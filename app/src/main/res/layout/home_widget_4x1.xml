@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/four_by_one"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/four_by_one_height"
+    android:background="@color/transparent_black"
+    android:gravity="center"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/four_by_one_controls"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/four_by_one_album_art_width"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/four_by_one_albumart"
+            android:layout_width="@dimen/four_by_one_album_art_width"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:contentDescription="@string/cd_art" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:layout_weight="75">
+
+                <ImageButton
+                    android:id="@+id/four_by_one_control_prev"
+                    style="@style/AppWidgetMediaButton"
+                    android:src="@drawable/btn_playback_previous_transparent" />
+
+                <ImageButton
+                    android:id="@+id/four_by_one_control_play"
+                    style="@style/AppWidgetMediaButton"
+                    android:src="@drawable/btn_playback_play_transparent" />
+
+                <ImageButton
+                    android:id="@+id/four_by_one_control_next"
+                    style="@style/AppWidgetMediaButton"
+                    android:src="@drawable/btn_playback_next_transparent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:orientation="vertical"
+                android:layout_weight="25">
+
+                <ImageView
+                    android:id="@+id/four_by_one_infocontrols_info_divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY" />
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/holo_blue_dark" />
+
+
+                <LinearLayout
+                    android:id="@+id/four_by_one_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/holo_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/four_by_one_trackname"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:textColor="@color/transparent_white"
+                        android:textSize="@dimen/text_size_small"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/four_by_one_separator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:textColor="@color/transparent_white"
+                        android:textSize="@dimen/text_size_small"
+                        android:text=" - " />
+
+                    <TextView
+                        android:id="@+id/four_by_one_artistname"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:textColor="@color/transparent_white"
+                        android:textSize="@dimen/text_size_small" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>

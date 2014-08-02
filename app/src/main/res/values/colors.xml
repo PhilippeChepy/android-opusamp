@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="transparent">#00000000</color>
+    <color name="black">#ff000000</color>
+    <color name="transparent_black">#aa000000</color>
+    <color name="transparent_white">#ccffffff</color>
+
+    <color name="holo_dark">#ff212121</color>
+    <color name="holo_light">#fff3f3f3</color>
+    <color name="holo_orange">#ffffbb33</color>
+    <color name="holo_blue_dark">#ff0099cc</color>
+
+	<color name="view_slider_color">#ff3f9fe0</color>
+    <color name="view_scrollingtabs_color">#ff3f9fe0</color>
+
+    <color name="review_green">#ff669900</color>
+
+    <color name="text_light">#66000000</color>
+
+    <color name="link_blue">#ff3399ff</color>
+</resources>

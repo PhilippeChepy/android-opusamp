@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="text_size_extra_micro">10sp</dimen>
+    <dimen name="text_size_micro">12sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_large">18sp</dimen>
+    <dimen name="text_size_x_large">24.0sp</dimen>
+    <dimen name="audio_controls_info_container_padding">16dip</dimen>
+    <dimen name="audio_controls_artwork_padding">20dip</dimen>
+    <dimen name="audio_controls_controls_height">56dip</dimen>
+    <dimen name="audio_controls_controls_height_2">112dip</dimen>
+    <dimen name="audio_controls_seek_bar_padding">10dip</dimen>
+    <dimen name="audio_controls_button_container_padding">2dip</dimen>
+    <dimen name="tab_padding_top_bottom">6dp</dimen>
+    <dimen name="tab_padding_left_right">40dp</dimen>
+    <dimen name="tab_height">30dp</dimen>
+    <dimen name="audio_player_controls_end_button_width">50.0dip</dimen>
+    <dimen name="audio_player_controls_end_button_height">50.0dip</dimen>
+    <dimen name="list_preferred_item_padding">10.0dip</dimen>
+    <dimen name="list_preferred_item_padding_simple">7.0dip</dimen>
+
+    <dimen name="list_preferred_item_height_small">48dp</dimen>
+    <dimen name="list_preferred_item_padding_left">6dp</dimen>
+    <dimen name="list_preferred_item_padding_right">6dp</dimen>
+
+    <!-- AppWidgdt 1x1 -->
+    <dimen name="one_by_one_height">62dp</dimen>
+    <dimen name="one_by_one_width">72dp</dimen>
+
+    <!-- AppWidgdt 4x1 -->
+    <dimen name="four_by_one_height">90dp</dimen>
+    <dimen name="four_by_one_album_art_width">90dp</dimen>
+
+    <!-- AppWidget 4x2 -->
+    <dimen name="four_by_two_height">180dp</dimen>
+    <dimen name="four_by_two_control_height">55dp</dimen>
+    <dimen name="four_by_two_album_art_width">135dp</dimen>
+    <dimen name="grid_item_spacing">4.0dip</dimen>
+    <dimen name="grid_item_padding_left">8.0dip</dimen>
+    <dimen name="item_normal_height">60.0dip</dimen>
+    <dimen name="item_normal_image_width">54.0dip</dimen>
+    <dimen name="notification_action_width">48.0dip</dimen>
+    <dimen name="notification_action_height">48.0dip</dimen>
+    <dimen name="notification_action_padding">8.0dip</dimen>
+    <dimen name="notification_big_icon_height">64.0dip</dimen>
+    <dimen name="notification_big_icon_width">64.0dip</dimen>
+    <dimen name="notification_info_container_padding_left">8.0dip</dimen>
+    <dimen name="notification_info_container_padding_bottom">4.0dip</dimen>
+    <dimen name="notification_expanded_content_padding_top">8.0dip</dimen>
+    <dimen name="notification_expanded_collapse_padding">8.0dip</dimen>
+    <dimen name="notification_expanded_height">128.0dip</dimen>
+    <dimen name="notification_expanded_buttons_divider_padding">12.0dip</dimen>
+    <dimen name="notification_expanded_button_height">48.0dip</dimen>
+    <dimen name="notification_expanded_button_padding">10.0dip</dimen>
+    <dimen name="bottom_action_bar_height">48.0dip</dimen>
+    <dimen name="bottom_action_bar_item_padding_left">12.0dip</dimen>
+    <dimen name="bottom_action_bar_item_padding_right">12.0dip</dimen>
+    <dimen name="bottom_action_bar_info_padding_left">5.0dip</dimen>
+    <dimen name="bottom_action_bar_button_container_width">165.0dip</dimen>
+
+    <!-- Colorstrip -->
+    <dimen name="colorstrip_height">2.0dip</dimen>
+
+    <!-- Shadow height -->
+    <dimen name="shadow_height">5.0dip</dimen>
+    <dimen name="header_height">250dp</dimen>
+    <dimen name="header_logo_size">100dp</dimen>
+
+    <!-- StepPagerStrip -->
+    <dimen name="step_pager_tab_width">32dp</dimen>
+    <dimen name="step_pager_tab_height">3dp</dimen>
+    <dimen name="step_pager_tab_spacing">4dp</dimen>
+    <dimen name="widget_margin">8dp</dimen>
+
+</resources>

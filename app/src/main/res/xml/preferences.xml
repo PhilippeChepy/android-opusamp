@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen 
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceScreen
+        android:icon="@drawable/ic_action_tiles_large"
+        android:title="@string/preference_appearance_screen_title">
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:icon="@drawable/ic_action_headphones"
+        android:title="@string/preference_headset_screen_title">
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:icon="@drawable/ic_action_gear"
+        android:title="@string/preference_other_options_screen_title">
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:icon="@drawable/ic_action_info"
+        android:title="@string/preference_about_screen_title">
+
+
+        <Preference
+            android:key="open_source"
+            android:title="@string/preference_licenses_title" />
+    </PreferenceScreen>
+
+</PreferenceScreen>

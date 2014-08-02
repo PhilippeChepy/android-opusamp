@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="AutoCompleteTextViewAudioKit" parent="android:Widget.Holo.Light.AutoCompleteTextView">
+      <item name="android:dropDownSelector">@drawable/audiokit_list_selector_holo_light</item>
+	    <item name="android:background">@drawable/audiokit_edit_text_holo_light</item>
+  </style>
+
+  <style name="ButtonAudioKit" parent="android:Widget.Holo.Light.Button">
+	  <item name="android:background">@drawable/audiokit_btn_default_holo_light</item>
+  </style>
+
+  <style name="ImageButtonAudioKit" parent="android:Widget.Holo.Light.ImageButton">
+	  <item name="android:background">@drawable/audiokit_btn_default_holo_light</item>
+  </style>
+
+  <style name="SpinnerAudioKit" parent="android:Widget.Holo.Light.Spinner">
+      <item name="android:background">@drawable/audiokit_spinner_background_holo_light</item>
+      <item name="android:dropDownSelector">@drawable/audiokit_list_selector_holo_light</item>
+  </style>
+
+  <style name="ProgressBarAudioKit" parent="android:Widget.Holo.Light.ProgressBar.Horizontal">
+      <item name="android:progressDrawable">@drawable/audiokit_progress_horizontal_holo_light</item>
+      <item name="android:indeterminateDrawable">@drawable/audiokit_progress_indeterminate_horizontal_holo_light</item>
+  </style>
+
+  <style name="SeekBarAudioKit" parent="android:Widget.Holo.Light.SeekBar">
+      <item name="android:progressDrawable">@drawable/audiokit_scrubber_progress_horizontal_holo_light</item>
+      <item name="android:indeterminateDrawable">@drawable/audiokit_scrubber_progress_horizontal_holo_light</item>
+      <item name="android:thumb">@drawable/audiokit_scrubber_control_selector_holo_light</item>
+  </style>
+
+  <style name="RatingBarAudioKit" parent="android:Widget.Holo.Light.RatingBar">
+      <item name="android:progressDrawable">@drawable/audiokit_ratingbar_full_holo_light</item>
+      <item name="android:indeterminateDrawable">@drawable/audiokit_ratingbar_full_holo_light</item>
+  </style>
+
+  <style name="RatingBarBigAudioKit" parent="android:Widget.Holo.Light.RatingBar.Indicator">
+      <item name="android:progressDrawable">@drawable/audiokit_ratingbar_holo_light</item>
+      <item name="android:indeterminateDrawable">@drawable/audiokit_ratingbar_holo_light</item>
+  </style>
+
+  <style name="RatingBarSmallAudioKit" parent="android:Widget.Holo.Light.RatingBar.Small">
+      <item name="android:progressDrawable">@drawable/audiokit_ratingbar_small_holo_light</item>
+      <item name="android:indeterminateDrawable">@drawable/audiokit_ratingbar_small_holo_light</item>
+  </style>
+
+  <style name="ToggleAudioKit" parent="android:Widget.Holo.Light.Button.Toggle">
+      <item name="android:background">@drawable/audiokit_btn_toggle_holo_light</item>
+  </style>
+
+</resources>

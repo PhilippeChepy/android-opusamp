@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/list_base_container"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <eu.chepy.audiokit.ui.views.CustomTextView
+        android:id="@+id/dragable_list_empty"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        android:gravity="center_horizontal"
+        android:textColor="#ff848484"
+        android:textSize="@dimen/text_size_large"
+        android:textStyle="italic"
+        android:visibility="gone" />
+
+    <com.mobeta.android.dslv.DragSortListView
+        android:id="@+id/dragable_list_base"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/transparent"
+        android:clipToPadding="false"
+        android:divider="@color/transparent"
+        android:dividerHeight="2.0dip"
+        android:drawSelectorOnTop="true"
+        android:fadingEdge="vertical"
+        android:fastScrollAlwaysVisible="false"
+        android:fastScrollEnabled="true"
+        app:drag_handle_id="@+id/edit_track_list_item_handle"
+        app:float_background_color="@color/transparent" />
+
+</FrameLayout>

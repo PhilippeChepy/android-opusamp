@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AudioKit.FullScreenActivity" parent="Theme.Sherlock.NoActionBar">
+    </style>
+
+    <style name="AudioKit.TransparentActionBar" parent="AudioKit">
+        <item name="windowContentOverlay">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="windowActionBarOverlay">true</item>
+    </style>
+
+    <style name="AudioKit.NavigationDrawer" parent="AudioKit">
+        <item name="homeAsUpIndicator">@drawable/ic_drawer</item>
+        <item name="windowContentOverlay">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="windowActionBarOverlay">true</item>
+    </style>
+
+    <style name="PlayerButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/holo_selector</item>
+    </style>
+
+
+    <style name="BottomActionBarText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:gravity">top|left|center</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">@dimen/text_size_extra_micro</item>
+    </style>
+
+    <style name="BottomActionBarLineOne" parent="BottomActionBarText">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="BottomActionBarLineTwo" parent="BottomActionBarText">
+    </style>
+
+    <style name="BottomActionBarItem">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center|right</item>
+        <item name="android:paddingLeft">@dimen/bottom_action_bar_item_padding_left</item>
+        <item name="android:paddingRight">@dimen/bottom_action_bar_item_padding_right</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:background">@drawable/holo_selector</item>
+    </style>
+
+    <style name="BottomActionBarItem.Previous" parent="BottomActionBarItem">
+        <item name="android:contentDescription">@string/cd_previous</item>
+    </style>
+
+    <style name="BottomActionBarItem.Next" parent="BottomActionBarItem">
+        <item name="android:contentDescription">@string/cd_next</item>
+    </style>
+
+    <style name="BottomActionBarItem.Play" parent="BottomActionBarItem">
+        <item name="android:contentDescription">@string/cd_play</item>
+    </style>
+
+    <style name="BottomActionBarItem.Shuffle" parent="BottomActionBarItem">
+        <item name="android:contentDescription">@string/cd_shuffle</item>
+    </style>
+
+    <style name="BottomActionBarItem.Repeat" parent="BottomActionBarItem">
+        <item name="android:contentDescription">@string/cd_repeat</item>
+    </style>
+
+    <style name="NotificationText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:fadingEdge">horizontal</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="NotificationAction">
+        <item name="android:layout_width">@dimen/notification_action_width</item>
+        <item name="android:layout_height">@dimen/notification_action_height</item>
+        <item name="android:gravity">center|right</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/notification_action_padding</item>
+        <item name="android:background">?android:selectableItemBackground</item>
+    </style>
+
+    <style name="NotificationAction.Previous" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_previous_transparent</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:contentDescription">@string/cd_previous</item>
+    </style>
+
+    <style name="NotificationAction.Play" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_play_transparent</item>
+        <item name="android:contentDescription">@string/cd_play</item>
+    </style>
+
+    <style name="NotificationAction.Next" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_next_transparent</item>
+        <item name="android:contentDescription">@string/cd_next</item>
+    </style>
+
+    <style name="NotificationAction.Collapse" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_notification_collapse</item>
+    </style>
+
+    <style name="AppWidgetMediaButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/holo_selector</item>
+        <item name="android:scaleType">center</item>
+    </style>
+
+</resources>

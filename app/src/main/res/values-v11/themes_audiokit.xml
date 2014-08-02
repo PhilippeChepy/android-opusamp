@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="AudioKit" parent="@style/_AudioKit"/>
+
+  <style name="_AudioKit" parent="Theme.Sherlock.Light.DarkActionBar">
+
+    <item name="android:editTextBackground">@drawable/audiokit_edit_text_holo_light</item>
+
+    <item name="android:textColorHighlight">#993f9fe0</item>
+    <item name="android:textSelectHandleLeft">@drawable/audiokit_text_select_handle_left</item>
+    <item name="android:textSelectHandleRight">@drawable/audiokit_text_select_handle_right</item>
+    <item name="android:textSelectHandle">@drawable/audiokit_text_select_handle_middle</item>
+
+    <item name="android:autoCompleteTextViewStyle">@style/AutoCompleteTextViewAudioKit</item>
+
+    <item name="android:listChoiceIndicatorMultiple">@drawable/audiokit_btn_check_holo_light</item>
+
+    <item name="android:listChoiceIndicatorSingle">@drawable/audiokit_btn_radio_holo_light</item>
+
+    <item name="android:buttonStyle">@style/ButtonAudioKit</item>
+
+    <item name="android:imageButtonStyle">@style/ImageButtonAudioKit</item>
+
+    <item name="android:dropDownSpinnerStyle">@style/SpinnerAudioKit</item>
+
+    <item name="android:progressBarStyleHorizontal">@style/ProgressBarAudioKit</item>
+
+    <item name="android:seekBarStyle">@style/SeekBarAudioKit</item>
+
+    <item name="android:ratingBarStyle">@style/RatingBarAudioKit</item>
+
+    <item name="android:ratingBarStyleIndicator">@style/RatingBarBigAudioKit</item>
+
+    <item name="android:ratingBarStyleSmall">@style/RatingBarSmallAudioKit</item>
+
+    <item name="android:buttonStyleToggle">@style/ToggleAudioKit</item>
+
+    <item name="android:listChoiceBackgroundIndicator">@drawable/audiokit_list_selector_holo_light</item>
+
+    <item name="android:activatedBackgroundIndicator">@drawable/audiokit_activated_background_holo_light</item>
+
+    <item name="android:fastScrollThumbDrawable">@drawable/audiokit_fastscroll_thumb_holo</item>
+
+  </style>
+
+</resources>

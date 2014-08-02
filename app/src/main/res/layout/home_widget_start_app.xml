@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/unavailable"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/four_by_two_height"
+    android:background="@color/transparent_black"
+    android:gravity="center"
+    android:orientation="horizontal" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="@color/transparent_white"
+        android:textSize="@dimen/text_size_small"
+        android:textStyle="bold"
+        android:textIsSelectable="false"
+        android:text="@string/label_start_app"/>
+
+</LinearLayout>

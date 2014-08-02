@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="tab_titles">
+        <item>@string/tab_playlists</item>
+        <item>@string/tab_artists</item>
+        <item>@string/tab_album_artists</item>
+        <item>@string/tab_albums</item>
+        <item>@string/tab_songs</item>
+        <item>@string/tab_genres</item>
+        <item>@string/tab_storage</item>
+    </string-array>
+    
+	<string-array name="cover_exts">
+		<item>@string/ext_jpeg</item>
+		<item>@string/ext_jpg</item>
+		<item>@string/ext_png</item>
+		<item>@string/ext_bmp</item>
+	</string-array>
+
+	<string-array name="audio_exts">
+		<item>@string/ext_cda</item>
+		<item>@string/ext_mp3</item>
+		<item>@string/ext_mp2</item>
+		<item>@string/ext_mp1</item>
+		<item>@string/ext_aac</item>
+		<item>@string/ext_vlb</item>
+		<item>@string/ext_m4a</item>
+		<item>@string/ext_mp4</item>
+		<item>@string/ext_nsa</item>
+		<item>@string/ext_flac</item>
+		<item>@string/ext_ogg</item>
+		<item>@string/ext_wma</item>
+		<item>@string/ext_mid</item>
+		<item>@string/ext_midi</item>
+		<item>@string/ext_rmi</item>
+		<item>@string/ext_kar</item>
+		<item>@string/ext_miz</item>
+		<item>@string/ext_mod</item>
+		<item>@string/ext_mdz</item>
+		<item>@string/ext_nst</item>
+		<item>@string/ext_stm</item>
+		<item>@string/ext_stz</item>
+		<item>@string/ext_s3m</item>
+		<item>@string/ext_s3z</item>
+		<item>@string/ext_it</item>
+		<item>@string/ext_itz</item>
+		<item>@string/ext_xm</item>
+		<item>@string/ext_xmz</item>
+		<item>@string/ext_mtm</item>
+		<item>@string/ext_ult</item>
+		<item>@string/ext_669</item>
+		<item>@string/ext_far</item>
+		<item>@string/ext_amf</item>
+		<item>@string/ext_okt</item>
+		<item>@string/ext_ptm</item>
+		<item>@string/ext_wav</item>
+		<item>@string/ext_voc</item>
+		<item>@string/ext_au</item>
+		<item>@string/ext_snd</item>
+		<item>@string/ext_aif</item>
+		<item>@string/ext_aiff</item>
+		<item>@string/ext_atrac</item>
+		<item>@string/ext_omg</item>
+		<item>@string/ext_at3</item>
+	</string-array>
+
+    <string-array name="sort_playlists">
+        <item>@string/sort_A_Z</item>
+        <item>@string/sort_Z_A</item>
+    </string-array>
+
+	<string-array name="sort_artists">
+	    <item>@string/sort_A_Z</item>
+	    <item>@string/sort_Z_A</item>
+	</string-array>
+	
+	<string-array name="sort_album_artists">
+	    <item>@string/sort_A_Z</item>
+	    <item>@string/sort_Z_A</item>
+	</string-array>
+	
+	<string-array name="sort_albums">
+	    <item>@string/sort_A_Z</item>
+	    <item>@string/sort_Z_A</item>
+	    <item>@string/sort_artist_A_Z</item>
+	    <item>@string/sort_artist_Z_A</item>
+	</string-array>
+	
+	<string-array name="sort_songs">
+	    <item>@string/sort_A_Z</item>
+	    <item>@string/sort_Z_A</item>
+	    <item>@string/track_asc</item>
+	    <item>@string/track_desc</item>
+	    <item>@string/filename_A_Z</item>
+	    <item>@string/filename_Z_A</item>
+	    <item>@string/sort_artist_A_Z</item>
+	    <item>@string/sort_artist_Z_A</item>
+	    <item>@string/sort_album_A_Z</item>
+	    <item>@string/sort_album_Z_A</item>
+	</string-array>
+
+    <string-array name="sort_genre">
+        <item>@string/sort_A_Z</item>
+        <item>@string/sort_Z_A</item>
+    </string-array>
+	
+	<string-array name="sort_files">
+	    <item>@string/sort_A_Z</item>
+	    <item>@string/sort_Z_A</item>
+	</string-array>
+	
+	
+</resources>

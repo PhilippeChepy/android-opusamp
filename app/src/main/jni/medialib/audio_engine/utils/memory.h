@@ -1,0 +1,37 @@
+/*
+ * memory.h
+ *
+ * Copyright (c) 2012, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
+
+#ifndef H_MEMORY
+#define H_MEMORY
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#include <stdlib.h>
+
+extern unsigned long memory_alloc_counter;
+
+void * memory_alloc(size_t size);
+void * memory_zero_alloc(size_t size);
+void * memory_free(void * ptr);
+
+void * memory_clone(const void * source, size_t size);
+int memory_compare(const void * source1, const void * source2, size_t size);
+#define memory_copy(dest, src, len)     memcpy(dest, src, len)
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* H_MEMORY */

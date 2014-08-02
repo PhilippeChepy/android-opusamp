@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Service & associated permissions -->
+    <string name="svc_player">Lecteur audio</string>
+    <string name="perm_player">Lire de la musique en utilisant un service specialisé</string>
+    
+    <string name="svc_collection">Scanner de musique</string>
+    <string name="perm_collection">Rechercher de la musique sur la machine</string>
+    
+    <!-- Notifications -->
+	<string name="notif_scan_in_progress">Fichiers audio en cours de recherche</string>
+	<string name="notif_playing">Lecture en cours</string>
+
+    <!-- Activities -->
+    <string name="dialog_title_album_properties">Propriétés de l\'album</string>
+    <string name="dialog_title_media_properties">Propriétés du média</string>
+
+    <string name="label_metadata_media_uri">Chemin</string>
+    <string name="label_metadata_media_duration">Durée</string>
+    <string name="label_metadata_media_bitrate">Débit</string>
+    <string name="label_metadata_media_samplerate">Taux d\'échantillonnage</string>
+    <string name="label_metadata_media_codec">Codec</string>
+    <string name="label_metadata_media_score">Score</string>
+    <string name="label_metadata_media_first_played">Lu en premier</string>
+    <string name="label_metadata_media_last_played">Lu en dernier</string>
+    <string name="label_metadata_media_title">Titre</string>
+    <string name="label_metadata_media_artist">Artiste</string>
+    <string name="label_metadata_media_album_artist">Artiste d\'album</string>
+    <string name="label_metadata_media_album">Album</string>
+    <string name="label_metadata_media_genre">Genre</string>
+    <string name="label_metadata_media_year">Année</string>
+    <string name="label_metadata_media_track">Piste</string>
+    <string name="label_metadata_media_disc">Disque</string>
+
+
+    <string name="label_done">Valider</string>
+    <string name="label_cancel">Annuler</string>
+    
+	<string name="label_player">Lecteur</string>
+	<string name="label_collection">Bibliothèque</string>
+	<string name="label_tracks">Pistes</string>
+	<string name="label_tag_editor">Métadonnées</string>
+    <string name="label_preferences">Préferences</string>
+    
+    <string name="label_artist_details">Détails de l\'artiste</string>
+    <string name="label_album_details">Détails de l\'album</string>
+    <string name="label_playlist_details">Détails de la playlist</string>
+    <string name="label_genre_details">Details du genre</string>
+    
+	<string name="label_drawer_open">Ouvrir le menu de navigation</string>
+    <string name="label_drawer_close">Fermer le menu de navigation</string>
+
+    <string name="label_local_media_manager">Médias sur ce périphérique</string>
+    <string name="label_dlna_media_manager">Médias sur le réseau (DLNA)</string>
+
+    <string name="menu_label_recent">Période</string>
+    <string name="menu_label_sort">Tri</string>
+    <string name="menu_label_search">Recherche</string>
+    <string name="menu_label_filter">Filtrer</string>
+    <string name="menu_label_show_hidden">Afficher les objets cachés</string>
+    
+	<string name="menu_label_collection">Bibliothèque</string>
+	<string name="menu_label_share">Partager</string>
+	<string name="menu_label_audio_effects">Effets audios</string>
+	<string name="menu_label_sleep_timer">Arret automatique</string>
+	<string name="menu_label_toggle_car_mode">Entrer/sortir du mode voiture</string>
+	<string name="menu_label_settings">Préférences</string>
+	<string name="menu_label_add_directory">Ajouter un dossier</string>
+    <string name="menu_label_add_library">Ajouter une bibliothèque</string>
+	
+	<string name="context_menu_play">Lire</string>
+	<string name="context_menu_play_next">Lire après</string>
+	<string name="context_menu_add_to_queue">Ajouter à la file</string>
+	<string name="context_menu_add_to_playlist">Ajouter à la liste de lecture</string>
+    <string name="context_menu_details">Propriétés</string>
+	<string name="context_menu_more_by_artist">Plus de cet artist</string>
+	<string name="context_menu_use_as_ringtone">Utiliser comme sonnerie</string>
+	<string name="context_menu_delete">Supprimer</string>
+	<string name="context_menu_remove">Enlever</string>
+    <string name="context_menu_remove_all">Vider la liste</string>
+	<string name="context_menu_hide">Cacher</string>
+	<string name="context_menu_show">Rendre visible</string>
+    <string name="context_menu_edit">Editer</string>
+
+    <string name="context_menu_use_file_art">Choisir une pochette (depuis un fichier)</string>
+    <string name="context_menu_restore_file_art">Restaurer la pochette originale</string>
+    
+    <!-- ContentType descriptions for player controls -->
+	<string name="cd_repeat">Répeter</string>
+	<string name="cd_previous">Precedente</string>
+	<string name="cd_play">Lecture et pause</string>
+	<string name="cd_next">Suivante</string>
+	<string name="cd_shuffle">Mélanger les pistes</string>
+	<string name="cd_currently_playing">Lecture en cours</string>
+
+    <string name="cd_playlist">Afficher/cacher la liste de lecture</string>
+    <string name="cd_carmode">Passer en mode voiture</string>
+	
+	<!-- Tabs -->
+	<string name="tab_accept_path">Dossiers parcourus</string>
+	<string name="tab_exclude_path">Dossiers exclus</string>
+	
+	<!--<string name="tab_recent">Recents</string>-->
+    <string name="tab_artists">Artistes</string>
+    <string name="tab_album_artists">Artistes d\'albums</string>
+    <string name="tab_albums">Albums</string>
+    <string name="tab_songs">Pistes</string>
+    <string name="tab_playlists">Listes de lecture</string>
+    <string name="tab_genres">Genres</string>
+    <string name="tab_storage">Fichiers</string>
+    
+    <!-- Context Menu -->
+    <string name="mi_play_selection">Lire la sélection</string>
+    <string name="mi_uses_as_ringtone">Utiliser comme sonnerie</string>
+    <string name="mi_add_to_playlist">Ajouter à la liste de lecture</string>
+    <string name="mi_search">Rechercher</string>
+    <string name="mi_remove">Supprimer de cette liste de lecture</string>
+    <string name="mi_add_media_manager">Type de fournisseur de medias</string>
+    
+    <!-- No items messages for library -->
+    <string name="ni_recents">Pas de pistes lues récement</string>
+    <string name="ni_artists">Pas d\'artistes</string>
+    <string name="ni_albums">Pas d\'albums</string>
+    <string name="ni_songs">Pas de pistes</string>
+    <string name="ni_playlists">Pas de listes de lecture</string>
+    <string name="ni_genres">Pas de genres</string>
+    <string name="ni_files">Pas de fichiers</string>
+    <string name="ni_providers">Pas de bibliothèques</string>
+    <string name="ni_scan_directories">Pas de dossiers</string>
+
+    <string name="ni_artists_hint">Vérifier l\'emplacement des fichiers</string>
+    <string name="ni_albums_hint">Vérifier l\'emplacement des fichiers</string>
+    <string name="ni_songs_hint">Vérifier l\'emplacement des fichiers</string>
+    <!--<string name="ni_playlists_hint">Créer une nouvelle liste de lecture</string>-->
+    <string name="ni_genres_hint">Vérifier l\'emplacement des fichiers</string>
+
+    <string name="ni_current_playlist">La liste de lecture courante est vide</string>
+
+    <string name="fs_parent_directory">Dossier supérieur</string>
+    <string name="fs_directory">Dossier</string>
+    <string name="fs_audio">Fichier audio</string>
+    
+    <string name="header_interface">Interface graphique</string>
+    <string name="header_media_scanner">Scanner de fichier</string>
+    <string name="header_storage">Stockage</string>
+    <string name="header_about">A Propos</string>
+    
+    <!-- UI/Other -->
+    <string name="label_filter_hint">Recherche</string>
+    <string name="label_new_playlist">Nouvelle liste de lecture</string>
+    <string name="label_new_library">Nouvelle bibliothèque</string>
+    <string name="label_favorites">Favoris</string>
+
+    <string name="share_via">Partager via</string>
+    <string name="share_body">J\'écoute actuellement %1$s par %2$s.</string>
+    
+    <string name="label_autostop_set">Pause automatique dans %1$d minute(s)</string>
+    <string name="label_autostop_cancel">Pause automatique annulée</string>
+
+    <string name="label_track_count">%1$d élément(s) dans la file</string>
+
+    <string name="toast_press_back_again">Pressez de nouveau pour sortir</string>
+
+
+    <string name="label_media_management">Gestion des médias</string>
+    <string name="label_settings">Paramètres</string>
+    <string name="label_library_settings">Gestion des bibliothèques</string>
+
+    <string name="label_library_settings_location">Emplacements</string>
+    <string name="label_library_settings_soundfx">Effets sonores</string>
+    <string name="label_library_settings_general">Paramètres de la bibliothèque</string>
+
+
+    <string name="label_application_settings">Paramètres de l\'application</string>
+
+    <string name="label_prev">Precedent</string>
+    <string name="label_next">Suivant</string>
+    <string name="label_finish">Terminer</string>
+
+    <string name="label_select_cover">Choix de la pochette</string>
+
+    <string name="label_default_library">Bibliothèque musicale</string>
+    <string name="label_start_app">Ouvrir le lecteur pour lire des médias</string>
+
+    <string name="label_scan_files">Fichiers à scanner</string>
+
+    <string name="tutor_home_title">Réglages</string>
+    <string name="tutor_home_detail">Cliquez sur l\'icone de l\'application pour accéder aux réglages du lecteur.\nVous pouvez aussi faire glisser le bord gauche de l\'écran vers la droite pour avoir le même résultat.</string>
+
+    <string name="tutor_library_management_title">Gérez vos bibliothèques</string>
+    <string name="tutor_library_management_detail">Vous pouvez gérer plusieurs bibliothèques.\n\nCliquez sur cette icone pour ajouter une bibliothèque.\nVous pouvez cliquer sur chacune des bibliothèques pour mettre en place des réglages spécifiques (tels que les emplacements de vos médias, des paramètres de connexion, etc.).</string>
+    
+    <string name="sort_A_Z">A-Z</string>
+    <string name="sort_Z_A">Z-A</string>
+	<string name="track_asc">Piste croissante</string>
+	<string name="track_desc">Piste décroissante</string>
+	<string name="filename_A_Z">Nom de fichier A-Z</string>
+	<string name="filename_Z_A">Nom de fichier Z-A</string>
+    <string name="sort_artist_A_Z">Artiste A-Z</string>
+	<string name="sort_artist_Z_A">Artiste Z-A</string>
+	<string name="sort_album_A_Z">Album A-Z</string>
+	<string name="sort_album_Z_A">Album Z-A</string>
+    <string name="sort_number_of_songs">Nombre de pistes</string>
+    <string name="sort_number_of_albums">Nombre d\'albums</string>
+    <string name="sort_year">Année</string>
+	<string name="sort_duration">Durée</string>
+    
+    <!-- Alertes -->
+    <string name="alert_title_playlist_is_empty">La liste de lecture est vide</string>
+	<string name="alert_playlist_is_empty">Il n\'y a pas de pistes à lire !\nAjoutez d\'abord quelque chose à lire dans la liste de lecture.</string>
+
+    <string name="alert_title_playlist_delete">Confirmation</string>
+    <string name="alert_playlist_delete">Voulez vous vraiment supprimer cette liste de lecture ?</string>
+
+    <string name="alert_title_art_change_tracks">Question</string>
+    <string name="alert_art_change_tracks">Mettre à jour les pistes avec cette image ?</string>
+
+    <string name="alert_title_search_path_exists">Chemin déjà inscrit</string>
+    <string name="alert_search_path_exists">Ce dossier est déjà dans la liste des dossier à analyser ou à exclure.</string>
+
+
+    <!-- Préferences -->
+    <string name="library_local_provider_path_settings_title">Paramètres de recherche</string>
+    <string name="library_local_provider_path_settings_desc">Vous pouvez ici définir les emplacements ou chercher des médias pour la bibliothèque que vous paramètrez actuellement.\nLes médias qui sont dans les dossiers exclus ne seront pas ajoutés à la bibliothèque.</string>
+
+    <string name="library_global_settings_title">Bibliothèques</string>
+    <string name="library_global_settings_desc">Vous pouvez ici modifier vos bibliothèques.\nAppuyez longtemps sur une ligne pour éditer ou supprimer une bibliothèque.\nVous ne pouvez pas supprimer la bibliothèque par défaut.</string>
+
+    <string name="preference_appearance_screen_title">Apparence</string>
+    <string name="preference_headset_screen_title">Casque et bluetooth</string>
+    <string name="preference_other_options_screen_title">Autres options</string>
+    <string name="preference_about_screen_title">A propos</string>
+
+    <string name="preference_licenses_title">Licences Open source</string>
+
+    <string name="preference_various_artists_default_value">Artistes divers</string>
+    <string name="preference_unknown_artists_default_value">Artistes inconnu</string>
+
+
+
+
+    <string name="loc_preference_collection_screen_title">Bibliothèque musicale</string>
+
+    <string name="loc_preference_collection_tab_visibility_dialog_title">Onglets activés</string>
+    <string name="loc_preference_collection_tab_visibility_summary">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
+
+
+    <!-- Equalizer view -->
+    <string name="label_enable_equalizer">Activer l\'equaliseur</string>
+
+</resources>

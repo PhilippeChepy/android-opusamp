@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/actionbar_discard"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingRight="20dp"
+        android:background="@drawable/holo_selector" >
+
+        <TextView
+            style="@style/Widget.Sherlock.ActionBar.TabText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableLeft="@drawable/ic_action_cancel_dark"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:text="@string/label_cancel" />
+
+    </FrameLayout>
+
+    <View
+        android:layout_width="0.5dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:background="#55FFFFFF" />
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/actionbar_done"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingRight="20dp"
+        android:background="@drawable/holo_selector" >
+
+        <TextView
+            style="@style/Widget.Sherlock.ActionBar.TabText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableLeft="@drawable/ic_action_tick_dark"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:text="@string/label_done" />
+
+    </FrameLayout>
+
+</LinearLayout>
