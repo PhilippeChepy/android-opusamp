@@ -2,28 +2,37 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Preference
-        android:key="location"
-        android:title="@string/label_library_settings_location"
-        android:icon="@drawable/ic_action_tiles_large" />
 
+    <PreferenceCategory android:title="@string/loc_preference_collection_screen_title" >
+        <Preference
+            android:key="location"
+            android:title="@string/label_library_settings_location"
+            android:icon="@drawable/ic_action_folder_closed" />
 
-    <PreferenceScreen
-        android:title="@string/header_interface"
-        android:icon="@drawable/ic_action_tiles_large" >
+        <eu.chepy.audiokit.utils.support.android.preference.MultiSelectListPreference
+            android:capitalize="words"
+            android:defaultValue="@array/tab_titles"
+            android:icon="@drawable/ic_action_tiles_large"
+            android:dialogTitle="@string/loc_preference_collection_tab_visibility_dialog_title"
+            android:entries="@array/tab_titles"
+            android:entryValues="@array/tab_titles"
+            android:key="@string/key_tabs_enabled"
+            android:summary="@string/loc_preference_collection_tab_visibility_summary"
+            android:title="@string/loc_preference_collection_tab_visibility_dialog_title" />
+    </PreferenceCategory>
 
-        <PreferenceCategory android:title="@string/loc_preference_collection_screen_title" >
-            <eu.chepy.audiokit.utils.support.android.preference.MultiSelectListPreference
-                android:capitalize="words"
-                android:defaultValue="@array/tab_titles"
-                android:dialogTitle="@string/loc_preference_collection_tab_visibility_dialog_title"
-                android:entries="@array/tab_titles"
-                android:entryValues="@array/tab_titles"
-                android:key="@string/key_tabs_enabled"
-                android:summary="@string/loc_preference_collection_tab_visibility_summary"
-                android:title="@string/loc_preference_collection_tab_visibility_dialog_title" />
-        </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/header_storage"
+        android:icon="@drawable/ic_action_database" >
 
-    </PreferenceScreen>
+        <Preference
+            android:title="@string/loc_preference_optimize_database"
+            android:icon="@drawable/ic_action_database"/>
+
+        <Preference
+            android:title="@string/loc_preference_clear_art_cache"
+            android:icon="@drawable/ic_action_document"/>
+
+    </PreferenceCategory>
 
 </PreferenceScreen>

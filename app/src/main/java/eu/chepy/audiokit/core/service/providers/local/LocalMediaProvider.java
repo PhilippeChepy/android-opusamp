@@ -131,6 +131,21 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         currentFolder = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         isAtRootLevel = true;
+
+        final Resources resources = PlayerApplication.context.getResources();
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
+
+        final String[] tabTitles = resources.getStringArray(R.array.tab_titles);
+
+        Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
+        Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.key_tabs_enabled), null);
+
+        // Default instead of no selection.
+        if (userEnabledTabs == null || userEnabledTabs.size() == 0) {
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+            SharedPreferencesCompat.EditorCompat.putStringSet(editor, resources.getString(R.string.key_tabs_enabled), defaultTabs);
+            editor.commit();
+        }
     }
 
     public SQLiteDatabase getWritableDatabase() {
@@ -707,7 +722,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         final Resources resources = PlayerApplication.context.getResources();
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
 
-        // TODO: use specific preferences !
         final String[] tabTitles = resources.getStringArray(R.array.tab_titles);
 
         Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));

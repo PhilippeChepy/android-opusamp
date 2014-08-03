@@ -229,7 +229,10 @@
 
 
 
-    <string name="loc_preference_collection_screen_title">Music Library</string>
+    <string name="loc_preference_collection_screen_title">Media Library</string>
+
+    <string name="loc_preference_optimize_database">Optimize database</string>
+    <string name="loc_preference_clear_art_cache">Clear art temporary memory</string>
 
     <string name="loc_preference_collection_tab_visibility_dialog_title">Enabled tabs</string>
     <string name="loc_preference_collection_tab_visibility_summary">Select what tabs are shown in music library</string>

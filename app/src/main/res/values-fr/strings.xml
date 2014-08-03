@@ -239,8 +239,10 @@
 
 
 
+    <string name="loc_preference_collection_screen_title">Bibliothèque</string>
 
-    <string name="loc_preference_collection_screen_title">Bibliothèque musicale</string>
+    <string name="loc_preference_optimize_database">Optimiser la base de données</string>
+    <string name="loc_preference_clear_art_cache">Nettoyer la mémoire temporaire des image</string>
 
     <string name="loc_preference_collection_tab_visibility_dialog_title">Onglets activés</string>
     <string name="loc_preference_collection_tab_visibility_summary">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
