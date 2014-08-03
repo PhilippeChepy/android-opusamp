@@ -10,7 +10,7 @@
  *
  * http://www.chepy.eu
  */
-package eu.chepy.audiokit.core.service.providers.local;
+package eu.chepy.audiokit.core.service.providers.local.ui.fragments;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -33,7 +33,8 @@ import android.widget.GridView;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
-import eu.chepy.audiokit.core.service.providers.local.entities.ScanDirectory;
+import eu.chepy.audiokit.core.service.providers.local.LocalMediaProvider;
+import eu.chepy.audiokit.core.service.providers.local.database.Entities;
 import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.audiokit.ui.adapter.holder.GridViewHolder;
 import eu.chepy.audiokit.ui.fragments.AbstractRefreshableFragment;
@@ -143,8 +144,8 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 		Log.d(TAG, "onCreateLoader()");
 
         final String[] projection = new String[] {
-                ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_ID,
-                ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
+                Entities.ScanDirectory._ID,
+                Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
         };
         
 		int pathType = CONTENT_SEARCH_PATH;
@@ -153,20 +154,20 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
             pathType = arguments.getInt(CONTENT_TYPE_KEY, CONTENT_SEARCH_PATH);
         }
 
-		final String selection = ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ?";
+		final String selection = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ?";
 		
 		final String[] selectionArgs = new String[] {
 			String.valueOf(pathType == CONTENT_SEARCH_PATH ? 0 : 1)	
 		};
 		
-		final String sortOrder = ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME;
+		final String sortOrder = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME;
 
         return new AbstractSimpleCursorLoader(getActivity()) {
             @Override
             public Cursor loadInBackground() {
                 SQLiteDatabase database = getReadableDatabase();
                 if (database != null) {
-                    return database.query(ScanDirectory.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+                    return database.query(Entities.ScanDirectory.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
                 }
                 return null;
             }
@@ -225,7 +226,7 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 		Log.d(TAG, "onContextItemSelected()");
 
 		if (item.getItemId() == MENUITEM_DELETE) {
-            final String selection = ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_ID + " = ? ";
+            final String selection = Entities.ScanDirectory._ID + " = ? ";
 			
 			final String selectionArgs[] = new String[] {
 					cursor.getString(COLUMN_ID)
@@ -233,7 +234,7 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 
             SQLiteDatabase database = getWritableDatabase();
             if (database != null) {
-                database.delete(ScanDirectory.TABLE_NAME, selection, selectionArgs);
+                database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
             }
 			// TODO: delete associated content (already scanned)
 

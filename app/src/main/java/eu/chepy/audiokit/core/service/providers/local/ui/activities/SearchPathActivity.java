@@ -1,4 +1,4 @@
-package eu.chepy.audiokit.core.service.providers.local;
+package eu.chepy.audiokit.core.service.providers.local.ui.activities;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -15,11 +15,13 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
-import eu.chepy.audiokit.core.service.providers.local.entities.ScanDirectory;
+import eu.chepy.audiokit.core.service.providers.local.database.Entities;
+import eu.chepy.audiokit.core.service.providers.local.database.OpenHelper;
+import eu.chepy.audiokit.core.service.providers.local.ui.fragments.SearchPathFragment;
 import eu.chepy.audiokit.ui.activities.UtilDirectorySelectActivity;
 import eu.chepy.audiokit.ui.adapter.ux.PagerAdapter;
 
-public class UISearchPathsSettingsActivity extends SherlockFragmentActivity {
+public class SearchPathActivity extends SherlockFragmentActivity {
 
 	private ViewPager viewPager;
 	
@@ -83,16 +85,16 @@ public class UISearchPathsSettingsActivity extends SherlockFragmentActivity {
 		switch(requestCode) {
 		case REQUEST_CODE_SEARCH_PATH:
 			if (resultCode == RESULT_OK) {
-                InternalDatabaseOpenHelper openHelper = new InternalDatabaseOpenHelper(this, providerId);
+                OpenHelper openHelper = new OpenHelper(this, providerId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
                     final ContentValues values = new ContentValues();
-                    values.put(ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
-                    values.put(ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, data.getStringExtra(UtilDirectorySelectActivity.KEY_RESULT));
+                    values.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
+                    values.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, data.getStringExtra(UtilDirectorySelectActivity.KEY_RESULT));
 
                     try {
-                        database.insertOrThrow(ScanDirectory.TABLE_NAME, null, values);
+                        database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -106,16 +108,16 @@ public class UISearchPathsSettingsActivity extends SherlockFragmentActivity {
 			break;
 		case REQUEST_CODE_EXCLUDE_PATH:
 			if (resultCode == RESULT_OK) {
-                InternalDatabaseOpenHelper openHelper = new InternalDatabaseOpenHelper(this, providerId);
+                OpenHelper openHelper = new OpenHelper(this, providerId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
                     final ContentValues values = new ContentValues();
-                    values.put(ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 1);
-                    values.put(ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, data.getStringExtra(UtilDirectorySelectActivity.KEY_RESULT));
+                    values.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 1);
+                    values.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, data.getStringExtra(UtilDirectorySelectActivity.KEY_RESULT));
 
                     try {
-                        database.insertOrThrow(ScanDirectory.TABLE_NAME, null, values);
+                        database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -135,7 +137,7 @@ public class UISearchPathsSettingsActivity extends SherlockFragmentActivity {
 
 		@Override
 		public boolean onMenuItemClick(MenuItem item) {
-			Intent intent = new Intent(UISearchPathsSettingsActivity.this, UtilDirectorySelectActivity.class);
+			Intent intent = new Intent(SearchPathActivity.this, UtilDirectorySelectActivity.class);
 			startActivityForResult(intent, viewPager.getCurrentItem() == 0 ? REQUEST_CODE_SEARCH_PATH : REQUEST_CODE_EXCLUDE_PATH);
 			return false;
 		}

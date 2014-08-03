@@ -5,8 +5,8 @@ import android.content.ContentValues;
 import java.io.File;
 import java.io.InputStream;
 
-import eu.chepy.audiokit.core.service.providers.local.InternalCoverInputStream;
-import eu.chepy.audiokit.core.service.providers.local.entities.Media;
+import eu.chepy.audiokit.core.service.providers.local.database.Entities;
+import eu.chepy.audiokit.core.service.providers.local.utils.CoverInputStream;
 
 public abstract class JniMediaLib {
 
@@ -110,24 +110,24 @@ public abstract class JniMediaLib {
             tagsRead(file.getAbsolutePath());
 
             contentValues.clear();
-            contentValues.put(Media.COLUMN_FIELD_URI, "file://" + file.getAbsolutePath());
-            contentValues.put(Media.COLUMN_FIELD_DURATION, tagDuration);
-            contentValues.put(Media.COLUMN_FIELD_BITRATE, tagBitrate);
-            contentValues.put(Media.COLUMN_FIELD_SAMPLE_RATE, tagSamplerate);
-            contentValues.put(Media.COLUMN_FIELD_TITLE, tagTitle);
-            contentValues.put(Media.COLUMN_FIELD_ARTIST, tagArtist);
+            contentValues.put(Entities.Media.COLUMN_FIELD_URI, "file://" + file.getAbsolutePath());
+            contentValues.put(Entities.Media.COLUMN_FIELD_DURATION, tagDuration);
+            contentValues.put(Entities.Media.COLUMN_FIELD_BITRATE, tagBitrate);
+            contentValues.put(Entities.Media.COLUMN_FIELD_SAMPLE_RATE, tagSamplerate);
+            contentValues.put(Entities.Media.COLUMN_FIELD_TITLE, tagTitle);
+            contentValues.put(Entities.Media.COLUMN_FIELD_ARTIST, tagArtist);
             //contentValues.put(Media.COLUMN_FIELD_COMPOSER, tagComposer);
-            contentValues.put(Media.COLUMN_FIELD_ALBUM_ARTIST, tagAlbumArtist);
-            contentValues.put(Media.COLUMN_FIELD_ALBUM, tagAlbum);
-            contentValues.put(Media.COLUMN_FIELD_GENRE, tagGenre);
-            contentValues.put(Media.COLUMN_FIELD_YEAR, tagYear);
-            contentValues.put(Media.COLUMN_FIELD_TRACK, tagTrack);
-            contentValues.put(Media.COLUMN_FIELD_DISC, tagDisc);
-            contentValues.put(Media.COLUMN_FIELD_BPM, tagBpm);
-            contentValues.put(Media.COLUMN_FIELD_COMMENT, tagComment);
-            contentValues.put(Media.COLUMN_FIELD_LYRICS, tagLyrics);
-            contentValues.put(Media.COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
-            contentValues.put(Media.COLUMN_FIELD_USE_EMBEDDED_ART, hasEmbeddedArt);
+            contentValues.put(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST, tagAlbumArtist);
+            contentValues.put(Entities.Media.COLUMN_FIELD_ALBUM, tagAlbum);
+            contentValues.put(Entities.Media.COLUMN_FIELD_GENRE, tagGenre);
+            contentValues.put(Entities.Media.COLUMN_FIELD_YEAR, tagYear);
+            contentValues.put(Entities.Media.COLUMN_FIELD_TRACK, tagTrack);
+            contentValues.put(Entities.Media.COLUMN_FIELD_DISC, tagDisc);
+            contentValues.put(Entities.Media.COLUMN_FIELD_BPM, tagBpm);
+            contentValues.put(Entities.Media.COLUMN_FIELD_COMMENT, tagComment);
+            contentValues.put(Entities.Media.COLUMN_FIELD_LYRICS, tagLyrics);
+            contentValues.put(Entities.Media.COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
+            contentValues.put(Entities.Media.COLUMN_FIELD_USE_EMBEDDED_ART, hasEmbeddedArt);
 
             return contentValues;
         }
@@ -135,7 +135,7 @@ public abstract class JniMediaLib {
 
     public static InputStream getCoverInputStream(File file) {
         if (file != null) {
-            InputStream inputStream = new InternalCoverInputStream(file.getAbsolutePath());
+            InputStream inputStream = new CoverInputStream(file.getAbsolutePath());
             return inputStream;
         }
 

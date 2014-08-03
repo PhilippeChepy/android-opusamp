@@ -33,7 +33,7 @@ import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.AbstractProviderAction;
 import eu.chepy.audiokit.core.service.providers.MediaManagerFactory;
 import eu.chepy.audiokit.core.service.providers.MediaManagerFactory.MediaManagerDescription;
-import eu.chepy.audiokit.core.service.providers.index.entities.Provider;
+import eu.chepy.audiokit.core.service.providers.index.database.Entities;
 import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.audiokit.ui.adapter.ProviderAdapter;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
@@ -75,9 +75,9 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
         ContentType Data
      */
     private final static String[] requestedFields = new String[] {
-            Provider.COLUMN_FIELD_PROVIDER_ID,
-            Provider.COLUMN_FIELD_PROVIDER_NAME,
-            Provider.COLUMN_FIELD_PROVIDER_TYPE
+            Entities.Provider._ID,
+            Entities.Provider.COLUMN_FIELD_PROVIDER_NAME,
+            Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE
     };
 
     public static final int COLUMN_PROVIDER_ID = 0;
@@ -137,9 +137,9 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
             public Cursor loadInBackground() {
                 final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
                 if (database != null) {
-                    final String orderBy = Provider.COLUMN_FIELD_PROVIDER_POSITION;
+                    final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-                    return database.query(Provider.TABLE_NAME, requestedFields, null, null, null, null, orderBy);
+                    return database.query(Entities.Provider.TABLE_NAME, requestedFields, null, null, null, null, orderBy);
                 }
                 return null;
             }
@@ -196,10 +196,10 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
                             int mediaProviderType = cursor.getInt(COLUMN_PROVIDER_TYPE);
 
                             ContentValues contentValues = new ContentValues();
-                            contentValues.put(Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
-                            contentValues.put(Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
+                            contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
+                            contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
 
-                            database.update(Provider.TABLE_NAME, contentValues, Provider.COLUMN_FIELD_PROVIDER_ID + " = ? ",
+                            database.update(Entities.Provider.TABLE_NAME, contentValues, Entities.Provider._ID + " = ? ",
                                     new String[] {
                                             String.valueOf(providerId)
                                     });
@@ -222,7 +222,7 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
                         /*
                             Delete database registration
                          */
-                        database.delete(Provider.TABLE_NAME, Provider.COLUMN_FIELD_PROVIDER_ID + " = ? ",
+                        database.delete(Entities.Provider.TABLE_NAME, Entities.Provider._ID + " = ? ",
                                 new String[] {
                                         String.valueOf(mediaManager.getMediaManagerId())
                                 });
@@ -328,16 +328,16 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
 
                     // Provider is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex)
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex)
                     );
 
                     // Provider is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " - 1 " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION +
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " - 1 " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
                                 " BETWEEN " + String.valueOf(lowerIndex) +
                                     " AND " + String.valueOf(upperIndex)
                     );
@@ -345,32 +345,32 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
 
                     // Provider is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex) + " " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex) + " " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
                     );
                 } else {
                     int lowerIndex = Math.min(indexFrom, indexTo);
                     int upperIndex = Math.max(indexFrom, indexTo);
 
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex)
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex)
                     );
 
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " + 1 " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION +
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " + 1 " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
                                 " BETWEEN " + String.valueOf(lowerIndex) +
                                     " AND " + String.valueOf(upperIndex)
                     );
 
                     database.execSQL(
-                            "UPDATE " + Provider.TABLE_NAME + " " +
-                            "SET " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex) + " " +
-                            "WHERE " + Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
+                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex) + " " +
+                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
                     );
                 }
                 database.setTransactionSuccessful();
@@ -419,11 +419,11 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
 
                     if (database != null && collectionName != null) {
                         ContentValues contentValues = new ContentValues();
-                        contentValues.put(Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
-                        contentValues.put(Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
-                        contentValues.put(Provider.COLUMN_FIELD_PROVIDER_POSITION, cursor.getCount());
+                        contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
+                        contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
+                        contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION, cursor.getCount());
 
-                        long rowId = database.insert(Provider.TABLE_NAME, null, contentValues);
+                        long rowId = database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
                         if (rowId < 0) {
                             Log.w(TAG, "new library: database insertion failure.");
                         } else {

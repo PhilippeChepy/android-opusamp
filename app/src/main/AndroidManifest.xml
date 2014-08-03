@@ -66,12 +66,12 @@
         </activity>
 
         <activity
-            android:name=".core.service.providers.local.UISearchPathsSettingsActivity"
+            android:name=".core.service.providers.local.ui.activities.SearchPathActivity"
             android:label="@string/label_scan_files" >
         </activity>
 
         <activity
-            android:name=".core.service.providers.local.UILocalContentSettingsActivity"
+            android:name=".core.service.providers.local.ui.activities.SettingsActivity"
             android:label="@string/label_scan_files" >
         </activity>
 

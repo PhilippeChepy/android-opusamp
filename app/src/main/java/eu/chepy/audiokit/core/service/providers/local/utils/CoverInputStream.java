@@ -1,13 +1,13 @@
-package eu.chepy.audiokit.core.service.providers.local;
+package eu.chepy.audiokit.core.service.providers.local.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import eu.chepy.audiokit.utils.jni.JniMediaLib;
 
-public class InternalCoverInputStream extends InputStream {
+public class CoverInputStream extends InputStream {
 
-    public static final String TAG = InternalCoverInputStream.class.getSimpleName();
+    public static final String TAG = CoverInputStream.class.getSimpleName();
 
 
 
@@ -21,7 +21,7 @@ public class InternalCoverInputStream extends InputStream {
 
 
 
-    public InternalCoverInputStream(String filePath) {
+    public CoverInputStream(String filePath) {
         nativeContext = JniMediaLib.coverInputStreamOpen(filePath);
 
         pos = 0;

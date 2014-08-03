@@ -38,14 +38,10 @@ import eu.chepy.audiokit.core.service.providers.AbstractEmptyContentAction;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.AbstractProviderAction;
 import eu.chepy.audiokit.core.service.providers.Metadata;
-import eu.chepy.audiokit.core.service.providers.local.entities.Album;
-import eu.chepy.audiokit.core.service.providers.local.entities.AlbumArtist;
-import eu.chepy.audiokit.core.service.providers.local.entities.Artist;
-import eu.chepy.audiokit.core.service.providers.local.entities.Genre;
-import eu.chepy.audiokit.core.service.providers.local.entities.Media;
-import eu.chepy.audiokit.core.service.providers.local.entities.Playlist;
-import eu.chepy.audiokit.core.service.providers.local.entities.PlaylistEntry;
-import eu.chepy.audiokit.core.service.providers.local.entities.ScanDirectory;
+import eu.chepy.audiokit.core.service.providers.local.database.Entities;
+import eu.chepy.audiokit.core.service.providers.local.database.OpenHelper;
+import eu.chepy.audiokit.core.service.providers.local.ui.activities.SearchPathActivity;
+import eu.chepy.audiokit.core.service.providers.local.ui.activities.SettingsActivity;
 import eu.chepy.audiokit.ui.activities.SoundEffectsActivity;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
@@ -63,7 +59,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
 
-    private InternalDatabaseOpenHelper databaseOpenHelper;
+    private OpenHelper openHelper;
 
     private int providerId;
 
@@ -130,7 +126,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         this.mediaManager = mediaManager;
         this.providerId = providerId;
 
-        databaseOpenHelper = new InternalDatabaseOpenHelper(PlayerApplication.context, providerId);
+        openHelper = new OpenHelper(PlayerApplication.context, providerId);
         scanListeners = new ArrayList<OnLibraryChangeListener>();
 
         currentFolder = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
@@ -138,29 +134,29 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     public SQLiteDatabase getWritableDatabase() {
-        return databaseOpenHelper.getWritableDatabase();
+        return openHelper.getWritableDatabase();
     }
 
     public SQLiteDatabase getReadableDatabase() {
-        return databaseOpenHelper.getReadableDatabase();
+        return openHelper.getReadableDatabase();
     }
 
     public void setLastPlayed(String mediaUri) {
         SQLiteDatabase database = getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(Media.COLUMN_FIELD_LAST_PLAYED, new Date().getTime());
+        values.put(Entities.Media.COLUMN_FIELD_LAST_PLAYED, new Date().getTime());
 
-        final String where = Media.COLUMN_FIELD_URI + " = ?";
+        final String where = Entities.Media.COLUMN_FIELD_URI + " = ?";
         final String whereArgs[] = new String[] {
                 mediaUri
         };
 
-        database.update(Media.TABLE_NAME, values, where, whereArgs);
+        database.update(Entities.Media.TABLE_NAME, values, where, whereArgs);
     }
 
     @Override
     public void erase() {
-        databaseOpenHelper.deleteDatabaseFile();
+        openHelper.deleteDatabaseFile();
 
         File filePath = PlayerApplication.context.getFilesDir();
         if (filePath != null) {
@@ -258,12 +254,12 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public boolean play(ContentType contentType, String sourceId, int sortOrder, int position, String filter) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             if (MusicConnector.playerService != null) {
                 try {
-                    database.delete(PlaylistEntry.TABLE_NAME, PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
+                    database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
                         if (currentFolder.getParentFile() != null) {
                             position--; // bypass position[0] (parent file).
@@ -299,7 +295,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public boolean playNext(ContentType contentType, String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             if (MusicConnector.playerService != null) {
@@ -333,15 +329,15 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public String playlistNew(String playlistName) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(Playlist.COLUMN_FIELD_PLAYLIST_NAME, playlistName);
-            contentValues.put(Playlist.COLUMN_FIELD_VISIBLE, true);
-            contentValues.put(Playlist.COLUMN_FIELD_USER_HIDDEN, false);
+            contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, playlistName);
+            contentValues.put(Entities.Playlist.COLUMN_FIELD_VISIBLE, true);
+            contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
 
-            return String.valueOf(database.insert(Playlist.TABLE_NAME, null, contentValues));
+            return String.valueOf(database.insert(Entities.Playlist.TABLE_NAME, null, contentValues));
         }
 
         return null;
@@ -349,20 +345,20 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public boolean playlistDelete(String playlistId) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (playlistId == null) {
             playlistId = "0";
         }
 
         return database != null &&
-                database.delete(Playlist.TABLE_NAME, Playlist.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[] { playlistId}) > 0 &&
-                database.delete(PlaylistEntry.TABLE_NAME, PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[] { playlistId}) > 0;
+                database.delete(Entities.Playlist.TABLE_NAME, Entities.Playlist._ID + " = ?", new String[] { playlistId}) > 0 &&
+                database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[] { playlistId}) > 0;
     }
 
     @Override
     public boolean playlistAdd(String playlistId, ContentType contentType, String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        SQLiteDatabase database = openHelper.getReadableDatabase();
 
         if (playlistId == null) {
             playlistId = "0";
@@ -374,9 +370,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     int position = 0;
 
                     Cursor cursor = database.query(
-                            PlaylistEntry.TABLE_NAME,
+                            Entities.PlaylistEntry.TABLE_NAME,
                             new String[] { "COUNT(*) AS CNT" },
-                            PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
+                            Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
                             new String[] {playlistId},
                             null,
                             null,
@@ -426,7 +422,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             playlistId = "0";
         }
 
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
         if (database != null) {
             database.beginTransaction();
             try {
@@ -436,54 +432,54 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
                     // Playlist is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + ")"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + ")"
                     );
 
                     // Playlist is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
                     );
 
 
                     // Playlist is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + " " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + " " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
                     );
                 } else {
                     int lowerIndex = Math.min(moveFrom, moveTo);
                     int upperIndex = Math.max(moveFrom, moveTo);
 
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + ")"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + ")"
                     );
 
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + PlaylistEntry.COLUMN_FIELD_POSITION + " + 1 " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + 1 " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
                     );
 
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + " " +
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + " " +
                                     "WHERE " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
                     );
                 }
                 database.setTransactionSuccessful();
@@ -499,13 +495,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public void playlistRemove(String playlistId, int position) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
         if (database != null) {
             database.beginTransaction();
             try {
                 database.delete(
-                        PlaylistEntry.TABLE_NAME,
-                        PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? AND " + PlaylistEntry.COLUMN_FIELD_POSITION + " = ? ",
+                        Entities.PlaylistEntry.TABLE_NAME,
+                        Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? AND " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = ? ",
                         new String[]{
                                 playlistId,
                                 String.valueOf(position),
@@ -513,9 +509,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 );
 
                 database.execSQL(
-                        "UPDATE " + PlaylistEntry.TABLE_NAME + " " +
-                                "SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = " + PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
-                                "WHERE (" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) AND (" + PlaylistEntry.COLUMN_FIELD_POSITION + " >= ?) ",
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
+                                "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) AND (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= ?) ",
                         new String[]{
                                 playlistId,
                                 String.valueOf(position),
@@ -534,14 +530,14 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public void playlistClear(String playlistId) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (playlistId == null) {
             playlistId = "0";
         }
 
         if (database != null) {
-            database.delete(PlaylistEntry.TABLE_NAME, PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[]{playlistId});
+            database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[]{playlistId});
         }
     }
 
@@ -778,13 +774,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doToggleAlbumVisibility(String albumId) {
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + Album.TABLE_NAME +
-                            "   SET " + Album.COLUMN_FIELD_USER_HIDDEN + " = ~" + Album.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Album.COLUMN_FIELD_ALBUM_ID + " = " + albumId
+                    "UPDATE " + Entities.Album.TABLE_NAME +
+                            "   SET " + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.Album._ID + " = " + albumId
             );
 
             doNotifyLibraryChanges();
@@ -795,13 +791,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doToggleAlbumArtistVisibility(String albumArtistId) {
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + AlbumArtist.TABLE_NAME +
-                            "   SET " + AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = ~" + AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + AlbumArtist.COLUMN_FIELD_ARTIST_ID + " = " + albumArtistId
+                    "UPDATE " + Entities.AlbumArtist.TABLE_NAME +
+                            "   SET " + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.AlbumArtist._ID + " = " + albumArtistId
             );
 
             doNotifyLibraryChanges();
@@ -812,13 +808,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doToggleArtistVisibility(String artistId) {
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + Artist.TABLE_NAME +
-                            "   SET " + Artist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Artist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Artist.COLUMN_FIELD_ARTIST_ID + " = " + artistId
+                    "UPDATE " + Entities.Artist.TABLE_NAME +
+                            "   SET " + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.Artist._ID + " = " + artistId
             );
 
             doNotifyLibraryChanges();
@@ -830,13 +826,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     protected boolean doToggleGenreVisibility(String genreId) {
 
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + Genre.TABLE_NAME +
-                            "   SET " + Genre.COLUMN_FIELD_USER_HIDDEN + " = ~" + Genre.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Genre.COLUMN_FIELD_GENRE_ID + " = " + genreId
+                    "UPDATE " + Entities.Genre.TABLE_NAME +
+                            "   SET " + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.Genre._ID + " = " + genreId
             );
 
             doNotifyLibraryChanges();
@@ -847,13 +843,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doToggleMediaVisibility(String mediaId) {
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + Media.TABLE_NAME +
-                            "   SET " + Media.COLUMN_FIELD_USER_HIDDEN + " = ~" + Media.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Media.COLUMN_FIELD_ID + " = " + mediaId
+                    "UPDATE " + Entities.Media.TABLE_NAME +
+                            "   SET " + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.Media._ID + " = " + mediaId
             );
 
             doNotifyLibraryChanges();
@@ -864,13 +860,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doTogglePlaylistVisibility(String playlistId) {
-        final SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             database.execSQL(
-                    "UPDATE " + Playlist.TABLE_NAME +
-                            "   SET " + Playlist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Playlist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Playlist.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId
+                    "UPDATE " + Entities.Playlist.TABLE_NAME +
+                            "   SET " + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " " +
+                            "WHERE " + Entities.Playlist._ID + " = " + playlistId
             );
 
             doNotifyLibraryChanges();
@@ -907,13 +903,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         for (int field : requestedFields) {
             switch (field) {
                 case ALBUM_ARTIST_ID:
-                    columnsList.add(AlbumArtist.COLUMN_FIELD_ARTIST_ID);
+                    columnsList.add(Entities.AlbumArtist._ID);
                     break;
                 case ALBUM_ARTIST_NAME:
-                    columnsList.add(AlbumArtist.COLUMN_FIELD_ARTIST_NAME);
+                    columnsList.add(Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME);
                     break;
                 case ALBUM_ARTIST_VISIBLE:
-                    columnsList.add("(" + AlbumArtist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
+                    columnsList.add("(" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
         }
@@ -928,22 +924,22 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -ALBUM_ARTIST_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
         }
 
-        String where = MusicConnector.show_hidden ? null : "(" + AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
+        String where = MusicConnector.show_hidden ? null : "(" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (where != null) {
@@ -953,13 +949,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 where = "";
             }
 
-            where = where + "(" + AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " LIKE '%" + filter + "%')";
+            where = where + "(" + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " LIKE '%" + filter + "%')";
         }
 
         // query.
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
-            return database.query(AlbumArtist.TABLE_NAME, columns, where, null, null, null, orderBy);
+            return database.query(Entities.AlbumArtist.TABLE_NAME, columns, where, null, null, null, orderBy);
         }
         return null;
     }
@@ -970,16 +966,16 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaProvider.ALBUM_ID:
-                    columnsList.add(Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ID);
+                    columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album._ID);
                     break;
                 case AbstractMediaProvider.ALBUM_NAME:
-                    columnsList.add(Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_NAME);
+                    columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME);
                     break;
                 case AbstractMediaProvider.ALBUM_ARTIST:
-                    columnsList.add(Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ARTIST);
+                    columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST);
                     break;
                 case AbstractMediaProvider.ALBUM_VISIBLE:
-                    columnsList.add("(" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_USER_HIDDEN + "= 0)");
+                    columnsList.add("(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
         }
@@ -994,39 +990,39 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -ALBUM_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE DESC";
                     break;
                 case ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
         }
 
         // setting details arguments
-        String selection = MusicConnector.show_hidden ? "" : "(" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
+        String selection = MusicConnector.show_hidden ? "" : "(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
         String[] selectionArgs = null;
         String groupBy = null;
 
-        String tableDescription = Album.TABLE_NAME;
+        String tableDescription = Entities.Album.TABLE_NAME;
 
         String localSourceId = sourceId;
         if (localSourceId == null) {
@@ -1037,25 +1033,25 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " = ? ";
+                selection = selection + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " = ? ";
                 selectionArgs = new String[] {
                         localSourceId
                 };
                 break;
             case CONTENT_TYPE_GENRE:
                 tableDescription =
-                        Album.TABLE_NAME + " JOIN " + Media.TABLE_NAME +
-                                " ON " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID + " = " + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ID;
+                        Entities.Album.TABLE_NAME + " JOIN " + Entities.Media.TABLE_NAME +
+                                " ON " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID;
 
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
 
-                selection = selection + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_GENRE_ID + " = ? ";
+                selection = selection + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_GENRE_ID + " = ? ";
                 selectionArgs = new String[] {
                         localSourceId
                 };
-                groupBy = Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID;
+                groupBy = Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID;
                 break;
             /*
             case CONTENT_TYPE_ARTIST:
@@ -1070,12 +1066,12 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             selection = selection + " AND ";
 
             selection = selection + "(" +
-                    "(" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
-                    "(" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_NAME + " LIKE '%" + filter + "%') " + ")";
+                    "(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
+                    "(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " LIKE '%" + filter + "%') " + ")";
         }
 
         // query.
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
             return database.query(tableDescription, columns, selection, selectionArgs, groupBy, null, orderBy);
         }
@@ -1088,13 +1084,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaProvider.ARTIST_ID:
-                    columnsList.add(Artist.COLUMN_FIELD_ARTIST_ID);
+                    columnsList.add(Entities.Artist._ID);
                     break;
                 case AbstractMediaProvider.ARTIST_NAME:
-                    columnsList.add(Artist.COLUMN_FIELD_ARTIST_NAME);
+                    columnsList.add(Entities.Artist.COLUMN_FIELD_ARTIST_NAME);
                     break;
                 case AbstractMediaProvider.ARTIST_VISIBLE:
-                    columnsList.add("(" + Artist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
+                    columnsList.add("(" + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
         }
@@ -1109,22 +1105,22 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -ARTIST_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
         }
 
-        String selection = MusicConnector.show_hidden ? null : AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
+        String selection = MusicConnector.show_hidden ? null : Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (selection != null) {
@@ -1135,13 +1131,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             }
 
             selection = selection + "(" +
-                    "(" + Artist.COLUMN_FIELD_ARTIST_NAME + " LIKE '%" + filter + "%') " + ")";
+                    "(" + Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " LIKE '%" + filter + "%') " + ")";
         }
 
         // query.
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
-            return database.query(Artist.TABLE_NAME, columns, selection, null, null, null, orderBy);
+            return database.query(Entities.Artist.TABLE_NAME, columns, selection, null, null, null, orderBy);
         }
         return null;
     }
@@ -1152,13 +1148,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaProvider.GENRE_ID:
-                    columnsList.add(Genre.COLUMN_FIELD_GENRE_ID);
+                    columnsList.add(Entities.Genre._ID);
                     break;
                 case AbstractMediaProvider.GENRE_NAME:
-                    columnsList.add(Genre.COLUMN_FIELD_GENRE_NAME);
+                    columnsList.add(Entities.Genre.COLUMN_FIELD_GENRE_NAME);
                     break;
                 case AbstractMediaProvider.GENRE_VISIBLE:
-                    columnsList.add("(" + Genre.COLUMN_FIELD_USER_HIDDEN + "= 0)");
+                    columnsList.add("(" + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
         }
@@ -1173,22 +1169,22 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -GENRE_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE ASC";
         }
 
-        String selection = MusicConnector.show_hidden ? null : Genre.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
+        String selection = MusicConnector.show_hidden ? null : Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (selection != null) {
@@ -1199,13 +1195,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             }
 
             selection = selection + "(" +
-                    "(" + Genre.COLUMN_FIELD_GENRE_NAME + " LIKE '%" + filter + "%') " + ")";
+                    "(" + Entities.Genre.COLUMN_FIELD_GENRE_NAME + " LIKE '%" + filter + "%') " + ")";
         }
 
         // query.
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
-            return database.query(Genre.TABLE_NAME, columns, selection, null, null, null, orderBy);
+            return database.query(Entities.Genre.TABLE_NAME, columns, selection, null, null, null, orderBy);
         }
         return null;
     }
@@ -1217,13 +1213,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaProvider.PLAYLIST_ID:
-                    columnsList.add(Playlist.COLUMN_FIELD_PLAYLIST_ID);
+                    columnsList.add(Entities.Playlist._ID);
                     break;
                 case AbstractMediaProvider.PLAYLIST_NAME:
-                    columnsList.add(Playlist.COLUMN_FIELD_PLAYLIST_NAME);
+                    columnsList.add(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME);
                     break;
                 case AbstractMediaProvider.PLAYLIST_VISIBLE:
-                    columnsList.add("(" + Playlist.COLUMN_FIELD_VISIBLE + "<> 0) AND (" + Playlist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
+                    columnsList.add("(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + "<> 0) AND (" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
         }
@@ -1238,35 +1234,35 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -PLAYLIST_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE ASC";
         }
 
         String selection = MusicConnector.show_hidden ?
-                "(" + Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Playlist.COLUMN_FIELD_PLAYLIST_ID + " <> 0)" :
-                "(" + Playlist.COLUMN_FIELD_USER_HIDDEN + " = 0) AND " +
-                        "(" + Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Playlist.COLUMN_FIELD_PLAYLIST_ID + " <> 0)";
+                "(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Playlist._ID + " <> 0)" :
+                "(" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " = 0) AND " +
+                        "(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Playlist._ID + " <> 0)";
 
         if (!TextUtils.isEmpty(filter)) {
             selection = selection + " AND (" +
-                    "(" + Playlist.COLUMN_FIELD_PLAYLIST_NAME + " LIKE '%" + filter + "%') " + ")";
+                    "(" + Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME + " LIKE '%" + filter + "%') " + ")";
         }
 
         // query.
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
-            return database.query(Playlist.TABLE_NAME, columns, selection, null, null, null, orderBy);
+            return database.query(Entities.Playlist.TABLE_NAME, columns, selection, null, null, null, orderBy);
         }
         return null;
     }
@@ -1281,118 +1277,118 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             switch (field) {
                 case AbstractMediaProvider.SONG_ID:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media._ID);
                     break;
                 case AbstractMediaProvider.SONG_URI:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_URI);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI);
                     break;
                 case AbstractMediaProvider.SONG_ART:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ART);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART);
                     break;
                 case AbstractMediaProvider.SONG_DURATION:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_DURATION);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DURATION);
                     break;
                 case AbstractMediaProvider.SONG_BITRATE:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_BITRATE);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_BITRATE);
                     break;
                 case AbstractMediaProvider.SONG_SAMPLE_RATE:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_SAMPLE_RATE);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_SAMPLE_RATE);
                     break;
                 case AbstractMediaProvider.SONG_CODEC:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_CODEC);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_CODEC);
                     break;
                 case AbstractMediaProvider.SONG_SCORE:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_SCORE);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_SCORE);
                     break;
                 case AbstractMediaProvider.SONG_FIRST_PLAYED:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_FIRST_PLAYED);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED);
                     break;
                 case AbstractMediaProvider.SONG_LAST_PLAYED:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_LAST_PLAYED);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED);
                     break;
                 case AbstractMediaProvider.SONG_TITLE:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TITLE);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE);
                     break;
                 case AbstractMediaProvider.SONG_ARTIST:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST);
                     break;
                 case AbstractMediaProvider.SONG_ARTIST_ID:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST_ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST_ID);
                     break;
                 case AbstractMediaProvider.SONG_ALBUM_ARTIST:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ARTIST);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
                     break;
                 case AbstractMediaProvider.SONG_ALBUM_ARTIST_ID:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ARTIST_ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID);
                     break;
                 case AbstractMediaProvider.SONG_ALBUM:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM);
                     break;
                 case AbstractMediaProvider.SONG_ALBUM_ID:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID);
                     break;
                 case AbstractMediaProvider.SONG_GENRE:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_GENRE);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_GENRE);
                     break;
                 case AbstractMediaProvider.SONG_GENRE_ID:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_GENRE_ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_GENRE_ID);
                     break;
                 case AbstractMediaProvider.SONG_YEAR:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_YEAR);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_YEAR);
                     break;
                 case AbstractMediaProvider.SONG_TRACK:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TRACK);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK);
                     break;
                 case AbstractMediaProvider.SONG_DISC:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_DISC);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC);
                     break;
                 case AbstractMediaProvider.SONG_BPM:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_BPM);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_BPM);
                     break;
                 case AbstractMediaProvider.SONG_COMMENT:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_COMMENT);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_COMMENT);
                     break;
                 case AbstractMediaProvider.SONG_LYRICS:
                     usesSongTable = true;
-                    columnsList.add(Media.TABLE_NAME + "." + Media.COLUMN_FIELD_LYRICS);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LYRICS);
                     break;
                 case AbstractMediaProvider.SONG_VISIBLE:
                     usesSongTable = true;
                     columnsList.add(
-                            "(" + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_USER_HIDDEN + "= 0) AND (" + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_VISIBLE + " <> 0)"
+                            "(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_USER_HIDDEN + "= 0) AND (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0)"
                     );
                     break;
 //                case AbstractMediaProvider.SONG_HAS_EMBEDDED_ART:
                 case AbstractMediaProvider.PLAYLIST_ENTRY_ID:
                     usesPlaylistEntryTable = true;
-                    columnsList.add(PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_ENTRY_ID);
+                    columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID);
                     break;
                 case AbstractMediaProvider.PLAYLIST_ENTRY_POSITION:
                     usesPlaylistEntryTable = true;
-                    columnsList.add(PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_POSITION);
+                    columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION);
                     break;
             }
         }
@@ -1405,134 +1401,134 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_URI:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
                     break;
                 case SONG_FIRST_PLAYED:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_FIRST_PLAYED:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
                     break;
                 case SONG_LAST_PLAYED:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_LAST_PLAYED:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
                     break;
                 case SONG_TITLE:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_TITLE:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ALBUM:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ALBUM:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
                     break;
                 case SONG_TRACK:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_TRACK:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
                     break;
                 case SONG_DISC:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_DISC:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
                     break;
                 case PLAYLIST_ENTRY_POSITION:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_POSITION + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " COLLATE NOCASE ASC";
                     break;
                 case -PLAYLIST_ENTRY_POSITION:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_POSITION + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
+            orderBy = Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
         }
 
-        String showFiles = usesPlaylistEntryTable ? " OR (" + Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " <> 0)" : "";
+        String showFiles = usesPlaylistEntryTable ? " OR (" + Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " <> 0)" : "";
 
         String selection = MusicConnector.show_hidden ?
-                "((" + Media.COLUMN_FIELD_VISIBLE + " <> 0) " + showFiles + ")" :
-                "(((" + Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Media.COLUMN_FIELD_USER_HIDDEN + " = 0))" +
+                "((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " + showFiles + ")" :
+                "(((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0))" +
                         showFiles + ")";
         String[] selectionArgs = null;
 
@@ -1545,7 +1541,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + "(" + Media.COLUMN_FIELD_ID + " = ?) ";
+                selection = selection + "(" + Entities.Media._ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1554,7 +1550,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + "(" + Media.COLUMN_FIELD_ARTIST_ID + " = ?) ";
+                selection = selection + "(" + Entities.Media.COLUMN_FIELD_ARTIST_ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1563,7 +1559,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + "(" + Media.COLUMN_FIELD_ALBUM_ID + " = ?) ";
+                selection = selection + "(" + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1574,7 +1570,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 }
 
                 usesPlaylistEntryTable = true;
-                selection = selection + "(" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) ";
+                selection = selection + "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1583,7 +1579,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + "(" + Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = ?) ";
+                selection = selection + "(" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1592,7 +1588,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (!TextUtils.isEmpty(selection)) {
                     selection = selection + " AND ";
                 }
-                selection = selection + "(" + Media.COLUMN_FIELD_GENRE_ID + " = ?) ";
+                selection = selection + "(" + Entities.Media.COLUMN_FIELD_GENRE_ID + " = ?) ";
                 selectionArgs = new String[] {
                         sourceId
                 };
@@ -1601,29 +1597,29 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         if (!TextUtils.isEmpty(filter)) {
             selection = selection + "AND (" +
-                    "(" + Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
-                    "(" + Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
-                    "(" + Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
-                    "(" + Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
-                    "(" + Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
+                    "(" + Entities.Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
+                    "(" + Entities.Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
+                    "(" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
+                    "(" + Entities.Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
+                    "(" + Entities.Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
         }
 
         // query.
-        String tableDescription = Media.TABLE_NAME;
+        String tableDescription = Entities.Media.TABLE_NAME;
         if (usesPlaylistEntryTable) {
             if (usesSongTable) {
                 tableDescription =
 
-                        PlaylistEntry.TABLE_NAME + " JOIN " + Media.TABLE_NAME +
-                                " ON " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ID + " = " +
-                                PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_SONG_ID;
+                        Entities.PlaylistEntry.TABLE_NAME + " JOIN " + Entities.Media.TABLE_NAME +
+                                " ON " + Entities.Media.TABLE_NAME + "." + Entities.Media._ID + " = " +
+                                Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID;
             }
             else {
-                tableDescription = PlaylistEntry.TABLE_NAME;
+                tableDescription = Entities.PlaylistEntry.TABLE_NAME;
             }
         }
 
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
             return database.query(tableDescription, columns, selection, selectionArgs, null, null, orderBy);
         }
@@ -1854,19 +1850,19 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected InputStream getSongArt(String songId) {
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database == null) {
             return null;
         }
 
         final String[] columns = new String[] {
-                Media.COLUMN_FIELD_URI,
-                Media.COLUMN_FIELD_ART,
-                Media.COLUMN_FIELD_HAS_EMBEDDED_ART,
-                Media.COLUMN_FIELD_USE_EMBEDDED_ART
+                Entities.Media.COLUMN_FIELD_URI,
+                Entities.Media.COLUMN_FIELD_ART,
+                Entities.Media.COLUMN_FIELD_HAS_EMBEDDED_ART,
+                Entities.Media.COLUMN_FIELD_USE_EMBEDDED_ART
         };
 
-        final String selection = Media.COLUMN_FIELD_ID + " = ? ";
+        final String selection = Entities.Media._ID + " = ? ";
 
         final String[] selectionArgs = new String[] {
                 songId
@@ -1881,7 +1877,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
         String songArtUri = null;
-        Cursor cursor = database.query(Media.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(Entities.Media.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
 
@@ -1917,17 +1913,17 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected InputStream getAlbumArt(String albumId) {
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database == null) {
             return null;
         }
 
-        final String[] columns = new String[] { Album.COLUMN_FIELD_ALBUM_ART };
-        final String selection = Album.COLUMN_FIELD_ALBUM_ID + " = ? ";
+        final String[] columns = new String[] { Entities.Album.COLUMN_FIELD_ALBUM_ART };
+        final String selection = Entities.Album._ID + " = ? ";
         final String[] selectionArgs = new String[] { albumId };
 
         String albumArtUri = null;
-        Cursor cursor = database.query(Album.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(Entities.Album.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             albumArtUri = cursor.getString(0);
@@ -1949,7 +1945,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected void doUpdateAlbumCover(String albumId, String uri, boolean updateTracks) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
             final String whereAlbumId[] = new String[] {
@@ -1957,17 +1953,17 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             };
 
             ContentValues contentValues = new ContentValues();
-            contentValues.put(Album.COLUMN_FIELD_ALBUM_ART, uri);
+            contentValues.put(Entities.Album.COLUMN_FIELD_ALBUM_ART, uri);
 
-            database.update(Album.TABLE_NAME, contentValues, Album.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
+            database.update(Entities.Album.TABLE_NAME, contentValues, Entities.Album._ID + " = ? ", whereAlbumId);
 
 
             if (updateTracks) {
                 contentValues.clear();
-                contentValues.put(Media.COLUMN_FIELD_ART, uri);
-                contentValues.put(Media.COLUMN_FIELD_USE_EMBEDDED_ART, false);
+                contentValues.put(Entities.Media.COLUMN_FIELD_ART, uri);
+                contentValues.put(Entities.Media.COLUMN_FIELD_USE_EMBEDDED_ART, false);
 
-                database.update(Media.TABLE_NAME, contentValues, Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
+                database.update(Entities.Media.TABLE_NAME, contentValues, Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
             }
 
             doNotifyLibraryChanges();
@@ -2045,16 +2041,16 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean mediaExistsInDb(String mediaUri) {
-        SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
+        SQLiteDatabase database = openHelper.getReadableDatabase();
 
         if (database == null) {
             return true; // error, will be added in next scan.
         }
 
         Cursor cursor = database.query(
-                Media.TABLE_NAME,
-                new String[] { Media.COLUMN_FIELD_ID },
-                Media.COLUMN_FIELD_URI + " = ? ",
+                Entities.Media.TABLE_NAME,
+                new String[] { Entities.Media._ID},
+                Entities.Media.COLUMN_FIELD_URI + " = ? ",
                 new String[] { mediaUri },
                 null,
                 null,
@@ -2079,67 +2075,84 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
 
         scanning = true;
-        scanContext.scannerDatabaseHandle = databaseOpenHelper.getWritableDatabase();
+        scanContext.database = openHelper.getWritableDatabase();
 
-        if (scanContext.scannerDatabaseHandle != null) {
-            /*
-                Firstly, checking for deleted files.
-             */
-            final String[] projection = new String[] {
-                    Media.COLUMN_FIELD_ID,
-                    Media.COLUMN_FIELD_URI
-            };
+        Cursor acceptCursor = null;
+        Cursor discardCursor = null;
 
-            Cursor cursor = scanContext.scannerDatabaseHandle.query(Media.TABLE_NAME, projection, null, null, null, null, null);
-            if (cursor != null) {
-                int indexOfId = cursor.getColumnIndexOrThrow(Media.COLUMN_FIELD_ID);
-                int indexOfFilePath = cursor.getColumnIndexOrThrow(Media.COLUMN_FIELD_URI);
+        try {
+            if (scanContext.database != null) {
+                /*
+                    Firstly, checking for deleted files.
+                */
+                final String[] projection = new String[]{
+                        Entities.Media._ID,
+                        Entities.Media.COLUMN_FIELD_URI
+                };
 
-                while (cursor.moveToNext()) {
-                    //Log.i(TAG, "scan : " + PlayerApplication.uriToFile(cursor.getString(indexOfFilePath)));
-                    if (!PlayerApplication.uriToFile(cursor.getString(indexOfFilePath)).exists()) {
-                        final String where = Media.COLUMN_FIELD_ID + " = ? ";
-                        final String[] selectionArgs = new String[] {
-                                String.valueOf(cursor.getInt(indexOfId))
-                        };
+                Cursor cursor = scanContext.database.query(Entities.Media.TABLE_NAME, projection, null, null, null, null, null);
 
-                        Log.i(TAG, "!Media : " + cursor.getString(indexOfFilePath));
-                        scanContext.scannerDatabaseHandle.delete(Media.TABLE_NAME, where, selectionArgs);
+                if (cursor != null) {
+                    int indexOfId = cursor.getColumnIndexOrThrow(Entities.Media._ID);
+                    int indexOfFilePath = cursor.getColumnIndexOrThrow(Entities.Media.COLUMN_FIELD_URI);
+
+                    while (cursor.moveToNext()) {
+                        // Checking for deleted files
+                        final File mediaFile = PlayerApplication.uriToFile(cursor.getString(indexOfFilePath));
+                        if (!mediaFile.exists()) {
+                            final String where = Entities.Media._ID + " = ? ";
+                            final String[] selectionArgs = new String[]{
+                                    String.valueOf(cursor.getInt(indexOfId))
+                            };
+
+                            Log.i(TAG, "!Media : " + cursor.getString(indexOfFilePath));
+                            scanContext.database.delete(Entities.Media.TABLE_NAME, where, selectionArgs);
+                        }
                     }
+                    cursor.close();
                 }
-                cursor.close();
-            }
 
-            /*
-                Next, we make a list of forbidden paths.
-             */
-            final String pathProjection[] = new String[] {
-                    ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
-            };
+                /*
+                    Next, we make a list of forbidden paths.
+                */
+                final String pathProjection[] = new String[]{
+                        Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
+                };
 
-            final String selection = ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ? ";
+                final String selection = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ? ";
 
-            final String selectionAccept[] = new String[] {
-                    "0"
-            };
+                final String selectionAccept[] = new String[]{
+                        "0"
+                };
 
-            final String selectionDiscard[] = new String[] {
-                    "1"
-            };
+                final String selectionDiscard[] = new String[]{
+                        "1"
+                };
 
-            ArrayList<File> acceptList = new ArrayList<File>();
+                ArrayList<File> acceptList = new ArrayList<File>();
 
-            SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
-
-            if (database != null) {
-                Cursor acceptCursor = database.query(ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
-                Cursor discardCursor = database.query(ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
+                acceptCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
+                discardCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
 
                 Map<String, Boolean> discardMap = new HashMap<String, Boolean>();
                 if (discardCursor != null && discardCursor.getCount() > 0) {
+                    scanContext.database.beginTransaction();
+
                     while (discardCursor.moveToNext()) {
-                        discardMap.put(discardCursor.getString(0), true);
+                        final String discardPath = discardCursor.getString(0);
+                        discardMap.put(discardPath, true);
+
+                        scanContext.database.delete(
+                                Entities.Media.TABLE_NAME,
+                                Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
+                                new String[]{
+                                        "file://" + discardPath + File.separator + "%"
+                                }
+                        );
                     }
+
+                    scanContext.database.setTransactionSuccessful();
+                    scanContext.database.endTransaction();
                 }
 
                 if (acceptCursor != null && acceptCursor.getCount() > 0) {
@@ -2153,15 +2166,74 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     doSyncDirectoryScan(acceptList, discardMap, scanContext);
                 }
 
-                if (acceptCursor != null) {
-                    acceptCursor.close();
-                }
+                scanContext.database.beginTransaction();
 
-                if (discardCursor != null) {
-                    discardCursor.close();
-                }
+                Log.w(TAG, "Updating albums");
+                scanContext.database.delete(
+                        Entities.Album.TABLE_NAME,
+                        Entities.Album._ID + " NOT IN ( " +
+                                "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " " +
+                                "FROM " + Entities.Media.TABLE_NAME + " " +
+                                "GROUP BY " + Entities.Media.COLUMN_FIELD_ALBUM_ID +
+                                ")",
+                        null
+                );
+
+                Log.w(TAG, "Updating Album artists");
+                scanContext.database.delete(
+                        Entities.AlbumArtist.TABLE_NAME,
+                        Entities.AlbumArtist._ID + " NOT IN ( " +
+                                "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " " +
+                                "FROM " + Entities.Media.TABLE_NAME + " " +
+                                "GROUP BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID +
+                                ")",
+                        null
+                );
+
+                Log.w(TAG, "Updating Artists");
+                scanContext.database.delete(
+                        Entities.Artist.TABLE_NAME,
+                        Entities.Artist._ID + " NOT IN ( " +
+                                "SELECT " + Entities.Media.COLUMN_FIELD_ARTIST_ID + " " +
+                                "FROM " + Entities.Media.TABLE_NAME + " " +
+                                "GROUP BY " + Entities.Media.COLUMN_FIELD_ARTIST_ID +
+                                ")",
+                        null
+                );
+
+                Log.w(TAG, "Updating Genres");
+                scanContext.database.delete(
+                        Entities.Genre.TABLE_NAME,
+                        Entities.Genre._ID + " NOT IN ( " +
+                                "SELECT " + Entities.Media.COLUMN_FIELD_GENRE_ID + " " +
+                                "FROM " + Entities.Media.TABLE_NAME + " " +
+                                "GROUP BY " + Entities.Media.COLUMN_FIELD_GENRE_ID +
+                                ")",
+                        null
+                );
+                scanContext.database.setTransactionSuccessful();
+                scanContext.database.endTransaction();
+
+                scanContext.database = null;
             }
         }
+        catch (final Exception exception) {
+            LogUtils.LOGException(TAG, "doSyncStartScan", 0, exception);
+        }
+        finally {
+            if (scanContext.database != null && scanContext.database.inTransaction()) {
+                scanContext.database.endTransaction();
+            }
+
+            if (acceptCursor != null) {
+                acceptCursor.close();
+            }
+
+            if (discardCursor != null) {
+                discardCursor.close();
+            }
+        }
+
         scanning = false;
 
         for (OnLibraryChangeListener libraryChangeListener : scanListeners) {
@@ -2177,7 +2249,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
 
         if (id == null) {
-            Cursor artistCursor = scanContext.scannerDatabaseHandle.query(Artist.TABLE_NAME, new String[] {Artist.COLUMN_FIELD_ARTIST_ID}, Artist.COLUMN_FIELD_ARTIST_NAME + " = ?", new String[] { artist }, null, null, null);
+            Cursor artistCursor = scanContext.database.query(Entities.Artist.TABLE_NAME, new String[] {Entities.Artist._ID}, Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " = ?", new String[] { artist }, null, null, null);
 
             if (artistCursor != null && artistCursor.getCount() > 0) {
                 artistCursor.moveToPosition(0);
@@ -2186,10 +2258,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             }
             else {
                 ContentValues artistValues = new ContentValues();
-                artistValues.put(Artist.COLUMN_FIELD_ARTIST_NAME, artist);
-                artistValues.put(Artist.COLUMN_FIELD_USER_HIDDEN, false);
-                artistValues.put(Artist.COLUMN_FIELD_VISIBLE, true);
-                id = scanContext.scannerDatabaseHandle.insert(Artist.TABLE_NAME, null, artistValues);
+                artistValues.put(Entities.Artist.COLUMN_FIELD_ARTIST_NAME, artist);
+                artistValues.put(Entities.Artist.COLUMN_FIELD_USER_HIDDEN, false);
+                artistValues.put(Entities.Artist.COLUMN_FIELD_VISIBLE, true);
+                id = scanContext.database.insert(Entities.Artist.TABLE_NAME, null, artistValues);
                 scanContext.artistIdMap.put(artist, id);
             }
 
@@ -2209,7 +2281,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
 
         if (id == null) {
-            Cursor albumCursor = scanContext.scannerDatabaseHandle.query(Album.TABLE_NAME, new String[]{Album.COLUMN_FIELD_ALBUM_ID}, Album.COLUMN_FIELD_ALBUM_NAME + " = ?", new String[]{album}, null, null, null);
+            Cursor albumCursor = scanContext.database.query(Entities.Album.TABLE_NAME, new String[]{Entities.Album._ID}, Entities.Album.COLUMN_FIELD_ALBUM_NAME + " = ?", new String[]{album}, null, null, null);
 
             if (albumCursor != null && albumCursor.getCount() > 0) {
                 albumCursor.moveToPosition(0);
@@ -2218,9 +2290,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             }
             else {
                 ContentValues albumValues = new ContentValues();
-                albumValues.put(Album.COLUMN_FIELD_ALBUM_NAME, album);
-                albumValues.put(Album.COLUMN_FIELD_USER_HIDDEN, false);
-                id = scanContext.scannerDatabaseHandle.insert(Album.TABLE_NAME, null, albumValues);
+                albumValues.put(Entities.Album.COLUMN_FIELD_ALBUM_NAME, album);
+                albumValues.put(Entities.Album.COLUMN_FIELD_USER_HIDDEN, false);
+                id = scanContext.database.insert(Entities.Album.TABLE_NAME, null, albumValues);
                 scanContext.albumIdMap.put(album, id);
             }
 
@@ -2240,7 +2312,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
 
         if (id == null) {
-            Cursor genreCursor = scanContext.scannerDatabaseHandle.query(Genre.TABLE_NAME, new String[] {Genre.COLUMN_FIELD_GENRE_ID}, Genre.COLUMN_FIELD_GENRE_NAME + " = ?", new String[] { genre }, null, null, null);
+            Cursor genreCursor = scanContext.database.query(Entities.Genre.TABLE_NAME, new String[] {Entities.Genre._ID}, Entities.Genre.COLUMN_FIELD_GENRE_NAME + " = ?", new String[] { genre }, null, null, null);
 
             if (genreCursor != null && genreCursor.getCount() > 0) {
                 genreCursor.moveToPosition(0);
@@ -2249,10 +2321,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             }
             else {
                 ContentValues genreValues = new ContentValues();
-                genreValues.put(Genre.COLUMN_FIELD_GENRE_NAME, genre);
-                genreValues.put(Genre.COLUMN_FIELD_USER_HIDDEN, false);
-                genreValues.put(Genre.COLUMN_FIELD_VISIBLE, true);
-                id = scanContext.scannerDatabaseHandle.insert(Genre.TABLE_NAME, null, genreValues);
+                genreValues.put(Entities.Genre.COLUMN_FIELD_GENRE_NAME, genre);
+                genreValues.put(Entities.Genre.COLUMN_FIELD_USER_HIDDEN, false);
+                genreValues.put(Entities.Genre.COLUMN_FIELD_VISIBLE, true);
+                id = scanContext.database.insert(Entities.Genre.TABLE_NAME, null, genreValues);
                 scanContext.genreIdMap.put(genre, id);
             }
 
@@ -2315,11 +2387,11 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     else if (coverUri.equals("")) {
                         scanContext.coverMap.put(file.getName(), artUri);
 
-                        scanContext.mediaCover.put(Media.COLUMN_FIELD_ART, artUri);
-                        int rows = scanContext.scannerDatabaseHandle.update(
-                                Media.TABLE_NAME,
+                        scanContext.mediaCover.put(Entities.Media.COLUMN_FIELD_ART, artUri);
+                        int rows = scanContext.database.update(
+                                Entities.Media.TABLE_NAME,
                                 scanContext.mediaCover,
-                                Media.COLUMN_FIELD_URI + " LIKE ?",
+                                Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
                                 new String[]{file.getName() + File.separator + "%"});
                         Log.w(TAG, "Updated covers: " + rows + " rows (" + file.getName() + File.separator + "%" + ") -> " + artUri);
                         return artUri; // done.
@@ -2332,83 +2404,86 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected void updateAlbumArtists(SyncScanContext scanContext) {
-        scanContext.scannerDatabaseHandle.execSQL(
-                "UPDATE " + Album.TABLE_NAME + " SET " +
-                        Album.COLUMN_FIELD_ALBUM_ARTIST + " = ( " +
+        scanContext.database.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                        Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " = ( " +
                         "SELECT " +
-                        "CASE WHEN COUNT(DISTINCT " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST + ") = 1 THEN " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ARTIST + " " +
+                        "CASE WHEN COUNT(DISTINCT " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + ") = 1 THEN " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + " " +
                         "ELSE '" + PlayerApplication.getVariousArtists() + "' " +
                         "END " +
-                        "AS " + Media.COLUMN_FIELD_ARTIST + " " +
-                        "FROM " + Media.TABLE_NAME + " " +
-                        "WHERE (" + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID + " = " + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ID + ") " +
+                        "AS " + Entities.Media.COLUMN_FIELD_ARTIST + " " +
+                        "FROM " + Entities.Media.TABLE_NAME + " " +
+                        "WHERE (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID + ") " +
                         " AND (" +
-                        "(" + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " = 0) " +
-                        "OR (" + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " IS NULL)" +
+                        "(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " = 0) " +
+                        "OR (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " IS NULL)" +
                         ") " +
-                        "GROUP BY " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID +
+                        "GROUP BY " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID +
                         ")");
 
-        scanContext.scannerDatabaseHandle.execSQL(
-                "INSERT OR IGNORE INTO " + AlbumArtist.TABLE_NAME + " (" +
-                        AlbumArtist.COLUMN_FIELD_ARTIST_NAME + ", " +
-                        AlbumArtist.COLUMN_FIELD_VISIBLE + ", " +
-                        AlbumArtist.COLUMN_FIELD_USER_HIDDEN +
+        scanContext.database.execSQL(
+                "INSERT OR IGNORE INTO " + Entities.AlbumArtist.TABLE_NAME + " (" +
+                        Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + ", " +
+                        Entities.AlbumArtist.COLUMN_FIELD_VISIBLE + ", " +
+                        Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN +
                         ") " +
-                        "SELECT " + Album.COLUMN_FIELD_ALBUM_ARTIST + ", -1, 0 " +
-                        "FROM " + Album.TABLE_NAME + " GROUP BY " + Album.COLUMN_FIELD_ALBUM_ARTIST);
+                        "SELECT " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + ", -1, 0 " +
+                        "FROM " + Entities.Album.TABLE_NAME + " GROUP BY " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST
+        );
 
-        scanContext.scannerDatabaseHandle.execSQL(
-                "UPDATE " + Album.TABLE_NAME + " SET " + Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
-                        "SELECT " + AlbumArtist.COLUMN_FIELD_ARTIST_ID + " " +
-                        "FROM " + AlbumArtist.TABLE_NAME + " " +
-                        "WHERE " + AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " = " + Album.COLUMN_FIELD_ALBUM_ARTIST + " " +
-                        "GROUP BY " + AlbumArtist.COLUMN_FIELD_ARTIST_NAME +
+        scanContext.database.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME + " SET " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
+                        "SELECT " + Entities.AlbumArtist._ID + " " +
+                        "FROM " + Entities.AlbumArtist.TABLE_NAME + " " +
+                        "WHERE " + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " = " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " " +
+                        "GROUP BY " + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME +
                         ") " +
-                        "WHERE " + Album.COLUMN_FIELD_ALBUM_ARTIST + " IN (" +
-                        "SELECT " + AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " " +
-                        "FROM " + AlbumArtist.TABLE_NAME +
+                        "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " IN (" +
+                        "SELECT " + Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " " +
+                        "FROM " + Entities.AlbumArtist.TABLE_NAME +
                         ") ");
 
-        scanContext.scannerDatabaseHandle.execSQL(
-                "UPDATE " + Media.TABLE_NAME + " SET " +
-                        Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
-                        "SELECT " + Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " " +
-                        "FROM " + Album.TABLE_NAME + " " +
-                        "WHERE " + Album.COLUMN_FIELD_ALBUM_ID + " = " + Media.COLUMN_FIELD_ALBUM_ID + " " +
-                        "GROUP BY " + Album.COLUMN_FIELD_ALBUM_ID +
+        scanContext.database.execSQL(
+                "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
+                        Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
+                        "SELECT " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " " +
+                        "FROM " + Entities.Album.TABLE_NAME + " " +
+                        "WHERE " + Entities.Album._ID + " = " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " " +
+                        "GROUP BY " + Entities.Album._ID +
                         "), " +
-                        Media.COLUMN_FIELD_ALBUM_ARTIST + " = (" +
-                        "SELECT " + Album.COLUMN_FIELD_ALBUM_ARTIST + " " +
-                        "FROM " + Album.TABLE_NAME + " " +
-                        "WHERE " + Album.COLUMN_FIELD_ALBUM_ID + " = " + Media.COLUMN_FIELD_ALBUM_ID + " " +
-                        "GROUP BY " + Album.COLUMN_FIELD_ALBUM_ID +
+                        Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " = (" +
+                        "SELECT " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " " +
+                        "FROM " + Entities.Album.TABLE_NAME + " " +
+                        "WHERE " + Entities.Album._ID + " = " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " " +
+                        "GROUP BY " + Entities.Album._ID +
                         ") " +
-                        "WHERE " + Media.COLUMN_FIELD_ALBUM_ID + " IN (" +
-                        "SELECT " + Album.COLUMN_FIELD_ALBUM_ID + " " +
-                        "FROM " + Album.TABLE_NAME +
-                        ") ");
+                        "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " IN (" +
+                        "SELECT " + Entities.Album._ID + " " +
+                        "FROM " + Entities.Album.TABLE_NAME +
+                        ") "
+        );
 
-        scanContext.scannerDatabaseHandle.execSQL(
-                "DELETE FROM " + AlbumArtist.TABLE_NAME + " WHERE " + AlbumArtist.COLUMN_FIELD_ARTIST_ID + " NOT IN (" +
-                        "SELECT " + Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " FROM " + Media.TABLE_NAME + ")"
+        scanContext.database.execSQL(
+                "DELETE FROM " + Entities.AlbumArtist.TABLE_NAME + " WHERE " + Entities.AlbumArtist._ID + " NOT IN (" +
+                        "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " FROM " + Entities.Media.TABLE_NAME + ")"
         );
     }
 
     protected void updateAlbumCovers(SyncScanContext scanContext) {
-        scanContext.scannerDatabaseHandle.execSQL(
-                "UPDATE " + Album.TABLE_NAME + " SET " +
-                        Album.COLUMN_FIELD_ALBUM_ART + " = ( " +
-                        "SELECT " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ART  + " " +
-                        "FROM " + Media.TABLE_NAME + " " +
-                        "WHERE " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ALBUM_ID + " = " + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ID + " " +
-                        "  AND " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ART + " IS NOT NULL " +
+        scanContext.database.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                        Entities.Album.COLUMN_FIELD_ALBUM_ART + " = ( " +
+                        "SELECT " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART + " " +
+                        "FROM " + Entities.Media.TABLE_NAME + " " +
+                        "WHERE " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID + " " +
+                        "  AND " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART + " IS NOT NULL " +
                         "UNION " +
                         "SELECT NULL " +
-                        "ORDER BY " + Media.TABLE_NAME + "." + Media.COLUMN_FIELD_ART + " DESC " +
+                        "ORDER BY " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART + " DESC " +
                         "LIMIT 1 " +
                         ") " +
-                        "WHERE (" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ART + " IS NULL) OR (" + Album.TABLE_NAME + "." + Album.COLUMN_FIELD_ALBUM_ART + " = '')");
+                        "WHERE (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART + " IS NULL) OR (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART + " = '')"
+        );
     }
 
     protected void doSyncDirectoryScan(List<File> fileList, Map<String, Boolean> discardMap, SyncScanContext scanContext) {
@@ -2430,8 +2505,8 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             if (currentFile.isDirectory()) {
                 final String path = currentFile.getAbsolutePath();
 
-                if ((discardMap.get(path) == null) || (!discardMap.get(path).equals(true))) {
-//                    Log.d(TAG, "entering: " + currentFile.getName());
+                if (discardMap.get(path) == null || discardMap.get(path).equals(false)) {
+                    Log.d(TAG, "+Path: " + currentFile.getName());
                     fileList.remove(pathIndex);
 
                     // directory content is not empty
@@ -2442,6 +2517,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                             fileList.add(pathIndex, subFile);
                         }
                     }
+                }
+                else {
+                    Log.d(TAG, "-Path: " + currentFile.getName());
+                    fileList.remove(pathIndex);
                 }
             }
             else {
@@ -2459,7 +2538,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
                         String coverUri = getCoverForFile(currentFile.getParentFile(), scanContext);
                         if (!TextUtils.isEmpty(coverUri)) {
-                            mediaTags.put(Media.COLUMN_FIELD_ART, coverUri);
+                            mediaTags.put(Entities.Media.COLUMN_FIELD_ART, coverUri);
                         }
                         else {
                             if (coverUri == null) {
@@ -2468,17 +2547,17 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                     scanContext.coverMap.put(currentFile.getParent(), "");
                                 }
                             }
-                            mediaTags.remove(Media.COLUMN_FIELD_ART);
+                            mediaTags.remove(Entities.Media.COLUMN_FIELD_ART);
                         }
 
 
-                        mediaTags.put(Media.COLUMN_FIELD_ARTIST_ID, getArtistId(mediaTags.getAsString(Media.COLUMN_FIELD_ARTIST), scanContext));
-                        mediaTags.put(Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(mediaTags.getAsString(Media.COLUMN_FIELD_ALBUM), scanContext));
-                        mediaTags.put(Media.COLUMN_FIELD_GENRE_ID, getGenreId(mediaTags.getAsString(Media.COLUMN_FIELD_GENRE), scanContext));
-                        mediaTags.put(Media.COLUMN_FIELD_VISIBLE, true);
-                        mediaTags.put(Media.COLUMN_FIELD_USER_HIDDEN, false);
+                        mediaTags.put(Entities.Media.COLUMN_FIELD_ARTIST_ID, getArtistId(mediaTags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST), scanContext));
+                        mediaTags.put(Entities.Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(mediaTags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM), scanContext));
+                        mediaTags.put(Entities.Media.COLUMN_FIELD_GENRE_ID, getGenreId(mediaTags.getAsString(Entities.Media.COLUMN_FIELD_GENRE), scanContext));
+                        mediaTags.put(Entities.Media.COLUMN_FIELD_VISIBLE, true);
+                        mediaTags.put(Entities.Media.COLUMN_FIELD_USER_HIDDEN, false);
 
-                        scanContext.scannerDatabaseHandle.insert(Media.TABLE_NAME, null, mediaTags);
+                        scanContext.database.insert(Entities.Media.TABLE_NAME, null, mediaTags);
 
                         refreshThreshold++;
                         if (refreshThreshold >= 25) {
@@ -2486,10 +2565,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                             refreshThreshold = 0;
                         }
                     }
-//                    else {
-//                        Log.i(TAG, "=Media : " + mediaUri);
+                    else {
+                        Log.i(TAG, "=Media : " + mediaUri);
                     // nothing to be done.
-//                    }
+                    }
                 }
                 fileList.remove(pathIndex);
             }
@@ -2508,13 +2587,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         scanContext.albumIdMap = null;
         scanContext.genreIdMap.clear();
         scanContext.genreIdMap = null;
-        scanContext.scannerDatabaseHandle = null;
+        System.gc();
 
         doNotifyLibraryChanges();
     }
 
     protected boolean doPlaylistAddContent(String playlistId, int position, ContentType contentType, final String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (playlistId == null) {
             playlistId = "0";
@@ -2525,62 +2604,62 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             String selectionArgs[] = null;
 
             String insertStatement =
-                    "INSERT INTO " + PlaylistEntry.TABLE_NAME + " (" +
-                            PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + ", " +
-                            PlaylistEntry.COLUMN_FIELD_POSITION + ", " +
-                            PlaylistEntry.COLUMN_FIELD_SONG_ID +
+                    "INSERT INTO " + Entities.PlaylistEntry.TABLE_NAME + " (" +
+                            Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + ", " +
+                            Entities.PlaylistEntry.COLUMN_FIELD_POSITION + ", " +
+                            Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID +
                             ") ";
 
             if (contentType == ContentType.CONTENT_TYPE_PLAYLIST) {
                 insertStatement = insertStatement +
-                        "SELECT " + playlistId + ", NULL, " + PlaylistEntry.COLUMN_FIELD_SONG_ID + " ";
+                        "SELECT " + playlistId + ", NULL, " + Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID + " ";
 
                 selectStatement =
-                        "FROM " + PlaylistEntry.TABLE_NAME + " " +
-                                "WHERE " + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + sourceId + " " +
-                                "ORDER BY " + PlaylistEntry.COLUMN_FIELD_POSITION;
+                        "FROM " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + sourceId + " " +
+                                "ORDER BY " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION;
             }
             else {
                 insertStatement = insertStatement +
-                        "SELECT " + playlistId + ", NULL, " + Media.COLUMN_FIELD_ID + " ";
+                        "SELECT " + playlistId + ", NULL, " + Entities.Media._ID + " ";
 
-                selectStatement = "FROM " + Media.TABLE_NAME + " ";
+                selectStatement = "FROM " + Entities.Media.TABLE_NAME + " ";
 
                 selectStatement = selectStatement + (MusicConnector.show_hidden ?
-                        "WHERE (" + Media.COLUMN_FIELD_VISIBLE + " <> 0) " :
-                        "WHERE (" + Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Media.COLUMN_FIELD_USER_HIDDEN + " = 0) ");
+                        "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " :
+                        "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0) ");
 
                 switch (contentType) {
                     case CONTENT_TYPE_DEFAULT:
                         if (!TextUtils.isEmpty(filter)) {
                             selectStatement = selectStatement + " AND (" +
-                                    "(" + Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
+                                    "(" + Entities.Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
+                                    "(" + Entities.Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
+                                    "(" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
+                                    "(" + Entities.Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
+                                    "(" + Entities.Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
                         }
 
                         break;
                     case CONTENT_TYPE_MEDIA:
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_ID + " = " + sourceId + ") ";
+                                "AND (" + Entities.Media._ID + " = " + sourceId + ") ";
                         break;
                     case CONTENT_TYPE_GENRE:
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_GENRE_ID + " = " + sourceId + ") ";
+                                "AND (" + Entities.Media.COLUMN_FIELD_GENRE_ID + " = " + sourceId + ") ";
                         break;
                     case CONTENT_TYPE_ARTIST:
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_ARTIST_ID + " = " + sourceId + ") ";
+                                "AND (" + Entities.Media.COLUMN_FIELD_ARTIST_ID + " = " + sourceId + ") ";
                         break;
                     case CONTENT_TYPE_ALBUM:
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_ALBUM_ID + " = " + sourceId + ") ";
+                                "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + sourceId + ") ";
                         break;
                     case CONTENT_TYPE_ALBUM_ARTIST:
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = " + sourceId + ") ";
+                                "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = " + sourceId + ") ";
                         break;
                     case CONTENT_TYPE_STORAGE:
                         String decodedSourceId;
@@ -2591,7 +2670,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                             return false;
                         }
                         selectStatement = selectStatement +
-                                "AND (" + Media.COLUMN_FIELD_URI + " = ?) ";
+                                "AND (" + Entities.Media.COLUMN_FIELD_URI + " = ?) ";
 
                         selectionArgs = new String[] {
                                 decodedSourceId
@@ -2603,58 +2682,58 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
                 switch (sortOrder) {
                     case SONG_URI:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_URI:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
                         break;
                     case SONG_FIRST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_FIRST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
                         break;
                     case SONG_LAST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_LAST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
                         break;
                     case SONG_TITLE:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_TITLE:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
                         break;
                     case SONG_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
                         break;
                     case SONG_ALBUM_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_ALBUM_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
                         break;
                     case SONG_ALBUM:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_ALBUM:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
                         break;
                     case SONG_TRACK:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_TRACK:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
                         break;
                     case SONG_DISC:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
                         break;
                     case -SONG_DISC:
-                        selectStatement = selectStatement + "ORDER BY " + Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
+                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
                         break;
                 }
             }
@@ -2668,24 +2747,24 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     addedCount = cursor.getInt(0);
 
                     database.execSQL(
-                            "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " +
-                                    PlaylistEntry.COLUMN_FIELD_POSITION + " = " + PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
-                                    "WHERE " + PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
-                                    "AND " + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
+                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
+                                    Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
+                                    "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
+                                    "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
                 }
 
                 cursor.close();
             }
 
             final String updateStatement =
-                    "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " + PlaylistEntry.COLUMN_FIELD_POSITION + " = (" +
-                            "SELECT COUNT(*)" + " FROM " + PlaylistEntry.TABLE_NAME + " T1 " +
-                            "WHERE (T1." + PlaylistEntry.COLUMN_FIELD_ENTRY_ID + " < " + PlaylistEntry.TABLE_NAME + "." + PlaylistEntry.COLUMN_FIELD_ENTRY_ID + ") " +
-                            "AND (T1." + PlaylistEntry.COLUMN_FIELD_POSITION + " < " + (position + addedCount) +") " +
-                            "AND (T1." + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") " +
+                    "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = (" +
+                            "SELECT COUNT(*)" + " FROM " + Entities.PlaylistEntry.TABLE_NAME + " T1 " +
+                            "WHERE (T1." + Entities.PlaylistEntry._ID + " < " + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID + ") " +
+                            "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " < " + (position + addedCount) +") " +
+                            "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") " +
                             ") " +
-                            "WHERE (" + PlaylistEntry.COLUMN_FIELD_POSITION + " IS NULL) " +
-                            "AND (" + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") ";
+                            "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " IS NULL) " +
+                            "AND (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") ";
 
             database.beginTransaction();
             try {
@@ -2706,7 +2785,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     protected boolean doPlaylistAddContent(String playlistId, int position, List<File> fileList, boolean deleteFileMedias) {
-        SQLiteDatabase database = databaseOpenHelper.getWritableDatabase();
+        SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (playlistId == null) {
             playlistId = "0";
@@ -2718,23 +2797,23 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             SyncScanContext scanContext = new SyncScanContext();
 
             database.execSQL(
-                    "UPDATE " + PlaylistEntry.TABLE_NAME + " SET " +
-                            PlaylistEntry.COLUMN_FIELD_POSITION + " = " + PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
-                            "WHERE " + PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
-                            "AND " + PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
+                    "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
+                            Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
+                            "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
+                            "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
 
             database.beginTransaction();
             try {
                 // Suppression des anciens medias.
                 // TODO: optimization, remove "deleteFileMedias" and delete unused medias in playlists
                 if (deleteFileMedias) {
-                    final String where = Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " = ? ";
+                    final String where = Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " = ? ";
 
                     final String whereArgs[] = new String[]{
                             String.valueOf(1)
                     };
 
-                    database.delete(Media.TABLE_NAME, where, whereArgs);
+                    database.delete(Entities.Media.TABLE_NAME, where, whereArgs);
                 }
 
                 ContentValues contentValues = new ContentValues();
@@ -2742,15 +2821,15 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (isAudioFile(scanContext, currentFile)) {
                         contentValues.clear();
                         JniMediaLib.doReadTags(currentFile, contentValues);
-                        contentValues.put(Media.COLUMN_FIELD_VISIBLE, 0);
-                        contentValues.put(Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY, 1);
-                        long insertId = database.insert(Media.TABLE_NAME, null, contentValues);
+                        contentValues.put(Entities.Media.COLUMN_FIELD_VISIBLE, 0);
+                        contentValues.put(Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY, 1);
+                        long insertId = database.insert(Entities.Media.TABLE_NAME, null, contentValues);
 
                         contentValues.clear();
-                        contentValues.put(PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID, playlistId);
-                        contentValues.put(PlaylistEntry.COLUMN_FIELD_POSITION, position);
-                        contentValues.put(PlaylistEntry.COLUMN_FIELD_SONG_ID, insertId);
-                        database.insert(PlaylistEntry.TABLE_NAME, null, contentValues);
+                        contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID, playlistId);
+                        contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_POSITION, position);
+                        contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID, insertId);
+                        database.insert(Entities.PlaylistEntry.TABLE_NAME, null, contentValues);
                         position++;
                     }
                 }
@@ -2847,7 +2926,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
     public static class SyncScanContext {
-        SQLiteDatabase scannerDatabaseHandle;
+        SQLiteDatabase database;
 
         ArrayList<String> albumArtExtensions = null;
 
@@ -2878,7 +2957,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         @Override
         public void launch(Activity source) {
-            final Intent intent = new Intent(PlayerApplication.context, UISearchPathsSettingsActivity.class);
+            final Intent intent = new Intent(PlayerApplication.context, SearchPathActivity.class);
             intent.putExtra(KEY_PROVIDER_ID, providerId);
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
@@ -2917,7 +2996,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         @Override
         public void launch(Activity source) {
-            final Intent intent = new Intent(PlayerApplication.context, UILocalContentSettingsActivity.class);
+            final Intent intent = new Intent(PlayerApplication.context, SettingsActivity.class);
             intent.putExtra(KEY_PROVIDER_ID, providerId);
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);

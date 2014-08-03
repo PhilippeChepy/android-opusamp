@@ -1,4 +1,4 @@
-package eu.chepy.audiokit.core.service.providers.local;
+package eu.chepy.audiokit.core.service.providers.local.ui.activities;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -13,7 +13,7 @@ import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
-public class UILocalContentSettingsActivity extends SherlockPreferenceActivity {
+public class SettingsActivity extends SherlockPreferenceActivity {
 
     private int providerId;
 
@@ -51,7 +51,7 @@ public class UILocalContentSettingsActivity extends SherlockPreferenceActivity {
                         PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
 
                 final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-                mediaProvider.getAbstractProviderAction(0).launch(UILocalContentSettingsActivity.this);
+                mediaProvider.getAbstractProviderAction(0).launch(SettingsActivity.this);
                 return true;
             }
         });

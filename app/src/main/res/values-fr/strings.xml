@@ -61,6 +61,7 @@
     
 	<string name="menu_label_collection">Bibliothèque</string>
 	<string name="menu_label_share">Partager</string>
+    <string name="menu_label_reload">Recharger</string>
 	<string name="menu_label_audio_effects">Effets audios</string>
 	<string name="menu_label_sleep_timer">Arret automatique</string>
 	<string name="menu_label_toggle_car_mode">Entrer/sortir du mode voiture</string>

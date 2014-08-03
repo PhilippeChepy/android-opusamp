@@ -38,7 +38,7 @@ import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider.ContentType;
 import eu.chepy.audiokit.core.service.providers.AbstractProviderAction;
-import eu.chepy.audiokit.core.service.providers.index.entities.Provider;
+import eu.chepy.audiokit.core.service.providers.index.database.Entities;
 import eu.chepy.audiokit.ui.adapter.ux.NavigationDrawerAdapter;
 import eu.chepy.audiokit.ui.adapter.ux.PagerAdapter;
 import eu.chepy.audiokit.ui.drawer.AbstractNavigationDrawerItem;
@@ -82,6 +82,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     private static final int OPTION_MENUITEM_FILTER = 3;
 
     private static final int OPTION_MENUITEM_SHOW_HIDDEN = 4;
+
+    private static final int OPTION_MENUITEM_RELOAD = 5;
 
 
 
@@ -177,6 +179,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         shareMenuItem.setIcon(R.drawable.ic_action_share_dark);
         shareMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         shareMenuItem.setOnMenuItemClickListener(shareOnMenuItemClickListener);
+
+        final MenuItem reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menu_label_reload);
+        reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+        reloadMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
         return true;
     }
@@ -466,17 +473,13 @@ TODO:
         }
     };
 
-
-
-    //    Sort Menuitem click listener
-/*    private final MenuItem.OnMenuItemClickListener onRecentOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
-
+    private final MenuItem.OnMenuItemClickListener reloadOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
         @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            libraryAdapter.doRefresh();
+        public boolean onMenuItemClick(MenuItem menuItem) {
+            PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getMediaProvider().scanStart();
             return true;
         }
-    };*/
+    };
 
     private final MenuItem.OnMenuItemClickListener onSortOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
@@ -785,12 +788,12 @@ TODO:
 
         if (database != null) {
             Cursor cursor = database.query(
-                    Provider.TABLE_NAME,
+                    Entities.Provider.TABLE_NAME,
                     new String[]{
-                            Provider.COLUMN_FIELD_PROVIDER_ID,
-                            Provider.COLUMN_FIELD_PROVIDER_NAME
+                            Entities.Provider._ID,
+                            Entities.Provider.COLUMN_FIELD_PROVIDER_NAME
                     },
-                    null, null, null, null, Provider.COLUMN_FIELD_PROVIDER_POSITION);
+                    null, null, null, null, Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION);
 
             final int COLUMN_PROVIDER_ID = 0;
 

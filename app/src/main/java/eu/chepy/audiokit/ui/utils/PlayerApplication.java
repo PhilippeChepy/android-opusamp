@@ -40,8 +40,8 @@ import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.MediaManagerFactory;
-import eu.chepy.audiokit.core.service.providers.index.IndexDatabaseOpenHelper;
-import eu.chepy.audiokit.core.service.providers.index.entities.Provider;
+import eu.chepy.audiokit.core.service.providers.index.database.Entities;
+import eu.chepy.audiokit.core.service.providers.index.database.OpenHelper;
 import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.audiokit.utils.LogUtils;
 
@@ -80,7 +80,7 @@ public class PlayerApplication extends Application {
 
         context = getApplicationContext();
 
-        databaseHelper = new IndexDatabaseOpenHelper(this);
+        databaseHelper = new OpenHelper(this);
         allocateMediaManagers();
         playerManagerIndex = getLibraryPlayerIndex();
         libraryManagerIndex = getLibraryLibraryIndex();
@@ -111,17 +111,17 @@ public class PlayerApplication extends Application {
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database != null) {
             final String[] columns = new String[]{
-                    Provider.COLUMN_FIELD_PROVIDER_ID,
-                    Provider.COLUMN_FIELD_PROVIDER_TYPE
+                    Entities.Provider._ID,
+                    Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE
             };
 
             final int COLUMN_ID = 0;
 
             final int COLUMN_TYPE = 1;
 
-            final String orderBy = Provider.COLUMN_FIELD_PROVIDER_POSITION;
+            final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-            Cursor cursor = database.query(Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
+            Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
             if (cursor != null && cursor.getCount() > 0) {
                 mediaManagers = new AbstractMediaManager[cursor.getCount()];
 
