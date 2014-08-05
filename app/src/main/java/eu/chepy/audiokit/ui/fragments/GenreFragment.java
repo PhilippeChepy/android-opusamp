@@ -127,8 +127,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         final int[] sortFields = new int[] { MusicConnector.genres_sort_order };
 
-        return PlayerApplication.buildGenreLoader(PlayerApplication.libraryManagerIndex,
-                requestedFields, sortFields, PlayerApplication.lastSearchFilter);
+        return PlayerApplication.buildGenreLoader(PlayerApplication.libraryManagerIndex, requestedFields, sortFields, PlayerApplication.lastSearchFilter);
 	}
 
 	@Override

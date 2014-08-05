@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.preference;
+package eu.chepy.backport.android.content;
 
-import android.preference.Preference;
+import android.content.SharedPreferences;
 
 import java.util.Set;
 
-abstract class PreferenceImpl {
-    public abstract Set<String> getPersistedStringSet(Preference pref, Set<String> defaultReturnValue);
-    public abstract boolean persistStringSet(Preference pref, Set<String> values);
+abstract class SharedPreferencesImpl {
+    public abstract Set<String> getStringSet(SharedPreferences prefs, String key, Set<String> defValues);
 }

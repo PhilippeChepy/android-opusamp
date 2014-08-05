@@ -1,3 +1,3 @@
 #!/bin/sh
-PATH=/opt/android-ndk-r9d:$PATH
+PATH=/opt/android-ndk-r10:$PATH
 ndk-build clean

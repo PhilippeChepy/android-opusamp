@@ -114,7 +114,7 @@ public class LibraryAdapter extends SimpleCursorAdapter {
             final LayoutInflater layoutInflater = LayoutInflater.from (PlayerApplication.context);
             convertView = layoutInflater.inflate(itemView, parent, false);
 
-            View contextMenuHandle = convertView.findViewById(R.id.context_menu_handle);
+            final View contextMenuHandle = convertView.findViewById(R.id.context_menu_handle);
             if (contextMenuHandle != null) {
                 contextMenuHandle.setOnClickListener(new View.OnClickListener() {
                     @Override

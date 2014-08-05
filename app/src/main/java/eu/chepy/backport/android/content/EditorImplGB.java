@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.content;
+package eu.chepy.backport.android.content;
 
-import android.annotation.TargetApi;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import java.util.Set;
 
-// Implementation for Honeycomb or later
-/**
- * @hide
- */
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-final class EditorImplHoneycomb extends EditorImpl {
+import eu.chepy.backport.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
+
+//Implementation for Gingerbread
+final class EditorImplGB extends EditorImpl {
     // private static final String TAG = "EditorCompatImplHoneycomb";
 
     @Override
     public SharedPreferences.Editor putStringSet(SharedPreferences.Editor editor, String key, Set<String> values) {
-        return editor.putStringSet(key, values);
+
+        SharedPreferencesJsonStringSetWrapperUtils.putStringSet(editor, key, values);
+
+        return editor;
     }
 }

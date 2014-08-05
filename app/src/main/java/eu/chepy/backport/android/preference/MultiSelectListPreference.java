@@ -21,7 +21,7 @@
  * Copied from Jelly Bean implementation.
  */
 
-package eu.chepy.audiokit.utils.support.android.preference;
+package eu.chepy.backport.android.preference;
 
 import android.app.AlertDialog.Builder;
 import android.content.Context;

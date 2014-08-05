@@ -9,7 +9,7 @@
             android:title="@string/label_library_settings_location"
             android:icon="@drawable/ic_action_folder_closed" />
 
-        <eu.chepy.audiokit.utils.support.android.preference.MultiSelectListPreference
+        <eu.chepy.backport.android.preference.MultiSelectListPreference
             android:capitalize="words"
             android:defaultValue="@array/tab_titles"
             android:icon="@drawable/ic_action_tiles_large"

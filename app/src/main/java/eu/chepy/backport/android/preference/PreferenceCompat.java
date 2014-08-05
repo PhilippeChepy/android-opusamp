@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.preference;
+package eu.chepy.backport.android.preference;
 
 import android.os.Build;
 import android.preference.PreferenceManager;

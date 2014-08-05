@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.preference;
+package eu.chepy.backport.android.preference;
 
 import android.preference.Preference;
 import android.util.Log;
@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import eu.chepy.audiokit.utils.support.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
+import eu.chepy.backport.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
 
 //Implementation for Gingerbread
 class PreferenceImplGB extends PreferenceImpl {

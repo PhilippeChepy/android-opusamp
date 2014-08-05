@@ -49,7 +49,7 @@ import eu.chepy.audiokit.ui.utils.ProviderStreamImageDownloader;
 import eu.chepy.audiokit.utils.Base64;
 import eu.chepy.audiokit.utils.LogUtils;
 import eu.chepy.audiokit.utils.jni.JniMediaLib;
-import eu.chepy.audiokit.utils.support.android.content.SharedPreferencesCompat;
+import eu.chepy.backport.android.content.SharedPreferencesCompat;
 
 public class LocalMediaProvider implements AbstractMediaProvider {
 

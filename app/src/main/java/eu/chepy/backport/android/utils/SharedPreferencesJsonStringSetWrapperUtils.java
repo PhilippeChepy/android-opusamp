@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.utils;
+package eu.chepy.backport.android.utils;
 
 import android.content.SharedPreferences;
 import android.util.Log;

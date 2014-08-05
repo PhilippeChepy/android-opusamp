@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.content;
+package eu.chepy.backport.android.content;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences.Editor;

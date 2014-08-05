@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.content;
+package eu.chepy.backport.android.content;
 
 import android.content.SharedPreferences;
 
 import java.util.Set;
 
-import eu.chepy.audiokit.utils.support.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
-
-// Implementation for Gingerbread
 /**
  * @hide
  */
-final class SharedPreferencesImplGB extends SharedPreferencesImpl {
-    // private static final String TAG = "SharedPreferenceCompatImplGB";
-
-    @Override
-    public Set<String> getStringSet(SharedPreferences prefs, String key, Set<String> defValues) {
-        return SharedPreferencesJsonStringSetWrapperUtils.getStringSet(prefs, key, defValues);
-    }
+abstract class EditorImpl {
+    public abstract SharedPreferences.Editor putStringSet(
+            SharedPreferences.Editor editor, String key, Set<String> values);
 }

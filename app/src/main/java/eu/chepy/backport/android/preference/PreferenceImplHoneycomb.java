@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.preference;
+package eu.chepy.backport.android.preference;
 
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
-import eu.chepy.audiokit.utils.support.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
+import eu.chepy.backport.android.utils.SharedPreferencesJsonStringSetWrapperUtils;
 
 // Implementation for Honeycomb or later
 @TargetApi(11)

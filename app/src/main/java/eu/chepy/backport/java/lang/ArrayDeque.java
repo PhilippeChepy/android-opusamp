@@ -28,7 +28,7 @@
  *  limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.java.lang;
+package eu.chepy.backport.java.lang;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

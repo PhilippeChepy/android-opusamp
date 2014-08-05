@@ -27,7 +27,7 @@
  * limitations under the License.
  */
 
-package eu.chepy.audiokit.utils.support.android.os;
+package eu.chepy.backport.android.os;
 
 import android.os.Handler;
 import android.os.Message;
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import eu.chepy.audiokit.utils.support.java.lang.ArrayDeque;
+import eu.chepy.backport.java.lang.ArrayDeque;
 
 /**
  * <p>AsyncTask enables proper and easy use of the UI thread. This class allows to

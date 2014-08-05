@@ -1,5 +1,5 @@
 #APP_ABI := armeabi-v7a armeabi x86 mips
-APP_ABI := all
+APP_ABI := all32
 
 APP_MODULES := medialib
 
