@@ -36,17 +36,11 @@ public class LibraryAdapterFactory {
         switch (adapterType) {
             case ADAPTER_ALBUM:
             case ADAPTER_ALBUM_SIMPLE:
-                int layout = R.layout.view_item_double_line_thumbnailed;
-
-                //if (adapterType == ADAPTER_ALBUM && PlayerApplication.isTablet()) {
-                //    layout = R.layout.view_item_double_line_sq_image;
-                //}
-
                 return new LibraryAdapter(
                         viewContainer,
                         adapterType,
                         managerIndex,
-                        layout,
+                        R.layout.view_item_double_line_thumbnailed,
                         new int[] {
                                 columnIndexes[1],
                                 columnIndexes[2]
