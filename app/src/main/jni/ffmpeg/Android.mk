@@ -1,0 +1,13 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := ffmpeg
+
+LOCAL_SRC_FILES := $(LOCAL_PATH)/build/$(TARGET_ARCH_ABI)/libffmpeg.so
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/build/$(TARGET_ARCH_ABI)/include
+LOCAL_EXPORT_LDLIBS := $(LOCAL_PATH)/build/$(TARGET_ARCH_ABI)/libffmpeg.so
+
+# LOCAL_PRELINK_MODULE := true
+
+include $(PREBUILT_SHARED_LIBRARY)

@@ -236,8 +236,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
             if (database != null) {
                 database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
             }
-			// TODO: delete associated content (already scanned)
-
             getLoaderManager().restartLoader(0, null, this);
 		}
 

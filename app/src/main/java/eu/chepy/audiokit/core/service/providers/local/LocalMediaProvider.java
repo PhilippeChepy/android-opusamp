@@ -1644,11 +1644,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         final String[] columns = new String[requestedFields.length + 1];
         final Object[] currentRow = new Object[requestedFields.length + 1];
 
-        int sort = STORAGE_DISPLAY_NAME;
-        if (sortFields != null && sortFields.length >= 1) {
-            sort = sortFields[0];
-        }
-
         columns[requestedFields.length] = "_id";
         for (int columnIndex = 0 ; columnIndex < requestedFields.length ; columnIndex++) {
             columns[columnIndex] = String.valueOf(requestedFields[columnIndex]);
@@ -1711,7 +1706,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             cursor.addRow(currentRow);
         }
 
-        fileList = getStorageFileList(scanContext, sort, filter);
+        fileList = getStorageFileList(scanContext, filter);
 
         for (File currentFile : fileList) {
             if (!currentFile.isDirectory()) {
@@ -2818,8 +2813,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
             database.beginTransaction();
             try {
-                // Suppression des anciens medias.
-                // TODO: optimization, remove "deleteFileMedias" and delete unused medias in playlists
                 if (deleteFileMedias) {
                     final String where = Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " = ? ";
 
@@ -2863,7 +2856,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         return false;
     }
 
-    protected List<File> getStorageFileList(SyncScanContext scanContext, int sort, String filter) {
+    protected List<File> getStorageFileList(SyncScanContext scanContext, String filter) {
         if (currentFolder == null) {
             return null;
         }
@@ -2876,6 +2869,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             Arrays.sort(currentFileList, filetypeComparator);
 
             for (File currentFile : currentFileList) {
+                if (!TextUtils.isEmpty(filter) && !currentFile.getAbsolutePath().toLowerCase().contains(filter.toLowerCase())) {
+                    continue;
+                }
+
                 if (isAudioFile(scanContext, currentFile)) {
                     fileList.add(currentFile);
                 } else if (currentFile.isDirectory()) {

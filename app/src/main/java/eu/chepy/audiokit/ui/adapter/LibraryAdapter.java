@@ -20,7 +20,7 @@ public class LibraryAdapter extends SimpleCursorAdapter {
     public static final String TAG = LibraryAdapter.class.getSimpleName();
 
 
-    protected Activity parentActivity;
+    protected LibraryAdapterContainer container;
 
 
 
@@ -67,15 +67,15 @@ public class LibraryAdapter extends SimpleCursorAdapter {
 
 
 
-    public LibraryAdapter(Activity activity, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn) {
-        this(activity, source, managerType, itemView, textColumns, textViews, idColumn, imagePlaceHolder, imageView, visibilityColumn, -1);
+    public LibraryAdapter(LibraryAdapterContainer adapterContainer, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn) {
+        this(adapterContainer, source, managerType, itemView, textColumns, textViews, idColumn, imagePlaceHolder, imageView, visibilityColumn, -1);
     }
 
     @SuppressWarnings("deprecation")
-    public LibraryAdapter(Activity activity, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn, int indicator) {
+    public LibraryAdapter(LibraryAdapterContainer container, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn, int indicator) {
         super(PlayerApplication.context, itemView, null, new String[] {}, new int[] {});
 
-        this.parentActivity = activity;
+        this.container = container;
 
         this.source = source;
         this.managerType = managerType;
@@ -101,7 +101,7 @@ public class LibraryAdapter extends SimpleCursorAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, final ViewGroup parent) {
+    public View getView(final int position, View convertView, final ViewGroup parent) {
         //final View view = super.getView(position, convertView, parent);
         final Cursor cursor = (Cursor) getItem(position);
 
@@ -116,39 +116,24 @@ public class LibraryAdapter extends SimpleCursorAdapter {
             final LayoutInflater layoutInflater = LayoutInflater.from (PlayerApplication.context);
             convertView = layoutInflater.inflate(itemView, parent, false);
 
-            final View contextMenuHandle = convertView.findViewById(R.id.context_menu_handle);
-            if (contextMenuHandle != null) {
-                contextMenuHandle.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //parentActivity.openContextMenu(parent);
-                        PopupMenu popupMenu = new PopupMenu(parentActivity, contextMenuHandle);
-                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test1");
-                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test2");
-                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test3");
-                        popupMenu.show();
-                    }
-                });
-            }
-
             viewHolder = new LibraryHolder();
-            if (convertView != null) {
-                viewHolder.textViews = new TextView[textViews.length];
-                for (int textIndex = 0; textIndex < textColumns.length; textIndex++) {
-                    viewHolder.textViews[textIndex] = (TextView) convertView.findViewById(textViews[textIndex]);
-                }
-
-                viewHolder.imageView = (ImageView) convertView.findViewById(imageView);
-
-                if (positionIndicatorView >= 0) {
-                    viewHolder.positionIndicatorView = (ImageView) convertView.findViewById(positionIndicatorView);
-                }
-                else {
-                    viewHolder.positionIndicatorView = null;
-                }
-
-                convertView.setTag(viewHolder);
+            viewHolder.textViews = new TextView[textViews.length];
+            for (int textIndex = 0; textIndex < textColumns.length; textIndex++) {
+                viewHolder.textViews[textIndex] = (TextView) convertView.findViewById(textViews[textIndex]);
             }
+
+            viewHolder.imageView = (ImageView) convertView.findViewById(imageView);
+
+            if (positionIndicatorView >= 0) {
+                viewHolder.positionIndicatorView = (ImageView) convertView.findViewById(positionIndicatorView);
+            }
+            else {
+                viewHolder.positionIndicatorView = null;
+            }
+
+            viewHolder.contextMenuHandle = convertView.findViewById(R.id.context_menu_handle);
+
+            convertView.setTag(viewHolder);
         } else {
             viewHolder = (LibraryHolder) convertView.getTag();
         }
@@ -189,10 +174,22 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                 if (imageUri != null) {
                     PlayerApplication.thumbnailImageLoader.displayImage(imageUri, viewHolder.imageView);
                 }
-
             }
 
-            if (visibilityColumn >= 0 && convertView != null && cursor != null) {
+            if (viewHolder.contextMenuHandle != null) {
+                viewHolder.contextMenuHandle.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        PopupMenu popupMenu = new PopupMenu(container.getActivity(), view);
+                        container.createMenu(popupMenu.getMenu(), position);
+                        popupMenu.setOnMenuItemClickListener(container.getOnPopupMenuItemClickListener(position));
+                        popupMenu.show();
+                    }
+                });
+            }
+
+            if (visibilityColumn >= 0) {
                 if (cursor.getInt(visibilityColumn) == 0) {
                     convertView.setBackgroundColor(PlayerApplication.context.getResources().getColor(R.color.holo_orange));
                 }
@@ -232,5 +229,15 @@ public class LibraryAdapter extends SimpleCursorAdapter {
         public ImageView imageView;
 
         public ImageView positionIndicatorView;
+
+        public View contextMenuHandle;
+    }
+
+    public interface LibraryAdapterContainer {
+        public Activity getActivity();
+
+        public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(int position);
+
+        public void createMenu(final Menu menu, int position);
     }
 }

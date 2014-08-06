@@ -13,6 +13,7 @@
 package eu.chepy.audiokit.ui.utils;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
@@ -29,7 +30,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
 import android.util.Log;
-import android.view.ContextMenu;
+import android.view.Menu;
 import android.webkit.WebView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -125,8 +126,6 @@ public class PlayerApplication extends Application {
             if (cursor != null && cursor.getCount() > 0) {
                 mediaManagers = new AbstractMediaManager[cursor.getCount()];
 
-
-
                 for (int index = 0 ; index < cursor.getCount() ; index++) {
                     cursor.moveToNext();
                     int providerType = cursor.getInt(COLUMN_TYPE);
@@ -145,9 +144,8 @@ public class PlayerApplication extends Application {
                         mediaManagers[index] = MediaManagerFactory.buildMediaManager(providerType, providerId);
                     }
                 }
-                if (cursor != null) {
-                    cursor.close();
-                }
+
+                cursor.close();
             }
 
             if (currentProvider != null) {
@@ -286,11 +284,11 @@ public class PlayerApplication extends Application {
         return  (mins < 10 ? "0" + mins : mins) + (secs < 10 ? (secs == 0 ? ":00" : ":0" + secs) : ":" + secs);
     }
 
-    public static void createSongContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createSongContextMenu(Menu menu, int groupId, boolean visible) {
         createSongContextMenu(menu, groupId, visible, false);
     }
 
-    public static void createSongContextMenu(ContextMenu menu, int groupId, boolean visible, boolean isPlaylistDetails) {
+    public static void createSongContextMenu(Menu menu, int groupId, boolean visible, boolean isPlaylistDetails) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -308,11 +306,11 @@ public class PlayerApplication extends Application {
         menu.add(groupId, CONTEXT_MENUITEM_DETAIL, 7, R.string.context_menu_details);
     }
 
-    public static boolean songContextItemSelected(FragmentActivity hostActivity, int itemId, String songId, int position) {
+    public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position) {
         return songContextItemSelected(hostActivity, itemId, songId, position, null, 0);
     }
 
-    public static boolean songContextItemSelected(FragmentActivity hostActivity, int itemId, String songId, int position, String playlistId, int playlistPosition) {
+    public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position, String playlistId, int playlistPosition) {
         Log.e(TAG, "playlistPosition = " + playlistPosition);
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
@@ -339,7 +337,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createPlaylistContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createPlaylistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -369,7 +367,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static boolean playlistContextItemSelected(FragmentActivity hostActivity, int itemId, String playlistId, int sortOrder, int position) {
+    public static boolean playlistContextItemSelected(Activity hostActivity, int itemId, String playlistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder, position);
@@ -386,7 +384,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createGenreContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createGenreContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -413,7 +411,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static boolean genreContextItemSelected(FragmentActivity hostActivity, int itemId, String genreId, int sortOrder, int position) {
+    public static boolean genreContextItemSelected(Activity hostActivity, int itemId, String genreId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder, position);
@@ -430,7 +428,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createArtistContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createArtistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -457,7 +455,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static boolean artistContextItemSelected(FragmentActivity hostActivity, int itemId, String artistId, int sortOrder, int position) {
+    public static boolean artistContextItemSelected(Activity hostActivity, int itemId, String artistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder, position);
@@ -474,7 +472,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createAlbumContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createAlbumContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -504,7 +502,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static boolean albumContextItemSelected(FragmentActivity hostActivity, int itemId, String albumId, int sortOrder, int position) {
+    public static boolean albumContextItemSelected(Activity hostActivity, int itemId, String albumId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
@@ -521,7 +519,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createAlbumArtistContextMenu(ContextMenu menu, int groupId, boolean visible) {
+    public static void createAlbumArtistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -548,7 +546,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static boolean albumArtistContextItemSelected(FragmentActivity hostActivity, int itemId, String albumArtistId, int sortOrder, int position) {
+    public static boolean albumArtistContextItemSelected(Activity hostActivity, int itemId, String albumArtistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder, position);
@@ -565,7 +563,7 @@ public class PlayerApplication extends Application {
         }
     }
 
-    public static void createStorageContextMenu(ContextMenu menu, int groupId) {
+    public static void createStorageContextMenu(Menu menu, int groupId) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
         if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
@@ -632,27 +630,6 @@ public class PlayerApplication extends Application {
         return new File(Environment.getExternalStorageDirectory().getPath() + "/Music/");
     }
 
-    @TargetApi(8)
-    public static File getCacheDir(final String tag) {
-        if (hasFroyo()) {
-            File dir = context.getExternalCacheDir();
-            if (dir == null) {
-                return null;
-            }
-
-            dir = new File(String.format("%s/%s/", dir.getPath(), tag));
-            if (!dir.exists() && !dir.mkdirs())
-                dir = null;
-            return dir;
-        }
-
-        File dir = new File(String.format("%s/Android/data/%s/cache/%s/", Environment.getExternalStorageDirectory().getPath(), context.getPackageName(), tag));
-        if (!dir.exists() && !dir.mkdirs())
-            dir = null;
-        return dir;
-    }
-
-
     public static void saveLibraryIndexes() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -675,17 +652,6 @@ public class PlayerApplication extends Application {
 
 
 
-    /*
-     *
-     */
-    public final static int SHOWCASE_MAIN_ACTIVITY = 100;
-
-    public final static int SHOWCASE_LIBRARY_MANAGEMENT = 101;
-
-    public final static int SHOWCASE_LOCAL_LIBRARY_LOCATION = 102;
-
-
-
 	/*
 	 * PlayerActivity Preferences
 	 */
@@ -697,14 +663,8 @@ public class PlayerApplication extends Application {
 	
 	public final static String PREFERENCE_PLAYER_LAST_SHUFFLE_MODE = "last_shuffle_mode";
 	
-	public final static String PREFERENCE_PLAYER_LAST_PLAYLIST_ID = "last_playlist_id";
-	
 	public final static String PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION = "last_playlist_position";
-	
-	public final static int MEDIA_ID_NO_MEDIA = -1;
-	
-	public static int LIBRARY_CURRENT_PLAYLIST = 0;
-	
+
 	public static AlertDialog showOpenSourceDialog(final Context context) {
 		final WebView webView = new WebView(context);
 		webView.loadUrl("file:///android_asset/licenses.html");

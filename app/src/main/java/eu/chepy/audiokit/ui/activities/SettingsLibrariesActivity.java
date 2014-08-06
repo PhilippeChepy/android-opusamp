@@ -248,17 +248,6 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
         addMenuItem.setIcon(R.drawable.ic_action_add_dark);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         addMenuItem.setOnMenuItemClickListener(onAddOptionMenuItemListener);
-
-        /*
-        TODO:
-        new ShowcaseView.Builder(this, true)
-                .setTarget(new ActionItemTarget(this, OPTION_MENUITEM_ADD))
-                .setContentTitle(R.string.tutor_library_management_title)
-                .setContentText(R.string.tutor_library_management_detail)
-                .setStyle(R.style.ShowcaseTheme)
-                .singleShot(PlayerApplication.SHOWCASE_LIBRARY_MANAGEMENT)
-                .build();
-         */
         return true;
     }
 

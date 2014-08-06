@@ -44,7 +44,7 @@ public class MediaManagerFactory {
         switch (mediaManagerType) {
             case AbstractMediaManager.LOCAL_MEDIA_MANAGER:
                 return new LocalMediaManager(providerId);
-            /* TODO:
+            /*
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:
                 return new DlnaMediaManager(providerId);
             case AbstractMediaManager.DEEZER_MEDIA_MANAGER:

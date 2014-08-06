@@ -50,7 +50,6 @@ import eu.chepy.audiokit.ui.fragments.AlbumFragment;
 import eu.chepy.audiokit.ui.fragments.ArtistFragment;
 import eu.chepy.audiokit.ui.fragments.GenreFragment;
 import eu.chepy.audiokit.ui.fragments.PlaylistFragment;
-import eu.chepy.audiokit.ui.fragments.RecentFragment;
 import eu.chepy.audiokit.ui.fragments.SongFragment;
 import eu.chepy.audiokit.ui.fragments.StorageFragment;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
@@ -76,15 +75,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     /*
         Actionbar
      */
-    private static final int OPTION_MENUITEM_RECENT = 1;
+    private static final int OPTION_MENUITEM_SORT = 1;
 
-    private static final int OPTION_MENUITEM_SORT = 2;
+    private static final int OPTION_MENUITEM_FILTER = 2;
 
-    private static final int OPTION_MENUITEM_FILTER = 3;
+    private static final int OPTION_MENUITEM_SHOW_HIDDEN = 3;
 
-    private static final int OPTION_MENUITEM_SHOW_HIDDEN = 4;
-
-    private static final int OPTION_MENUITEM_RELOAD = 5;
+    private static final int OPTION_MENUITEM_RELOAD = 4;
 
 
 
@@ -254,18 +251,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         else {
             getPlayerView().registerServiceListener();
         }
-
-        /*
-TODO:
-        new ShowcaseView.Builder(this, true)
-                .setTarget(new ActionViewTarget(this, ActionViewTarget.Type.HOME))
-                .setContentTitle(R.string.tutor_home_title)
-                .setContentText(R.string.tutor_home_detail)
-                .setStyle(R.style.ShowcaseTheme)
-                .singleShot(PlayerApplication.SHOWCASE_MAIN_ACTIVITY)
-                .build();
-         */
-        // TODO: add showcase to explain sliding of bottom player...
     }
 
     @Override
@@ -488,7 +473,7 @@ TODO:
         public boolean onMenuItemClick(MenuItem item) {
             final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LibraryMainActivity.this);
 
-            final Class<?> currentItemClass = libraryAdapter.getItem(libraryPager.getCurrentItem()).getClass();
+            final Class<?> currentItemClass = ((Object)libraryAdapter.getItem(libraryPager.getCurrentItem())).getClass();
 
             if (currentItemClass.equals(PlaylistFragment.class)) {
                 int sortIndex = 0;
@@ -812,9 +797,7 @@ TODO:
                     collectionIndex++;
                 }
 
-                if (cursor != null) {
-                    cursor.close();
-                }
+                cursor.close();
             } else {
                 collections = new CollectionDescriptor[1];
             }
@@ -876,15 +859,11 @@ TODO:
     }
 
     protected void doManageMenuitemVisibility(PagerAdapter pagerAdapter, int position) {
-        final Class<?> itemClass = pagerAdapter.getItem(position).getClass();
+        final Class<?> itemClass = ((Object)pagerAdapter.getItem(position)).getClass();
 
         if (itemClass.equals(PlaylistFragment.class)) {
             sortMenuItem.setVisible(true);
 //            recentMenuItem.setVisible(false);
-        }
-        else if (itemClass.equals(RecentFragment.class)) {
-            sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(true);
         }
         else if (itemClass.equals(ArtistFragment.class)) {
             sortMenuItem.setVisible(true);

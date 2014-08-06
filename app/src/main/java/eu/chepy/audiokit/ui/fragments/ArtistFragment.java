@@ -18,9 +18,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.PopupMenu;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,8 +108,32 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-        final Activity activity = getActivity();
-        adapter = LibraryAdapterFactory.build(activity, LibraryAdapterFactory.ADAPTER_ARTIST, LibraryAdapter.LIBRARY_MANAGER,
+        final Activity hostActivity = getActivity();
+        final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
+            @Override
+            public Activity getActivity() {
+                return hostActivity;
+            }
+
+            @Override
+            public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
+                return new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        cursor.moveToPosition(position);
+                        return PlayerApplication.artistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ARTIST_ID), MusicConnector.artists_sort_order, 0);
+                    }
+                };
+            }
+
+            @Override
+            public void createMenu(Menu menu, int position) {
+                cursor.moveToPosition(position);
+                PlayerApplication.createArtistContextMenu(menu, FRAGMENT_GROUP_ID, cursor.getInt(COLUMN_ARTIST_VISIBLE) == 1);
+            }
+        };
+
+        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_ARTIST, LibraryAdapter.LIBRARY_MANAGER,
                 new int[] {
                         COLUMN_ARTIST_ID,
                         COLUMN_ARTIST_NAME,

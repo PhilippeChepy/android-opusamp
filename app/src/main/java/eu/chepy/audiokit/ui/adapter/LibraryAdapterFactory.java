@@ -1,7 +1,5 @@
 package eu.chepy.audiokit.ui.adapter;
 
-import android.app.Activity;
-
 import eu.chepy.audiokit.R;
 
 public class LibraryAdapterFactory {
@@ -34,7 +32,7 @@ public class LibraryAdapterFactory {
 
 
 
-    public static LibraryAdapter build(Activity activity, int adapterType, int managerIndex, int[] columnIndexes) {
+    public static LibraryAdapter build(LibraryAdapter.LibraryAdapterContainer viewContainer, int adapterType, int managerIndex, int[] columnIndexes) {
         switch (adapterType) {
             case ADAPTER_ALBUM:
             case ADAPTER_ALBUM_SIMPLE:
@@ -45,7 +43,7 @@ public class LibraryAdapterFactory {
                 //}
 
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         layout,
@@ -67,7 +65,7 @@ public class LibraryAdapterFactory {
             case ADAPTER_RECENT:
             case ADAPTER_PLAYLIST:
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         R.layout.view_item_single_line,
@@ -83,7 +81,7 @@ public class LibraryAdapterFactory {
                         columnIndexes[2]);
             case ADAPTER_SONG_SIMPLE:
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         R.layout.view_item_double_line,
@@ -101,7 +99,7 @@ public class LibraryAdapterFactory {
                         columnIndexes[3]);
             case ADAPTER_SONG:
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         R.layout.view_item_double_line_thumbnailed,
@@ -119,7 +117,7 @@ public class LibraryAdapterFactory {
                         columnIndexes[3]);
             case ADAPTER_STORAGE:
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         R.layout.view_item_double_line_thumbnailed,
@@ -137,7 +135,7 @@ public class LibraryAdapterFactory {
                         columnIndexes[4]);
             case ADAPTER_PLAYLIST_DETAILS:
                 return new LibraryAdapter(
-                        activity,
+                        viewContainer,
                         adapterType,
                         managerIndex,
                         R.layout.view_item_double_line_dragable_thumbnailed,

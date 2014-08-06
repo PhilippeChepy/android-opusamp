@@ -62,7 +62,7 @@
         android:layout_height="fill_parent"
         android:layout_weight="0.0"
         android:adjustViewBounds="false"
-        android:paddingRight="15.0dip"
+        android:paddingRight="5.0dp"
         android:background="@color/transparent"
         android:src="@drawable/dropdown_ic_arrow" />
 </LinearLayout>

@@ -17,9 +17,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -126,8 +128,32 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
         Log.d(TAG, "onActivityCreated()");
         super.onActivityCreated(savedInstanceState);
 
-        final Activity activity = getActivity();
-        adapter = LibraryAdapterFactory.build(activity, LibraryAdapterFactory.ADAPTER_STORAGE, LibraryAdapter.LIBRARY_MANAGER,
+        final Activity hostActivity = getActivity();
+        final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
+            @Override
+            public Activity getActivity() {
+                return hostActivity;
+            }
+
+            @Override
+            public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
+                return new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        cursor.moveToPosition(position);
+                        return PlayerApplication.storageContextItemSelected(menuItem.getItemId(), cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, position);
+                    }
+                };
+            }
+
+            @Override
+            public void createMenu(Menu menu, int position) {
+                cursor.moveToPosition(position);
+                doOnCreateContextMenu(menu, position);
+            }
+        };
+
+        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_STORAGE, LibraryAdapter.LIBRARY_MANAGER,
                 new int[]{
                         COLUMN_STORAGE_ID,
                         COLUMN_STORAGE_DISPLAY_NAME,
@@ -186,17 +212,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
         final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
         if (info != null) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-
-            boolean hasChild = (Boolean) mediaProvider.getProperty(
-                    AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
-                    info.position,
-                    AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
-
-            if (!hasChild) {
-                PlayerApplication.createStorageContextMenu(menu, FRAGMENT_GROUP_ID);
-            }
+            doOnCreateContextMenu(menu, info.position);
         }
     }
 
@@ -270,5 +286,19 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
                 null,
                 AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION);
         pathTextView.setText(currentPath);
+    }
+
+    protected void doOnCreateContextMenu(Menu menu, int position) {
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+
+        boolean hasChild = (Boolean) mediaProvider.getProperty(
+                AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+                position,
+                AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
+
+        if (!hasChild) {
+            PlayerApplication.createStorageContextMenu(menu, FRAGMENT_GROUP_ID);
+        }
     }
 }

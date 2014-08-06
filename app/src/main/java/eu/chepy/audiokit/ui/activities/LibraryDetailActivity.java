@@ -13,6 +13,7 @@
 package eu.chepy.audiokit.ui.activities;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,8 +26,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.PopupMenu;
 import android.util.TypedValue;
 import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -128,76 +132,18 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        switch (contentType) {
-            case CONTENT_TYPE_ARTIST:
-                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
-                break;
-            case CONTENT_TYPE_ALBUM_ARTIST:
-                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
-                break;
-            case CONTENT_TYPE_ALBUM:
-                if (menuInfo == null || ((AdapterView.AdapterContextMenuInfo)menuInfo).id == -1) {
-                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.context_menu_use_file_art);
-                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.context_menu_restore_file_art);
-                }
-                else {
-                    PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
-                }
-                break;
-            case CONTENT_TYPE_PLAYLIST:
-                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1, true);
-                break;
-            case CONTENT_TYPE_GENRE:
-                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
+        doOnCreateContextMenu(menu);
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
+
     @Override
-    public boolean onContextItemSelected(android.view.MenuItem item) {
+    public boolean onContextItemSelected(MenuItem item) {
         if (item.getGroupId() != CONTEXT_MENU_GROUP_ID && item.getGroupId() != CONTEXT_ART_GROUP_ID) {
             return getPlayerView().onContextItemSelected(item);
         }
 
-        switch (contentType) {
-            case CONTENT_TYPE_ARTIST:
-                return PlayerApplication.artistDetailContextItemSelected(this, item.getItemId(), contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
-            case CONTENT_TYPE_ALBUM_ARTIST:
-                return PlayerApplication.albumArtistDetailContextItemSelected(this, item.getItemId(), MusicConnector.albums_sort_order, cursor.getString(COLUMN_ALBUM_ID));
-            case CONTENT_TYPE_ALBUM:
-                if (item.getGroupId() == CONTEXT_ART_GROUP_ID) {
-                    switch (item.getItemId()) {
-                        case CONTEXT_MENUITEM_USE_FILE_ART:
-                            doImageChangeRequest();
-                            break;
-                        case CONTEXT_MENUITEM_RESTORE_ART:
-                            // TODO: art restoration.
-                            break;
-                    }
-                    return true;
-                }
-                else {
-                    AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                    cursor.moveToPosition(info.position - 1);
-
-                    return PlayerApplication.albumDetailContextItemSelected(this, item.getItemId(), contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
-                }
-            case CONTENT_TYPE_PLAYLIST:
-                boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, item.getItemId(), contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
-
-                if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_CLEAR || item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
-                    getSupportLoaderManager().restartLoader(1, null, this);
-                }
-
-                return playlistActionResult;
-            case CONTENT_TYPE_GENRE:
-                return PlayerApplication.genreDetailContextItemSelected(this, item.getItemId(), contentSourceId, MusicConnector.albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
-            default:
-                throw new IllegalArgumentException();
-        }
+        return doOnContextItemSelected(item.getGroupId(), item.getItemId());
     }
 
     @Override
@@ -233,6 +179,31 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     throw new IllegalArgumentException();
             }
 
+            final Activity hostActivity = this;
+            final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
+                @Override
+                public Activity getActivity() {
+                    return hostActivity;
+                }
+
+                @Override
+                public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
+                    return new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem menuItem) {
+                            cursor.moveToPosition(position);
+                            return doOnContextItemSelected(menuItem.getGroupId(), menuItem.getItemId());
+                        }
+                    };
+                }
+
+                @Override
+                public void createMenu(final Menu menu, int position) {
+                    cursor.moveToPosition(position);
+                    doOnCreateContextMenu(menu);
+                }
+            };
+
             /*
                 Setting adapter
              */
@@ -240,7 +211,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 case CONTENT_TYPE_ARTIST:
                 case CONTENT_TYPE_ALBUM:
                 case CONTENT_TYPE_PLAYLIST:
-                    adapter = LibraryAdapterFactory.build(this, LibraryAdapterFactory.ADAPTER_SONG, LibraryAdapter.LIBRARY_MANAGER,
+                    adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG, LibraryAdapter.LIBRARY_MANAGER,
                             new int[] {
                                     COLUMN_SONG_ID,
                                     COLUMN_SONG_TITLE,
@@ -250,7 +221,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     break;
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
-                    adapter = LibraryAdapterFactory.build(this, LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
+                    adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
                             new int[]{
                                     COLUMN_ALBUM_ID,
                                     COLUMN_ALBUM_NAME,
@@ -665,6 +636,70 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 return PlayerApplication.playlistDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
             case CONTENT_TYPE_GENRE:
                 return PlayerApplication.genreDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, contentSourceId, MusicConnector.albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    public void doOnCreateContextMenu(Menu menu) {
+        switch (contentType) {
+            case CONTENT_TYPE_ARTIST:
+                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
+                break;
+            case CONTENT_TYPE_ALBUM_ARTIST:
+                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
+                break;
+            case CONTENT_TYPE_ALBUM:
+                if (cursor.getPosition() == -1) {
+                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.context_menu_use_file_art);
+                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.context_menu_restore_file_art);
+                }
+                else {
+                    PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
+                }
+                break;
+            case CONTENT_TYPE_PLAYLIST:
+                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1, true);
+                break;
+            case CONTENT_TYPE_GENRE:
+                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    public boolean doOnContextItemSelected(int groupId, int itemId) {
+        switch (contentType) {
+            case CONTENT_TYPE_ARTIST:
+                return PlayerApplication.artistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+            case CONTENT_TYPE_ALBUM_ARTIST:
+                return PlayerApplication.albumArtistDetailContextItemSelected(this, itemId, MusicConnector.albums_sort_order, cursor.getString(COLUMN_ALBUM_ID));
+            case CONTENT_TYPE_ALBUM:
+                if (groupId == CONTEXT_ART_GROUP_ID) {
+                    switch (itemId) {
+                        case CONTEXT_MENUITEM_USE_FILE_ART:
+                            doImageChangeRequest();
+                            break;
+                        case CONTEXT_MENUITEM_RESTORE_ART:
+                            // TODO: art restoration.
+                            break;
+                    }
+                    return true;
+                }
+                else {
+                    return PlayerApplication.albumDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+                }
+            case CONTENT_TYPE_PLAYLIST:
+                boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+
+                if (itemId == PlayerApplication.CONTEXT_MENUITEM_CLEAR || itemId == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
+                    getSupportLoaderManager().restartLoader(1, null, this);
+                }
+
+                return playlistActionResult;
+            case CONTENT_TYPE_GENRE:
+                return PlayerApplication.genreDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
             default:
                 throw new IllegalArgumentException();
         }

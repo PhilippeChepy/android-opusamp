@@ -12,6 +12,7 @@
  */
 package eu.chepy.audiokit.ui.utils;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -21,9 +22,11 @@ import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -96,11 +99,6 @@ public class PlayerViewHelper implements
     private static final int COLUMN_ENTRY_POSITION = 3;
 
     private static final int COLUMN_SONG_VISIBLE = 4;
-
-
-
-    // TODO: add cover art context menu.
-    private static final int CONTEXT_ART_GROUP_ID = 101;
 
 
 
@@ -179,7 +177,31 @@ public class PlayerViewHelper implements
         progressBar = (SeekBar) hostActivity.findViewById(R.id.progress);
         progressBar.setOnSeekBarChangeListener(progressBarOnChangeListener);
 
-        adapter = LibraryAdapterFactory.build(hostActivity, LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS, LibraryAdapter.PLAYER_MANAGER,
+        final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
+            @Override
+            public Activity getActivity() {
+                return hostActivity;
+            }
+
+            @Override
+            public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
+                return new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        playlistCursor.moveToPosition(position);
+                        return doOnContextItemSelected(menuItem.getItemId());
+                    }
+                };
+            }
+
+            @Override
+            public void createMenu(Menu menu, int position) {
+                playlistCursor.moveToPosition(position);
+                doOnCreateContextMenu(menu);
+            }
+        };
+
+        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS, LibraryAdapter.PLAYER_MANAGER,
                 new int[] {
                         COLUMN_SONG_ID,
                         COLUMN_SONG_TITLE,
@@ -206,7 +228,7 @@ public class PlayerViewHelper implements
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) hostActivity.findViewById(R.id.sliding_layout);
         if (slidingUpPanelLayout != null) {
-// TODO:            slidingUpPanelLayout.setShadowDrawable(hostActivity.getResources().getDrawable(R.drawable.above_shadow));
+            //slidingUpPanelLayout.setShadowDrawable(hostActivity.getResources().getDrawable(R.drawable.above_shadow));
             slidingUpPanelLayout.setDragView(hostActivity.findViewById(R.id.upper_panel));
             slidingUpPanelLayout.setPanelSlideListener(panelSlideListener);
 
@@ -359,35 +381,13 @@ public class PlayerViewHelper implements
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
         Log.d(TAG, "onCreateContextMenu()");
 
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.context_menu_add_to_queue);
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.context_menu_add_to_playlist);
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_CLEAR, 5, R.string.context_menu_remove_all);
-        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_DELETE, 6, R.string.context_menu_remove);
+        doOnCreateContextMenu(menu);
     }
 
     public boolean onContextItemSelected(android.view.MenuItem item) {
         Log.d(TAG, "onContextItemSelected()");
 
-        if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_PLAY) {
-            return doPlayAction();
-        }
-        else if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_PLAY_NEXT) {
-            return doPlayNextAction();
-        }
-        else if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_ADD_TO_QUEUE) {
-            return doAddToQueueAction();
-        }
-        else if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST) {
-            return doAddToPlaylistAction();
-        }
-        else if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_CLEAR) {
-            return doClearAction();
-        }
-        else if (item.getItemId() == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
-            return doDeleteAction();
-        }
+        doOnContextItemSelected(item.getItemId());
 
         return hostActivity.onContextItemSelected(item);
     }
@@ -426,6 +426,38 @@ public class PlayerViewHelper implements
         }
 
         playerServiceListener.doPlaylistPositionUpdate();
+    }
+
+    protected void doOnCreateContextMenu(Menu menu) {
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY, 1, R.string.context_menu_play);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.context_menu_play_next);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.context_menu_add_to_queue);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.context_menu_add_to_playlist);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_CLEAR, 5, R.string.context_menu_remove_all);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_DELETE, 6, R.string.context_menu_remove);
+    }
+
+    protected boolean doOnContextItemSelected(int itemId) {
+        if (itemId == PlayerApplication.CONTEXT_MENUITEM_PLAY) {
+            return doPlayAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_PLAY_NEXT) {
+            return doPlayNextAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_ADD_TO_QUEUE) {
+            return doAddToQueueAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST) {
+            return doAddToPlaylistAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_CLEAR) {
+            return doClearAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
+            return doDeleteAction();
+        }
+
+        return false;
     }
 
     protected boolean doPlayAction() {
