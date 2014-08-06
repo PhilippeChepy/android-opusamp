@@ -20,8 +20,10 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -31,8 +33,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
 import com.mobeta.android.dslv.DragSortListView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
@@ -69,7 +69,7 @@ public class PlayerViewHelper implements
     /*
         Host activity
      */
-    private SherlockFragmentActivity hostActivity;
+    private ActionBarActivity hostActivity;
 
     private LibraryAdapter adapter;
 
@@ -146,7 +146,7 @@ public class PlayerViewHelper implements
 
 
 
-    public PlayerViewHelper(SherlockFragmentActivity fragmentActivity) {
+    public PlayerViewHelper(ActionBarActivity fragmentActivity) {
         hostActivity = fragmentActivity;
 
         imageViewContainer = hostActivity.findViewById(R.id.square_view_container);

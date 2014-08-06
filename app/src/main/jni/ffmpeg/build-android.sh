@@ -1,6 +1,18 @@
 #!/bin/bash
 
-export ANDROID_NDK="/opt/android-ndk-r10"
+#export ANDROID_NDK="/opt/android-ndk-r10"
+#export ANDROID_PLATFORM=android-L
+#export ANDROID_NDK_TOOLCHAIN_VERSION=4.9
+
+export ANDROID_NDK="/opt/android-ndk-r9d"
+export ANDROID_NDK_TOOLCHAIN_VERSION=4.8
+
+export ANDROID_NDK_ARM_32_PLATFORM=android-8
+export ANDROID_NDK_X86_32_PLATFORM=android-9
+export ANDROID_NDK_MIPS_32_PLATFORM=android-9
+export ANDROID_NDK_ARM_64_PLATFORM=android-L
+export ANDROID_NDK_X86_64_PLATFORM=android-L
+export ANDROID_NDK_MIPS_64_PLATFORM=android-L
 
 if [ -z "$ANDROID_NDK" ]; then
     echo "You must define ANDROID_NDK before starting."
@@ -22,32 +34,32 @@ platform="$1"
 
 function arm_toolchain() {
     export CROSS_PREFIX=arm-linux-androideabi-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_ARM_32_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 function x86_toolchain() {
     export CROSS_PREFIX=i686-linux-android-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=x86-4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=x86-${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_X86_32_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 function mips_toolchain() {
     export CROSS_PREFIX=mipsel-linux-android-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_MIPS_32_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 function arm64_toolchain() {
     export CROSS_PREFIX=aarch64-linux-android-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_ARM_64_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 function x86_64_toolchain() {
     export CROSS_PREFIX=x86_64-linux-android-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_X86_64_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 function mips64_toolchain() {
     export CROSS_PREFIX=mips64el-linux-android-
-    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}4.9 --platform=android-L --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --toolchain=${CROSS_PREFIX}${ANDROID_NDK_TOOLCHAIN_VERSION} --platform=${ANDROID_NDK_MIPS_64_PLATFORM} --system=$HOST_SYSTEM --install-dir=$TOOLCHAIN
 }
 
 SOURCE=`pwd`
@@ -91,7 +103,7 @@ export LD=${CROSS_PREFIX}ld
 export AR=${CROSS_PREFIX}ar
 export STRIP=${CROSS_PREFIX}strip
 
-CFLAGS="-std=c99 -O3 -Wall -pipe -fpic -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DANDROID -DNDEBUG"
+CFLAGS="-std=c99 -O3 -w -pipe -fpic -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DANDROID -DNDEBUG"
 LDFLAGS="-lm -lz -Wl,--no-undefined -Wl,-z,noexecstack"
 
 case $CROSS_PREFIX in

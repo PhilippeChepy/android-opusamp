@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +18,6 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-
 import java.io.File;
 import java.io.FileFilter;
 
@@ -27,7 +26,7 @@ import eu.chepy.audiokit.ui.adapter.holder.GridViewHolder;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.ui.views.CustomTextView;
 
-public class UtilDirectorySelectActivity extends SherlockFragmentActivity implements OnItemClickListener {
+public class UtilDirectorySelectActivity extends ActionBarActivity implements OnItemClickListener {
 
 	private GridView gridView;
 
@@ -93,13 +92,8 @@ public class UtilDirectorySelectActivity extends SherlockFragmentActivity implem
                     });
         }
 
-     getSupportActionBar().setDisplayOptions(
-             ActionBar.DISPLAY_SHOW_CUSTOM,
-             ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
-     
-     getSupportActionBar().setCustomView(
-             customActionBarView,
-    		 new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+        getSupportActionBar().setCustomView(customActionBarView, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         
         setFolder(Environment.getExternalStorageDirectory());
 	}

@@ -12,18 +12,17 @@
  */
 package eu.chepy.audiokit.ui.fragments;
 
+import android.support.v4.app.Fragment;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.view.View;
-
-import com.actionbarsherlock.app.SherlockFragment;
 
 import eu.chepy.audiokit.core.service.providers.AbstractEmptyContentAction;
 import eu.chepy.audiokit.core.service.providers.AbstractProviderAction;
 import eu.chepy.audiokit.ui.views.CustomLinkTextView;
 import eu.chepy.audiokit.ui.views.CustomTextView;
 
-public abstract class AbstractRefreshableFragment extends SherlockFragment {
+public abstract class AbstractRefreshableFragment extends Fragment {
 	
 	public static final String TAG = AbstractRefreshableFragment.class.getSimpleName();
 

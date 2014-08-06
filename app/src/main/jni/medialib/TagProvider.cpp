@@ -209,18 +209,18 @@ JNIEXPORT void JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_tagsRead(JNI
 
 	jfieldID fieldTagTitle = env->GetStaticFieldID(classLibraryScannerService, "tagTitle", "Ljava/lang/String;");
 	jfieldID fieldTagArtist = env->GetStaticFieldID(classLibraryScannerService, "tagArtist", "Ljava/lang/String;");
-	jfieldID fieldTagComposer = env->GetStaticFieldID(classLibraryScannerService, "tagComposer", "Ljava/lang/String;");
-	jfieldID fieldTagAlbumArtist = env->GetStaticFieldID(classLibraryScannerService, "tagAlbumArtist", "Ljava/lang/String;");
+//	jfieldID fieldTagComposer = env->GetStaticFieldID(classLibraryScannerService, "tagComposer", "Ljava/lang/String;");
+//	jfieldID fieldTagAlbumArtist = env->GetStaticFieldID(classLibraryScannerService, "tagAlbumArtist", "Ljava/lang/String;");
 	jfieldID fieldTagAlbum = env->GetStaticFieldID(classLibraryScannerService, "tagAlbum", "Ljava/lang/String;");
 	jfieldID fieldTagGenre = env->GetStaticFieldID(classLibraryScannerService, "tagGenre", "Ljava/lang/String;");
 
 	jfieldID fieldTagYear = env->GetStaticFieldID(classLibraryScannerService, "tagYear", "I");
 	jfieldID fieldTagTrack = env->GetStaticFieldID(classLibraryScannerService, "tagTrack", "I");
-	jfieldID fieldTagDisc = env->GetStaticFieldID(classLibraryScannerService, "tagDisc", "I");
-	jfieldID fieldTagBpm = env->GetStaticFieldID(classLibraryScannerService, "tagBpm", "I");
+//	jfieldID fieldTagDisc = env->GetStaticFieldID(classLibraryScannerService, "tagDisc", "I");
+//	jfieldID fieldTagBpm = env->GetStaticFieldID(classLibraryScannerService, "tagBpm", "I");
 
 	jfieldID fieldTagComment = env->GetStaticFieldID(classLibraryScannerService, "tagComment", "Ljava/lang/String;");
-	jfieldID fieldTagLyrics = env->GetStaticFieldID(classLibraryScannerService, "tagLyrics", "Ljava/lang/String;");
+//	jfieldID fieldTagLyrics = env->GetStaticFieldID(classLibraryScannerService, "tagLyrics", "Ljava/lang/String;");
 
 	jfieldID fieldTagHasEmbeddedArt = env->GetStaticFieldID(classLibraryScannerService, "hasEmbeddedArt", "Z");
 
@@ -286,11 +286,13 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
     if (inputstream_context != NULL) {
         delete inputstream_context;
     }
+    return 0;
 }
 
 JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadSetPosition(JNIEnv * env, jclass classLibraryScannerService, jlong context, jint position) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 
+    return -1;
 }
 
 JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadGetCount(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
@@ -322,7 +324,10 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
         jbyte * coverData = (jbyte *) inputstream_context->coverData.data();
         // TODO: add buffer overflow check
         env->SetByteArrayRegion(target, offset, length, &coverData[nativePos]);
+        return 0;
     }
+
+    return -1;
 }
 
 #ifdef __cplusplus

@@ -12,22 +12,23 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
-import com.actionbarsherlock.widget.SearchView;
 import com.astuetz.PagerSlidingTabStrip;
 
 import java.util.ArrayList;
@@ -159,30 +160,30 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menu_label_sort);
         sortMenuItem.setIcon(R.drawable.ic_action_sort_1_dark);
-        sortMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+        MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
         final MenuItem searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menu_label_filter);
         searchMenuItem.setIcon(R.drawable.ic_action_search_dark);
-        searchMenuItem.setActionView(searchView);
-        searchMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        MenuItemCompat.setActionView(searchMenuItem, searchView);
+        MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
         final MenuItem hiddenMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 4, R.string.menu_label_show_hidden);
         hiddenMenuItem.setIcon(R.drawable.ic_action_show_dark);
         hiddenMenuItem.setCheckable(true);
-        hiddenMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
 
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
         final MenuItem shareMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 5, R.string.menu_label_share);
         shareMenuItem.setIcon(R.drawable.ic_action_share_dark);
-        shareMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        MenuItemCompat.setShowAsAction(shareMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         shareMenuItem.setOnMenuItemClickListener(shareOnMenuItemClickListener);
 
         final MenuItem reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menu_label_reload);
         reloadMenuItem.setIcon(R.drawable.ic_action_reload);
-        reloadMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
         return true;
@@ -810,6 +811,10 @@ TODO:
                     );
                     collectionIndex++;
                 }
+
+                if (cursor != null) {
+                    cursor.close();
+                }
             } else {
                 collections = new CollectionDescriptor[1];
             }
@@ -819,8 +824,8 @@ TODO:
         }
         collections[collections.length - 1] = new CollectionDescriptor(ID_LIBRARY_MANAGEMENT, getString(R.string.label_library_settings));
 
-        navigationAdapter = new ArrayAdapter<CollectionDescriptor>(getSupportActionBar().getThemedContext(), R.layout.sherlock_spinner_item, collections);
-        navigationAdapter.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
+        navigationAdapter = new ArrayAdapter<CollectionDescriptor>(getSupportActionBar().getThemedContext(), R.layout.support_simple_spinner_dropdown_item, collections);
+        navigationAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
 
         getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         getSupportActionBar().setListNavigationCallbacks(navigationAdapter, collectionOnNavigationListener);

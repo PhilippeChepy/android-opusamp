@@ -1,15 +1,14 @@
 package eu.chepy.audiokit.ui.activities;
 
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.views.VerticalSeekBar;
 
-public class SoundEffectsActivity extends SherlockFragmentActivity {
+public class SoundEffectsActivity extends ActionBarActivity {
 
     private CheckBox equalizerEnabledCheckbox;
 

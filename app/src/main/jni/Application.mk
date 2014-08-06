@@ -1,7 +1,8 @@
 #APP_ABI := armeabi-v7a armeabi x86 mips
-APP_ABI := all32
+APP_ABI := all
 
 APP_MODULES := medialib
+APP_PLATFORM := android-8
 
 APP_STL := stlport_static
 APP_CPPFLAGS += -frtti 

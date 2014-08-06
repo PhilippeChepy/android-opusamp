@@ -145,6 +145,9 @@ public class PlayerApplication extends Application {
                         mediaManagers[index] = MediaManagerFactory.buildMediaManager(providerType, providerId);
                     }
                 }
+                if (cursor != null) {
+                    cursor.close();
+                }
             }
 
             if (currentProvider != null) {

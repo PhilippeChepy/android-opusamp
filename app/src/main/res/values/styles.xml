@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AudioKit.FullScreenActivity" parent="Theme.Sherlock.NoActionBar">
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="@style/Theme.AppCompat.Light">
+        <item name="android:windowNoTitle">true</item>
+
+    </style>
+
+    <style name="AudioKit.FullScreenActivity" parent="Theme.AppCompat.Light.NoActionBar">
+
     </style>
 
     <style name="AudioKit.TransparentActionBar" parent="AudioKit">
-        <item name="windowContentOverlay">@null</item>
-        <item name="android:windowContentOverlay">@null</item>
         <item name="windowActionBarOverlay">true</item>
     </style>
 
     <style name="AudioKit.NavigationDrawer" parent="AudioKit">
         <item name="homeAsUpIndicator">@drawable/ic_drawer</item>
-        <item name="windowContentOverlay">@null</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="windowActionBarOverlay">true</item>
     </style>

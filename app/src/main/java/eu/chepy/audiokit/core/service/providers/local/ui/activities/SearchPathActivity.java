@@ -6,11 +6,12 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBarActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import eu.chepy.audiokit.R;
@@ -21,7 +22,7 @@ import eu.chepy.audiokit.core.service.providers.local.ui.fragments.SearchPathFra
 import eu.chepy.audiokit.ui.activities.UtilDirectorySelectActivity;
 import eu.chepy.audiokit.ui.adapter.ux.PagerAdapter;
 
-public class SearchPathActivity extends SherlockFragmentActivity {
+public class SearchPathActivity extends ActionBarActivity {
 
 	private ViewPager viewPager;
 	
@@ -70,7 +71,7 @@ public class SearchPathActivity extends SherlockFragmentActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menu_label_add_directory);
 		addMenuItem.setIcon(R.drawable.ic_action_add_dark);
-		addMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+        MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
 
 		return true;

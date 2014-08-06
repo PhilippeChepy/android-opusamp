@@ -621,7 +621,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         actionbarHeight = 0;
         final Resources.Theme theme = getTheme();
         if (theme != null) {
-            theme.resolveAttribute(com.actionbarsherlock.R.attr.actionBarSize, mTypedValue, true);
+            theme.resolveAttribute(android.support.v7.appcompat.R.attr.actionBarSize, mTypedValue, true);
             actionbarHeight = TypedValue.complexToDimensionPixelSize(mTypedValue.data, getResources().getDisplayMetrics());
         }
 

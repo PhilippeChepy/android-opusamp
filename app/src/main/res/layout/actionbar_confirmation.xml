@@ -13,7 +13,7 @@
         android:background="@drawable/holo_selector" >
 
         <TextView
-            style="@style/Widget.Sherlock.ActionBar.TabText"
+            style="@style/Widget.AppCompat.ActionBar.TabText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -40,7 +40,7 @@
         android:background="@drawable/holo_selector" >
 
         <TextView
-            style="@style/Widget.Sherlock.ActionBar.TabText"
+            style="@style/Widget.AppCompat.ActionBar.TabText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

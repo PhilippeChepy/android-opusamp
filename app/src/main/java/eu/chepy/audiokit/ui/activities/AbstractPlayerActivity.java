@@ -16,18 +16,18 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import eu.chepy.audiokit.core.service.IPlayerService;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerViewHelper;
 
-public abstract class AbstractPlayerActivity extends SherlockFragmentActivity implements ServiceConnection {
+public abstract class AbstractPlayerActivity extends ActionBarActivity implements ServiceConnection {
 
     public static final String TAG = AbstractPlayerActivity.class.getSimpleName();
 

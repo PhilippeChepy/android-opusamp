@@ -2,7 +2,9 @@ package eu.chepy.audiokit.ui.adapter;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -119,7 +121,12 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                 contextMenuHandle.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        parentActivity.openContextMenu(parent);
+                        //parentActivity.openContextMenu(parent);
+                        PopupMenu popupMenu = new PopupMenu(parentActivity, contextMenuHandle);
+                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test1");
+                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test2");
+                        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, "Test3");
+                        popupMenu.show();
                     }
                 });
             }

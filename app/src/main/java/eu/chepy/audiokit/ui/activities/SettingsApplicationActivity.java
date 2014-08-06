@@ -15,13 +15,12 @@ package eu.chepy.audiokit.ui.activities;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.Preference;
-
-import com.actionbarsherlock.app.SherlockPreferenceActivity;
+import android.preference.PreferenceActivity;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
-public class SettingsApplicationActivity extends SherlockPreferenceActivity {
+public class SettingsApplicationActivity extends PreferenceActivity {
 
 	public static final String TAG = SettingsApplicationActivity.class.getSimpleName();
 
@@ -32,7 +31,6 @@ public class SettingsApplicationActivity extends SherlockPreferenceActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		getSupportActionBar().show();
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		addPreferencesFromResource(R.xml.preferences);
 		

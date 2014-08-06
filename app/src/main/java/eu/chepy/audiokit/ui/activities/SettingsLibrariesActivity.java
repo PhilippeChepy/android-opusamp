@@ -11,18 +11,19 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
 import com.mobeta.android.dslv.DragSortListView;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import eu.chepy.audiokit.ui.adapter.ProviderAdapter;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.utils.LogUtils;
 
-public class SettingsLibrariesActivity extends SherlockFragmentActivity implements
+public class SettingsLibrariesActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         AdapterView.OnItemClickListener,
         DragSortListView.DropListener,
@@ -245,7 +246,7 @@ public class SettingsLibrariesActivity extends SherlockFragmentActivity implemen
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem addMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_ADD, 1, R.string.menu_label_add_library);
         addMenuItem.setIcon(R.drawable.ic_action_add_dark);
-        addMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+        MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         addMenuItem.setOnMenuItemClickListener(onAddOptionMenuItemListener);
 
         /*

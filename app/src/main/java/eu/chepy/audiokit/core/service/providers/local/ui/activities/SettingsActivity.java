@@ -4,16 +4,15 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-
-import com.actionbarsherlock.app.SherlockPreferenceActivity;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
-public class SettingsActivity extends SherlockPreferenceActivity {
+public class SettingsActivity extends PreferenceActivity {
 
     private int providerId;
 
@@ -28,7 +27,6 @@ public class SettingsActivity extends SherlockPreferenceActivity {
             providerId = intent.getIntExtra(AbstractMediaProvider.KEY_PROVIDER_ID, 0);
         }
 
-        getSupportActionBar().show();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         final PreferenceManager preferenceManager = getPreferenceManager();
