@@ -609,6 +609,8 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
     @Override
     public Object getProperty(ContentType contentType, Object target, ContentProperty key) {
+        final Resources resources = PlayerApplication.context.getResources();
+
         switch (key) {
             case CONTENT_ART_STREAM:
                 switch (contentType) {
@@ -642,9 +644,78 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 // TODO: add metadatas.
                 switch (contentType) {
                     case CONTENT_TYPE_ALBUM:
+                        final SQLiteDatabase database = getReadableDatabase();
+
+                        final String albumSelection = Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ";
+
+                        final String albumSelectionArgs[] = new String[] {
+                                (String) target
+                        };
+
                         // Track count
+                        final Cursor trackCountCursor = database.rawQuery(
+                            "SELECT COUNT(*) " +
+                                    "FROM " + Entities.Media.TABLE_NAME + " " +
+                                    "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
+
+                        long trackCount = 0;
+                        if (trackCountCursor != null) {
+                            if (trackCountCursor.moveToFirst()) {
+                                trackCount = trackCountCursor.getInt(0);
+                            }
+                            trackCountCursor.close();
+                        }
+
+                        // Total duration
+                        String totalDuration = PlayerApplication.context.getString(R.string.label_metadata_unknown);
+                        final Cursor totalCursor = database.rawQuery(
+                                "SELECT SUM(" + Entities.Media.COLUMN_FIELD_DURATION + ") " +
+                                        "FROM " + Entities.Media.TABLE_NAME + " " +
+                                        "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
+                        if (totalCursor != null) {
+                            if (totalCursor.moveToFirst()) {
+                                totalDuration = PlayerApplication.formatSecs(totalCursor.getInt(0));
+                            }
+                            totalCursor.close();
+                        }
+
                         // Album artist
+                        final String artistsColumns[] = new String[] {
+                                Entities.Media.COLUMN_FIELD_ARTIST
+                        };
+
+                        final Cursor artistsCursor = database.query(Entities.Media.TABLE_NAME, artistsColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_ARTIST, null, Entities.Media.COLUMN_FIELD_ARTIST);
+                        final ArrayList<String> artists = new ArrayList<String>();
+
+                        if (artistsCursor != null) {
+                            while (artistsCursor.moveToNext()) {
+                                artists.add(artistsCursor.getString(0));
+                            }
+                            artistsCursor.close();
+                        }
+
                         // Genre
+                        final String genresColumns[] = new String[] {
+                                Entities.Media.COLUMN_FIELD_GENRE
+                        };
+
+                        final Cursor genreCursor = database.query(Entities.Media.TABLE_NAME, genresColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_GENRE, null, Entities.Media.COLUMN_FIELD_GENRE);
+                        final ArrayList<String> genres = new ArrayList<String>();
+
+                        if (genreCursor != null) {
+                            while (genreCursor.moveToNext()) {
+                                genres.add(genreCursor.getString(0));
+                            }
+                            genreCursor.close();
+                        }
+
+
+                        // Data compilation
+                        metadataList.add(new Metadata(0, resources.getString(R.string.label_metadata_album_track_count), String.valueOf(trackCount), false));
+                        metadataList.add(new Metadata(1, resources.getString(R.string.label_metadata_album_duration), totalDuration, false));
+                        metadataList.add(new Metadata(2, resources.getQuantityString(R.plurals.label_metadata_album_artists, artists.size()), TextUtils.join(", ", artists), false));
+                        metadataList.add(new Metadata(2, resources.getQuantityString(R.plurals.label_metadata_album_genres, genres.size()), TextUtils.join(", ", genres), false));
+
                         break;
                     case CONTENT_TYPE_MEDIA:
                         final int requestedFields[] = new int[] {
@@ -666,7 +737,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                             SONG_DISC,
                         };
 
-                        final int fieldIds[] = new int[] {
+                        final int fieldLabelIds[] = new int[] {
                             R.string.label_metadata_media_uri,
                             R.string.label_metadata_media_duration,
                             R.string.label_metadata_media_bitrate,
@@ -705,7 +776,12 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                             editable = true;
                                     }
 
-                                    metadataList.add(new Metadata(columnIndex, fieldIds[columnIndex], cursor.getString(columnIndex), editable));
+                                    String value = cursor.getString(columnIndex);
+                                    if (requestedFields[columnIndex] == SONG_DURATION) {
+                                        value = PlayerApplication.formatSecs(cursor.getInt(columnIndex));
+                                    }
+
+                                    metadataList.add(new Metadata(columnIndex, resources.getString(fieldLabelIds[columnIndex]), value, editable));
                                 }
                             }
                         }

@@ -362,7 +362,8 @@ public class PlayerViewHelper implements
         changePlaylistCursor(cursor);
 
         if (playlistLengthTextView != null) {
-            playlistLengthTextView.setText(String.format(hostActivity.getString(R.string.label_track_count), playlistCursor.getCount()));
+            int count = playlistCursor.getCount();
+            playlistLengthTextView.setText(hostActivity.getResources().getQuantityString(R.plurals.label_track_count, count, count));
         }
     }
 
@@ -654,7 +655,7 @@ public class PlayerViewHelper implements
 
                 titleTextView.setText(playlistCursor.getString(COLUMN_SONG_TITLE));
                 artistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
-                timeTextView.setText(PlayerApplication.formatMsecs(position));
+                timeTextView.setText(PlayerApplication.formatMSecs(position));
 
                 final String songArtUri =
                         ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
@@ -795,7 +796,7 @@ public class PlayerViewHelper implements
                 progressBar.setProgress(position);
             }
 
-            timeTextView.setText(PlayerApplication.formatMsecs(position));
+            timeTextView.setText(PlayerApplication.formatMSecs(position));
         }
     }
 

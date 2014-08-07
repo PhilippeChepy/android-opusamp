@@ -305,13 +305,23 @@ public class MusicConnector {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
         final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
 
-        Object metadataList = mediaProvider.getProperty(contentType, contentId, AbstractMediaProvider.ContentProperty.CONTENT_METADATA_LIST);
+        int titleResId = R.string.dialog_title_media_properties;
+        switch (contentType) {
+            case CONTENT_TYPE_ALBUM:
+                titleResId = R.string.dialog_title_album_properties;
 
-        MetadataListAdapter adapter = new MetadataListAdapter(hostActivity, (ArrayList<Metadata>)metadataList);
+                break;
+            case CONTENT_TYPE_MEDIA:
+                break;
+            default:
+                return false;
+        }
 
+        final Object metadataList = mediaProvider.getProperty(contentType, contentId, AbstractMediaProvider.ContentProperty.CONTENT_METADATA_LIST);
+        final MetadataListAdapter adapter = new MetadataListAdapter(hostActivity, (ArrayList<Metadata>)metadataList);
 
         new AlertDialog.Builder(hostActivity)
-                .setTitle(R.string.dialog_title_media_properties)
+                .setTitle(titleResId)
                 .setIcon(R.drawable.ic_launcher)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override

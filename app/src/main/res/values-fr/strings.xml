@@ -15,6 +15,20 @@
     <string name="dialog_title_album_properties">Propriétés de l\'album</string>
     <string name="dialog_title_media_properties">Propriétés du média</string>
 
+    <string name="label_metadata_unknown">inconnu</string>
+    <string name="label_metadata_album_track_count">Nombre de pistes</string>
+    <string name="label_metadata_album_duration">Durée totale</string>
+    <plurals name="label_metadata_album_artists">
+        <item quantity="zero">Artiste</item>
+        <item quantity="one">Artiste</item>
+        <item quantity="other">Artistes</item>
+    </plurals>
+    <plurals name="label_metadata_album_genres">
+        <item quantity="zero">Genre</item>
+        <item quantity="one">Genre</item>
+        <item quantity="other">Genres</item>
+    </plurals>
+
     <string name="label_metadata_media_uri">Chemin</string>
     <string name="label_metadata_media_duration">Durée</string>
     <string name="label_metadata_media_bitrate">Débit</string>
@@ -154,11 +168,18 @@
 
     <string name="share_via">Partager via</string>
     <string name="share_body">J\'écoute actuellement %1$s par %2$s.</string>
-    
-    <string name="label_autostop_set">Pause automatique dans %1$d minute(s)</string>
-    <string name="label_autostop_cancel">Pause automatique annulée</string>
 
-    <string name="label_track_count">%1$d élément(s) dans la file</string>
+
+    <plurals name="label_autostop_set">
+        <item quantity="zero">Pause automatique désactivée</item>
+        <item quantity="one">Pause automatique dans %1$d minute</item>
+        <item quantity="other">Pause automatique dans %1$d minutes</item>
+    </plurals>
+    <plurals name="label_track_count">
+        <item quantity="zero">File vide</item>
+        <item quantity="one">%1$d élément dans la file</item>
+        <item quantity="other">%1$d éléments dans la file</item>
+    </plurals>
 
     <string name="toast_press_back_again">Pressez de nouveau pour sortir</string>
 

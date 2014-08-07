@@ -25,6 +25,20 @@
     <string name="dialog_title_album_properties">Album properties</string>
     <string name="dialog_title_media_properties">Media properties</string>
 
+    <string name="label_metadata_unknown">unknown</string>
+    <string name="label_metadata_album_track_count">Track count</string>
+    <string name="label_metadata_album_duration">Duration</string>
+    <plurals name="label_metadata_album_artists">
+        <item quantity="zero">Artist</item>
+        <item quantity="one">Artist</item>
+        <item quantity="other">Artists</item>
+    </plurals>
+    <plurals name="label_metadata_album_genres">
+        <item quantity="zero">Genre</item>
+        <item quantity="one">Genre</item>
+        <item quantity="other">Genres</item>
+    </plurals>
+
     <string name="label_metadata_media_uri">Path</string>
     <string name="label_metadata_media_duration">Duration</string>
     <string name="label_metadata_media_bitrate">Bitrate</string>
@@ -154,9 +168,18 @@
     <string name="label_favorites">Favorites</string>
     <string name="share_via">Share via</string>
     <string name="share_body">I\'m currently listening %1$s by %2$s.</string>
-    <string name="label_autostop_set">Pausing music in %1$d minute(s)</string>
-    <string name="label_autostop_cancel">Canceled scheduled pause</string>
-    <string name="label_track_count">%1$d item(s) in playlist</string>
+
+    <plurals name="label_autostop_set">
+        <item quantity="zero">Pausing music is disabled</item>
+        <item quantity="one">Pausing music in %1$d minute</item>
+        <item quantity="other">Pausing music in %1$d minutes</item>
+    </plurals>
+    <plurals name="label_track_count">
+        <item quantity="zero">Empty playlist</item>
+        <item quantity="one">%1$d item in playlist</item>
+        <item quantity="other">%1$d items in playlist</item>
+    </plurals>
+
     <string name="toast_press_back_again">Press BACK again to exit"</string>
     <string name="label_media_management">Media management</string>
     <string name="label_settings">Settings</string>

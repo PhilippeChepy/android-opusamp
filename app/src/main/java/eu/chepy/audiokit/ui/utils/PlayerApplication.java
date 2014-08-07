@@ -276,8 +276,11 @@ public class PlayerApplication extends Application {
     /*
 
      */
-    public static String formatMsecs(long duration) {
-        int durationSecs = (int) (duration / 1000);
+    public static String formatMSecs(long duration) {
+        return  formatSecs((int) (duration / 1000));
+    }
+
+    public static String formatSecs(int durationSecs) {
         int mins = (durationSecs / 60);
         int secs = (durationSecs % 60);
 
@@ -480,6 +483,7 @@ public class PlayerApplication extends Application {
         }
         menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.context_menu_add_to_playlist);
         menu.add(groupId, CONTEXT_MENUITEM_HIDE, 5, visible ? R.string.context_menu_hide : R.string.context_menu_show);
+        menu.add(groupId, CONTEXT_MENUITEM_DETAIL, 6, R.string.context_menu_details);
     }
 
     public static boolean albumDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String albumId, int sortOrder, int position, String songId) {
@@ -514,6 +518,9 @@ public class PlayerApplication extends Application {
                 return MusicConnector.doContextActionAddToPlaylist(hostActivity, AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
                 return MusicConnector.doContextActionToggleVisibility(AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+            case CONTEXT_MENUITEM_DETAIL:
+                MusicConnector.doContextActionDetail(hostActivity, AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+                return false;
             default:
                 return false;
         }
