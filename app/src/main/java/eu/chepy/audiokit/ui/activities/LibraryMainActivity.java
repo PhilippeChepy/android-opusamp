@@ -173,11 +173,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
-        final MenuItem shareMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 5, R.string.menu_label_share);
-        shareMenuItem.setIcon(R.drawable.ic_action_share_dark);
-        MenuItemCompat.setShowAsAction(shareMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
-        shareMenuItem.setOnMenuItemClickListener(shareOnMenuItemClickListener);
-
         final MenuItem reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menu_label_reload);
         reloadMenuItem.setIcon(R.drawable.ic_action_reload);
         MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -449,15 +444,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     };
 
 
-
-    private final MenuItem.OnMenuItemClickListener shareOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
-
-        @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            doSharing();
-            return true;
-        }
-    };
 
     private final MenuItem.OnMenuItemClickListener reloadOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
         @Override
@@ -892,20 +878,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         else {
             sortMenuItem.setVisible(false);
 //            recentMenuItem.setVisible(false);
-        }
-    }
-
-    protected void doSharing() {
-        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-        sharingIntent.setType("text/plain");
-
-        final String mediaTitle = getPlayerView().currentMediaTitle();
-        final String mediaArtist = getPlayerView().currentMediaArtist();
-
-        if (!TextUtils.isEmpty(mediaTitle) && !TextUtils.isEmpty(mediaArtist)) {
-            final String sharingText = String.format(getString(R.string.share_body), mediaTitle, mediaArtist);
-            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, sharingText);
-            startActivity(Intent.createChooser(sharingIntent, getString(R.string.share_via)));
         }
     }
 

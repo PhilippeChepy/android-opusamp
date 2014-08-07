@@ -126,10 +126,10 @@
                     android:src="@drawable/ic_action_list_2_off" />
 
                 <ImageButton
-                    android:id="@+id/playlist_carmode"
+                    android:id="@+id/song_options"
                     style="@style/PlayerButton"
                     android:contentDescription="@string/cd_carmode"
-                    android:src="@drawable/ic_action_car_off" />
+                    android:src="@drawable/ic_action_overflow" />
             </LinearLayout>
         </LinearLayout>
 

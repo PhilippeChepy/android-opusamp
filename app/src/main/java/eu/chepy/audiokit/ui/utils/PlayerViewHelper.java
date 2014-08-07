@@ -23,6 +23,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.PopupMenu;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -133,6 +134,8 @@ public class PlayerViewHelper implements
 
     private TextView playlistLengthTextView;
 
+    private ImageButton songOptionsButton;
+
 
 
     private SlidingUpPanelLayout slidingUpPanelLayout;
@@ -224,26 +227,75 @@ public class PlayerViewHelper implements
         if (playlistButton != null) {
             playlistButton.setOnClickListener(playlistToggleVisibilityClickListener);
         }
-        refreshViews();
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) hostActivity.findViewById(R.id.sliding_layout);
         if (slidingUpPanelLayout != null) {
             //slidingUpPanelLayout.setShadowDrawable(hostActivity.getResources().getDrawable(R.drawable.above_shadow));
             slidingUpPanelLayout.setDragView(hostActivity.findViewById(R.id.upper_panel));
             slidingUpPanelLayout.setPanelSlideListener(panelSlideListener);
+        }
 
-            final ImageButton carmodeButton = (ImageButton) hostActivity.findViewById(R.id.playlist_carmode);
-            carmodeButton.setOnClickListener(new View.OnClickListener() {
+        songOptionsButton = (ImageButton) hostActivity.findViewById(R.id.song_options);
+        if (songOptionsButton != null) {
+            songOptionsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-                    final Intent carmodeIntent = new Intent(hostActivity, CarModeActivity.class);
-                    hostActivity.startActivity(carmodeIntent);
+                public void onClick(View v) {
+                    PopupMenu popupMenu = new PopupMenu(hostActivity, v);
+
+                    popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menu_label_share);
+                    popupMenu.getMenu().getItem(0).setIcon(R.drawable.ic_action_share_dark);
+                    popupMenu.getMenu().getItem(0).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                            sharingIntent.setType("text/plain");
+
+                            final String mediaTitle = currentMediaTitle();
+                            final String mediaArtist = currentMediaArtist();
+
+                            if (!TextUtils.isEmpty(mediaTitle) && !TextUtils.isEmpty(mediaArtist)) {
+                                final String sharingText = String.format(PlayerApplication.context.getString(R.string.share_body), mediaTitle, mediaArtist);
+                                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, sharingText);
+                                PlayerApplication.context.startActivity(Intent.createChooser(sharingIntent, PlayerApplication.context.getString(R.string.share_via)));
+                            }
+                            return true;
+                        }
+                    });
+
+                    popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.menu_label_toggle_car_mode);
+                    popupMenu.getMenu().getItem(1).setIcon(R.drawable.ic_action_car);
+                    popupMenu.getMenu().getItem(1).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            final Intent carmodeIntent = new Intent(hostActivity, CarModeActivity.class);
+                            hostActivity.startActivity(carmodeIntent);
+                            return false;
+                        }
+                    });
+
+                    popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menu_label_delayed_pause);
+                    popupMenu.getMenu().getItem(2).setIcon(R.drawable.ic_action_alarm);
+                    popupMenu.getMenu().getItem(2).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            return false;
+                        }
+                    });
+
+
+                    popupMenu.show();
+
                 }
             });
         }
+
+        refreshViews();
     }
 
-    public void changePlaylistCursor(Cursor cursor) {
+    public int changePlaylistCursor(Cursor cursor) {
+        int queuePosition = MusicConnector.getCurrentPlaylistPosition();
+
         if (adapter != null) {
             adapter.changeCursor(cursor);
 
@@ -252,8 +304,6 @@ public class PlayerViewHelper implements
             }
 
             if (cursor != null) {
-                int queuePosition = MusicConnector.getCurrentPlaylistPosition();
-
                 if (playlist != null) {
                     playlist.setSelection(queuePosition);
                 }
@@ -261,6 +311,7 @@ public class PlayerViewHelper implements
                 playerServiceListener.fullUiUpdate();
             }
         }
+        return queuePosition;
     }
 
     public void registerServiceListener() {
@@ -359,11 +410,11 @@ public class PlayerViewHelper implements
         }
 
         playlistCursor = cursor;
-        changePlaylistCursor(cursor);
+        int currentTrack = changePlaylistCursor(cursor);
 
         if (playlistLengthTextView != null) {
             int count = playlistCursor.getCount();
-            playlistLengthTextView.setText(hostActivity.getResources().getQuantityString(R.plurals.label_track_count, count, count));
+            playlistLengthTextView.setText(hostActivity.getResources().getQuantityString(R.plurals.label_track_position, count, count));
         }
     }
 

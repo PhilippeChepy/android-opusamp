@@ -79,6 +79,7 @@
 	<string name="menu_label_audio_effects">Effets audios</string>
 	<string name="menu_label_sleep_timer">Arret automatique</string>
 	<string name="menu_label_toggle_car_mode">Entrer/sortir du mode voiture</string>
+    <string name="menu_label_delayed_pause">Pause programmée</string>
 	<string name="menu_label_settings">Préférences</string>
 	<string name="menu_label_add_directory">Ajouter un dossier</string>
     <string name="menu_label_add_library">Ajouter une bibliothèque</string>
@@ -175,10 +176,10 @@
         <item quantity="one">Pause automatique dans %1$d minute</item>
         <item quantity="other">Pause automatique dans %1$d minutes</item>
     </plurals>
-    <plurals name="label_track_count">
+    <plurals name="label_track_position">
         <item quantity="zero">File vide</item>
-        <item quantity="one">%1$d élément dans la file</item>
-        <item quantity="other">%1$d éléments dans la file</item>
+        <item quantity="one">%1$d piste dans la file</item>
+        <item quantity="other">%1$d pistes dans la file</item>
     </plurals>
 
     <string name="toast_press_back_again">Pressez de nouveau pour sortir</string>
