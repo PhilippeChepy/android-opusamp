@@ -13,7 +13,9 @@
 package eu.chepy.audiokit.ui.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -37,6 +39,9 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.mobeta.android.dslv.DragSortListView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
@@ -147,8 +152,54 @@ public class PlayerViewHelper implements
 
 
 
+    /*
+        Ad mob
+     */
+    private InterstitialAd interstitial = null;
+
+    private static final String CONFIG_FILE_FREEMIUM = "freemium";
+
+    private static final String CONFIG_IS_FREEMIUM = "isFreemium";
+
+    private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
+
+
+
     public PlayerViewHelper(ActionBarActivity fragmentActivity) {
         hostActivity = fragmentActivity;
+
+        final SharedPreferences sharedPreferences = hostActivity.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        boolean freemium = sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
+
+        if (freemium) {
+            int noDisplayCounter = sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
+
+            if (noDisplayCounter >= 5) {
+                interstitial = new InterstitialAd(hostActivity);
+                interstitial.setAdUnitId("ca-app-pub-3216044483473621/6665880790");
+
+                AdRequest adRequest = new AdRequest.Builder()
+                        .addTestDevice("2A8AFDBBC128894B872A1F3DAE11358D") // Nexus 5
+                        .addTestDevice("EA2776551264A5F012EAD8016CCAFD67") // LG GPad
+                        .build();
+
+                interstitial.loadAd(adRequest);
+                interstitial.setAdListener(new AdListener() {
+                    @Override
+                    public void onAdLoaded() {
+                        super.onAdLoaded();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt(CONFIG_NO_DISPLAY, 0);
+                        editor.apply();
+                    }
+                });
+            }
+            else {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt(CONFIG_NO_DISPLAY, noDisplayCounter);
+                editor.apply();
+            }
+        }
 
         imageViewContainer = hostActivity.findViewById(R.id.square_view_container);
         playlistContainer = hostActivity.findViewById(R.id.playlist_container);
@@ -246,6 +297,12 @@ public class PlayerViewHelper implements
         }
 
         refreshViews();
+    }
+
+    public void onActivityDestroy() {
+        if (interstitial != null && interstitial.isLoaded()) {
+            interstitial.show();
+        }
     }
 
     public int changePlaylistCursor(Cursor cursor) {

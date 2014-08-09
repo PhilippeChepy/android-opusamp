@@ -262,13 +262,15 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
 
         getSupportLoaderManager().destroyLoader(0);
 
         for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
             mediaManager.getMediaProvider().removeLibraryChangeListener(libraryChangeListener);
         }
+
+        getPlayerView().onActivityDestroy();
+        super.onDestroy();
 
         getPlayerView().unregisterServiceListener();
         unbindDrawables(findViewById(R.id.drawer_layout));

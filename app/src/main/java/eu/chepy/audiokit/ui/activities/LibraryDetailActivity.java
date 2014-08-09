@@ -312,8 +312,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        getPlayerView().onActivityDestroy();
         getPlayerView().unregisterServiceListener();
+
+        super.onDestroy();
 
         unbindDrawables(findViewById(R.id.sliding_layout));
         getSupportLoaderManager().destroyLoader(0);
