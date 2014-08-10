@@ -90,6 +90,13 @@ public class PlayerApplication extends Application {
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
     }
 
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+
+
+    }
+
     public static void allocateMediaManagers() {
         AbstractMediaManager currentProvider = null;
         int currentProviderId = -1;
