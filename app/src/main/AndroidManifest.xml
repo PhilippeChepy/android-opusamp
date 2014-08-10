@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="eu.chepy.audiokit"
-    android:versionCode="1"
-    android:versionName="1.0.1" >
+    package="eu.chepy.audiokit" >
+
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -24,12 +24,11 @@
             android:name=".core.service.PlayerService"
             android:enabled="true"
             android:icon="@drawable/ic_launcher"
-            android:label="@string/svc_player"
-            android:stopWithTask="false" >
-            <intent-filter>
+            android:label="@string/svc_player" >
+            <!--<intent-filter>
                 <action android:name="eu.chepy.audiokit.core.service.PlayerService" >
                 </action>
-            </intent-filter>
+            </intent-filter>-->
         </service>
 
         <receiver android:name=".core.service.ServiceBroadcastReceiver" >
