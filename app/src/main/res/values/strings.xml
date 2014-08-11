@@ -241,10 +241,15 @@
     <string name="preference_other_options_screen_title">Other options</string>
     <string name="preference_about_screen_title">About</string>
 
+    <string name="preference_online_help">Online help</string>
     <string name="preference_licenses_title">Open source Licenses</string>
 
     <string name="preference_various_artists_default_value">Various artists</string>
     <string name="preference_unknown_artists_default_value">Unknown artist</string>
+
+    <string name="dialog_title_database_optimization">Data optimization</string>
+    <string name="progress_dialog_global">Main database</string>
+    <string name="progress_dialog_pct">Database : %1$s/%2$s</string>
 
 
 

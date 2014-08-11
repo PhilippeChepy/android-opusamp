@@ -12,16 +12,23 @@
  */
 package eu.chepy.audiokit.ui.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.Log;
 
+import java.io.File;
+import java.text.DecimalFormat;
+
 import eu.chepy.audiokit.BuildConfig;
 import eu.chepy.audiokit.R;
+import eu.chepy.audiokit.ui.utils.NormalImageLoader;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
+import eu.chepy.audiokit.ui.utils.ThumbnailImageLoader;
 import eu.chepy.audiokit.utils.iab.IabHelper;
 import eu.chepy.audiokit.utils.iab.IabResult;
 import eu.chepy.audiokit.utils.iab.Inventory;
@@ -52,7 +59,11 @@ public class SettingsApplicationActivity extends PreferenceActivity {
 		
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		addPreferencesFromResource(R.xml.preferences);
-		
+
+        setCacheCleanupListener();
+        setDatabaseOptimizationListener();
+
+        setOnlineHelpListener();
 		setOpenSourceLicensesListener();
 
 
@@ -108,7 +119,98 @@ public class SettingsApplicationActivity extends PreferenceActivity {
     }
 
     @SuppressWarnings("deprecation")
-	private void setOpenSourceLicensesListener() {
+	private void setCacheCleanupListener() {
+        final Preference cacheCleanup = findPreference("cache_cleanup");
+        setDiscCacheSummary(cacheCleanup);
+        cacheCleanup.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+            @Override
+            public boolean onPreferenceClick(final Preference preference) {
+                NormalImageLoader.getInstance().clearDiskCache();
+                ThumbnailImageLoader.getInstance().clearDiskCache();
+                setDiscCacheSummary(cacheCleanup);
+                return true;
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setDatabaseOptimizationListener() {
+        final Preference databaseOptimization = findPreference("database_optimization");
+        databaseOptimization.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+            @Override
+            public boolean onPreferenceClick(final Preference preference) {
+                final ProgressDialog progressDialog = new ProgressDialog(SettingsApplicationActivity.this);
+
+                final AsyncTask<Void, Integer, Void> optimizationTask = new AsyncTask<Void, Integer, Void>() {
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        progressDialog.setTitle(R.string.dialog_title_database_optimization);
+                        progressDialog.setIndeterminate(true);
+                        progressDialog.show();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        try {
+                            publishProgress(0);
+                            PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
+
+                            for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
+                                publishProgress(index + 1);
+                                PlayerApplication.mediaManagers[index].getMediaProvider().databaseMaintain();
+                            }
+                        }
+                        catch (Exception e) {
+
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Integer... values) {
+                        super.onProgressUpdate(values);
+
+                        if (values[0] == 0) {
+                            progressDialog.setMessage(getString(R.string.progress_dialog_global));
+                        }
+                        else {
+                            progressDialog.setMessage(String.format(getString(R.string.progress_dialog_pct), values[0], PlayerApplication.mediaManagers.length));
+                        }
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        progressDialog.dismiss();
+                    }
+                };
+
+                optimizationTask.execute();
+
+                return true;
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setOnlineHelpListener() {
+        final Preference onlineHelp = findPreference("online_help");
+        onlineHelp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+            @Override
+            public boolean onPreferenceClick(final Preference preference) {
+
+                return true;
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setOpenSourceLicensesListener() {
         final Preference openSourceLicenses = findPreference("open_source");
         openSourceLicenses.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
@@ -176,4 +278,28 @@ public class SettingsApplicationActivity extends PreferenceActivity {
             }
         }
     };
+
+    private static long folderSize(File directory) {
+        long length = 0;
+        for (File file : directory.listFiles()) {
+            if (file.isFile())
+                length += file.length();
+            else
+                length += folderSize(file);
+        }
+        return length;
+    }
+
+    private static void setDiscCacheSummary(Preference cacheCleanup) {
+        File normalCacheDirectory = NormalImageLoader.getInstance().getDiskCache().getDirectory();
+        File thumbnailCacheDirectory = ThumbnailImageLoader.getInstance().getDiskCache().getDirectory();
+
+        final Double allocated = (double)(folderSize(normalCacheDirectory) + folderSize(thumbnailCacheDirectory))/ (double)(1048576);
+
+        final DecimalFormat decimalFormat = new DecimalFormat();
+        decimalFormat.setMaximumFractionDigits(2);
+        decimalFormat.setMinimumFractionDigits(2);
+
+        cacheCleanup.setSummary(decimalFormat.format(allocated) + " MB");
+    }
 }

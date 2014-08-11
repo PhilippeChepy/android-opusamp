@@ -21,18 +21,4 @@
             android:title="@string/loc_preference_collection_tab_visibility_dialog_title" />
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/header_storage"
-        android:icon="@drawable/ic_action_database" >
-
-        <Preference
-            android:title="@string/loc_preference_optimize_database"
-            android:icon="@drawable/ic_action_database"/>
-
-        <Preference
-            android:title="@string/loc_preference_clear_art_cache"
-            android:icon="@drawable/ic_action_document"/>
-
-    </PreferenceCategory>
-
 </PreferenceScreen>

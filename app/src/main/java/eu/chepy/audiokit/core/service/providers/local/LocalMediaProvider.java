@@ -2946,6 +2946,11 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         return false;
     }
 
+    @Override
+    public void databaseMaintain() {
+        getWritableDatabase().rawQuery("VACUUM;", null);
+    }
+
     protected List<File> getStorageFileList(SyncScanContext scanContext, String filter) {
         if (currentFolder == null) {
             return null;

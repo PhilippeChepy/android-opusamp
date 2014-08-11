@@ -247,12 +247,15 @@
     <string name="preference_other_options_screen_title">Autres options</string>
     <string name="preference_about_screen_title">A propos</string>
 
+    <string name="preference_online_help">Aide en ligne</string>
     <string name="preference_licenses_title">Licences Open source</string>
 
     <string name="preference_various_artists_default_value">Artistes divers</string>
     <string name="preference_unknown_artists_default_value">Artistes inconnu</string>
 
-
+    <string name="dialog_title_database_optimization">Optimisation des données</string>
+    <string name="progress_dialog_global">Base de données principale</string>
+    <string name="progress_dialog_pct">Base de données : %1$s/%2$s</string>
 
     <string name="loc_preference_collection_screen_title">Bibliothèque</string>
 

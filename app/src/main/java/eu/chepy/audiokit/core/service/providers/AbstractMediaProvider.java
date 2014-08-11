@@ -186,4 +186,7 @@ public interface AbstractMediaProvider {
     public AbstractProviderAction getAbstractProviderAction(int index);
 
     public AbstractProviderAction[] getAbstractProviderActionList();
+
+
+    public void databaseMaintain();
 }

@@ -17,14 +17,34 @@
         android:title="@string/preference_other_options_screen_title">
     </PreferenceScreen>
 
-    <PreferenceScreen
-        android:icon="@drawable/ic_action_info"
+    <PreferenceCategory
+        android:title="@string/header_storage"
+        android:icon="@drawable/ic_action_database" >
+
+        <Preference
+            android:key="database_optimization"
+            android:title="@string/loc_preference_optimize_database"
+            android:icon="@drawable/ic_action_database"/>
+
+        <Preference
+            android:key="cache_cleanup"
+            android:title="@string/loc_preference_clear_art_cache"
+            android:icon="@drawable/ic_action_document"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:title="@string/preference_about_screen_title">
 
+        <Preference
+            android:key="online_help"
+            android:title="@string/preference_online_help"
+            android:icon="@drawable/ic_action_help" />
 
         <Preference
             android:key="open_source"
-            android:title="@string/preference_licenses_title" />
-    </PreferenceScreen>
+            android:title="@string/preference_licenses_title"
+            android:icon="@drawable/ic_action_info" />
+    </PreferenceCategory>
 
 </PreferenceScreen>
