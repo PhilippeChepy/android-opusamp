@@ -20,7 +20,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,7 +36,6 @@ import java.io.File;
 import java.util.ArrayList;
 
 import eu.chepy.audiokit.R;
-import eu.chepy.audiokit.core.service.PlayerService;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider.ContentType;
@@ -238,13 +236,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         doInitLibraryContent();
         getSupportLoaderManager().initLoader(0, null, getPlayerView());
 
-        if (MusicConnector.playerService == null) {
+        if (PlayerApplication.playerService == null) {
             final Context context = getApplicationContext();
 
             if (context != null) {
-                final Intent playerService = new Intent(context, PlayerService.class);
-                context.bindService(playerService, this, Context.BIND_AUTO_CREATE);
-                context.startService(playerService);
+                PlayerApplication.connectService(this);
             }
         }
         else {
@@ -265,8 +261,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                         PlayerApplication.saveLibraryIndexes();
 
                         try {
-                            MusicConnector.playerService.queueReload();
-
+                            PlayerApplication.playerService.queueReload();
                         } catch (final RemoteException remoteException) {
                             LogUtils.LOGException(TAG, "doReloadServiceState", 0, remoteException);
                         }
@@ -323,7 +318,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onDestroy() {
-
         getSupportLoaderManager().destroyLoader(0);
 
         for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
@@ -331,12 +325,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
 
         getPlayerView().onActivityDestroy();
-        super.onDestroy();
-
         getPlayerView().unregisterServiceListener();
+        PlayerApplication.unregisterServiceCallback(this);
+
         unbindDrawables(findViewById(R.id.drawer_layout));
+        super.onDestroy();
         System.gc();
-        Log.w(TAG, "onDestroy()");
     }
 
     @Override

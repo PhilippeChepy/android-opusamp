@@ -43,7 +43,6 @@ import android.widget.ListView;
 import com.nineoldandroids.view.ViewHelper;
 
 import eu.chepy.audiokit.R;
-import eu.chepy.audiokit.core.service.PlayerService;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.adapter.LibraryAdapter;
@@ -302,13 +301,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         getSupportLoaderManager().initLoader(0, null, this);
         getSupportLoaderManager().initLoader(1, null, this);
 
-        if (MusicConnector.playerService == null) {
+        if (PlayerApplication.playerService == null) {
             final Context context = getApplicationContext();
 
             if (context != null) {
-                final Intent playerService = new Intent(context, PlayerService.class);
-                context.bindService(playerService, this, Context.BIND_AUTO_CREATE);
-                context.startService(playerService);
+                PlayerApplication.connectService(this);
             }
         }
         else {
@@ -320,15 +317,15 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     protected void onDestroy() {
-        getPlayerView().onActivityDestroy();
-        getPlayerView().unregisterServiceListener();
-
-        super.onDestroy();
-
-        unbindDrawables(findViewById(R.id.sliding_layout));
         getSupportLoaderManager().destroyLoader(0);
         getSupportLoaderManager().destroyLoader(1);
 
+        getPlayerView().onActivityDestroy();
+        getPlayerView().unregisterServiceListener();
+        PlayerApplication.unregisterServiceCallback(this);
+
+        unbindDrawables(findViewById(R.id.drawer_layout));
+        super.onDestroy();
         System.gc();
     }
 

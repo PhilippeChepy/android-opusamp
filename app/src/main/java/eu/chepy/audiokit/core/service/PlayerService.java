@@ -888,7 +888,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 			final Editor edit = sharedPreferences.edit();
 			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-			edit.commit();
+			edit.apply();
 
             notifyQueueChanged();
 		}
@@ -927,12 +927,11 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 					play();
 				}
 			}
-
 			
 			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 			final Editor edit = sharedPreferences.edit();
 			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-			edit.commit();
+			edit.apply();
 
             notifyQueueChanged();
 		}
@@ -954,7 +953,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 			final Editor edit = sharedPreferences.edit();
 			edit.remove(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION);
-			edit.commit();
+			edit.apply();
 
             notifyQueueChanged();
 		}
@@ -977,8 +976,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 			
 			if (currentTrack != null && playlist.getCount() > 0) {
                 final String mediaUri = currentTrack.getMediaUri();
-				if (!TextUtils.isEmpty(mediaUri) &&
-						mediaUri.equals(playlist.getString(COLUMN_SONG_URI))) {
+				if (!TextUtils.isEmpty(mediaUri) && mediaUri.equals(playlist.getString(COLUMN_SONG_URI))) {
 					if (wasPlaying) {
 						play();
 					}

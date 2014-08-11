@@ -18,7 +18,7 @@ import android.content.Intent;
 import android.os.RemoteException;
 import android.util.Log;
 
-import eu.chepy.audiokit.ui.utils.MusicConnector;
+import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.utils.LogUtils;
 
 public class StorageMountBroadcastReceiver extends BroadcastReceiver {
@@ -30,10 +30,10 @@ public class StorageMountBroadcastReceiver extends BroadcastReceiver {
 		Log.d(TAG, "onReceive()");
 		
 		if (intent.equals(Intent.ACTION_MEDIA_REMOVED)) {
-			if (MusicConnector.playerService != null) {
+			if (PlayerApplication.playerService != null) {
 				try {
-					if (MusicConnector.playerService.isPlaying()) {
-						MusicConnector.playerService.stop();
+					if (PlayerApplication.playerService.isPlaying()) {
+                        PlayerApplication.playerService.stop();
 					}
 				} catch (final RemoteException remoteException) {
 					LogUtils.LOGException(TAG, "onReceive()", 0, remoteException);

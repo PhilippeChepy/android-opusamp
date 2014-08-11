@@ -144,7 +144,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         if (userEnabledTabs == null || userEnabledTabs.size() == 0) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             SharedPreferencesCompat.EditorCompat.putStringSet(editor, resources.getString(R.string.key_tabs_enabled), defaultTabs);
-            editor.commit();
+            editor.apply();
         }
     }
 
@@ -272,7 +272,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
                     database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
@@ -288,13 +288,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         return false;
                     }
 
-                    MusicConnector.playerService.queueReload();
+                    PlayerApplication.playerService.queueReload();
 
-                    if (MusicConnector.playerService.queueGetSize() > position) {
-                        MusicConnector.playerService.queueSetPosition(position);
+                    if (PlayerApplication.playerService.queueGetSize() > position) {
+                        PlayerApplication.playerService.queueSetPosition(position);
 
-                        if (!MusicConnector.playerService.isPlaying()) {
-                            MusicConnector.playerService.play();
+                        if (!PlayerApplication.playerService.isPlaying()) {
+                            PlayerApplication.playerService.play();
                         }
                     }
                     return true;
@@ -313,9 +313,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         SQLiteDatabase database = openHelper.getWritableDatabase();
 
         if (database != null) {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
-                    int position = MusicConnector.playerService.queueGetPosition();
+                    int position = PlayerApplication.playerService.queueGetPosition();
 
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
                         File selection = fileList.get(position);
@@ -330,7 +330,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         return false;
                     }
 
-                    MusicConnector.playerService.queueReload();
+                    PlayerApplication.playerService.queueReload();
                     return true;
                 }
                 catch (final RemoteException remoteException) {
@@ -380,7 +380,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
 
         if (database != null) {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
                     int position = 0;
 
@@ -415,7 +415,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         return false;
                     }
 
-                    MusicConnector.playerService.queueReload();
+                    PlayerApplication.playerService.queueReload();
                     return true;
                 }
                 catch (final RemoteException remoteException) {

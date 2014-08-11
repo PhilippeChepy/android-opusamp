@@ -142,8 +142,6 @@ public class PlayerViewHelper implements
 
     private TextView playlistLengthTextView;
 
-    private ImageButton songOptionsButton;
-
 
 
     private SlidingUpPanelLayout slidingUpPanelLayout;
@@ -295,7 +293,7 @@ public class PlayerViewHelper implements
             slidingUpPanelLayout.setPanelSlideListener(panelSlideListener);
         }
 
-        songOptionsButton = (ImageButton) hostActivity.findViewById(R.id.song_options);
+        final ImageButton songOptionsButton = (ImageButton) hostActivity.findViewById(R.id.song_options);
         if (songOptionsButton != null) {
             songOptionsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -423,7 +421,7 @@ public class PlayerViewHelper implements
 
     public void registerServiceListener() {
         try {
-            MusicConnector.playerService.registerPlayerCallback(playerServiceListener);
+            PlayerApplication.playerService.registerPlayerCallback(playerServiceListener);
             int queuePosition = MusicConnector.getCurrentPlaylistPosition();
 
             if (playlist != null) {
@@ -439,9 +437,9 @@ public class PlayerViewHelper implements
     }
 
     public void unregisterServiceListener() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.unregisterPlayerCallback(playerServiceListener);
+                PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "unregisterServiceListener()", 0, remoteException);
             }
@@ -488,9 +486,9 @@ public class PlayerViewHelper implements
      */
     @Override
     public void drop(int from, int to) {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.queueMove(from, to);
+                PlayerApplication.playerService.queueMove(from, to);
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "drop()", 0, remoteException);
             }
@@ -519,7 +517,7 @@ public class PlayerViewHelper implements
         }
 
         playlistCursor = cursor;
-        int currentTrack = changePlaylistCursor(cursor);
+        changePlaylistCursor(cursor);
 
         if (playlistLengthTextView != null) {
             int count = playlistCursor.getCount();
@@ -622,10 +620,10 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doPlayAction() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.queueSetPosition(playlistCursor.getPosition());
-                MusicConnector.playerService.play();
+                PlayerApplication.playerService.queueSetPosition(playlistCursor.getPosition());
+                PlayerApplication.playerService.play();
                 return true;
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "onContextItemSelected()", 0, remoteException);
@@ -639,13 +637,13 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doPlayNextAction() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                final int queueSize = MusicConnector.playerService.queueGetSize();
-                final int queuePosition = MusicConnector.playerService.queueGetPosition();
+                final int queueSize = PlayerApplication.playerService.queueGetSize();
+                final int queuePosition = PlayerApplication.playerService.queueGetPosition();
 
-                MusicConnector.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
-                MusicConnector.playerService.queueMove(queueSize, queuePosition + 1);
+                PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
+                PlayerApplication.playerService.queueMove(queueSize, queuePosition + 1);
                 return true;
             } catch (final RemoteException remoteException) {
                 Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
@@ -656,9 +654,9 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doAddToQueueAction() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
+                PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
                 return true;
             } catch (final RemoteException remoteException) {
                 Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
@@ -675,10 +673,10 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doClearAction() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.stop();
-                MusicConnector.playerService.queueClear();
+                PlayerApplication.playerService.stop();
+                PlayerApplication.playerService.queueClear();
             } catch (final RemoteException remoteException) {
                 Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
             }
@@ -690,9 +688,9 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doDeleteAction() {
-        if (MusicConnector.playerService != null) {
+        if (PlayerApplication.playerService != null) {
             try {
-                MusicConnector.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
+                PlayerApplication.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
             } catch (final RemoteException remoteException) {
                 Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
             }
@@ -801,10 +799,10 @@ public class PlayerViewHelper implements
                 long position = 0;
                 int queuePosition = 0;
 
-                if (MusicConnector.playerService != null) {
+                if (PlayerApplication.playerService != null) {
                     try {
-                        position = MusicConnector.playerService.getPosition();
-                        queuePosition = MusicConnector.playerService.queueGetPosition();
+                        position = PlayerApplication.playerService.getPosition();
+                        queuePosition = PlayerApplication.playerService.queueGetPosition();
                     }
                     catch (final RemoteException remoteException) {
                         LogUtils.LOGException(TAG, "doSongUpdate", 0, remoteException);
@@ -837,9 +835,9 @@ public class PlayerViewHelper implements
         }
 
         protected void doRepeatButtonUpdate() {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
-                    switch (MusicConnector.playerService.getRepeatMode()) {
+                    switch (PlayerApplication.playerService.getRepeatMode()) {
                         case PlayerService.REPEAT_ALL:
                             repeatButton.setImageResource(R.drawable.ic_action_playback_repeat);
                             break;
@@ -860,9 +858,9 @@ public class PlayerViewHelper implements
         }
 
         protected void doPlayButtonUpdate() {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
-                    if (MusicConnector.playerService.isPlaying()) {
+                    if (PlayerApplication.playerService.isPlaying()) {
                         playButton.setImageResource(R.drawable.ic_action_playback_pause);
                         timeTextView.clearAnimation();
                     }
@@ -876,13 +874,13 @@ public class PlayerViewHelper implements
                         timeTextView.startAnimation(animation);
                     }
 
-                    long currentPosition = MusicConnector.playerService.getPosition();
+                    long currentPosition = PlayerApplication.playerService.getPosition();
 
                     if (currentPosition == 0) {
                         onSeek(0);
                     }
 
-                    progressBar.setMax((int) MusicConnector.playerService.getDuration());
+                    progressBar.setMax((int) PlayerApplication.playerService.getDuration());
                 }
                 catch (final RemoteException remoteException) {
                     LogUtils.LOGException(TAG, "doPlayButtonUpdate()", 0, remoteException);
@@ -894,9 +892,9 @@ public class PlayerViewHelper implements
         }
 
         protected void doShuffleButtonUpdate() {
-            if (MusicConnector.playerService != null) {
+            if (PlayerApplication.playerService != null) {
                 try {
-                    switch (MusicConnector.playerService.getShuffleMode()) {
+                    switch (PlayerApplication.playerService.getShuffleMode()) {
                         case PlayerService.SHUFFLE_AUTO:
                             shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle);
                             break;
@@ -967,18 +965,14 @@ public class PlayerViewHelper implements
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             try {
-                boolean wasPlaying = MusicConnector.playerService.isPlaying();
-
-                if (wasPlaying) {
-                    MusicConnector.playerService.pause(true);
+                if (PlayerApplication.playerService.isPlaying()) {
+                    PlayerApplication.playerService.pause(true);
+                    PlayerApplication.playerService.setPosition(seekBar.getProgress());
+                    PlayerApplication.playerService.play();
                 }
-
-                MusicConnector.playerService.setPosition(seekBar.getProgress());
-
-                if (wasPlaying) {
-                    MusicConnector.playerService.play();
+                else {
+                    PlayerApplication.playerService.setPosition(seekBar.getProgress());
                 }
-
             }
             catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "progressBarOnChangeListener.onStopTrackingTouch()", 0, remoteException);

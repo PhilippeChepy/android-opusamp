@@ -1,14 +1,11 @@
 package eu.chepy.audiokit.ui.activities;
 
-import android.content.Context;
-import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.WindowManager;
 
 import eu.chepy.audiokit.R;
-import eu.chepy.audiokit.core.service.PlayerService;
-import eu.chepy.audiokit.ui.utils.MusicConnector;
+import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
 public class CarModeActivity extends AbstractPlayerActivity {
 
@@ -17,6 +14,7 @@ public class CarModeActivity extends AbstractPlayerActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         setContentView(R.layout.activity_car_mode);
@@ -24,14 +22,8 @@ public class CarModeActivity extends AbstractPlayerActivity {
         initPlayerView(savedInstanceState, false);
         getSupportLoaderManager().initLoader(0, null, getPlayerView());
 
-        if (MusicConnector.playerService == null) {
-            final Context context = getApplicationContext();
-
-            if (context != null) {
-                final Intent playerService = new Intent(context, PlayerService.class);
-                context.bindService(playerService, this, Context.BIND_AUTO_CREATE);
-                context.startService(playerService);
-            }
+        if (PlayerApplication.playerService == null) {
+            PlayerApplication.connectService(this);
         }
         else {
             getPlayerView().registerServiceListener();
@@ -43,12 +35,14 @@ public class CarModeActivity extends AbstractPlayerActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         getSupportLoaderManager().destroyLoader(0);
 
+        getPlayerView().onActivityDestroy();
         getPlayerView().unregisterServiceListener();
-        unbindDrawables(findViewById(R.id.carmode_layout));
+        PlayerApplication.unregisterServiceCallback(this);
+
+        unbindDrawables(findViewById(R.id.drawer_layout));
+        super.onDestroy();
         System.gc();
-        Log.w(TAG, "onDestroy()");
     }
 }

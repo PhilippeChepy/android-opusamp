@@ -23,8 +23,6 @@ import android.widget.AdapterView;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
-import eu.chepy.audiokit.core.service.IPlayerService;
-import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerViewHelper;
 
 public abstract class AbstractPlayerActivity extends ActionBarActivity implements ServiceConnection {
@@ -55,18 +53,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                 getSupportActionBar().hide();
             }
         }
-    }
-
-    @Override
-    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        MusicConnector.playerService = IPlayerService.Stub.asInterface(iBinder);
-        playerViewHelper.registerServiceListener();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName componentName) {
-        playerViewHelper.unregisterServiceListener();
-        MusicConnector.playerService = null; // Used by app widgets...
     }
 
     @Override
@@ -104,6 +90,16 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     }
 
     @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        getPlayerView().registerServiceListener();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        getPlayerView().unregisterServiceListener();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
@@ -112,8 +108,11 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         }
     }
 
-    protected void unbindDrawables(View view)
-    {
+    protected void unbindDrawables(View view) {
+        if (view == null) {
+            return;
+        }
+
         if (view.getBackground() != null) {
             view.getBackground().setCallback(null);
         }

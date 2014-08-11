@@ -16,15 +16,18 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
@@ -36,8 +39,11 @@ import android.webkit.WebView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import eu.chepy.audiokit.R;
+import eu.chepy.audiokit.core.service.IPlayerService;
+import eu.chepy.audiokit.core.service.PlayerService;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.core.service.providers.MediaManagerFactory;
@@ -46,13 +52,24 @@ import eu.chepy.audiokit.core.service.providers.index.database.OpenHelper;
 import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.audiokit.utils.LogUtils;
 
-public class PlayerApplication extends Application {
+public class PlayerApplication extends Application implements ServiceConnection {
 
 	public final static String TAG = PlayerApplication.class.getSimpleName();
 
 
 
+    // Global application context
     public static Context context;
+
+    // Global application instance
+    public static PlayerApplication instance;
+
+    // Global service reference.
+    public static IPlayerService playerService = null;
+
+    public static ArrayList<ServiceConnection> additionalCallbacks = new ArrayList<ServiceConnection>();
+
+
 
     /*
 
@@ -74,12 +91,15 @@ public class PlayerApplication extends Application {
 
     public static ImageLoader thumbnailImageLoader;
 
+    private static boolean connecting;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         context = getApplicationContext();
+        instance = this;
 
         databaseHelper = new OpenHelper(this);
         allocateMediaManagers();
@@ -90,11 +110,37 @@ public class PlayerApplication extends Application {
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
     }
 
+    public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
+        if (connecting) {
+            return;
+        }
+
+        additionalCallbacks.add(additionalConnectionCallback);
+        connecting = true;
+        if (context != null) {
+            final Intent playerService = new Intent(context, PlayerService.class);
+            context.bindService(playerService, instance, Context.BIND_AUTO_CREATE);
+            context.startService(playerService);
+        }
+        connecting = false;
+    }
+
+    public synchronized static void unregisterServiceCallback(ServiceConnection additionalCallback) {
+        additionalCallbacks.remove(additionalCallback);
+    }
+
     @Override
-    public void onTerminate() {
-        super.onTerminate();
+    public synchronized void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        playerService = IPlayerService.Stub.asInterface(iBinder);
 
+        for (ServiceConnection callback : additionalCallbacks) {
+            callback.onServiceConnected(componentName, iBinder);
+        }
+    }
 
+    @Override
+    public synchronized void onServiceDisconnected(ComponentName componentName) {
+        playerService = null;
     }
 
     public static void allocateMediaManagers() {
@@ -171,9 +217,9 @@ public class PlayerApplication extends Application {
             }
         }
 
-        if (MusicConnector.playerService != null) {
+        if (playerService != null) {
             try {
-                MusicConnector.playerService.notifyProviderChanged();
+                playerService.notifyProviderChanged();
             }
             catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "allocateMediaManagers", 0, remoteException);
@@ -650,7 +696,7 @@ public class PlayerApplication extends Application {
 
         editor.putInt(PREFERENCE_LIBRARY_PLAYER_INDEX, playerManagerIndex);
         editor.putInt(PREFERENCE_LIBRARY_LIBRARY_INDEX, libraryManagerIndex);
-        editor.commit();
+        editor.apply();
     }
 
     public static int getLibraryPlayerIndex() {
@@ -693,11 +739,6 @@ public class PlayerApplication extends Application {
 								dialog.dismiss();
 							}
 						}).create();
-	}
-	
-	public static boolean isTablet() {
-		return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= 
-				Configuration.SCREENLAYOUT_SIZE_LARGE;
 	}
 
     public static boolean hasFroyo() {
