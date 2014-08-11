@@ -187,9 +187,9 @@
 
     <string name="label_application_settings">Application settings</string>
 
-    <string name="label_widget_4x1">Opus 4x1</string>
-    <string name="label_widget_4x2">Opus 4x2</string>
-    <string name="label_start_app">Open Opus to play medias</string>
+    <string name="label_widget_4x1">Lecteur Audio 4x1</string>
+    <string name="label_widget_4x2">Lecteur Audio 4x2</string>
+    <string name="label_start_app">Open audio player for medias</string>
 
     <string name="sort_A_Z">A-Z</string>
     <string name="sort_Z_A">Z-A</string>

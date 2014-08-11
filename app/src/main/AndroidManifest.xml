@@ -88,7 +88,7 @@
 
         <activity
             android:name=".ui.activities.LibraryDetailActivity"
-            android:theme="@style/AudioKit.TransparentActionBar" >
+            android:theme="@style/AudioKit.TransparentActionBar">
         </activity>
 
         <activity

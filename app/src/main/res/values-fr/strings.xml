@@ -196,7 +196,7 @@
     <string name="label_select_cover">Choix de la pochette</string>
 
     <string name="label_default_library">Bibliothèque musicale</string>
-    <string name="label_start_app">Ouvrir le lecteur pour lire des médias</string>
+    <string name="label_start_app">Ouvrir le lecteur audio</string>
 
     <string name="label_scan_files">Fichiers à scanner</string>
 
