@@ -168,7 +168,8 @@ public interface AbstractMediaProvider {
         CONTENT_STORAGE_UPDATE_VIEW,        /* write only */
         CONTENT_STORAGE_HAS_PARENT,         /* read only */
         CONTENT_STORAGE_HAS_CHILD,          /* read only */
-        CONTENT_STORAGE_CURRENT_LOCATION,   /* read only */
+        CONTENT_STORAGE_CURRENT_LOCATION,   /* read/write only */
+        CONTENT_STORAGE_RESOURCE_POSITION,     /* read only */
     }
 
     public boolean hasFeature(Feature feature);

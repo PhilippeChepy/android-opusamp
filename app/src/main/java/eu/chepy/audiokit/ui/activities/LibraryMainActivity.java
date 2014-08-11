@@ -8,8 +8,10 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -31,6 +33,7 @@ import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import eu.chepy.audiokit.R;
@@ -54,6 +57,7 @@ import eu.chepy.audiokit.ui.fragments.SongFragment;
 import eu.chepy.audiokit.ui.fragments.StorageFragment;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
+import eu.chepy.audiokit.utils.LogUtils;
 
 public class LibraryMainActivity extends AbstractPlayerActivity {
 
@@ -245,6 +249,63 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
         else {
             getPlayerView().registerServiceListener();
+        }
+
+        final Intent intent = getIntent();
+        final String action = intent.getAction();
+
+        if(Intent.ACTION_VIEW.equals(action)){
+            for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[index];
+
+                if (mediaManager.getMediaManagerType() == AbstractMediaManager.LOCAL_MEDIA_MANAGER) {
+                    if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
+                        MusicConnector.doStopAction();
+                        PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
+                        PlayerApplication.saveLibraryIndexes();
+
+                        try {
+                            MusicConnector.playerService.queueReload();
+
+                        } catch (final RemoteException remoteException) {
+                            LogUtils.LOGException(TAG, "doReloadServiceState", 0, remoteException);
+                        }
+                    }
+
+                    final Uri dataUri = intent.getData();
+                    String path = dataUri.getPath();
+                    final File pathFile = new File(path);
+                    if (!pathFile.isDirectory()) {
+                        path = pathFile.getParent();
+                    }
+
+                    mediaManager.getMediaProvider().setProperty(
+                            ContentType.CONTENT_TYPE_STORAGE,
+                            path,
+                            AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
+                            null,
+                            null);
+                    int position = (Integer) mediaManager.getMediaProvider().getProperty(
+                            ContentType.CONTENT_TYPE_STORAGE,
+                            dataUri.getPath(),
+                            AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
+
+                    libraryAdapter.doRefresh();
+
+                    MusicConnector.doContextActionPlay(
+                            ContentType.CONTENT_TYPE_STORAGE,
+                            String.valueOf(position),
+                            MusicConnector.storage_sort_order,
+                            position);
+
+                    getPlayerView().getSlidingPanel().expandPanel();
+                    getSupportActionBar().hide();
+                }
+            }
+
+
+            // now you call whatever function your app uses
+            // to consume the txt file whose location you now know
         }
     }
 

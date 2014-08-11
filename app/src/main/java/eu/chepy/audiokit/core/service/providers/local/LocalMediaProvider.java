@@ -604,6 +604,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 }
 
                 break;
+            case CONTENT_STORAGE_CURRENT_LOCATION:
+                currentFolder = new File((String) target);
+                fileList = getStorageFileList(new SyncScanContext(), null);
+                break;
         }
     }
 
@@ -639,6 +643,16 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 return currentFolder.getParentFile() != null;
             case CONTENT_STORAGE_CURRENT_LOCATION:
                 return currentFolder.getAbsolutePath();
+            case CONTENT_STORAGE_RESOURCE_POSITION:
+                for (int index = 0 ; index < fileList.size() ; index++) {
+                    final File file = fileList.get(index);
+                    final String targetFilePath = (String) target;
+
+                    if (file.getAbsolutePath().equals(targetFilePath)) {
+                        return index + 1;
+                    }
+                }
+                return -1;
             case CONTENT_METADATA_LIST:
                 ArrayList<Metadata> metadataList = new ArrayList<Metadata>();
                 // TODO: add metadatas.
