@@ -265,8 +265,6 @@
     <string name="loc_preference_collection_tab_visibility_dialog_title">Onglets activés</string>
     <string name="loc_preference_collection_tab_visibility_summary">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
 
-
     <!-- Equalizer view -->
     <string name="label_enable_equalizer">Activer l\'equaliseur</string>
-
 </resources>

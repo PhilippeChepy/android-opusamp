@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="key_tabs_enabled">tabs_enabled</string>
+
+    <string name="key_audio_exts">audio_exts</string>
+    <string name="key_cover_exts">cover_exts</string>
+
+    <string name="ext_jpeg">jpeg</string>
+    <string name="ext_jpg">jpg</string>
+    <string name="ext_png">png</string>
+    <string name="ext_bmp">bmp</string>
+    <string name="ext_cda">cda</string>
+    <string name="ext_mp3">mp3</string>
+    <string name="ext_mp2">mp2</string>
+    <string name="ext_mp1">mp1</string>
+    <string name="ext_aac">aac</string>
+    <string name="ext_vlb">vlb</string>
+    <string name="ext_m4a">m4a</string>
+    <string name="ext_mp4">mp4</string>
+    <string name="ext_nsa">nsa</string>
+    <string name="ext_flac">flac</string>
+    <string name="ext_ogg">ogg</string>
+    <string name="ext_wma">wma</string>
+    <string name="ext_mid">mid</string>
+    <string name="ext_midi">midi</string>
+    <string name="ext_rmi">rmi</string>
+    <string name="ext_kar">kar</string>
+    <string name="ext_miz">miz</string>
+    <string name="ext_mod">mod</string>
+    <string name="ext_mdz">mdz</string>
+    <string name="ext_nst">nst</string>
+    <string name="ext_stm">stm</string>
+    <string name="ext_stz">stz</string>
+    <string name="ext_s3m">s3m</string>
+    <string name="ext_s3z">s3z</string>
+    <string name="ext_it">it</string>
+    <string name="ext_itz">itz</string>
+    <string name="ext_xm">xm</string>
+    <string name="ext_xmz">xmz</string>
+    <string name="ext_mtm">mtm</string>
+    <string name="ext_ult">ult</string>
+    <string name="ext_669">669</string>
+    <string name="ext_far">far</string>
+    <string name="ext_amf">amf</string>
+    <string name="ext_okt">okt</string>
+    <string name="ext_ptm">ptm</string>
+    <string name="ext_wav">wav</string>
+    <string name="ext_voc">voc</string>
+    <string name="ext_au">au</string>
+    <string name="ext_snd">snd</string>
+    <string name="ext_aif">aif</string>
+    <string name="ext_aiff">aiff</string>
+    <string name="ext_atrac">atrac</string>
+    <string name="ext_omg">omg</string>
+    <string name="ext_at3">at3</string>
+
+    <string name="label_00_00">00:00</string>
+</resources>
