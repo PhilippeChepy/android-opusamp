@@ -13,6 +13,7 @@
 package eu.chepy.audiokit.ui.utils;
 
 import android.app.Activity;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,6 +21,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -38,6 +40,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -149,6 +152,12 @@ public class PlayerViewHelper implements
         Player Ui logic
      */
     private boolean updateSeekBar = true;
+
+    private static int autostop;
+
+    private static Handler autostopHandler;
+
+    private static Runnable autostopTask;
 
 
 
@@ -327,7 +336,7 @@ public class PlayerViewHelper implements
     }
 
     protected void doShowOverflowMenu(final View v) {
-        PopupMenu popupMenu = new PopupMenu(hostActivity, v);
+        final PopupMenu popupMenu = new PopupMenu(hostActivity, v);
 
         popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menu_label_share);
         popupMenu.getMenu().getItem(0).setIcon(R.drawable.ic_action_share_dark);
@@ -361,11 +370,49 @@ public class PlayerViewHelper implements
             }
         });
 
-        popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menu_label_delayed_pause);
+        popupMenu.getMenu().add(Menu.NONE, 3, 3, autostop != 0 ?
+                        String.format(hostActivity.getString(R.string.menu_label_delayed_pause_in), PlayerApplication.formatSecs(autostop)) : // format minutes (not secs)
+                        hostActivity.getString(R.string.menu_label_delayed_pause));
+        popupMenu.getMenu().getItem(2).setCheckable(true);
+        popupMenu.getMenu().getItem(2).setChecked(autostop != 0);
         popupMenu.getMenu().getItem(2).setIcon(R.drawable.ic_action_alarm);
         popupMenu.getMenu().getItem(2).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                final MenuItem autostopMenuItem = popupMenu.getMenu().getItem(2);
+
+                if (autostopMenuItem.isChecked()) {
+                    autostop = 0;
+                    if (autostopHandler != null && autostopTask != null) {
+                        autostopHandler.removeCallbacks(autostopTask);
+                        autostopHandler = null;
+                        autostopTask = null;
+                    }
+                }
+                else {
+                    final TimePickerDialog tpd = new TimePickerDialog(hostActivity,
+                            new TimePickerDialog.OnTimeSetListener() {
+
+                                @Override
+                                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                    autostop = hourOfDay * 60 + minute;
+                                    autostopTask = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            MusicConnector.doStopAction();
+                                        }
+                                    };
+
+                                    autostopHandler = new Handler();
+                                    autostopHandler.postDelayed(autostopTask, autostop * 60000);
+                                }
+                            }, 0, 0, true);
+
+                    tpd.setTitle(R.string.label_autostop);
+                    tpd.show();
+
+                }
+
                 return false;
             }
         });

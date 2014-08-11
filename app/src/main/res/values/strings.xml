@@ -13,13 +13,6 @@
 
     <!-- Service & associated permissions -->
     <string name="svc_player">Music Player</string>
-    <string name="perm_player">Playing music using specialized service</string>
-    <string name="svc_collection">Music Scanner</string>
-    <string name="perm_collection">Searching music in device</string>
-
-    <!-- Notifications -->
-    <string name="notif_scan_in_progress">Scanning for audio files</string>
-    <string name="notif_playing">Playing in progress</string>
 
     <!-- Activities -->
     <string name="dialog_title_album_properties">Album properties</string>
@@ -83,8 +76,9 @@
     <string name="menu_label_reload">Reload</string>
     <string name="menu_label_audio_effects">Audio effects</string>
     <string name="menu_label_sleep_timer">Sleep Timer</string>
-    <string name="menu_label_toggle_car_mode">Toggler car mode</string>
-    <string name="menu_label_delayed_pause">Delayed pause</string>
+    <string name="menu_label_toggle_car_mode">Car mode</string>
+    <string name="menu_label_delayed_pause">Auto pause</string>
+    <string name="menu_label_delayed_pause_in">Auto pause (%1$s)</string>
     <string name="menu_label_settings">Settings</string>
     <string name="menu_label_add_directory">Add directory</string>
     <string name="menu_label_add_library">Add a library</string>
@@ -113,7 +107,7 @@
     <string name="cd_shuffle">Shuffle tracks</string>
     <string name="cd_currently_playing">Currently playing</string>
     <string name="cd_playlist">Show/Hide playlist</string>
-    <string name="cd_carmode">Switch to car mode</string>
+    <string name="cd_option_menu">Show option menu</string>
 
     <!-- Tabs -->
     <string name="tab_accept_path">Scanned</string>
@@ -170,6 +164,7 @@
     <string name="share_via">Share via</string>
     <string name="share_body">I\'m currently listening %1$s by %2$s.</string>
 
+    <string name="label_autostop">Pausing music in...</string>
     <plurals name="label_autostop_set">
         <item quantity="zero">Pausing music is disabled</item>
         <item quantity="one">Pausing music in %1$d minute</item>

@@ -2,14 +2,6 @@
 <resources>
     <!-- Service & associated permissions -->
     <string name="svc_player">Lecteur audio</string>
-    <string name="perm_player">Lire de la musique en utilisant un service specialisé</string>
-    
-    <string name="svc_collection">Scanner de musique</string>
-    <string name="perm_collection">Rechercher de la musique sur la machine</string>
-    
-    <!-- Notifications -->
-	<string name="notif_scan_in_progress">Fichiers audio en cours de recherche</string>
-	<string name="notif_playing">Lecture en cours</string>
 
     <!-- Activities -->
     <string name="dialog_title_album_properties">Propriétés de l\'album</string>
@@ -78,8 +70,9 @@
     <string name="menu_label_reload">Recharger</string>
 	<string name="menu_label_audio_effects">Effets audios</string>
 	<string name="menu_label_sleep_timer">Arret automatique</string>
-	<string name="menu_label_toggle_car_mode">Entrer/sortir du mode voiture</string>
-    <string name="menu_label_delayed_pause">Pause programmée</string>
+	<string name="menu_label_toggle_car_mode">Mode voiture</string>
+    <string name="menu_label_delayed_pause">Pause auto.</string>
+    <string name="menu_label_delayed_pause_in">Pause auto. (%1$s)</string>
 	<string name="menu_label_settings">Préférences</string>
 	<string name="menu_label_add_directory">Ajouter un dossier</string>
     <string name="menu_label_add_library">Ajouter une bibliothèque</string>
@@ -110,7 +103,7 @@
 	<string name="cd_currently_playing">Lecture en cours</string>
 
     <string name="cd_playlist">Afficher/cacher la liste de lecture</string>
-    <string name="cd_carmode">Passer en mode voiture</string>
+    <string name="cd_option_menu">Afficher le menu des options</string>
 	
 	<!-- Tabs -->
 	<string name="tab_accept_path">Dossiers parcourus</string>
@@ -170,7 +163,7 @@
     <string name="share_via">Partager via</string>
     <string name="share_body">J\'écoute actuellement %1$s par %2$s.</string>
 
-
+    <string name="label_autostop">Pause automatique</string>
     <plurals name="label_autostop_set">
         <item quantity="zero">Pause automatique désactivée</item>
         <item quantity="one">Pause automatique dans %1$d minute</item>

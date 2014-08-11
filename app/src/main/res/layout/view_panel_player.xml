@@ -128,7 +128,7 @@
                 <ImageButton
                     android:id="@+id/song_options"
                     style="@style/PlayerButton"
-                    android:contentDescription="@string/cd_carmode"
+                    android:contentDescription="@string/cd_option_menu"
                     android:src="@drawable/ic_action_overflow" />
             </LinearLayout>
         </LinearLayout>
