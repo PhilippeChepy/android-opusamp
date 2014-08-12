@@ -152,13 +152,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         searchView.setOnQueryTextListener(searchViewOnQueryTextListener);
         searchView.setOnCloseListener(searchViewOnCloseListener);
 
-/*        recentMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RECENT, 1, getString(R.string.menu_label_recent));
-        recentMenuItem.setIcon(R.drawable.ic_action_clock_dark);
-        recentMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-        recentMenuItem.setOnMenuItemClickListener(onRecentOptionMenuItemListener);*/
-
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menu_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_1_dark);
+        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
@@ -593,8 +588,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             }
 
             alertDialogBuilder.show();
-
-            return false;
+            return true;
         }
     };
 

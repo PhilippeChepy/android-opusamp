@@ -1094,31 +1094,31 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
                     break;
                 case -ALBUM_NAME:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE DESC";
                     break;
                 case ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
+                    orderBy = orderBy + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -ALBUM_ARTIST:
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
-                    orderBy = orderBy + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
+                    orderBy = orderBy + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
                     break;
             }
         }
 
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
+            orderBy = Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " COLLATE NOCASE ASC";
         }
 
         // setting details arguments

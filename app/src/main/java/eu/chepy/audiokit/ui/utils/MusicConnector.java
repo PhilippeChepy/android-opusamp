@@ -64,6 +64,11 @@ public class MusicConnector {
 
 
 
+    public static int details_songs_sort_order = AbstractMediaProvider.SONG_TRACK;
+
+    public static int details_albums_sort_order = AbstractMediaProvider.ALBUM_NAME;
+
+
     /*
         General service control
      */
