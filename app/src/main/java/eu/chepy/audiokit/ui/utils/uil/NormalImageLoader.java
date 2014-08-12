@@ -1,15 +1,24 @@
-package eu.chepy.audiokit.ui.utils;
+package eu.chepy.audiokit.ui.utils.uil;
 
 import android.graphics.Bitmap;
 
+import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 
+import eu.chepy.audiokit.ui.utils.PlayerApplication;
+
 public class NormalImageLoader extends ImageLoader {
 
     private volatile static NormalImageLoader instance;
+
+    private FileNameGenerator fileNameGenerator;
+
+    private NormalImageLoader() {
+        fileNameGenerator = new PrefixedFileNameGenerator("nil");
+    }
 
     public static NormalImageLoader getInstance() {
         if (instance == null) {
@@ -20,20 +29,19 @@ public class NormalImageLoader extends ImageLoader {
                     DisplayImageOptions displayImageOptions = new DisplayImageOptions.Builder()
                             .bitmapConfig(Bitmap.Config.RGB_565)
                             .cacheInMemory(true)
-                            .cacheOnDisc(true)
+                            .cacheOnDisk(true)
                             .imageScaleType(ImageScaleType.EXACTLY)
                             .considerExifParams(false)
                             .build();
 
                     ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
-                            .threadPoolSize(4)
+                            .threadPoolSize(2)
                             .diskCacheExtraOptions(500, 500, null)
-                            .diskCacheSize(100 * 1024 * 1024)
-//                            .discCacheSize(100 * 1024 * 1024)
-//                            .discCacheExtraOptions(500, 500, Bitmap.CompressFormat.PNG, 100, null)
-//                            .discCache(new TotalSizeLimitedDiscCache(PlayerApplication.getCacheDir("arts"), 100 * 1024 * 1024))
+                            .diskCacheSize(50 * 1024 * 1024)
+                            .diskCacheFileNameGenerator(instance.fileNameGenerator)
                             .memoryCacheExtraOptions(500, 500)
-                            .imageDownloader(new ProviderStreamImageDownloader(PlayerApplication.context))
+                            .memoryCacheSizePercentage(20)
+                            .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
                             .defaultDisplayImageOptions(displayImageOptions)
                             .build();
 

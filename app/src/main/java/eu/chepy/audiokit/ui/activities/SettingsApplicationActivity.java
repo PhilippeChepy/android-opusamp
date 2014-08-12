@@ -26,9 +26,9 @@ import java.text.DecimalFormat;
 
 import eu.chepy.audiokit.BuildConfig;
 import eu.chepy.audiokit.R;
-import eu.chepy.audiokit.ui.utils.NormalImageLoader;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
-import eu.chepy.audiokit.ui.utils.ThumbnailImageLoader;
+import eu.chepy.audiokit.ui.utils.uil.NormalImageLoader;
+import eu.chepy.audiokit.ui.utils.uil.ThumbnailImageLoader;
 import eu.chepy.audiokit.utils.iab.IabHelper;
 import eu.chepy.audiokit.utils.iab.IabResult;
 import eu.chepy.audiokit.utils.iab.Inventory;

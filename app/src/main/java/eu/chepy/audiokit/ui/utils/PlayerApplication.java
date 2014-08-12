@@ -50,6 +50,8 @@ import eu.chepy.audiokit.core.service.providers.MediaManagerFactory;
 import eu.chepy.audiokit.core.service.providers.index.database.Entities;
 import eu.chepy.audiokit.core.service.providers.index.database.OpenHelper;
 import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
+import eu.chepy.audiokit.ui.utils.uil.NormalImageLoader;
+import eu.chepy.audiokit.ui.utils.uil.ThumbnailImageLoader;
 import eu.chepy.audiokit.utils.LogUtils;
 
 public class PlayerApplication extends Application implements ServiceConnection {

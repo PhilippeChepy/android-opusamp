@@ -45,7 +45,7 @@ import eu.chepy.audiokit.core.service.providers.AbstractMediaPlayer;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
-import eu.chepy.audiokit.ui.utils.ProviderStreamImageDownloader;
+import eu.chepy.audiokit.ui.utils.uil.ProviderImageDownloader;
 import eu.chepy.audiokit.ui.widgets.Widget4x1;
 import eu.chepy.audiokit.ui.widgets.Widget4x2;
 import eu.chepy.audiokit.utils.LogUtils;
@@ -1012,8 +1012,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
                 songId = playlist.getInt(COLUMN_SONG_ID);
 
-                songArtUri = ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderStreamImageDownloader.SUBTYPE_MEDIA + "/" +
+                songArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX +
+                        ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
                         PlayerApplication.playerManagerIndex + "/" +
                         songId;
 

@@ -58,6 +58,7 @@ import eu.chepy.audiokit.ui.activities.CarModeActivity;
 import eu.chepy.audiokit.ui.activities.LibraryMainActivity;
 import eu.chepy.audiokit.ui.adapter.LibraryAdapter;
 import eu.chepy.audiokit.ui.adapter.LibraryAdapterFactory;
+import eu.chepy.audiokit.ui.utils.uil.ProviderImageDownloader;
 import eu.chepy.audiokit.ui.views.RepeatingImageButton;
 import eu.chepy.audiokit.utils.LogUtils;
 
@@ -816,8 +817,8 @@ public class PlayerViewHelper implements
                 timeTextView.setText(PlayerApplication.formatMSecs(position));
 
                 final String songArtUri =
-                        ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderStreamImageDownloader.SUBTYPE_MEDIA + "/" +
+                        ProviderImageDownloader.SCHEME_URI_PREFIX +
+                        ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
                         PlayerApplication.playerManagerIndex + "/" +
                         playlistCursor.getString(COLUMN_SONG_ID);
 

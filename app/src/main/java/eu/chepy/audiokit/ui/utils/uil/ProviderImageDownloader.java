@@ -1,4 +1,4 @@
-package eu.chepy.audiokit.ui.utils;
+package eu.chepy.audiokit.ui.utils.uil;
 
 import android.content.Context;
 import android.net.Uri;
@@ -11,10 +11,11 @@ import java.util.List;
 
 import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
+import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
-public class ProviderStreamImageDownloader extends BaseImageDownloader {
+public class ProviderImageDownloader extends BaseImageDownloader {
 
-    public static final String TAG = ProviderStreamImageDownloader.class.getSimpleName();
+    public static final String TAG = ProviderImageDownloader.class.getSimpleName();
 
 
 
@@ -29,7 +30,7 @@ public class ProviderStreamImageDownloader extends BaseImageDownloader {
     public static final String SUBTYPE_STORAGE = "storage";
 
 
-    public ProviderStreamImageDownloader(Context context) {
+    public ProviderImageDownloader(Context context) {
         super(context);
     }
 

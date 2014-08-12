@@ -50,7 +50,7 @@ import eu.chepy.audiokit.ui.adapter.LibraryAdapterFactory;
 import eu.chepy.audiokit.ui.adapter.ux.HeaderWrapperAdapter;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
-import eu.chepy.audiokit.ui.utils.ProviderStreamImageDownloader;
+import eu.chepy.audiokit.ui.utils.uil.ProviderImageDownloader;
 
 public class LibraryDetailActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -294,8 +294,8 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     ((ImageView) placeHolderView).setImageResource(R.drawable.no_art_normal);
 
                     final String songArtUri =
-                            ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                            ProviderStreamImageDownloader.SUBTYPE_ALBUM + "/" +
+                            ProviderImageDownloader.SCHEME_URI_PREFIX +
+                            ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
                             PlayerApplication.libraryManagerIndex + "/" +
                             contentSourceId;
                     PlayerApplication.normalImageLoader.displayImage(songArtUri, (ImageView) placeHolderView);
@@ -471,8 +471,8 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
                 if (contentType == AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM) {
                     final String songArtUri =
-                            ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                            ProviderStreamImageDownloader.SUBTYPE_ALBUM + "/" +
+                            ProviderImageDownloader.SCHEME_URI_PREFIX +
+                            ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
                             PlayerApplication.libraryManagerIndex + "/" +
                             contentSourceId;
                     PlayerApplication.normalImageLoader.displayImage(songArtUri, (ImageView) placeHolderView);

@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
-import eu.chepy.audiokit.ui.utils.ProviderStreamImageDownloader;
+import eu.chepy.audiokit.ui.utils.uil.ProviderImageDownloader;
 
 public class LibraryAdapter extends SimpleCursorAdapter {
 
@@ -155,15 +155,15 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                     case LibraryAdapterFactory.ADAPTER_SONG:
                     case LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS:
                         imageUri =
-                                ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                                ProviderStreamImageDownloader.SUBTYPE_MEDIA + "/" +
+                                ProviderImageDownloader.SCHEME_URI_PREFIX +
+                                ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
                                         managerIndex + "/" + cursor.getString(idColumn);
                         break;
                     case LibraryAdapterFactory.ADAPTER_ALBUM:
                     case LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE:
                         imageUri =
-                                ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                                ProviderStreamImageDownloader.SUBTYPE_ALBUM + "/" +
+                                ProviderImageDownloader.SCHEME_URI_PREFIX +
+                                ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
                                         managerIndex + "/" + cursor.getString(idColumn);
                         break;
                     case LibraryAdapterFactory.ADAPTER_STORAGE:

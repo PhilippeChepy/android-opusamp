@@ -45,7 +45,7 @@ import eu.chepy.audiokit.core.service.providers.local.ui.activities.SettingsActi
 import eu.chepy.audiokit.ui.activities.SoundEffectsActivity;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
-import eu.chepy.audiokit.ui.utils.ProviderStreamImageDownloader;
+import eu.chepy.audiokit.ui.utils.uil.ProviderImageDownloader;
 import eu.chepy.audiokit.utils.Base64;
 import eu.chepy.audiokit.utils.LogUtils;
 import eu.chepy.audiokit.utils.jni.JniMediaLib;
@@ -1810,8 +1810,8 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                             currentRow[columnIndex] = PlayerApplication.fileToUri(currentFile);
                             break;
                         case SONG_ART:
-                            currentRow[columnIndex] = ProviderStreamImageDownloader.SCHEME_URI_PREFIX +
-                                    ProviderStreamImageDownloader.SUBTYPE_STORAGE + "/" +
+                            currentRow[columnIndex] = ProviderImageDownloader.SCHEME_URI_PREFIX +
+                                    ProviderImageDownloader.SUBTYPE_STORAGE + "/" +
                                     PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/" +
                                     Base64.encodeBytes(PlayerApplication.fileToUri(currentFile).getBytes());
                             break;
