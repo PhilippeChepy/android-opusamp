@@ -21,6 +21,7 @@ extern "C" {
 #include <audio_engine/utils/stdcompat.h>
 #include <audio_engine/utils/circular_buffer.h>
 #include <pthread.h>
+#include <jni.h>
 
 enum sample_format_e {
 	SAMPLE_FORMAT_S16_LE,
@@ -129,6 +130,11 @@ struct engine_context_ {
 
 	void * engine_output_specific;
 	void * engine_input_specific;
+
+    int is_transcoder;
+	JavaVM * vm;
+	jobject obj;
+	jclass cls;
 };
 
 struct engine_stream_context_ {
@@ -154,7 +160,7 @@ struct engine_stream_context_ {
 	int64_t last_timestamp_update;
 };
 
-int engine_new(engine_context_s * engine_context);
+int engine_new(engine_context_s * engine_context, int is_transcoder);
 int engine_delete(engine_context_s * engine_context);
 int engine_set_params(engine_context_s * engine_context, int sample_format, int sampling_rate, int channel_count, int stream_type, int stream_latency);
 int engine_get_output_name(engine_context_s * engine_context, char ** output_name);

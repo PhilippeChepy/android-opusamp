@@ -96,7 +96,6 @@ public class CoverInputStream extends InputStream {
         }
 
         pos += n;
-        JniMediaLib.coverInputStreamReadSetPosition(nativeContext, pos);
         return n;
     }
 
@@ -122,7 +121,6 @@ public class CoverInputStream extends InputStream {
         if (nativeContext == 0) {
             return;
         }
-        JniMediaLib.coverInputStreamReadSetPosition(nativeContext, pos);
     }
 
     public void close() throws IOException {

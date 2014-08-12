@@ -64,14 +64,17 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
 	public LocalMediaPlayer(LocalMediaManager localMediaManager) {
         mediaManager = localMediaManager;
-		if (engineInitialize() != 0) { // TODO: add ref counter to JniMediaLib.engineInitialize()
+		if (engineInitialize(false) != 0) {
             LogUtils.LOGE(TAG, "unable to initialize engine");
 		}
+        else {
+            LogUtils.LOGI(TAG, "initialized engine");
+        }
 	}
 	
 	@Override
 	protected void finalize() throws Throwable {
-		// TODO: add ref counter JniMediaLib.engineFinalize()
+		engineFinalize();
 		super.finalize();
 	}
 

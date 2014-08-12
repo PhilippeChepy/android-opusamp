@@ -195,13 +195,21 @@ static int ffinput_init_filters(engine_stream_context_s * stream_context, const 
 	AVFilter * buffer_sink = avfilter_get_by_name("abuffersink");
 	AVFilterInOut * outputs = avfilter_inout_alloc(); /* XXX */
 	AVFilterInOut * inputs = avfilter_inout_alloc(); /* XXX */
-	const enum AVSampleFormat out_sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
+//	const enum AVSampleFormat out_sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
+	enum AVSampleFormat out_sample_fmts[2] = { AV_SAMPLE_FMT_FLTP, -1 };
 	static const int64_t out_channel_layouts[] = { AV_CH_LAYOUT_STEREO, -1 };
     static const int out_sample_rates[] = { 44100, -1 };
     const AVFilterLink * out_link;
 	AVRational time_base = ffinput_stream->format_context->streams[ffinput_stream->stream_index]->time_base;
 
 	char source_args[512];
+
+	if (stream_context->engine->is_transcoder) {
+	    out_sample_fmts[0] = AV_SAMPLE_FMT_FLTP;
+	}
+	else {
+	    out_sample_fmts[0] = AV_SAMPLE_FMT_S16;
+	}
 
 	ffinput_stream->filter_graph = avfilter_graph_alloc(); /* XXX */
 
@@ -282,7 +290,7 @@ media_file_init_filters_done:
 }
 
 static void av_callback(void *ptr, int level, const char *fmt, va_list vl) {
-#if 0
+#if 1
     static char message[8192];
     const char *module = NULL;
 

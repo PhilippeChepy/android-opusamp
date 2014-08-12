@@ -14,6 +14,7 @@
 #include <audio_engine/engine.h>
 #include <audio_engine/outputs/safetrack.h>
 #include <audio_engine/outputs/audiotrack.h>
+#include <audio_engine/outputs/transcoder.h>
 #include <audio_engine/inputs/ffinput.h>
 #include <audio_engine/utils/log.h>
 
@@ -106,13 +107,11 @@ long output_data_callback(engine_stream_context_s * stream_context, void * user_
 	return (total_read_length / sizeof(int16_t)) / stream_context->engine->param_channel_count;
 }
 
-int engine_new(engine_context_s * engine_context) {
+int engine_new(engine_context_s * engine_context, int is_transcoder) {
 	engine_output_s const * output;
 	engine_input_s const * input;
 	int engine_error_code = ENGINE_GENERIC_ERROR;
-	size_t output_index = 0;
-
-	engine_output_s const * output_list[3];
+	char * engine_name;
 
 	input = ffinput_get_input();
 	engine_error_code = input->engine_new(engine_context);
@@ -124,37 +123,31 @@ int engine_new(engine_context_s * engine_context) {
 		LOG_INFO(LOG_TAG, "engine_new: using ffinput input.");
 	}
 
-/*	output_list[0] = opensl_get_output(); / * >= API9 (gingerbread) + */
-//	output_list[0] = audiotrack_get_output(); /* <= API9 (gingerbread) */
-	output_list[0] = safetrack_get_output(); /* otherwise (low performences */
-
-	for (output_index = 0 ; output_index < 1 ; output_index++) {
-		char * engine_name = "<no engine>";
-
-		output = output_list[output_index];
-		engine_context->output = output;
-		output->engine_get_name(engine_context, &engine_name);
-
-		engine_error_code = output->engine_new(engine_context);
-
-		if (engine_error_code != ENGINE_OK) {
-			LOG_INFO(LOG_TAG, "engine_new: output '%s' is not available.", engine_name);
-		}
-		else {
-			LOG_INFO(LOG_TAG, "engine_new: using '%s' output.", engine_name);
-			break;
-		}
+/*	output = opensl_get_output(); / * >= API9 (gingerbread) + */
+/*	output = audiotrack_get_output(); / * <= API9 (gingerbread) */
+    if (is_transcoder) {
+	    output = transcoder_get_output();
 	}
+	else {
+	    output = safetrack_get_output(); /* otherwise (low performences */
+	}
+	output->engine_get_name(engine_context, &engine_name);
+	engine_error_code = output->engine_new(engine_context);
 
 	if (engine_error_code == ENGINE_OK) {
+	    LOG_INFO(LOG_TAG, "engine_new: using '%s' output.", engine_name);
 		engine_context->input = input;
 		engine_context->output = output;
+		engine_context->is_transcoder = is_transcoder;
 
 		engine_context->completion_callback = NULL;
 		engine_context->param_buffer_size = 100 * 1024;
 		engine_context->param_sleep_decoder_buffer_threshold = 100 * 1024;
 		engine_context->param_wake_decoder_buffer_threshold = 40  * 1024;
 	}
+    else {
+        LOG_INFO(LOG_TAG, "engine_new: output '%s' is not available.", engine_name);
+    }
 
 engine_new_done:
 	return engine_error_code;

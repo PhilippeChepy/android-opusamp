@@ -18,6 +18,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := medialib
 
 SRCS :=  \
+	audio_engine/outputs/transcoder.c \
 	audio_engine/outputs/audiotrack.c \
 	audio_engine/outputs/safetrack.c \
 	audio_engine/inputs/ffinput.c \

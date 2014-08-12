@@ -289,12 +289,6 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
     return 0;
 }
 
-JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadSetPosition(JNIEnv * env, jclass classLibraryScannerService, jlong context, jint position) {
-    inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
-
-    return -1;
-}
-
 JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadGetCount(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 

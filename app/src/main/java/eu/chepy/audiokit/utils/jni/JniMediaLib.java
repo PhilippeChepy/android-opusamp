@@ -25,6 +25,9 @@ public abstract class JniMediaLib {
     public static final String TAG = JniMediaLib.class.getSimpleName();
 
 
+    public static final int TSC_FORMAT_VORBIS = 1;
+
+
 
 	private static int tagDuration;
 	private static int tagBitrate;
@@ -47,27 +50,32 @@ public abstract class JniMediaLib {
 
 
 
+    // Native engine context
+    private long engineContext = 0;
 
 
-    public native long engineInitialize();
 
-    public native long engineFinalize();
+    protected native long engineInitialize(boolean isTranscoder);
 
-    public native long streamInitialize(String mediaPath);
+    protected native long engineFinalize();
 
-    public native long streamFinalize(long streamContext);
+    protected native long streamInitialize(String mediaPath);
 
-    public native long streamPreload(long streamContext);
+    protected native long streamFinalize(long streamContext);
 
-    public native long streamStart(long streamContext);
+    protected native long streamPreload(long streamContext);
 
-    public native long streamStop(long streamContext);
+    protected native long streamTranscode(long streamContext, int targetFormat, String mediaPath);
 
-    public native long streamSetPosition(long streamContext, long position);
+    protected native long streamStart(long streamContext);
 
-    public native long streamGetPosition(long streamContext);
+    protected native long streamStop(long streamContext);
 
-    public native long streamGetDuration(long streamContext);
+    protected native long streamSetPosition(long streamContext, long position);
+
+    protected native long streamGetPosition(long streamContext);
+
+    protected native long streamGetDuration(long streamContext);
 
 
     private native static void tagsRead(String path);
@@ -77,8 +85,6 @@ public abstract class JniMediaLib {
     public native static long coverInputStreamClose(long nativeContext);
 
     public native static int coverInputStreamReadSingle(long nativeContext, int position);
-
-    public native static int coverInputStreamReadSetPosition(long nativeContext, int position);
 
     public native static int coverInputStreamReadGetCount(long nativeContext);
 
