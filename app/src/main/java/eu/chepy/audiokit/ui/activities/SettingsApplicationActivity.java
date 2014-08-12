@@ -1,5 +1,5 @@
 /*
- * SettingsActivity.java
+ * SettingsApplicationActivity.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
@@ -19,7 +19,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.util.Log;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -29,6 +28,7 @@ import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.ui.utils.uil.NormalImageLoader;
 import eu.chepy.audiokit.ui.utils.uil.ThumbnailImageLoader;
+import eu.chepy.audiokit.utils.LogUtils;
 import eu.chepy.audiokit.utils.iab.IabHelper;
 import eu.chepy.audiokit.utils.iab.IabResult;
 import eu.chepy.audiokit.utils.iab.Inventory;
@@ -90,10 +90,10 @@ public class SettingsApplicationActivity extends PreferenceActivity {
             public void onIabSetupFinished(IabResult result)
             {
                 if (!result.isSuccess()) {
-                    Log.d(TAG, "In-app Billing setup failed: " + result);
+                    LogUtils.LOGE(TAG, "In-app Billing setup failed: " + result);
                 }
                 else {
-                    Log.d(TAG, "In-app Billing is set up OK");
+                    LogUtils.LOGI(TAG, "In-app Billing is set up OK");
                 }
             }
         });
@@ -155,18 +155,14 @@ public class SettingsApplicationActivity extends PreferenceActivity {
 
                     @Override
                     protected Void doInBackground(Void... params) {
-                        try {
-                            publishProgress(0);
-                            PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
+                        publishProgress(0);
+                        PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
 
-                            for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
-                                publishProgress(index + 1);
-                                PlayerApplication.mediaManagers[index].getMediaProvider().databaseMaintain();
-                            }
+                        for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
+                            publishProgress(index + 1);
+                            PlayerApplication.mediaManagers[index].getMediaProvider().databaseMaintain();
                         }
-                        catch (Exception e) {
 
-                        }
                         return null;
                     }
 

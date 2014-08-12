@@ -1,5 +1,5 @@
 /*
- * CollectionStorageFragment.java
+ * StorageFragment.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,13 +38,7 @@ import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.ui.views.CustomLinkTextView;
 import eu.chepy.audiokit.ui.views.CustomTextView;
 
-//import java.io.File;
-//import java.io.FileFilter;
-
 public class StorageFragment extends AbstractRefreshableFragment implements LoaderManager.LoaderCallbacks<Cursor>, OnItemClickListener {
-	
-	private static final String TAG = "StorageFragment";
-
 
     public static final int FRAGMENT_GROUP_ID = 7;
 
@@ -89,8 +82,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void doRefresh() {
-        Log.d(TAG, "doRefresh()");
-
         doLocationUpdate();
         getLoaderManager().restartLoader(0, null, this);
     }
@@ -106,8 +97,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView()");
-
         final View rootView = inflater.inflate(R.layout.fragment_storage, container, false);
         if (rootView != null) {
             gridView = (GridView) rootView.findViewById(R.id.grid_view_base);
@@ -125,7 +114,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.d(TAG, "onActivityCreated()");
         super.onActivityCreated(savedInstanceState);
 
         final Activity hostActivity = getActivity();
@@ -173,7 +161,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-        Log.d(TAG, "onCreateLoader()");
         final int[] sortFields = new int[] { MusicConnector.storage_sort_order };
 
         return PlayerApplication.buildStorageLoader(
@@ -185,8 +172,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        Log.d(TAG, "onLoadFinished()");
-
         if (data == null) {
             return;
         }
@@ -198,8 +183,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        Log.d(TAG, "onLoaderReset()");
-
         if (this.adapter != null) {
             this.adapter.changeCursor(null);
         }
@@ -207,8 +190,6 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        Log.d(TAG, "onCreateContextMenu()");
-
         final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
         if (info != null) {
@@ -222,15 +203,12 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
             return false;
         }
 
-        Log.d(TAG, "onContextItemSelected()");
         PlayerApplication.storageContextItemSelected(item.getItemId(), cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, cursor.getPosition());
         return super.onContextItemSelected(item);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        Log.d(TAG, "onItemClick()");
-
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
         final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
 

@@ -1,3 +1,15 @@
+/*
+ * ProviderAdapter.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.ui.adapter;
 
 import android.app.Activity;
@@ -24,7 +36,7 @@ public class ProviderAdapter extends SimpleCursorAdapter {
     private static final int ITEM_VIEW = R.layout.view_item_double_line_dragable;
 
 
-
+    @SuppressWarnings("deprecation")
     public ProviderAdapter(Context context) {
         super(context, ITEM_VIEW, null, new String[] {}, new int[] {});
         this.context = context;

@@ -1,5 +1,5 @@
 /*
- * CollectionSongFragment.java
+ * SongFragment.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -41,8 +40,6 @@ import eu.chepy.audiokit.ui.views.CustomLinkTextView;
 import eu.chepy.audiokit.ui.views.CustomTextView;
 
 public class SongFragment extends AbstractRefreshableFragment implements LoaderCallbacks<Cursor>, OnItemClickListener {
-
-	private static final String TAG = SongFragment.class.getSimpleName();
 
     public static final int FRAGMENT_GROUP_ID = 1;
 
@@ -81,7 +78,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 
     @Override
 	public void doRefresh() {
-		Log.d(TAG, "doRefresh()");
         getLoaderManager().restartLoader(0, null, this);
 	}
 
@@ -96,8 +92,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
         
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TAG, "onCreateView()");
-		
 		final View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
         if (rootView != null) {
             gridView = (GridView) rootView.findViewById(R.id.grid_view_base);
@@ -113,7 +107,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
-		Log.d(TAG, "onActivityCreated()");
         super.onActivityCreated(savedInstanceState);
 
         final Activity hostActivity = getActivity();
@@ -158,7 +151,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-		Log.d(TAG, "onCreateLoader()");
         final int[] sortFields = new int[] { MusicConnector.songs_sort_order };
 
         return PlayerApplication.buildMediaLoader(
@@ -171,8 +163,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		Log.d(TAG, "onLoadFinished()");
-		
         if (data == null) {
             return;
         }
@@ -184,8 +174,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 	
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-		Log.d(TAG, "onLoaderReset()");
-		
         if (this.adapter != null) {
         	this.adapter.changeCursor(null);
         }
@@ -193,8 +181,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		Log.d(TAG, "onCreateContextMenu()");
-		
         PlayerApplication.createSongContextMenu(menu, FRAGMENT_GROUP_ID, cursor.getInt(COLUMN_SONG_VISIBLE) == 1);
 		super.onCreateContextMenu(menu, v, menuInfo);
 	}
@@ -208,16 +194,13 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
         if (item.getGroupId() != FRAGMENT_GROUP_ID) {
             return false;
         }
-		
-		Log.d(TAG, "onContextItemSelected()");
+
         PlayerApplication.songContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_SONG_ID), cursor.getPosition());
 		return super.onContextItemSelected(item);
 	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-		Log.d(TAG, "onItemClick()");
-
         PlayerApplication.songContextItemSelected(getActivity(), PlayerApplication.CONTEXT_MENUITEM_PLAY, cursor.getString(COLUMN_SONG_ID), cursor.getPosition());
 	}
 }

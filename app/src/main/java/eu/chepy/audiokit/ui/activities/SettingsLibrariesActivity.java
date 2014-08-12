@@ -1,3 +1,15 @@
+/*
+ * SettingsLibrariesActivity.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.ui.activities;
 
 import android.app.AlertDialog;
@@ -14,7 +26,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -167,8 +178,6 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        Log.d(TAG, "onCreateContextMenu()");
-
         menu.setHeaderTitle(R.string.label_library_settings);
         menu.add(Menu.NONE, CONTEXT_MENUITEM_EDIT, 1, R.string.context_menu_edit);
 
@@ -302,7 +311,7 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
     }
 
     protected void doMoveProviders(int indexFrom, int indexTo) {
-        Log.w(TAG, "from = " + indexFrom + " to = " + indexTo);
+        LogUtils.LOGD(TAG, "from = " + indexFrom + " to = " + indexTo);
 
         if (indexFrom == indexTo) {
             return; // done.
@@ -415,7 +424,7 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
 
                         long rowId = database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
                         if (rowId < 0) {
-                            Log.w(TAG, "new library: database insertion failure.");
+                            LogUtils.LOGW(TAG, "new library: database insertion failure.");
                         } else {
                             doLibraryConfiguration((int) rowId, mediaProviderType);
                             doRefresh();

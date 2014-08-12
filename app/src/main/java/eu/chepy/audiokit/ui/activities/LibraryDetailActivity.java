@@ -28,7 +28,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -686,7 +685,6 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             case CONTENT_TYPE_ALBUM:
-                Log.w(TAG, ""+cursor.getPosition());
                 if (cursor.getPosition() == -1) {
                     menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.context_menu_use_file_art);
                     menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.context_menu_restore_file_art);

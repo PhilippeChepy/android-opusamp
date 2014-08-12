@@ -1,11 +1,20 @@
+/*
+ * Entities.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.core.service.providers.index.database;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 
-/**
- * Created by phil on 03/08/14.
- */
 public class Entities {
     public abstract static class Provider implements BaseColumns {
 

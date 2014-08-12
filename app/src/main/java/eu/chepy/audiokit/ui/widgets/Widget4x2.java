@@ -1,3 +1,15 @@
+/*
+ * Widget4x2.java
+ *
+ * Copyright (c) 2012, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.ui.widgets;
 
 import android.annotation.TargetApi;
@@ -19,8 +31,6 @@ import eu.chepy.audiokit.ui.utils.PlayerApplication;
 public class Widget4x2 extends AppWidgetBase {
 
 	private static Widget4x2 instance;
-
-    public static final String COMMAND_WIDGET_UPDATE = "update_4x2";
 
     private boolean initialized = false;
 	

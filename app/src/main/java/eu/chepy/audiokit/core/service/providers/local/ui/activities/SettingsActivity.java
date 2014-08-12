@@ -1,3 +1,15 @@
+/*
+ * SettingsActivity.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.core.service.providers.local.ui.activities;
 
 import android.content.Intent;
@@ -17,6 +29,7 @@ public class SettingsActivity extends PreferenceActivity {
     private int providerId;
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

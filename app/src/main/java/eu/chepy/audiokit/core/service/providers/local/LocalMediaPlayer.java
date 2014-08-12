@@ -1,5 +1,5 @@
 /*
- * JniCodec.java
+ * LocalMediaPlayer.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
@@ -13,12 +13,11 @@
 
 package eu.chepy.audiokit.core.service.providers.local;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 
 import eu.chepy.audiokit.core.service.providers.AbstractMedia;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaPlayer;
+import eu.chepy.audiokit.utils.LogUtils;
 import eu.chepy.audiokit.utils.jni.JniMediaLib;
 
 public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer {
@@ -49,18 +48,15 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
     @Override
 	protected void playbackEndNotification() {
-		Log.d(TAG, "playbackEndNotification()");
 		new Thread(
 				new Runnable() {
 					
 					@Override
 					public void run() {
 						playerStop();
-						Log.d(TAG, "playbackEndNotification() : stopped");
 						for (OnProviderCompletionListener listener : listenerList) {
 							listener.onCodecCompletion();
 						}
-						Log.d(TAG, "playbackEndNotification() : done");
 					}
 				}
 				).start();
@@ -69,7 +65,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 	public LocalMediaPlayer(LocalMediaManager localMediaManager) {
         mediaManager = localMediaManager;
 		if (engineInitialize() != 0) { // TODO: add ref counter to JniMediaLib.engineInitialize()
-			Log.w(TAG, "unable to initialize engine");
+            LogUtils.LOGE(TAG, "unable to initialize engine");
 		}
 	}
 	
@@ -112,14 +108,8 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 				playerPause(true);
 			}
 			
-			if (currentContext != null) {
-				Log.d(TAG, "old context=" + currentContext.nativeContext);
-			}
-			else {
-				Log.d(TAG, "old context=" + -1);
-			}
 			currentContext = (LocalMedia) context;
-			Log.d(TAG, "new context=" + currentContext.nativeContext);
+            LogUtils.LOGD(TAG, "new context=" + currentContext.nativeContext);
 		}
 	}
 
@@ -144,12 +134,12 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 	public synchronized void playerPause(boolean setPaused) {
 		if (currentContext != null) {
 			if (setPaused) {
-				Log.d(TAG, "Stopping streaming");
+                LogUtils.LOGI(TAG, "Stopping streaming");
                 streamStop(currentContext.nativeContext);
 				playing = false;
 			}
 			else {
-				Log.d(TAG, "Starting streaming");
+                LogUtils.LOGI(TAG, "Starting streaming");
                 streamStart(currentContext.nativeContext);
 				playing = true;
 			}
@@ -204,7 +194,6 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
 	@Override
 	public void addCompletionListener(OnProviderCompletionListener listener) {
-		Log.d(TAG, "addCompletionListener()");
         if (listenerList.indexOf(listener) < 0) {
             listenerList.add(listener);
         }
@@ -212,13 +201,11 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
 	@Override
 	public void removeCompletionListener(OnProviderCompletionListener listener) {
-		Log.d(TAG, "removeCompletionListener()");
 		listenerList.remove(listener);
 	}
 
     @Override
     public void resetListeners() {
-        Log.d(TAG, "resetListeners()");
         listenerList.clear();
     }
 }

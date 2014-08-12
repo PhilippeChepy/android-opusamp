@@ -30,7 +30,6 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -194,7 +193,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 	}
 
     protected void doUpdateWidgets() {
-        Log.d(TAG, "doUpdateWidgets()");
         final SongInformations currentSong = new SongInformations();
 
         widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
@@ -212,8 +210,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.d(TAG, "onStartCommand()");
-
         if (intent != null) {
             if (intent.hasExtra(COMMAND_KEY)) {
                 MusicConnector.doManageControlIntent(intent);
@@ -290,7 +286,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
                 binder.queueSetPosition(position);
             } catch (final RemoteException remoteException) {
-                Log.w(TAG, "Exception in onStartCommand() : " + remoteException.getMessage());
+                LogUtils.LOGException(TAG, "onStartCommand", 0, remoteException);
             }
         }
 
@@ -308,7 +304,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 	@Override
 	public void onCodecCompletion() {
-		Log.d(TAG, "onCodecCompletion()");
 		try {
 			switch (repeatMode) {
 			case REPEAT_NONE:
@@ -329,7 +324,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 				break;
 			}
 		} catch (final RemoteException exception) {
-			Log.d(TAG, "onCodecCompletion() : " + exception.getMessage());
+			LogUtils.LOGException(TAG, "onCodecCompletion", 0, exception);
 		}
 	}
 	
@@ -351,7 +346,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public void registerPlayerCallback(IPlayerServiceListener playerServiceCallback) throws RemoteException {
-			Log.d(TAG, "registerCallback()");
 			if (!listeners.register(playerServiceCallback)) {
 				throw new RemoteException();
 			}
@@ -359,7 +353,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public void unregisterPlayerCallback(IPlayerServiceListener playerServiceCallback) throws RemoteException {
-			Log.d(TAG, "unregisterCallback()");
 			if (!listeners.unregister(playerServiceCallback)) {
 				throw new RemoteException();
 			}
@@ -569,8 +562,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void play() throws RemoteException {
-			Log.d(TAG, "playerPlay()");
-
             if (playlist == null || playlist.getCount() == 0) {
                 return;
             }
@@ -734,8 +725,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void setShuffleMode(int mode) throws RemoteException {
-			Log.d(TAG, "setShuffleMode() : " + mode);
-			
 			shuffleMode = mode;
 			if (shuffleMode == SHUFFLE_AUTO) {
 				if (getRepeatMode() == REPEAT_CURRENT) {
@@ -758,8 +747,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void setRepeatMode(int mode) throws RemoteException {
-			Log.d(TAG, "setRepeatMode() : " + mode);
-
 			repeatMode = mode;
 			if (repeatMode == REPEAT_CURRENT) {
 				if (getShuffleMode() != SHUFFLE_NONE) {
@@ -797,10 +784,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueSetPosition(int position) throws RemoteException {
-			Log.d(TAG, "setQueuePosition()");
-			
 			if (playlist != null && playlist.getCount() > 0) {
-				Log.d(TAG, "setQueuePosition() : moving to position " + position);
+				LogUtils.LOGD(TAG, "setQueuePosition() : moving to position " + position);
 
                 if (shuffleMode == SHUFFLE_NONE) {
                     if (playlist.getPosition() != position) {
@@ -835,8 +820,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueAdd(String mediaId) throws RemoteException {
-			Log.d(TAG, "queueAdd()");
-
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
             final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
 			mediaProvider.playlistAdd(null, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, mediaId, 0, null);
@@ -858,8 +841,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueMove(int indexFrom, int indexTo) throws RemoteException {
-			Log.d(TAG, "queueMove()");
-			
 			if (indexFrom == indexTo) {
 				return;
 			}
@@ -895,8 +876,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueRemove(int entry) throws RemoteException {
-			Log.d(TAG, "queueRemove()");
-			
 			int position = playlist.getPosition();
 			if (entry < position) {
 				position--;
@@ -938,8 +917,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueClear() throws RemoteException {
-			Log.d(TAG, "queueClear()");
-			
 			if (isPlaying()) {
 				currentTrack = unloadTrack(currentTrack);
 			}
@@ -1025,11 +1002,11 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                         art = null;
                     }
                 }
-                Log.d(TAG, "SongInformation.initialized : true");
+                LogUtils.LOGD(TAG, "SongInformation.initialized : true");
                 initialized = true;
             }
             else {
-                Log.d(TAG, "SongInformation.initialized : false");
+                LogUtils.LOGD(TAG, "SongInformation.initialized : false");
                 initialized = false;
             }
         }

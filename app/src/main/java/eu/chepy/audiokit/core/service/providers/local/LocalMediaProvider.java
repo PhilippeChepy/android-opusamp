@@ -1,3 +1,15 @@
+/*
+ * LocalMediaProvider.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.core.service.providers.local;
 
 import android.app.Activity;
@@ -15,7 +27,6 @@ import android.os.Environment;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -177,7 +188,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         if (filePath != null) {
             File providerPrefs = new File(filePath.getPath() + "/shared_prefs/provider-" + providerId + ".xml");
             if (!providerPrefs.delete()) {
-                Log.w(TAG, "deleting provider-" + providerId + " preferences failed");
+                LogUtils.LOGE(TAG, "deleting provider-" + providerId + " preferences failed");
             }
         }
     }
@@ -400,7 +411,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     if (cursor != null) {
                         cursor.close();
                     }
-                    Log.w(TAG, "playlistAdd : position = " + position);
+                    LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
 
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
                         File selection = fileList.get(position);
@@ -2204,7 +2215,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                     String.valueOf(cursor.getInt(indexOfId))
                             };
 
-                            Log.i(TAG, "!Media : " + cursor.getString(indexOfFilePath));
+                            LogUtils.LOGI(TAG, "!Media : " + cursor.getString(indexOfFilePath));
                             scanContext.database.delete(Entities.Media.TABLE_NAME, where, selectionArgs);
                         }
                     }
@@ -2267,7 +2278,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
                 scanContext.database.beginTransaction();
 
-                Log.w(TAG, "Updating albums");
+                LogUtils.LOGI(TAG, "Updating albums");
                 scanContext.database.delete(
                         Entities.Album.TABLE_NAME,
                         Entities.Album._ID + " NOT IN ( " +
@@ -2278,7 +2289,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         null
                 );
 
-                Log.w(TAG, "Updating Album artists");
+                LogUtils.LOGI(TAG, "Updating Album artists");
                 scanContext.database.delete(
                         Entities.AlbumArtist.TABLE_NAME,
                         Entities.AlbumArtist._ID + " NOT IN ( " +
@@ -2289,7 +2300,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         null
                 );
 
-                Log.w(TAG, "Updating Artists");
+                LogUtils.LOGI(TAG, "Updating Artists");
                 scanContext.database.delete(
                         Entities.Artist.TABLE_NAME,
                         Entities.Artist._ID + " NOT IN ( " +
@@ -2300,7 +2311,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         null
                 );
 
-                Log.w(TAG, "Updating Genres");
+                LogUtils.LOGI(TAG, "Updating Genres");
                 scanContext.database.delete(
                         Entities.Genre.TABLE_NAME,
                         Entities.Genre._ID + " NOT IN ( " +
@@ -2310,6 +2321,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                 ")",
                         null
                 );
+                LogUtils.LOGI(TAG, "updates done");
                 scanContext.database.setTransactionSuccessful();
                 scanContext.database.endTransaction();
 
@@ -2455,7 +2467,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
             File currentFile = fileList.get(pathIndex);
             if (currentFile.isDirectory()) {
-                Log.w(TAG, "entering: " + currentFile.getName());
+                LogUtils.LOGI(TAG, "entering: " + currentFile.getName());
                 fileList.remove(pathIndex);
 
                 // directory content is not empty
@@ -2478,7 +2490,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     coverUri = scanContext.coverMap.get(file.getName());
                     // never found a media for this art, updating cover map only
                     if (coverUri == null) {
-                        Log.w(TAG, "Updated covers uri: " + file.getName() + " -> " + artUri);
+                        LogUtils.LOGI(TAG, "Updated covers uri: " + file.getName() + " -> " + artUri);
                         scanContext.coverMap.put(file.getName(), artUri);
                         return artUri; // done.
                     }
@@ -2492,7 +2504,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                 scanContext.mediaCover,
                                 Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
                                 new String[]{file.getName() + File.separator + "%"});
-                        Log.w(TAG, "Updated covers: " + rows + " rows (" + file.getName() + File.separator + "%" + ") -> " + artUri);
+                        LogUtils.LOGI(TAG, "Updated covers: " + rows + " rows (" + file.getName() + File.separator + "%" + ") -> " + artUri);
                         return artUri; // done.
                     }
                 }
@@ -2605,7 +2617,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 final String path = currentFile.getAbsolutePath();
 
                 if (discardMap.get(path) == null || discardMap.get(path).equals(false)) {
-                    Log.d(TAG, "+Path: " + currentFile.getName());
+                    LogUtils.LOGI(TAG, "+Path: " + currentFile.getName());
                     fileList.remove(pathIndex);
 
                     // directory content is not empty
@@ -2618,7 +2630,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                     }
                 }
                 else {
-                    Log.d(TAG, "-Path: " + currentFile.getName());
+                    LogUtils.LOGI(TAG, "-Path: " + currentFile.getName());
                     fileList.remove(pathIndex);
                 }
             }
@@ -2631,7 +2643,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 if (isAudioFile(scanContext, currentFile)) {
                     final String mediaUri = PlayerApplication.fileToUri(currentFile);
                     if (!mediaExistsInDb(mediaUri)) {
-                        Log.i(TAG, "+Media : " + mediaUri);
+                        LogUtils.LOGI(TAG, "+Media : " + mediaUri);
 
                         JniMediaLib.doReadTags(currentFile, mediaTags);
 
@@ -2665,7 +2677,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                         }
                     }
                     else {
-                        Log.i(TAG, "=Media : " + mediaUri);
+                        LogUtils.LOGI(TAG, "=Media : " + mediaUri);
                     // nothing to be done.
                     }
                 }

@@ -1,5 +1,5 @@
 /*
- * CollectionScannerPathFragment.java
+ * SearchPathFragment.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -42,10 +41,6 @@ import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.ui.views.CustomTextView;
 
 public class SearchPathFragment extends AbstractRefreshableFragment implements LoaderCallbacks<Cursor>, OnItemClickListener {
-
-	private static final String TAG = SearchPathFragment.class.getSimpleName();
-
-
 
 	private GridView gridView;
 	
@@ -97,8 +92,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	
 	@Override
 	public void doRefresh() {
-		Log.d(TAG, "doRefresh()");
-
         if( gridView != null ) {
             getLoaderManager().restartLoader(0, null, this);
         }
@@ -106,8 +99,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
         
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TAG, "onCreateView()");
-		
 		View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
         if (rootView != null) {
             gridView = (GridView) rootView.findViewById(R.id.grid_view_base);
@@ -122,7 +113,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
-		Log.d(TAG, "onActivityCreated()");
         super.onActivityCreated(savedInstanceState);
 
         this.songAdapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
@@ -141,8 +131,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-		Log.d(TAG, "onCreateLoader()");
-
         final String[] projection = new String[] {
                 Entities.ScanDirectory._ID,
                 Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
@@ -176,8 +164,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		Log.d(TAG, "onLoadFinished()");
-		
         if (data == null) {
             return;
         }
@@ -189,8 +175,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-		Log.d(TAG, "onLoaderReset()");
-		
         if (this.songAdapter != null) {
         	this.songAdapter.changeCursor(null);
         }
@@ -198,20 +182,16 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	
 	@Override
 	public void onStart() {
-		Log.d(TAG, "onStart()");
         super.onStart();
 	}
 	
 	@Override
 	public void onStop() {
-		Log.d(TAG, "onStop()");
         super.onStop();
 	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		Log.d(TAG, "onCreateContextMenu()");
-		
 		menu.add(Menu.NONE, MENUITEM_DELETE, 1, R.string.context_menu_delete);
 		
 		super.onCreateContextMenu(menu, v, menuInfo);
@@ -222,8 +202,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 		if (!getUserVisibleHint()) {
 			return false;
 		}
-		
-		Log.d(TAG, "onContextItemSelected()");
 
 		if (item.getItemId() == MENUITEM_DELETE) {
             final String selection = Entities.ScanDirectory._ID + " = ? ";
@@ -244,8 +222,6 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-		Log.d(TAG, "onItemClick()");
-
         getActivity().openContextMenu(gridView);
 	}
 	

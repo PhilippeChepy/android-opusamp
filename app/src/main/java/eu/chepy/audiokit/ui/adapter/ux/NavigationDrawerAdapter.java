@@ -1,3 +1,15 @@
+/*
+ * NavigationDrawerAdapter.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.ui.adapter.ux;
 
 import android.content.Context;
@@ -87,11 +99,13 @@ public class NavigationDrawerAdapter extends ArrayAdapter<AbstractNavigationDraw
             }
         }
 
-        if ( navMenuItemHolder == null ) {
+        if (navMenuItemHolder == null && convertView != null) {
             navMenuItemHolder = (NavMenuSectionHolder) convertView.getTag();
         }
-                    
-        navMenuItemHolder.labelView.setText(menuSection.getLabel());
+
+        if (navMenuItemHolder != null) {
+            navMenuItemHolder.labelView.setText(menuSection.getLabel());
+        }
         
         return convertView ;
     }

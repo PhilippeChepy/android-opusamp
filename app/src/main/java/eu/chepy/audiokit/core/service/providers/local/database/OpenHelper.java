@@ -1,14 +1,26 @@
+/*
+ * OpenHelper.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.core.service.providers.local.database;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.io.File;
 
 import eu.chepy.audiokit.R;
+import eu.chepy.audiokit.utils.LogUtils;
 
 public class OpenHelper extends SQLiteOpenHelper {
 
@@ -31,7 +43,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         File databaseFile = context.getDatabasePath("provDb" + providerId + ".db");
         if (databaseFile != null) {
             boolean deleted = databaseFile.delete();
-            Log.w(TAG, "deleting provider data (" + providerId + ") : " + deleted);
+            LogUtils.LOGI(TAG, "deleting provider data (" + providerId + ") : " + deleted);
         }
     }
 

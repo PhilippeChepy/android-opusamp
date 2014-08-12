@@ -16,7 +16,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
-import android.util.Log;
 
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.utils.LogUtils;
@@ -27,9 +26,7 @@ public class StorageMountBroadcastReceiver extends BroadcastReceiver {
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		Log.d(TAG, "onReceive()");
-		
-		if (intent.equals(Intent.ACTION_MEDIA_REMOVED)) {
+		if (intent.getAction().equals(Intent.ACTION_MEDIA_REMOVED)) {
 			if (PlayerApplication.playerService != null) {
 				try {
 					if (PlayerApplication.playerService.isPlaying()) {

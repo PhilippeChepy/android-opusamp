@@ -17,7 +17,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import eu.chepy.audiokit.ui.utils.MusicConnector;
 
@@ -30,8 +29,6 @@ public class CallStateBroadcastReceiver extends BroadcastReceiver {
 		PhoneStateListener phoneListener = new PhoneStateListener() {
 			
 			public void onCallStateChanged(int state, String incomingNumber) {
-				Log.d(TAG, "callStateChanged() call");
-				
 				switch (state) {
 				case TelephonyManager.CALL_STATE_IDLE:
 					MusicConnector.doCallManageIdle();

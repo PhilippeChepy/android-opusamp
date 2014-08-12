@@ -32,7 +32,6 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.Menu;
 import android.webkit.WebView;
 
@@ -369,7 +368,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position, String playlistId, int playlistPosition) {
-        Log.e(TAG, "playlistPosition = " + playlistPosition);
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_DEFAULT, null, MusicConnector.songs_sort_order, position);

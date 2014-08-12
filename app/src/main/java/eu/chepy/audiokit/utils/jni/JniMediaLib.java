@@ -1,3 +1,15 @@
+/*
+ * JniMediaLib.java
+ *
+ * Copyright (c) 2012, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.utils.jni;
 
 import android.content.ContentValues;
@@ -135,8 +147,7 @@ public abstract class JniMediaLib {
 
     public static InputStream getCoverInputStream(File file) {
         if (file != null) {
-            InputStream inputStream = new CoverInputStream(file.getAbsolutePath());
-            return inputStream;
+            return new CoverInputStream(file.getAbsolutePath());
         }
 
         return null;

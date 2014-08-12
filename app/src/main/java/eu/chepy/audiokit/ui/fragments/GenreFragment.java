@@ -1,5 +1,5 @@
 /*
- * CollectionGenreFragment.java
+ * GenreFragment.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.

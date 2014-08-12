@@ -1,4 +1,18 @@
+/*
+ * CoverInputStream.java
+ *
+ * Copyright (c) 2014, Philippe Chepy
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Philippe Chepy.
+ * You shall not disclose such Confidential Information.
+ *
+ * http://www.chepy.eu
+ */
 package eu.chepy.audiokit.core.service.providers.local.utils;
+
+import android.support.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,14 +59,11 @@ public class CoverInputStream extends InputStream {
         return (pos < count) && (nativeContext != 0) ? (JniMediaLib.coverInputStreamReadSingle(nativeContext, pos++) & 0xff) : -1;
     }
 
-    public synchronized int read(byte target[], int off, int len) {
+    public synchronized int read(@NonNull byte target[], int off, int len) {
         if (nativeContext == 0) {
             return 0;
         }
 
-        if (target == null) {
-            throw new NullPointerException();
-        }
         else if (off < 0 || len < 0 || len > target.length - off) {
             throw new IndexOutOfBoundsException();
         }

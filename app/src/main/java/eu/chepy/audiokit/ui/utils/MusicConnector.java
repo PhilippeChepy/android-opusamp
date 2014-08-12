@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.RemoteException;
 import android.text.Editable;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -88,8 +87,6 @@ public class MusicConnector {
     }
 
     public static void doPrevAction() {
-        Log.d(TAG, "doPrevAction()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 PlayerApplication.playerService.prev();
@@ -104,8 +101,6 @@ public class MusicConnector {
     }
 
     public static boolean doStopAction() {
-        Log.d(TAG, "doStopAction()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 PlayerApplication.playerService.stop();
@@ -126,8 +121,6 @@ public class MusicConnector {
     }
 
     public static boolean doPlayAction(boolean keepNotification) {
-        Log.d(TAG, "doPlayAction()");
-
         boolean isPlaying = isPlaying();
 
         if (PlayerApplication.playerService != null) {
@@ -153,8 +146,6 @@ public class MusicConnector {
     }
 
     public static void doNextAction() {
-        Log.d(TAG, "doNextAction()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 PlayerApplication.playerService.next();
@@ -169,8 +160,6 @@ public class MusicConnector {
     }
 
     public static void doRepeatAction() {
-        Log.d(TAG, "doRepeatAction()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 int repeatMode = PlayerApplication.playerService.getRepeatMode();
@@ -197,8 +186,6 @@ public class MusicConnector {
     }
 
     public static void doShuffleAction() {
-        Log.d(TAG, "doShuffleAction()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 int shuffleMode = PlayerApplication.playerService.getShuffleMode();
@@ -222,8 +209,6 @@ public class MusicConnector {
     }
 
     public static int getCurrentPlaylistPosition() {
-        Log.d(TAG, "getCurrentPlaylistPosition()");
-
         if (PlayerApplication.playerService != null) {
             try {
                 return PlayerApplication.playerService.queueGetPosition();
@@ -273,7 +258,7 @@ public class MusicConnector {
 
         showPlaylistManagementDialog(hostActivity, new PlaylistManagementRunnable() {
             public void run(String playlistId) {
-                Log.w(TAG, "trying to add to " + playlistId);
+                LogUtils.LOGD(TAG, "trying to add to " + playlistId);
                 mediaProvider.playlistAdd(playlistId, sourceType, sourceId, sortOrder, PlayerApplication.lastSearchFilter);
             }
         });
@@ -457,17 +442,14 @@ public class MusicConnector {
     }
 
 	public static void doCallManageIdle() {
-		Log.d(TAG, "doCallManageIdle()");
 		doCallPausePlayback();
 	}
 
 	public static void doCallManageOffHook() {
-		Log.d(TAG, "doCallManageOffHook()");
 		doCallPausePlayback();
 	}
 
 	public static void doCallManageRinging() {
-		Log.d(TAG, "doCallManageRinging()");
 		doCallResumePlayback();
 	}
 

@@ -28,7 +28,6 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -539,23 +538,16 @@ public class PlayerViewHelper implements
      */
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-        Log.d(TAG, "onCreateContextMenu()");
-
         doOnCreateContextMenu(menu);
     }
 
     public boolean onContextItemSelected(android.view.MenuItem item) {
-        Log.d(TAG, "onContextItemSelected()");
-
         doOnContextItemSelected(item.getItemId());
-
         return hostActivity.onContextItemSelected(item);
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Log.d(TAG, "onItemClick()");
-
         doPlayAction();
     }
 
@@ -647,7 +639,7 @@ public class PlayerViewHelper implements
                 PlayerApplication.playerService.queueMove(queueSize, queuePosition + 1);
                 return true;
             } catch (final RemoteException remoteException) {
-                Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
+                LogUtils.LOGException(TAG, "doPlayNextAction", 0, remoteException);
             }
         }
 
@@ -660,11 +652,11 @@ public class PlayerViewHelper implements
                 PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
                 return true;
             } catch (final RemoteException remoteException) {
-                Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
+                LogUtils.LOGException(TAG, "doAddToQueueAction", 0, remoteException);
             }
         }
         else {
-            Log.d(TAG, "doAddToQueueAction() : Unable to connect to playerService");
+            LogUtils.LOGService(TAG, "doAddToQueueAction", 0);
         }
         return false;
     }
@@ -679,11 +671,11 @@ public class PlayerViewHelper implements
                 PlayerApplication.playerService.stop();
                 PlayerApplication.playerService.queueClear();
             } catch (final RemoteException remoteException) {
-                Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
+                LogUtils.LOGException(TAG, "doClearAction", 0, remoteException);
             }
         }
         else {
-            Log.d(TAG, "doClearAction() : Unable to connect to playerService");
+            LogUtils.LOGService(TAG, "doClearAction", 0);
         }
         return false;
     }
@@ -693,11 +685,11 @@ public class PlayerViewHelper implements
             try {
                 PlayerApplication.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
             } catch (final RemoteException remoteException) {
-                Log.w(TAG, "Exception in onContextItemSelected() : " + remoteException.getMessage());
+                LogUtils.LOGException(TAG, "doDeleteAction", 0, remoteException);
             }
         }
         else {
-            Log.d(TAG, "doDeleteAction() : Unable to connect to playerService");
+            LogUtils.LOGService(TAG, "doDeleteAction", 0);
         }
         return false;
     }
@@ -735,13 +727,11 @@ public class PlayerViewHelper implements
 
         @Override
         public void onShuffleModeChanged() throws RemoteException {
-            Log.w(TAG, "onSetShuffleMode");
             hostActivity.runOnUiThread(shuffleButtonUpdateRunnable);
         }
 
         @Override
         public void onRepeatModeChanged() throws RemoteException {
-            Log.w(TAG, "onSetRepeatMode");
             hostActivity.runOnUiThread(repeatButtonUpdateRunnable);
         }
 
@@ -753,31 +743,26 @@ public class PlayerViewHelper implements
 
         @Override
         public void onQueueChanged() throws RemoteException {
-            Log.w(TAG, "onQueueChanged");
             hostActivity.getSupportLoaderManager().restartLoader(0, null, PlayerViewHelper.this);
         }
 
         @Override
         public void onQueuePositionChanged() throws RemoteException {
-            Log.w(TAG, "onQueuePositionChanged");
             hostActivity.runOnUiThread(songUpdateRunnable);
         }
 
         @Override
         public void onPlay() throws RemoteException {
-            Log.w(TAG, "onPlay");
             hostActivity.runOnUiThread(playButtonUpdateRunnable);
         }
 
         @Override
         public void onPause() throws RemoteException {
-            Log.w(TAG, "onPause");
             hostActivity.runOnUiThread(playButtonUpdateRunnable);
         }
 
         @Override
         public void onStop() throws RemoteException {
-            Log.w(TAG, "onStop");
             hostActivity.runOnUiThread(playButtonUpdateRunnable);
         }
 
@@ -850,11 +835,11 @@ public class PlayerViewHelper implements
                             break;
                     }
                 } catch (final RemoteException remoteException) {
-                    Log.w(TAG, "Exception in doRepeatButtonUpdate() : " + remoteException.getMessage());
+                    LogUtils.LOGException(TAG, "doRepeatButtonUpdate", 0, remoteException);
                 }
             }
             else {
-                Log.w(TAG, "Not connected to service in doRepeatButtonUpdate()");
+                LogUtils.LOGService(TAG, "doRepeatButtonUpdate", 0);
             }
         }
 

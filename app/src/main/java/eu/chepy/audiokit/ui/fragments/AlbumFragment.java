@@ -1,5 +1,5 @@
 /*
- * CollectionAlbumFragment.java
+ * AlbumFragment.java
  *
  * Copyright (c) 2012, Philippe Chepy
  * All rights reserved.
