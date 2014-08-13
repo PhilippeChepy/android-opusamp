@@ -2,22 +2,17 @@
 <PreferenceScreen 
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceScreen
+    <!--<PreferenceScreen
         android:icon="@drawable/ic_action_tiles_large"
         android:title="@string/preference_appearance_screen_title">
-    </PreferenceScreen>
+    </PreferenceScreen>-->
 
-    <PreferenceScreen
+    <!--<PreferenceScreen
         android:icon="@drawable/ic_action_headphones"
         android:title="@string/preference_headset_screen_title">
-    </PreferenceScreen>
+    </PreferenceScreen>-->
 
     <PreferenceScreen
-        android:icon="@drawable/ic_action_gear"
-        android:title="@string/preference_other_options_screen_title">
-    </PreferenceScreen>
-
-    <PreferenceCategory
         android:title="@string/header_storage"
         android:icon="@drawable/ic_action_database" >
 
@@ -31,7 +26,12 @@
             android:title="@string/loc_preference_clear_art_cache"
             android:icon="@drawable/ic_action_document"/>
 
-    </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!--<PreferenceScreen
+        android:icon="@drawable/ic_action_gear"
+        android:title="@string/preference_other_options_screen_title">
+    </PreferenceScreen>-->
 
     <PreferenceCategory
         android:title="@string/preference_about_screen_title">
