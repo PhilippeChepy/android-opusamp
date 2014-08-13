@@ -70,6 +70,7 @@
     <string name="menu_label_reload">Recharger</string>
 	<string name="menu_label_audio_effects">Effets audios</string>
 	<string name="menu_label_sleep_timer">Arret automatique</string>
+    <string name="menu_label_ringtone">Utiliser comme sonnerie</string>
 	<string name="menu_label_toggle_car_mode">Mode voiture</string>
     <string name="menu_label_delayed_pause">Pause auto.</string>
     <string name="menu_label_delayed_pause_in">Pause auto. (%1$s)</string>

@@ -75,6 +75,7 @@
     <string name="menu_label_reload">Reload</string>
     <string name="menu_label_audio_effects">Audio effects</string>
     <string name="menu_label_sleep_timer">Sleep Timer</string>
+    <string name="menu_label_ringtone">Use as ringtone</string>
     <string name="menu_label_toggle_car_mode">Car mode</string>
     <string name="menu_label_delayed_pause">Auto pause</string>
     <string name="menu_label_delayed_pause_in">Auto pause (%1$s)</string>

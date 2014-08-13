@@ -52,6 +52,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.IPlayerServiceListener;
 import eu.chepy.audiokit.core.service.PlayerService;
+import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.activities.CarModeActivity;
 import eu.chepy.audiokit.ui.activities.LibraryMainActivity;
@@ -92,7 +93,8 @@ public class PlayerViewHelper implements
             AbstractMediaProvider.SONG_TITLE,
             AbstractMediaProvider.SONG_ARTIST,
             AbstractMediaProvider.PLAYLIST_ENTRY_POSITION,
-            AbstractMediaProvider.SONG_VISIBLE
+            AbstractMediaProvider.SONG_VISIBLE,
+            AbstractMediaProvider.SONG_URI
     };
 
     private int[] sortFields = new int[] {
@@ -108,6 +110,8 @@ public class PlayerViewHelper implements
     private static final int COLUMN_ENTRY_POSITION = 3;
 
     private static final int COLUMN_SONG_VISIBLE = 4;
+
+    private static final int COLUMN_SONG_URI = 5;
 
 
 
@@ -336,9 +340,9 @@ public class PlayerViewHelper implements
     protected void doShowOverflowMenu(final View v) {
         final PopupMenu popupMenu = new PopupMenu(hostActivity, v);
 
-        popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menu_label_share);
-        popupMenu.getMenu().getItem(0).setIcon(R.drawable.ic_action_share_dark);
-        popupMenu.getMenu().getItem(0).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        final MenuItem share = popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menu_label_share);
+        share.setIcon(R.drawable.ic_action_share_dark);
+        share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -357,27 +361,48 @@ public class PlayerViewHelper implements
             }
         });
 
-        popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.menu_label_toggle_car_mode);
-        popupMenu.getMenu().getItem(1).setIcon(R.drawable.ic_action_car);
-        popupMenu.getMenu().getItem(1).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+
+        if (PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getMediaManagerType() == AbstractMediaManager.LOCAL_MEDIA_MANAGER) {
+            final MenuItem ringtone = popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.menu_label_ringtone);
+            ringtone.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                /*
+                 TODO:
+                 Step 1: transcoding in app external storage (ogg is the most supported format)
+                 Step 2: setting the transcoded file as ringtone.
+                  */
+                    //final LocalTranscoder localTranscoder = new LocalTranscoder();
+                    //localTranscoder.load(playlistCursor.getString(COLUMN_SONG_URI));
+                    //localTranscoder.start();
+
+                    return true;
+                }
+            });
+        }
+
+        final MenuItem carMode = popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menu_label_toggle_car_mode);
+        carMode.setIcon(R.drawable.ic_action_car);
+        carMode.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 final Intent carmodeIntent = new Intent(hostActivity, CarModeActivity.class);
                 hostActivity.startActivity(carmodeIntent);
-                return false;
+                return true;
             }
         });
 
-        popupMenu.getMenu().add(Menu.NONE, 3, 3, autostop != 0 ?
+
+        final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, autostop != 0 ?
                         String.format(hostActivity.getString(R.string.menu_label_delayed_pause_in), PlayerApplication.formatSecs(autostop)) : // format minutes (not secs)
                         hostActivity.getString(R.string.menu_label_delayed_pause));
-        popupMenu.getMenu().getItem(2).setCheckable(true);
-        popupMenu.getMenu().getItem(2).setChecked(autostop != 0);
-        popupMenu.getMenu().getItem(2).setIcon(R.drawable.ic_action_alarm);
-        popupMenu.getMenu().getItem(2).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        autoPause.setCheckable(true);
+        autoPause.setChecked(autostop != 0);
+        autoPause.setIcon(R.drawable.ic_action_alarm);
+        autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                final MenuItem autostopMenuItem = popupMenu.getMenu().getItem(2);
+                final MenuItem autostopMenuItem = popupMenu.getMenu().getItem(3);
 
                 if (autostopMenuItem.isChecked()) {
                     autostop = 0;
@@ -386,8 +411,7 @@ public class PlayerViewHelper implements
                         autostopHandler = null;
                         autostopTask = null;
                     }
-                }
-                else {
+                } else {
                     final TimePickerDialog tpd = new TimePickerDialog(hostActivity,
                             new TimePickerDialog.OnTimeSetListener() {
 
@@ -404,14 +428,15 @@ public class PlayerViewHelper implements
                                     autostopHandler = new Handler();
                                     autostopHandler.postDelayed(autostopTask, autostop * 60000);
                                 }
-                            }, 0, 0, true);
+                            }, 0, 0, true
+                    );
 
                     tpd.setTitle(R.string.label_autostop);
                     tpd.show();
 
                 }
 
-                return false;
+                return true;
             }
         });
 
