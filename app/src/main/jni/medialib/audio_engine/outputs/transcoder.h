@@ -28,3 +28,15 @@ engine_output_s const * transcoder_get_output();
 
 
 #endif /* H_OUTPUTS_TRANSCODER */
+
+#if 0
+    while ( ) {
+
+    }
+
+
+
+    return 0;
+}
+
+#endif

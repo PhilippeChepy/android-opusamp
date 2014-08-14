@@ -52,7 +52,6 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.IPlayerServiceListener;
 import eu.chepy.audiokit.core.service.PlayerService;
-import eu.chepy.audiokit.core.service.providers.AbstractMediaManager;
 import eu.chepy.audiokit.core.service.providers.AbstractMediaProvider;
 import eu.chepy.audiokit.ui.activities.CarModeActivity;
 import eu.chepy.audiokit.ui.activities.LibraryMainActivity;
@@ -94,6 +93,7 @@ public class PlayerViewHelper implements
             AbstractMediaProvider.SONG_ARTIST,
             AbstractMediaProvider.PLAYLIST_ENTRY_POSITION,
             AbstractMediaProvider.SONG_VISIBLE,
+            AbstractMediaProvider.SONG_DURATION,
             AbstractMediaProvider.SONG_URI
     };
 
@@ -111,7 +111,9 @@ public class PlayerViewHelper implements
 
     private static final int COLUMN_SONG_VISIBLE = 4;
 
-    private static final int COLUMN_SONG_URI = 5;
+    private static final int COLUMN_SONG_DURATION = 5;
+
+    private static final int COLUMN_SONG_URI = 6;
 
 
 
@@ -361,26 +363,24 @@ public class PlayerViewHelper implements
             }
         });
 
-
+/*
         if (PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getMediaManagerType() == AbstractMediaManager.LOCAL_MEDIA_MANAGER) {
             final MenuItem ringtone = popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.menu_label_ringtone);
             ringtone.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                /*
-                 TODO:
-                 Step 1: transcoding in app external storage (ogg is the most supported format)
-                 Step 2: setting the transcoded file as ringtone.
-                  */
-                    //final LocalTranscoder localTranscoder = new LocalTranscoder();
-                    //localTranscoder.load(playlistCursor.getString(COLUMN_SONG_URI));
-                    //localTranscoder.start();
+                 // Step 1: transcoding in app external storage (ogg is the most supported format)
+                    ProgressDialog progressDialog = new ProgressDialog(hostActivity);
 
+                    final LocalTranscoder localTranscoder = new LocalTranscoder(hostActivity, progressDialog, (int)(playlistCursor.getLong(COLUMN_SONG_DURATION) / 1000));
+                    localTranscoder.load(playlistCursor.getString(COLUMN_SONG_URI));
+                    localTranscoder.start();
+                 // Step 2: setting the transcoded file as ringtone.
                     return true;
                 }
             });
         }
-
+*/
         final MenuItem carMode = popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menu_label_toggle_car_mode);
         carMode.setIcon(R.drawable.ic_action_car);
         carMode.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {

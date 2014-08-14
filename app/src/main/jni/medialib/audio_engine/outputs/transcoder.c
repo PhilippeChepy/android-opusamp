@@ -17,6 +17,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavformat/avio.h>
 //#include <libavfilter/avfiltergraph.h>
 #include <libavfilter/avcodec.h>
 //#include <libavfilter/buffersink.h>
@@ -73,8 +74,8 @@ typedef struct {
 	pthread_t output_thread;
 	pthread_mutex_t validity_lock;
 
-	size_t buffer_size;
-	int16_t * buffer;
+//	size_t buffer_size;
+//	int16_t * buffer;
 
 	void * user_context;
 	int64_t written_samples;
@@ -87,17 +88,83 @@ int transcoder_stream_get_position(engine_stream_context_s * stream_context, int
 static void * output_thread(void * thread_arg) {
 	engine_stream_context_s * stream_context = thread_arg;
 
+/**/
+    AVFormatContext * output_format_context;
+    AVStream * output_stream;
+    AVOutputFormat *output_format;
+    AVPacket packet;
+
+    size_t stream_index;
+
+    size_t output_buffer_size;
+    size_t sample_size;
+    uint8_t * output_buffer;
+    int16_t * samples;
+
+#define OUTPUT_FILENAME "/sdcard/test.ogg"
+    output_format = av_guess_format(NULL, OUTPUT_FILENAME, NULL);
+    output_format->audio_codec = CODEC_ID_VORBIS;
+
+    output_format_context = avformat_alloc_context();
+    output_format_context->oformat = output_format;
+
+    AVCodec* vorbis_encoder = avcodec_find_encoder(output_format->audio_codec);
+    snprintf(output_format_context->filename, sizeof(output_format_context->filename), "%s", OUTPUT_FILENAME);
+
+    LOG_INFO(LOG_TAG, "encoder = (%8.8x)", (int)vorbis_encoder);
+
+    output_stream = avformat_new_stream(output_format_context, vorbis_encoder);
+    output_stream->codec->codec_id = output_format->audio_codec;
+    output_stream->codec->codec_type = AVMEDIA_TYPE_AUDIO;
+    output_stream->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
+    output_stream->codec->bit_rate = 2 * 16 * 44100;
+    output_stream->codec->sample_rate = 44100;
+    output_stream->codec->channels = 2;
+
+    if (output_format_context->oformat->flags & AVFMT_GLOBALHEADER) {
+        output_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    }
+
+    AVDictionary *opts = NULL;
+    av_dict_set(&opts, "strict", "experimental", 0);
+    avcodec_open2(output_stream->codec, vorbis_encoder, &opts);
+    av_dict_free(&opts);
+
+    output_buffer_size = 32768; // 32K
+    output_buffer = (uint8_t *)av_malloc(output_buffer_size);
+
+    sample_size = 2 * output_stream->codec->frame_size * output_stream->codec->channels;
+    samples = (int16_t *)av_malloc(sample_size);
+
+    if (!(output_format->flags & AVFMT_NOFILE))
+        avio_open(&output_format_context->pb, OUTPUT_FILENAME, AVIO_FLAG_WRITE);
+
+    avformat_write_header(output_format_context, NULL);
+/**/
 	transcoder_stream_context_s * transcoder_stream = stream_context->stream_output_specific;
-	transcoder_stream->buffer = memory_alloc(sizeof(uint16_t) * transcoder_stream->buffer_size);
 
     get_env(stream_context, 1);
 
 	for (;;) {
-		int request_size = transcoder_stream->buffer_size / 40;
+		int request_size = output_stream->codec->frame_size;
 		int nb_samples = request_size / stream_context->engine->param_channel_count;
-		int got = transcoder_stream->data_callback(stream_context, transcoder_stream->user_context, transcoder_stream->buffer, nb_samples);
+		int got = transcoder_stream->data_callback(stream_context, transcoder_stream->user_context, samples, nb_samples);
 
         // TODO: write transcoder_stream->buffer[0, got * stream_context->engine->param_channel_count]
+
+        av_init_packet(&packet);
+
+        packet.size = avcodec_encode_audio(output_stream->codec, output_buffer, output_buffer_size, samples);
+
+        if (output_stream->codec->coded_frame && output_stream->codec->coded_frame->pts != (unsigned int)AV_NOPTS_VALUE) {
+            packet.pts = av_rescale_q(output_stream->codec->coded_frame->pts, output_stream->codec->time_base, output_stream->time_base);
+        }
+
+        packet.flags |= AV_PKT_FLAG_KEY;
+        packet.stream_index = output_stream->index;
+        packet.data = output_buffer;
+        av_interleaved_write_frame(output_format_context, &packet);
+
 
 		if (!transcoder_stream->has_valid_thread) {
 			break;
@@ -131,7 +198,27 @@ static void * output_thread(void * thread_arg) {
 	/* sync */ pthread_mutex_unlock(&transcoder_stream->validity_lock);
 
     release_env(stream_context, 1);
-	memory_free(transcoder_stream->buffer);
+
+/**/
+    av_write_trailer(output_format_context);
+
+    if (output_stream) {
+        avcodec_close(output_stream->codec);
+        av_free(output_buffer);
+        av_free(samples);
+    }
+
+    for (stream_index = 0; stream_index < output_format_context->nb_streams; stream_index++) {
+        av_freep(&output_format_context->streams[stream_index]->codec);
+        av_freep(&output_format_context->streams[stream_index]);
+    }
+
+    if (!(output_format->flags & AVFMT_NOFILE)) {
+        avio_close(output_format_context->pb);
+    }
+
+    av_free(output_format_context);
+/**/
 
 	return 0;
 }
@@ -174,7 +261,6 @@ int transcoder_stream_new(engine_context_s * engine_context, engine_stream_conte
 	transcoder_stream->state_callback = state_callback;
 	transcoder_stream->user_context = user_context;
 	transcoder_stream->stream_type = stream_type;
-	transcoder_stream->buffer_size = 65536; // 64kB
 	transcoder_stream->has_valid_thread = 0;
 	pthread_mutex_init(&transcoder_stream->validity_lock, NULL);
 
@@ -200,7 +286,6 @@ int transcoder_stream_delete(engine_stream_context_s * stream_context) {
 
 	if (transcoder_stream != NULL) {
 		pthread_mutex_destroy(&transcoder_stream->validity_lock);
-        memory_free(transcoder_stream->buffer);
 		memory_free(transcoder_stream);
 
 		stream_context->stream_output_specific = NULL;
@@ -281,3 +366,4 @@ static engine_output_s const transcoder_output = {
 	.engine_stream_stop = transcoder_stream_stop,
 	.engine_stream_flush = transcoder_stream_flush
 };
+

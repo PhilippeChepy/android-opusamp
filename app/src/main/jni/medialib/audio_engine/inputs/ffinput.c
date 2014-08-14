@@ -290,7 +290,7 @@ media_file_init_filters_done:
 }
 
 static void av_callback(void *ptr, int level, const char *fmt, va_list vl) {
-#if 1
+#if 0
     static char message[8192];
     const char *module = NULL;
 
