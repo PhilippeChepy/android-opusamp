@@ -728,8 +728,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             case CONTENT_TYPE_PLAYLIST:
                 boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
 
-                if (itemId == PlayerApplication.CONTEXT_MENUITEM_CLEAR || itemId == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
-                    getSupportLoaderManager().restartLoader(1, null, this);
+                switch (itemId) {
+                    case PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
+                    case PlayerApplication.CONTEXT_MENUITEM_CLEAR:
+                    case PlayerApplication.CONTEXT_MENUITEM_DELETE:
+                        getSupportLoaderManager().restartLoader(1, null, this);
                 }
 
                 return playlistActionResult;

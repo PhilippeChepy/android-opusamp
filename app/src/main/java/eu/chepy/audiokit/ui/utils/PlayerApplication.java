@@ -411,13 +411,19 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return MusicConnector.doContextActionPlayNext(AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
                 return MusicConnector.doContextActionAddToQueue(AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
+            case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
+                return MusicConnector.doContextActionAddToPlaylist(hostActivity, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
                 return MusicConnector.doContextActionToggleVisibility(AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, songId);
             case CONTEXT_MENUITEM_DETAIL:
                 MusicConnector.doContextActionDetail(hostActivity, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, songId);
                 return false;
             case CONTEXT_MENUITEM_DELETE:
-                return MusicConnector.doContextActionPlaylistDelete(hostActivity, playlistId);
+                MusicConnector.doContextActionMediaRemoveFromQueue(playlistId, position);
+                return true;
+            case CONTEXT_MENUITEM_CLEAR:
+                MusicConnector.doContextActionPlaylistClear(playlistId);
+                return true;
             default:
                 return false;
         }
