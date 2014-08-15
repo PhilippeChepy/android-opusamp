@@ -560,8 +560,7 @@ public class PlayerViewHelper implements
     }
 
     public boolean onContextItemSelected(android.view.MenuItem item) {
-        doOnContextItemSelected(item.getItemId());
-        return hostActivity.onContextItemSelected(item);
+        return doOnContextItemSelected(item.getItemId()) || hostActivity.onContextItemSelected(item);
     }
 
     @Override
@@ -688,6 +687,7 @@ public class PlayerViewHelper implements
             try {
                 PlayerApplication.playerService.stop();
                 PlayerApplication.playerService.queueClear();
+                return true;
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "doClearAction", 0, remoteException);
             }
@@ -702,6 +702,7 @@ public class PlayerViewHelper implements
         if (PlayerApplication.playerService != null) {
             try {
                 PlayerApplication.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
+                return true;
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "doDeleteAction", 0, remoteException);
             }

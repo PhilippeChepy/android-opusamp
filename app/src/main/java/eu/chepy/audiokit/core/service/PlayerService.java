@@ -192,9 +192,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         playlistOrderIndex = 0;
 	}
 
-    protected void doUpdateWidgets() {
-        final SongInformations currentSong = new SongInformations();
-
+    protected void doUpdateWidgets(final SongInformations currentSong) {
         widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
         widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
     }
@@ -291,7 +289,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         }
 
         doSetProviderListeners();
-        doUpdateWidgets();
+        doUpdateWidgets(new SongInformations());
 	}
 	
 	@Override
@@ -395,7 +393,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                             currentSong.trackName,
                             currentSong.art);
 
-                    doUpdateWidgets();
+                    doUpdateWidgets(currentSong);
 
                     startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, notificationHelper.getNotification());
                     hasNotification = true;
@@ -433,7 +431,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                 }
 			}
 
-            doUpdateWidgets();
+            doUpdateWidgets(new SongInformations());
 			
 			broadcastMutex.lock();
 			final int broadcastItemCount = listeners.beginBroadcast();
@@ -455,7 +453,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             remoteControlClient.stop();
             remoteControlClient.release();
 
-            doUpdateWidgets();
+            doUpdateWidgets(new SongInformations());
 
             if (PlayerApplication.hasICS()) {
                 audioManager.abandonAudioFocus(audioFocusChangeListener);
@@ -509,7 +507,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         private void notifySetQueuePosition() {
             hasNotification = false;
 
-            doUpdateWidgets();
+            doUpdateWidgets(new SongInformations());
 
             broadcastMutex.lock();
             final int broadcastItemCount = listeners.beginBroadcast();
@@ -528,7 +526,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         private void notifyQueueChanged() {
             hasNotification = false;
 
-            doUpdateWidgets();
+            doUpdateWidgets(new SongInformations());
 
             broadcastMutex.lock();
             final int broadcastItemCount = listeners.beginBroadcast();
@@ -876,6 +874,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 		@Override
 		public synchronized void queueRemove(int entry) throws RemoteException {
+            LogUtils.LOGD(TAG, "trying to remove " + entry);
 			int position = playlist.getPosition();
 			if (entry < position) {
 				position--;
@@ -888,8 +887,12 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 			boolean wasPlaying = isPlaying();
 			
 			if (position == entry) {
+                wasPlaying = false;
 				currentTrack = unloadTrack(currentTrack);
 			}
+            else {
+                pause(true);
+            }
 			
 			initPlaylist();
 			

@@ -522,6 +522,11 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     @Override
     public void playlistRemove(String playlistId, int position) {
         SQLiteDatabase database = openHelper.getWritableDatabase();
+
+        if (playlistId == null) {
+            playlistId = "0";
+        }
+
         if (database != null) {
             database.beginTransaction();
             try {
