@@ -302,8 +302,6 @@ public class PlayerViewHelper implements
                 }
             });
         }
-
-        refreshViews();
     }
 
     public void onActivityDestroy() {
@@ -532,6 +530,14 @@ public class PlayerViewHelper implements
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         if (cursor == null) {
             return;
+        }
+
+        if (cursor.getCount() <= 0) {
+            slidingUpPanelLayout.collapsePanel();
+            slidingUpPanelLayout.hidePanel();
+        }
+        else {
+            slidingUpPanelLayout.showPanel();
         }
 
         playlistCursor = cursor;
