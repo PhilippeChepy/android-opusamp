@@ -93,8 +93,6 @@ public class PlayerViewHelper implements
             AbstractMediaProvider.SONG_ARTIST,
             AbstractMediaProvider.PLAYLIST_ENTRY_POSITION,
             AbstractMediaProvider.SONG_VISIBLE,
-            AbstractMediaProvider.SONG_DURATION,
-            AbstractMediaProvider.SONG_URI
     };
 
     private int[] sortFields = new int[] {
@@ -110,10 +108,6 @@ public class PlayerViewHelper implements
     private static final int COLUMN_ENTRY_POSITION = 3;
 
     private static final int COLUMN_SONG_VISIBLE = 4;
-
-    private static final int COLUMN_SONG_DURATION = 5;
-
-    private static final int COLUMN_SONG_URI = 6;
 
 
 
@@ -392,53 +386,52 @@ public class PlayerViewHelper implements
             }
         });
 
+        if (MusicConnector.isPlaying()) {
+            final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, autostop != 0 ?
+                    String.format(hostActivity.getString(R.string.menu_label_delayed_pause_in), PlayerApplication.formatSecs(autostop)) : // format minutes (not secs)
+                    hostActivity.getString(R.string.menu_label_delayed_pause));
+            autoPause.setCheckable(true);
+            autoPause.setChecked(autostop != 0);
+            autoPause.setIcon(R.drawable.ic_action_alarm);
+            autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    if (autoPause.isChecked()) {
+                        autostop = 0;
+                        if (autostopHandler != null && autostopTask != null) {
+                            autostopHandler.removeCallbacks(autostopTask);
+                            autostopHandler = null;
+                            autostopTask = null;
+                        }
+                    } else {
+                        final TimePickerDialog tpd = new TimePickerDialog(hostActivity,
+                                new TimePickerDialog.OnTimeSetListener() {
 
-        final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, autostop != 0 ?
-                        String.format(hostActivity.getString(R.string.menu_label_delayed_pause_in), PlayerApplication.formatSecs(autostop)) : // format minutes (not secs)
-                        hostActivity.getString(R.string.menu_label_delayed_pause));
-        autoPause.setCheckable(true);
-        autoPause.setChecked(autostop != 0);
-        autoPause.setIcon(R.drawable.ic_action_alarm);
-        autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                final MenuItem autostopMenuItem = popupMenu.getMenu().getItem(3);
+                                    @Override
+                                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                        autostop = hourOfDay * 60 + minute;
+                                        autostopTask = new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                MusicConnector.doStopAction();
+                                            }
+                                        };
 
-                if (autostopMenuItem.isChecked()) {
-                    autostop = 0;
-                    if (autostopHandler != null && autostopTask != null) {
-                        autostopHandler.removeCallbacks(autostopTask);
-                        autostopHandler = null;
-                        autostopTask = null;
+                                        autostopHandler = new Handler();
+                                        autostopHandler.postDelayed(autostopTask, autostop * 60000);
+                                    }
+                                }, 0, 0, true
+                        );
+
+                        tpd.setTitle(R.string.label_autostop);
+                        tpd.show();
+
                     }
-                } else {
-                    final TimePickerDialog tpd = new TimePickerDialog(hostActivity,
-                            new TimePickerDialog.OnTimeSetListener() {
 
-                                @Override
-                                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                                    autostop = hourOfDay * 60 + minute;
-                                    autostopTask = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            MusicConnector.doStopAction();
-                                        }
-                                    };
-
-                                    autostopHandler = new Handler();
-                                    autostopHandler.postDelayed(autostopTask, autostop * 60000);
-                                }
-                            }, 0, 0, true
-                    );
-
-                    tpd.setTitle(R.string.label_autostop);
-                    tpd.show();
-
+                    return true;
                 }
-
-                return true;
-            }
-        });
+            });
+        }
 
 
         popupMenu.show();
