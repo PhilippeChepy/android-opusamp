@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string-array name="tab_titles">
-        <item>@string/tab_playlists</item>
-        <item>@string/tab_artists</item>
-        <item>@string/tab_album_artists</item>
-        <item>@string/tab_albums</item>
-        <item>@string/tab_songs</item>
-        <item>@string/tab_genres</item>
-        <item>@string/tab_storage</item>
-    </string-array>
-    
 	<string-array name="cover_exts">
 		<item>@string/ext_jpeg</item>
 		<item>@string/ext_jpg</item>

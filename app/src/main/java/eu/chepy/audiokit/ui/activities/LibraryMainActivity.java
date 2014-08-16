@@ -456,7 +456,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                     doLibraryManagement();
                     break;
                 case DRAWERITEM_APPLICATION_SETTINGS_ID:
-                    startActivity(new Intent(getApplicationContext(), SettingsApplicationActivity.class));
+                    startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                     break;
                 default:
                     final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getMediaProvider();

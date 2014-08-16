@@ -30,9 +30,11 @@ public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
             if (event != null && event.getAction() == KeyEvent.ACTION_UP) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                     MusicConnector.doPlayAction(true);
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
+                }
+                else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
                     MusicConnector.doNextAction();
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
+                }
+                else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
                     MusicConnector.doPrevAction();
                 }
             }

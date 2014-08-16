@@ -56,10 +56,11 @@ public class Security {
     public static boolean verifyPurchase(String base64PublicKey, String signedData, String signature) {
         if (TextUtils.isEmpty(signedData) || TextUtils.isEmpty(base64PublicKey) ||
                 TextUtils.isEmpty(signature)) {
-            Log.e(TAG, "Purchase verification failed: missing data.");
             if (BuildConfig.DEBUG) {
                 return true;
             }
+
+            Log.e(TAG, "Purchase verification failed: missing data.");
             return false;
         }
 

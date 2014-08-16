@@ -146,15 +146,15 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         final Resources resources = PlayerApplication.context.getResources();
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
 
-        final String[] tabTitles = resources.getStringArray(R.array.tab_titles);
+        final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
         Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
-        Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.key_tabs_enabled), null);
+        Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), null);
 
         // Default instead of no selection.
         if (userEnabledTabs == null || userEnabledTabs.size() == 0) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
-            SharedPreferencesCompat.EditorCompat.putStringSet(editor, resources.getString(R.string.key_tabs_enabled), defaultTabs);
+            SharedPreferencesCompat.EditorCompat.putStringSet(editor, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
             editor.apply();
         }
     }
@@ -828,11 +828,11 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         final Resources resources = PlayerApplication.context.getResources();
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
 
-        final String[] tabTitles = resources.getStringArray(R.array.tab_titles);
+        final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
         Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
         Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(
-                sharedPrefs, resources.getString(R.string.key_tabs_enabled), defaultTabs);
+                sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
 
         if (userEnabledTabs.size() == 0) {
             userEnabledTabs = defaultTabs;
@@ -3070,7 +3070,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         @Override
         public String getDescription() {
-            return PlayerApplication.context.getString(R.string.label_library_settings_location);
+            return PlayerApplication.context.getString(R.string.preference_title_settings_location);
         }
 
         @Override

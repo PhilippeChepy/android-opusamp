@@ -15,10 +15,14 @@ package eu.chepy.audiokit.core.broadcastreceiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
+import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.MusicConnector;
+import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
 public class CallStateBroadcastReceiver extends BroadcastReceiver {
 
@@ -42,9 +46,12 @@ public class CallStateBroadcastReceiver extends BroadcastReceiver {
 				}
 			}
 		};
-		
-		TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-		telephony.listen(phoneListener, PhoneStateListener.LISTEN_CALL_STATE);
+
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (sharedPreferences.getBoolean(PlayerApplication.context.getString(R.string.preference_key_pause_call), true)) {
+            TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            telephony.listen(phoneListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
 	}
 
 }

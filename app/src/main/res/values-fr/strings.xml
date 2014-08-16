@@ -152,7 +152,6 @@
     
     <string name="header_interface">Interface graphique</string>
     <string name="header_media_scanner">Scanner de fichier</string>
-    <string name="header_storage">Stockage</string>
     <string name="header_about">A Propos</string>
     
     <!-- UI/Other -->
@@ -183,7 +182,6 @@
     <string name="label_settings">Paramètres</string>
     <string name="label_library_settings">Gestion des bibliothèques</string>
 
-    <string name="label_library_settings_location">Emplacements</string>
     <string name="label_library_settings_soundfx">Effets sonores</string>
     <string name="label_library_settings_general">Paramètres de la bibliothèque</string>
 
@@ -243,13 +241,9 @@
     <string name="library_global_settings_title">Bibliothèques</string>
     <string name="library_global_settings_desc">Vous pouvez ici modifier vos bibliothèques.\nAppuyez longtemps sur une ligne pour éditer ou supprimer une bibliothèque.\nVous ne pouvez pas supprimer la bibliothèque par défaut.</string>
 
-    <string name="preference_appearance_screen_title">Apparence</string>
-    <string name="preference_headset_screen_title">Casque et bluetooth</string>
-    <string name="preference_other_options_screen_title">Autres options</string>
-    <string name="preference_about_screen_title">A propos</string>
 
-    <string name="preference_online_help">Aide en ligne</string>
-    <string name="preference_licenses_title">Licences Open source</string>
+
+
 
     <string name="preference_various_artists_default_value">Artistes divers</string>
     <string name="preference_unknown_artists_default_value">Artistes inconnu</string>
@@ -258,13 +252,49 @@
     <string name="progress_dialog_global">Base de données principale</string>
     <string name="progress_dialog_pct">Base de données : %1$s/%2$s</string>
 
-    <string name="loc_preference_collection_screen_title">Bibliothèque</string>
 
-    <string name="loc_preference_optimize_database">Optimiser la base de données</string>
-    <string name="loc_preference_clear_art_cache">Nettoyer la mémoire temporaire des image</string>
 
-    <string name="loc_preference_collection_tab_visibility_dialog_title">Onglets activés</string>
-    <string name="loc_preference_collection_tab_visibility_summary">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
+    <!-- Global preferences -->
+    <string name="preference_screen_title_storage">Stockage</string>
+    <string name="preference_category_title_cache_size">Taille du cache</string>
+    <string name="preference_title_cache_size">Pochettes</string>
+    <string name="preference_title_thumbnail_cache_size">Mignatures de pochettes</string>
+    <string name="preference_category_title_maintainance">Opérations de maintenance</string>
+    <string name="preference_title_optimize_database">Optimiser la base de données</string>
+    <string name="preference_title_clear_cache">Nettoyer la mémoire temporaire des image</string>
+
+    <string name="preference_screen_title_headphones">Casque et sorties audio</string>
+    <string name="preference_title_plug_auto_play">Démarrage automatique de la lecture</string>
+    <string name="preference_summary_plug_auto_play">Démarrage automatique de la lecture lors de la connexion d\'un périphérique audio sur l\'appareil</string>
+    <string name="preference_title_pause_call">Pause automatique de la lecture</string>
+    <string name="preference_summary_pause_call">Pause automatique de la lecture lors des appels téléphoniques</string>
+
+    <string name="preference_screen_title_about">Aide / A propos</string>
+    <string name="preference_title_premium">Mode premium</string>
+    <string name="preference_title_online_help">Aide en ligne</string>
+    <string name="preference_title_opensource">Licences Open source</string>
+
+
+    <!-- Local preferences -->
+    <string name="preference_category_title_collection">Bibliothèque</string>
+    <string name="preference_title_settings_location">Emplacements</string>
+    <string name="preference_summary_settings_location">Définir quels dossiers scanner et exclure pour cette bibliothèque</string>
+
+    <string name="preference_category_title_display">Affichage</string>
+    <string name="preference_title_tab_visibility">Onglets activés</string>
+    <string name="preference_summary_tab_visibility">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
+    <string name="preference_title_storage_display_details">Détails dans l\'explorateur de fichiers</string>
+    <string name="preference_summary_storage_display_details">Afficher des détails sur les medias plutôt que les noms des fichiers (peut être lent quand il y a beaucoup de fichiers).</string>
+    <string name="preference_title_genre_display">Affichage du détail des genres</string>
+    <string name="preference_summary_genre_display"></string>
+
+    <string name="preference_list_value_genre_show_albums">Afficher les albums</string>
+    <string name="preference_list_value_genre_show_tracks">Afficher les pistes</string>
+
+    <!-- Units -->
+    <string name="unit_MB">%s Mo</string>
+
+
 
     <!-- Equalizer view -->
     <string name="label_enable_equalizer">Activer l\'equaliseur</string>

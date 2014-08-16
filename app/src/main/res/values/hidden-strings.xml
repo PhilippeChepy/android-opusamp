@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="key_tabs_enabled">tabs_enabled</string>
-
     <string name="key_audio_exts">audio_exts</string>
     <string name="key_cover_exts">cover_exts</string>
 

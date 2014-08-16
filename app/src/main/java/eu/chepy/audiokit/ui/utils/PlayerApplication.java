@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
@@ -39,7 +40,9 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
+import eu.chepy.audiokit.BuildConfig;
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.core.service.IPlayerService;
 import eu.chepy.audiokit.core.service.PlayerService;
@@ -52,6 +55,10 @@ import eu.chepy.audiokit.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.audiokit.ui.utils.uil.NormalImageLoader;
 import eu.chepy.audiokit.ui.utils.uil.ThumbnailImageLoader;
 import eu.chepy.audiokit.utils.LogUtils;
+import eu.chepy.audiokit.utils.iab.IabHelper;
+import eu.chepy.audiokit.utils.iab.IabResult;
+import eu.chepy.audiokit.utils.iab.Inventory;
+import eu.chepy.audiokit.utils.iab.Purchase;
 
 public class PlayerApplication extends Application implements ServiceConnection {
 
@@ -69,6 +76,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static IPlayerService playerService = null;
 
     public static ArrayList<ServiceConnection> additionalCallbacks = new ArrayList<ServiceConnection>();
+
+    // Iab
+    private IabHelper iabHelper;
+
+    static final String ITEM_DEBUG_SKU = "android.test.purchased";
+
+    static final String ITEM_RELEASE_SKU = "eu.chepy.audiokit.noads";
+
+    static String ITEM_SKU;
+
+    static final String PURCHASE_TOKEN = "purchase-token-noads";
 
 
 
@@ -364,10 +382,10 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position) {
-        return songContextItemSelected(hostActivity, itemId, songId, position, null, 0);
+        return songContextItemSelected(hostActivity, itemId, songId, position, null);
     }
 
-    public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position, String playlistId, int playlistPosition) {
+    public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position, String playlistId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaProvider.ContentType.CONTENT_TYPE_DEFAULT, null, MusicConnector.songs_sort_order, position);
@@ -735,7 +753,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 		final WebView webView = new WebView(context);
 		webView.loadUrl("file:///android_asset/licenses.html");
 		return new AlertDialog.Builder(context)
-				.setTitle(R.string.preference_licenses_title)
+				.setTitle(R.string.preference_title_opensource)
 				.setView(webView)
 				.setPositiveButton(android.R.string.ok,
 						new DialogInterface.OnClickListener() {
@@ -746,6 +764,175 @@ public class PlayerApplication extends Application implements ServiceConnection 
 							}
 						}).create();
 	}
+
+
+
+
+    private static final String CONFIG_FILE_FREEMIUM = "freemium";
+
+    private static final String CONFIG_IS_FREEMIUM = "isFreemium";
+
+    private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
+
+    public static boolean isFreemium() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
+    }
+
+    public static void setFreemium(boolean freemium) {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CONFIG_IS_FREEMIUM, freemium);
+        editor.apply();
+    }
+
+    public static int adDisplayGetCounter() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
+    }
+
+    public static void adDisplayInc() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        int noDisplayCounter = sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(CONFIG_NO_DISPLAY, noDisplayCounter);
+        editor.apply();
+    }
+
+    public static void adDisplayReset() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(CONFIG_NO_DISPLAY, 0);
+        editor.apply();
+    }
+
+
+    public static void iabStart(final Runnable onStarted) {
+        if (!isFreemium() || instance.iabHelper != null) {
+            return;
+        }
+
+        if (BuildConfig.DEBUG) {
+            ITEM_SKU = ITEM_DEBUG_SKU;
+        }
+        else {
+            ITEM_SKU = ITEM_RELEASE_SKU;
+        }
+
+
+        String base64EncodedPublicKey =
+                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjLhj4p4ORoh54q1RGf4HwZTngM0LNNFR6Dpw2k+nfiys4S" +
+                        "S70WceuQTB1g+I0HqwSOn7P+R+Zw4HVAks+w4p/AlDpKd5eilIfztxP77gFBOBGIbSMhfZNkASBrAyiqBeTM8I8cwY" +
+                        "QAbIOd9H/j/xAg3vz4iNwWbB6PUFXiJSeo2nQB5VwSZYlwCb8xOGpnQbrzg8ZfP1MzWXZ9gOFjCvViczaCL5xN5WRg" +
+                        "V4NQgQ+n7ecuVFYHxeu/VNxy3/m9AeqQcA1P4+7c0YYoMZN34uRIDWlXsQuohIPG6COfcfnYOqoCk3d9Htp+QzCqVK" +
+                        "jSFN8loHWiDKvSEWf0+ffxpWuQIDAQAB";
+
+        instance.iabHelper = new IabHelper(context, base64EncodedPublicKey);
+
+        instance.iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+
+            public void onIabSetupFinished(IabResult result)
+            {
+                if (!result.isSuccess()) {
+                    LogUtils.LOGE(TAG, "In-app Billing setup failed: " + result);
+                }
+                else {
+                    LogUtils.LOGI(TAG, "In-app Billing is set up OK");
+                    iabCheck(onStarted);
+                }
+            }
+        });
+    }
+
+    public static void iabStop() {
+        if (instance.iabHelper != null) {
+            instance.iabHelper.dispose();
+        }
+        instance.iabHelper = null;
+    }
+
+    public static void iabPurchase(Activity activity) {
+        instance.iabHelper.launchPurchaseFlow(activity, ITEM_SKU, 10001, purchaseFinishedListener, PURCHASE_TOKEN);
+    }
+
+    public static boolean iabHandleResult(int requestCode, int resultCode, Intent data) {
+        return instance.iabHelper.handleActivityResult(requestCode, resultCode, data);
+    }
+
+    private static void iabCheck(final Runnable onFinished) {
+        new AsyncTask<Void, Void, Void>() {
+            protected Inventory inventory;
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                List<String> items = new ArrayList<String>();
+                items.add(ITEM_SKU);
+
+                try {
+                    LogUtils.LOGI(TAG, "querying inventory");
+                    inventory = instance.iabHelper.queryInventory(false, items);
+                }
+                catch (final Exception exception) {
+                    LogUtils.LOGW(TAG, "unable to query iab informations : " + exception);
+                    inventory = null;
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                if (inventory != null) {
+                    if (inventory.hasPurchase(ITEM_SKU)) {
+                        setFreemium(false);
+                    }
+                    onFinished.run();
+                }
+            }
+        }.execute();
+    }
+
+    private static IabHelper.OnIabPurchaseFinishedListener purchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
+        public void onIabPurchaseFinished(IabResult result, Purchase purchase)
+        {
+            if (result.isFailure()) {
+                LogUtils.LOGW(TAG, "purchaseFinished: failure");
+            }
+            else if (purchase.getSku().equals(ITEM_SKU)) {
+                LogUtils.LOGI(TAG, "purchaseFinished: success");
+                instance.iabHelper.queryInventoryAsync(receivedInventoryListener);
+            }
+        }
+    };
+
+    private static IabHelper.QueryInventoryFinishedListener receivedInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
+        public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+
+            if (result.isFailure()) {
+                LogUtils.LOGW(TAG, "receivedInventory: failure");
+            }
+            else {
+                LogUtils.LOGI(TAG, "receivedInventory: success");
+                instance.iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
+            }
+        }
+    };
+
+    private static IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
+
+        public void onConsumeFinished(Purchase purchase, IabResult result) {
+
+            if (result.isSuccess()) {
+                setFreemium(false);
+            }
+            else {
+                LogUtils.LOGW(TAG, "consumeFinished: failure");
+            }
+        }
+    };
 
     public static boolean hasFroyo() {
         // Can use static final constants like FROYO, declared in later versions

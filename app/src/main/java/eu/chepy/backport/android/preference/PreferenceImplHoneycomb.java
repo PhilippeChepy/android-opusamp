@@ -115,9 +115,7 @@ class PreferenceImplHoneycomb extends PreferenceImpl {
                     .putStringSet(key, values)
                     .apply();
         } catch (ClassCastException e) {
-            Log.e(TAG, "ClassCastException", e);
         } catch (RuntimeException e) {
-            Log.e(TAG, "RuntimeException", e);
         }
     }
 }

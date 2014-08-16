@@ -1,50 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen 
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!--<PreferenceScreen
-        android:icon="@drawable/ic_action_tiles_large"
-        android:title="@string/preference_appearance_screen_title">
-    </PreferenceScreen>-->
-
-    <!--<PreferenceScreen
-        android:icon="@drawable/ic_action_headphones"
-        android:title="@string/preference_headset_screen_title">
-    </PreferenceScreen>-->
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="@string/preference_screen_key_global">
 
     <PreferenceScreen
-        android:title="@string/header_storage"
+        android:title="@string/preference_screen_title_storage"
         android:icon="@drawable/ic_action_database" >
 
-        <Preference
-            android:key="database_optimization"
-            android:title="@string/loc_preference_optimize_database"
-            android:icon="@drawable/ic_action_database"/>
+        <PreferenceCategory
+            android:title="@string/preference_category_title_cache_size">
 
-        <Preference
-            android:key="cache_cleanup"
-            android:title="@string/loc_preference_clear_art_cache"
-            android:icon="@drawable/ic_action_document"/>
+            <EditTextPreference
+                android:digits="1234567890"
+                android:inputType="number"
+                android:key="@string/preference_key_cache_size"
+                android:defaultValue="30"
+                android:title="@string/preference_title_cache_size" />
 
+            <EditTextPreference
+                android:digits="1234567890"
+                android:inputType="number"
+                android:key="@string/preference_key_thumbnail_cache_size"
+                android:defaultValue="20"
+                android:title="@string/preference_title_thumbnail_cache_size" />
+        </PreferenceCategory>
+
+        <PreferenceCategory
+            android:title="@string/preference_category_title_maintainance">
+
+            <Preference
+                android:key="@string/preference_key_clear_cache"
+                android:title="@string/preference_title_clear_cache" />
+
+            <Preference
+                android:key="@string/preference_key_optimize_database"
+                android:title="@string/preference_title_optimize_database" />
+        </PreferenceCategory>
     </PreferenceScreen>
 
-    <!--<PreferenceScreen
-        android:icon="@drawable/ic_action_gear"
-        android:title="@string/preference_other_options_screen_title">
-    </PreferenceScreen>-->
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_headphones"
+        android:icon="@drawable/ic_action_headphones">
 
-    <PreferenceCategory
-        android:title="@string/preference_about_screen_title">
+        <CheckBoxPreference
+            android:key="@string/preference_key_plug_auto_play"
+            android:title="@string/preference_title_plug_auto_play"
+            android:summary="@string/preference_summary_plug_auto_play"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_pause_call"
+            android:title="@string/preference_title_pause_call"
+            android:summary="@string/preference_summary_pause_call"
+            android:defaultValue="true" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_about"
+        android:icon="@drawable/ic_action_help">
 
         <Preference
-            android:key="online_help"
-            android:title="@string/preference_online_help"
+            android:key="@string/preference_key_online_help"
+            android:title="@string/preference_title_online_help"
             android:icon="@drawable/ic_action_help" />
 
         <Preference
-            android:key="open_source"
-            android:title="@string/preference_licenses_title"
+            android:key="@string/preference_key_opensource"
+            android:title="@string/preference_title_opensource"
             android:icon="@drawable/ic_action_info" />
-    </PreferenceCategory>
+    </PreferenceScreen>
+
+    <Preference
+        android:key="@string/preference_key_premium"
+        android:title="@string/preference_title_premium"
+        android:icon="@drawable/ic_action_creditcard" />
 
 </PreferenceScreen>

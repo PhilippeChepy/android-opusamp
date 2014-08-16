@@ -103,27 +103,27 @@ export LD=${CROSS_PREFIX}ld
 export AR=${CROSS_PREFIX}ar
 export STRIP=${CROSS_PREFIX}strip
 
-CFLAGS="-std=c99 -O3 -w -pipe -fpic -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DANDROID -DNDEBUG"
+CFLAGS="-std=c99 -O3 -w -pipe -fpic -fPIC -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DNDEBUG"
 LDFLAGS="-lm -lz -Wl,--no-undefined -Wl,-z,noexecstack"
 
 case $CROSS_PREFIX in
     aarch64-*)
-        CFLAGS="-DANDROID"
+        CFLAGS="$CFLAGS -DANDROID"
         ;;
     arm-*)
         CFLAGS="-mthumb $CFLAGS -D__ARM_ARCH_5__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5TE__ -DANDROID"
         ;;
     x86_64-*)
-        CFLAGS="-DANDROID"
+        CFLAGS="$CFLAGS -DANDROID"
         ;;
     x86-*)
-        CFLAGS="-DANDROID"
+        CFLAGS="$CFLAGS -DANDROID"
         ;;
     mips64el-*)
-        CFLAGS="-DANDROID"
+        CFLAGS="$CFLAGS -DANDROID"
         ;;
     mipsel-*)
-        CFLAGS="-std=c99 -O3 -Wall -pipe -fpic -fasm  -ftree-vectorize -ffunction-sections -funwind-tables -fomit-frame-pointer -funswitch-loops \
+        CFLAGS="-std=c99 -O3 -Wall -pipe -fpic -fPIC -fasm  -ftree-vectorize -ffunction-sections -funwind-tables -fomit-frame-pointer -funswitch-loops \
         -finline-limit=300 -finline-functions -fpredictive-commoning -fgcse-after-reload -fipa-cp-clone -Wno-psabi -Wa,--noexecstack -DANDROID -DNDEBUG"
         ;;
 esac

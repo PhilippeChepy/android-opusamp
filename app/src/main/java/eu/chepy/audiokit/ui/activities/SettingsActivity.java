@@ -13,42 +13,28 @@
 package eu.chepy.audiokit.ui.activities;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
 
 import java.io.File;
 import java.text.DecimalFormat;
 
-import eu.chepy.audiokit.BuildConfig;
 import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 import eu.chepy.audiokit.ui.utils.uil.NormalImageLoader;
 import eu.chepy.audiokit.ui.utils.uil.ThumbnailImageLoader;
 import eu.chepy.audiokit.utils.LogUtils;
-import eu.chepy.audiokit.utils.iab.IabHelper;
-import eu.chepy.audiokit.utils.iab.IabResult;
-import eu.chepy.audiokit.utils.iab.Inventory;
-import eu.chepy.audiokit.utils.iab.Purchase;
 
-public class SettingsApplicationActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity {
 
-	public static final String TAG = SettingsApplicationActivity.class.getSimpleName();
-
-
-
-    private IabHelper iabHelper;
-
-    static final String ITEM_DEBUG_SKU = "android.test.purchased";
-
-    static final String ITEM_RELEASE_SKU = "eu.chepy.audiokit.noads";
-
-    static String ITEM_SKU;
-
-    static final String PURCHASE_TOKEN = "purchase-token-noads";
+	public static final String TAG = SettingsActivity.class.getSimpleName();
 
 
 
@@ -66,61 +52,88 @@ public class SettingsApplicationActivity extends PreferenceActivity {
         setOnlineHelpListener();
 		setOpenSourceLicensesListener();
 
+        final SharedPreferences sharedPrefs = getPreferences(Context.MODE_PRIVATE);
 
+        int cacheSize = sharedPrefs.getInt(getString(R.string.preference_key_cache_size), 30);
+        int thumbnailCacheSize = sharedPrefs.getInt(getString(R.string.preference_key_thumbnail_cache_size), 20);
 
-        if (BuildConfig.DEBUG) {
-            ITEM_SKU = ITEM_DEBUG_SKU;
-        }
-        else {
-            ITEM_SKU = ITEM_RELEASE_SKU;
-        }
+        boolean autoPlay = sharedPrefs.getBoolean(getString(R.string.preference_key_plug_auto_play), true);
+        boolean autoPause = sharedPrefs.getBoolean(getString(R.string.preference_key_pause_call), true);
 
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putInt(getString(R.string.preference_key_cache_size), cacheSize);
+        editor.putInt(getString(R.string.preference_key_thumbnail_cache_size), thumbnailCacheSize);
+        editor.putBoolean(getString(R.string.preference_key_plug_auto_play), autoPlay);
+        editor.putBoolean(getString(R.string.preference_key_pause_call), autoPause);
+        editor.apply();
 
-        String base64EncodedPublicKey =
-                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjLhj4p4ORoh54q1RGf4HwZTngM0LNNFR6Dpw2k+nfiys4S" +
-                "S70WceuQTB1g+I0HqwSOn7P+R+Zw4HVAks+w4p/AlDpKd5eilIfztxP77gFBOBGIbSMhfZNkASBrAyiqBeTM8I8cwY" +
-                "QAbIOd9H/j/xAg3vz4iNwWbB6PUFXiJSeo2nQB5VwSZYlwCb8xOGpnQbrzg8ZfP1MzWXZ9gOFjCvViczaCL5xN5WRg" +
-                "V4NQgQ+n7ecuVFYHxeu/VNxy3/m9AeqQcA1P4+7c0YYoMZN34uRIDWlXsQuohIPG6COfcfnYOqoCk3d9Htp+QzCqVK" +
-                "jSFN8loHWiDKvSEWf0+ffxpWuQIDAQAB";
-
-        iabHelper = new IabHelper(this, base64EncodedPublicKey);
-
-        iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-
-            public void onIabSetupFinished(IabResult result)
-            {
-                if (!result.isSuccess()) {
-                    LogUtils.LOGE(TAG, "In-app Billing setup failed: " + result);
-                }
-                else {
-                    LogUtils.LOGI(TAG, "In-app Billing is set up OK");
-                }
+        final Preference cacheSizePref = findPreference(getString(R.string.preference_key_cache_size));
+        cacheSizePref.setSummary(String.format(getString(R.string.unit_MB), cacheSize));
+        cacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                cacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
+                NormalImageLoader.init();
+                return true;
             }
         });
+
+        final Preference thumbCacheSizePref = findPreference(getString(R.string.preference_key_thumbnail_cache_size));
+        thumbCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), thumbnailCacheSize));
+        thumbCacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                thumbCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
+                ThumbnailImageLoader.init();
+                return true;
+            }
+        });
+
+        if (PlayerApplication.isFreemium()) {
+            final Preference buyPremium = findPreference(getString(R.string.preference_key_premium));
+            buyPremium.setEnabled(false);
+            buyPremium.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    PlayerApplication.iabPurchase(SettingsActivity.this);
+                    return true;
+                }
+            });
+
+            PlayerApplication.iabStart(new Runnable() {
+                @Override
+                public void run() {
+                    if (PlayerApplication.isFreemium()) {
+                        buyPremium.setEnabled(true);
+                    } else {
+                        disablePremiumIab();
+                    }
+                }
+            });
+        }
+        else {
+            disablePremiumIab();
+        }
 	}
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if (iabHelper != null) {
-            iabHelper.dispose();
-        }
-        iabHelper = null;
+        PlayerApplication.iabStop();
     }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (!iabHelper.handleActivityResult(requestCode, resultCode, data)) {
+        if (!PlayerApplication.iabHandleResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
     @SuppressWarnings("deprecation")
 	private void setCacheCleanupListener() {
-        final Preference cacheCleanup = findPreference("cache_cleanup");
+        final Preference cacheCleanup = findPreference(getString(R.string.preference_key_clear_cache));
         setDiscCacheSummary(cacheCleanup);
         cacheCleanup.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
@@ -136,12 +149,12 @@ public class SettingsApplicationActivity extends PreferenceActivity {
 
     @SuppressWarnings("deprecation")
     private void setDatabaseOptimizationListener() {
-        final Preference databaseOptimization = findPreference("database_optimization");
+        final Preference databaseOptimization = findPreference(getString(R.string.preference_key_optimize_database));
         databaseOptimization.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final ProgressDialog progressDialog = new ProgressDialog(SettingsApplicationActivity.this);
+                final ProgressDialog progressDialog = new ProgressDialog(SettingsActivity.this);
 
                 final AsyncTask<Void, Integer, Void> optimizationTask = new AsyncTask<Void, Integer, Void>() {
 
@@ -194,7 +207,7 @@ public class SettingsApplicationActivity extends PreferenceActivity {
 
     @SuppressWarnings("deprecation")
     private void setOnlineHelpListener() {
-        final Preference onlineHelp = findPreference("online_help");
+        final Preference onlineHelp = findPreference(getString(R.string.preference_key_online_help));
         onlineHelp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
@@ -207,73 +220,16 @@ public class SettingsApplicationActivity extends PreferenceActivity {
 
     @SuppressWarnings("deprecation")
     private void setOpenSourceLicensesListener() {
-        final Preference openSourceLicenses = findPreference("open_source");
+        final Preference openSourceLicenses = findPreference(getString(R.string.preference_key_opensource));
         openSourceLicenses.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                PlayerApplication.showOpenSourceDialog(SettingsApplicationActivity.this).show();
+                PlayerApplication.showOpenSourceDialog(SettingsActivity.this).show();
                 return true;
             }
         });
     }
-
-    @SuppressWarnings("deprecation")
-    private void setBuyInAppListener() {
-        final Preference buyPremium = findPreference("buy_premium_mode");
-        buyPremium.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                iabHelper.launchPurchaseFlow(SettingsApplicationActivity.this, ITEM_SKU, 10001, purchaseFinishedListener, PURCHASE_TOKEN);
-                return true;
-            }
-        });
-    }
-
-
-    public void consumeItem() {
-        iabHelper.queryInventoryAsync(receivedInventoryListener);
-    }
-
-    IabHelper.OnIabPurchaseFinishedListener purchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
-        public void onIabPurchaseFinished(IabResult result, Purchase purchase)
-        {
-            if (result.isFailure()) {
-                // TODO: Handle error
-                return;
-            }
-            else if (purchase.getSku().equals(ITEM_SKU)) {
-                consumeItem();
-                // TODO: cannot buy anymore
-            }
-
-        }
-    };
-
-    IabHelper.QueryInventoryFinishedListener receivedInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
-        public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
-
-            if (result.isFailure()) {
-                // TODO: Handle failure
-            }
-            else {
-                iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
-            }
-        }
-    };
-
-    IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
-
-        public void onConsumeFinished(Purchase purchase, IabResult result) {
-
-            if (result.isSuccess()) {
-                // TODO: inapp billing is purchased
-            }
-            else {
-                // handle error
-            }
-        }
-    };
 
     private static long folderSize(File directory) {
         long length = 0;
@@ -286,7 +242,7 @@ public class SettingsApplicationActivity extends PreferenceActivity {
         return length;
     }
 
-    private static void setDiscCacheSummary(Preference cacheCleanup) {
+    private void setDiscCacheSummary(Preference cacheCleanup) {
         File normalCacheDirectory = NormalImageLoader.getInstance().getDiskCache().getDirectory();
         File thumbnailCacheDirectory = ThumbnailImageLoader.getInstance().getDiskCache().getDirectory();
 
@@ -296,6 +252,14 @@ public class SettingsApplicationActivity extends PreferenceActivity {
         decimalFormat.setMaximumFractionDigits(2);
         decimalFormat.setMinimumFractionDigits(2);
 
-        cacheCleanup.setSummary(decimalFormat.format(allocated) + " MB");
+        cacheCleanup.setSummary(String.format(getString(R.string.unit_MB), decimalFormat.format(allocated)));
+    }
+
+    @SuppressWarnings("deprecation")
+    private void disablePremiumIab() {
+        LogUtils.LOGI(TAG, "disabling iab access");
+        PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference(getString(R.string.preference_screen_key_global));
+        Preference preference = findPreference(getString(R.string.preference_key_premium));
+        preferenceScreen.removePreference(preference);
     }
 }

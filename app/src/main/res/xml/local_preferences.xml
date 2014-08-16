@@ -1,24 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory
+        android:title="@string/preference_category_title_collection" >
 
-    <PreferenceCategory android:title="@string/loc_preference_collection_screen_title" >
         <Preference
-            android:key="location"
-            android:title="@string/label_library_settings_location"
-            android:icon="@drawable/ic_action_folder_closed" />
+            android:key="@string/preference_key_settings_location"
+            android:title="@string/preference_title_settings_location"
+            android:summary="@string/preference_summary_settings_location" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preference_category_title_display" >>
 
         <eu.chepy.backport.android.preference.MultiSelectListPreference
             android:capitalize="words"
-            android:defaultValue="@array/tab_titles"
-            android:icon="@drawable/ic_action_tiles_large"
-            android:dialogTitle="@string/loc_preference_collection_tab_visibility_dialog_title"
-            android:entries="@array/tab_titles"
-            android:entryValues="@array/tab_titles"
-            android:key="@string/key_tabs_enabled"
-            android:summary="@string/loc_preference_collection_tab_visibility_summary"
-            android:title="@string/loc_preference_collection_tab_visibility_dialog_title" />
+            android:defaultValue="@array/preference_values_tab_visibility"
+            android:entries="@array/preference_values_tab_visibility"
+            android:entryValues="@array/preference_values_tab_visibility"
+            android:key="@string/preference_key_tab_visibility"
+            android:summary="@string/preference_summary_tab_visibility"
+            android:title="@string/preference_title_tab_visibility"
+            android:dialogTitle="@string/preference_title_tab_visibility" />
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_storage_display_details"
+            android:title="@string/preference_title_storage_display_details"
+            android:summary="@string/preference_summary_storage_display_details"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:capitalize="words"
+            android:defaultValue="@array/preference_values_genre_details"
+            android:entries="@array/preference_values_genre_details"
+            android:entryValues="@array/preference_values_genre_details"
+            android:key="@string/preference_key_genre_display"
+            android:title="@string/preference_title_genre_display"
+            android:summary="@string/preference_summary_genre_display"
+            android:dialogTitle="@string/preference_title_genre_display" />
     </PreferenceCategory>
+
 
 </PreferenceScreen>

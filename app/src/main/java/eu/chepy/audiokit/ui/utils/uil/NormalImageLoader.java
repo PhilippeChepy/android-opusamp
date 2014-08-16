@@ -12,7 +12,9 @@
  */
 package eu.chepy.audiokit.ui.utils.uil;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.preference.PreferenceManager;
 
 import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -20,6 +22,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 
+import eu.chepy.audiokit.R;
 import eu.chepy.audiokit.ui.utils.PlayerApplication;
 
 public class NormalImageLoader extends ImageLoader {
@@ -32,36 +35,41 @@ public class NormalImageLoader extends ImageLoader {
         fileNameGenerator = new PrefixedFileNameGenerator("nil");
     }
 
-    public static NormalImageLoader getInstance() {
+    public synchronized static NormalImageLoader getInstance() {
         if (instance == null) {
-            synchronized (ImageLoader.class) {
-                if (instance == null) {
-                    instance = new NormalImageLoader();
-
-                    DisplayImageOptions displayImageOptions = new DisplayImageOptions.Builder()
-                            .bitmapConfig(Bitmap.Config.RGB_565)
-                            .cacheInMemory(true)
-                            .cacheOnDisk(true)
-                            .imageScaleType(ImageScaleType.EXACTLY)
-                            .considerExifParams(false)
-                            .build();
-
-                    ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
-                            .threadPoolSize(2)
-                            .diskCacheExtraOptions(500, 500, null)
-                            .diskCacheSize(50 * 1024 * 1024)
-                            .diskCacheFileNameGenerator(instance.fileNameGenerator)
-                            .memoryCacheExtraOptions(500, 500)
-                            .memoryCacheSizePercentage(20)
-                            .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
-                            .defaultDisplayImageOptions(displayImageOptions)
-                            .build();
-
-                    instance.init(loaderConfiguration);
-                }
-            }
+            instance = new NormalImageLoader();
+            init();
         }
         return instance;
+    }
+
+    public synchronized static void init() {
+        if (instance.isInited()) {
+            instance.destroy();
+        }
+
+        DisplayImageOptions displayImageOptions = new DisplayImageOptions.Builder()
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .cacheInMemory(true)
+                .cacheOnDisk(true)
+                .imageScaleType(ImageScaleType.EXACTLY)
+                .considerExifParams(false)
+                .build();
+
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+
+        ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
+                .threadPoolSize(2)
+                .diskCacheExtraOptions(500, 500, null)
+                .diskCacheSize(Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_cache_size), "30")) * 1024 * 1024)
+                .diskCacheFileNameGenerator(instance.fileNameGenerator)
+                .memoryCacheExtraOptions(500, 500)
+                .memoryCacheSizePercentage(20)
+                .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
+                .defaultDisplayImageOptions(displayImageOptions)
+                .build();
+
+        instance.init(loaderConfiguration);
     }
 
 }

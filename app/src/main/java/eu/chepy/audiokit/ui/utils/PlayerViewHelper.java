@@ -14,9 +14,7 @@ package eu.chepy.audiokit.ui.utils;
 
 import android.app.Activity;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -164,22 +162,13 @@ public class PlayerViewHelper implements
      */
     private InterstitialAd interstitial = null;
 
-    private static final String CONFIG_FILE_FREEMIUM = "freemium";
-
-    private static final String CONFIG_IS_FREEMIUM = "isFreemium";
-
-    private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
-
 
 
     public PlayerViewHelper(ActionBarActivity fragmentActivity) {
         hostActivity = fragmentActivity;
 
-        final SharedPreferences sharedPreferences = hostActivity.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        boolean freemium = sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
-
-        if (freemium) {
-            int noDisplayCounter = sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
+        if (PlayerApplication.isFreemium()) {
+            int noDisplayCounter = PlayerApplication.adDisplayGetCounter();
 
             if (noDisplayCounter >= 5) {
                 interstitial = new InterstitialAd(hostActivity);
@@ -195,16 +184,12 @@ public class PlayerViewHelper implements
                     @Override
                     public void onAdLoaded() {
                         super.onAdLoaded();
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putInt(CONFIG_NO_DISPLAY, 0);
-                        editor.apply();
+                        PlayerApplication.adDisplayReset();
                     }
                 });
             }
             else {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt(CONFIG_NO_DISPLAY, noDisplayCounter);
-                editor.apply();
+                PlayerApplication.adDisplayInc();
             }
         }
 
@@ -305,7 +290,7 @@ public class PlayerViewHelper implements
     }
 
     public void onActivityDestroy() {
-        if (interstitial != null && interstitial.isLoaded()) {
+        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.isFreemium()) {
             interstitial.show();
         }
     }
