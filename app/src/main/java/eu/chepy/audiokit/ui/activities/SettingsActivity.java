@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -212,7 +213,9 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-
+                // android-opus-player/online-help => 9ed808d1 238a4d52 55bcdbc3 d584bcc4
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://link.opus-mobile.com/?id=d584bcc4"));
+                startActivity(browserIntent);
                 return true;
             }
         });
