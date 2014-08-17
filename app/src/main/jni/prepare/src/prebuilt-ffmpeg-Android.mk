@@ -1,0 +1,13 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := ffmpeg
+
+LOCAL_STATIC_LIBRARIES = libsoxr
+
+LOCAL_SRC_FILES := $(LOCAL_PATH)/$(TARGET_ARCH_ABI)/libs/libffmpeg.so
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(TARGET_ARCH_ABI)/include
+LOCAL_EXPORT_LDLIBS := $(LOCAL_PATH)/$(TARGET_ARCH_ABI)/libs/libffmpeg.so
+
+include $(PREBUILT_SHARED_LIBRARY)

@@ -17,8 +17,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := medialib
 
-SRCS :=  \
-	audio_engine/outputs/transcoder.c \
+SRCS :=  audio_engine/outputs/transcoder.c \
 	audio_engine/outputs/audiotrack.c \
 	audio_engine/outputs/safetrack.c \
 	audio_engine/inputs/ffinput.c \
@@ -30,7 +29,7 @@ SRCS :=  \
 	TagProvider.cpp
 
 LOCAL_SRC_FILES := $(SRCS)
-LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/../ffmpeg/build/$(TARGET_ARCH_ABI)/include/ $(LOCAL_PATH)/../taglib/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)
 
 LOCAL_STATIC_LIBRARIES = libffmpeg libtaglib
 

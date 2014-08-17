@@ -1,0 +1,13 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := soxr
+
+LOCAL_STATIC_LIBRARIES = libsoxr
+
+LOCAL_SRC_FILES := $(LOCAL_PATH)/build/$(TARGET_ARCH_ABI)/libsoxr.so
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/src
+LOCAL_EXPORT_LDLIBS := $(LOCAL_PATH)/build/$(TARGET_ARCH_ABI)/libsoxr.so
+
+include $(PREBUILT_SHARED_LIBRARY)

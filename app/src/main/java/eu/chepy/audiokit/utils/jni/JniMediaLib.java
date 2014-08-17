@@ -98,6 +98,7 @@ public abstract class JniMediaLib {
     abstract protected void playbackEndNotification();
 
 	static {
+        System.loadLibrary("soxr");
         System.loadLibrary("ffmpeg");
         System.loadLibrary("taglib");
         System.loadLibrary("medialib");

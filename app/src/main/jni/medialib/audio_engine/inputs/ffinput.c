@@ -279,7 +279,7 @@ static int ffinput_init_filters(engine_stream_context_s * stream_context, const 
 
      out_link = ffinput_stream->buffer_sink_context->inputs[0];
      av_get_channel_layout_string(source_args, sizeof(source_args), -1, out_link->channel_layout);
-     av_log(NULL, AV_LOG_INFO, "Output: srate:%dHz fmt:%s chlayout:%s\n",
+     LOG_INFO(LOG_TAG, "Output: srate:%dHz fmt:%s chlayout:%s",
              (int)out_link->sample_rate,
              (char *)av_x_if_null(av_get_sample_fmt_name(out_link->format), "?"),
              source_args);
@@ -424,11 +424,12 @@ int ffinput_stream_new(engine_context_s * engine_context, engine_stream_context_
     ffinput_stream->state_callback = state_callback;
     ffinput_stream->user_context = user_context;
 
+    //LOG_ERROR(LOG_TAG, "audio decoder: set filters p");
     if (engine_context->param_channel_count == 2) {
-    	error_code = ffinput_init_filters(stream_context, "aresample=44100,aformat=sample_fmts=s16:channel_layouts=stereo");
+    	error_code = ffinput_init_filters(stream_context, "aresample=44100:resampler=soxr:linear_interp=1");
     }
     else {
-    	error_code = ffinput_init_filters(stream_context, "aresample=44100,aformat=sample_fmts=s16:channel_layouts=mono");
+    	error_code = ffinput_init_filters(stream_context, "aresample=44100:resampler=soxr:linear_interp=1");
     }
 
     ffinput_stream->has_valid_thread = 0;
