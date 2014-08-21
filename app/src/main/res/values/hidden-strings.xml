@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation">
+
     <string name="key_audio_exts">audio_exts</string>
     <string name="key_cover_exts">cover_exts</string>
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation">
+
+    <!-- Global Preferences keys -->
+    <string name="preference_screen_key_global">screen_key_global</string>
+
+    <string name="preference_key_cache_size">cache_size</string>
+    <string name="preference_key_thumbnail_cache_size">thumbnail_cache_size</string>
+    <string name="preference_key_optimize_database">optimize_database</string>
+    <string name="preference_key_clear_cache">clear_cache</string>
+    <string name="preference_key_plug_auto_play">plug_auto_play</string>
+    <string name="preference_key_pause_call">pause_call</string>
+    <string name="preference_key_premium">premium</string>
+    <string name="preference_key_online_help">online_help</string>
+    <string name="preference_key_opensource">opensource</string>
+
+    <!-- Local preference keys -->
+    <string name="preference_key_settings_location">settings_location</string>
+    <string name="preference_key_tab_visibility">tab_visibility</string>
+    <string name="preference_key_storage_display_details">storage_display</string>
+    <string name="preference_key_genre_display">genre_display</string>
+
+
+    <!-- Preference values -->
+    <string-array name="preference_values_tab_visibility">
+        <item>@string/tab_label_playlists</item>
+        <item>@string/tab_label_artists</item>
+        <item>@string/tab_label_album_artists</item>
+        <item>@string/tab_label_albums</item>
+        <item>@string/tab_label_songs</item>
+        <item>@string/tab_label_genres</item>
+        <item>@string/tab_label_storage</item>
+    </string-array>
+
+    <string-array name="preference_values_genre_details">
+        <item>@string/preference_list_value_genre_show_albums</item>
+        <item>@string/preference_list_value_genre_show_tracks</item>
+    </string-array>
+</resources>

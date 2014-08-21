@@ -19,7 +19,7 @@
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
-            android:contentDescription="@string/cd_art" />
+            android:contentDescription="@string/imageview_content_description_art" />
 
         <LinearLayout
             android:layout_width="fill_parent"

@@ -56,23 +56,23 @@
     </style>
 
     <style name="BottomActionBarItem.Previous" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/cd_previous</item>
+        <item name="android:contentDescription">@string/imageview_content_description_previous</item>
     </style>
 
     <style name="BottomActionBarItem.Next" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/cd_next</item>
+        <item name="android:contentDescription">@string/imageview_content_description_next</item>
     </style>
 
     <style name="BottomActionBarItem.Play" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/cd_play</item>
+        <item name="android:contentDescription">@string/imageview_content_description_play</item>
     </style>
 
     <style name="BottomActionBarItem.Shuffle" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/cd_shuffle</item>
+        <item name="android:contentDescription">@string/imageview_content_description_shuffle</item>
     </style>
 
     <style name="BottomActionBarItem.Repeat" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/cd_repeat</item>
+        <item name="android:contentDescription">@string/imageview_content_description_repeat</item>
     </style>
 
     <style name="NotificationText">
@@ -95,17 +95,17 @@
     <style name="NotificationAction.Previous" parent="@style/NotificationAction">
         <item name="android:src">@drawable/btn_playback_previous_transparent</item>
         <item name="android:visibility">gone</item>
-        <item name="android:contentDescription">@string/cd_previous</item>
+        <item name="android:contentDescription">@string/imageview_content_description_previous</item>
     </style>
 
     <style name="NotificationAction.Play" parent="@style/NotificationAction">
         <item name="android:src">@drawable/btn_playback_play_transparent</item>
-        <item name="android:contentDescription">@string/cd_play</item>
+        <item name="android:contentDescription">@string/imageview_content_description_play</item>
     </style>
 
     <style name="NotificationAction.Next" parent="@style/NotificationAction">
         <item name="android:src">@drawable/btn_playback_next_transparent</item>
-        <item name="android:contentDescription">@string/cd_next</item>
+        <item name="android:contentDescription">@string/imageview_content_description_next</item>
     </style>
 
     <style name="NotificationAction.Collapse" parent="@style/NotificationAction">

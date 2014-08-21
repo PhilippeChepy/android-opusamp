@@ -5,7 +5,7 @@ android {
     buildToolsVersion '19.1.0'
 
     defaultConfig {
-        applicationId "eu.chepy.audiokit"
+        applicationId "eu.chepy.opus.player"
         minSdkVersion 9
         targetSdkVersion 20
         versionCode 1
@@ -72,8 +72,8 @@ dependencies {
     /* PagerSLidingTabStrip */
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     /* DragSortListView - directly in source tree - no longer maintained, previously : compile 'com.mobeta.android.dslv:drag-sort-listview:0.6.1' */
-    compile 'com.google.android.gms:play-services:+'
     compile 'com.android.support:appcompat-v7:20.0+'
     compile 'com.android.support:support-v4:20.0+'
+    /*compile 'com.google.android.gms:play-services:5.2.8'*/
 }
 

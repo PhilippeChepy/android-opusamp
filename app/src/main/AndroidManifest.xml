@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="eu.chepy.audiokit" >
+    package="eu.chepy.opus.player" >
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -16,16 +16,18 @@
         android:name=".ui.utils.PlayerApplication"
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/application_label"
         android:theme="@style/AudioKit" >
 
-        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
 
         <service
             android:name=".core.service.PlayerService"
             android:enabled="true"
             android:icon="@drawable/ic_launcher"
-            android:label="@string/svc_player" >
+            android:label="@string/service_label" >
             <!--<intent-filter>
                 <action android:name="eu.chepy.audiokit.core.service.PlayerService" >
                 </action>
@@ -94,29 +96,23 @@
         <activity
             android:name=".ui.activities.SettingsLibrariesActivity"
             android:launchMode="singleTop"
+            android:label="@string/activity_title_library_management"
             android:theme="@style/AudioKit" >
-
-            <!--
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
         </activity>
 
         <activity
             android:name=".ui.activities.SettingsActivity"
-            android:label="@string/label_preferences" >
+            android:label="@string/activity_title_preferences" >
         </activity>
 
         <activity
             android:name=".core.service.providers.local.ui.activities.SearchPathActivity"
-            android:label="@string/label_scan_files" >
+            android:label="@string/activity_title_library_path" >
         </activity>
 
         <activity
             android:name=".core.service.providers.local.ui.activities.SettingsActivity"
-            android:label="@string/label_scan_files" >
+            android:label="@string/activity_label_files_to_scan" >
         </activity>
 
         <activity android:name=".ui.activities.SoundEffectsActivity">
@@ -124,7 +120,7 @@
 
         <activity
             android:name=".ui.activities.UtilDirectorySelectActivity"
-            android:label="@string/label_scan_files" >
+            android:label="@string/activity_label_files_to_scan" >
         </activity>
 
         <activity
@@ -139,7 +135,7 @@
 
         <receiver
             android:name=".ui.widgets.Widget4x1"
-            android:label="@string/label_widget_4x1" >
+            android:label="@string/widget_label_4x1" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -151,7 +147,7 @@
 
         <receiver
             android:name=".ui.widgets.Widget4x2"
-            android:label="@string/label_widget_4x2" >
+            android:label="@string/widget_label_4x2" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

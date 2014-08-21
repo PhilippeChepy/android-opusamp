@@ -54,7 +54,7 @@
         android:layout_above="@id/four_by_two_controls_info_divider"
         android:adjustViewBounds="true"
         android:scaleType="fitXY"
-        android:contentDescription="@string/cd_art" />
+        android:contentDescription="@string/imageview_content_description_art" />
 
     <ImageView
         android:layout_width="match_parent"

@@ -16,6 +16,6 @@
         android:textSize="@dimen/text_size_small"
         android:textStyle="bold"
         android:textIsSelectable="false"
-        android:text="@string/label_start_app"/>
+        android:text="@string/widget_content_start_app"/>
 
 </LinearLayout>

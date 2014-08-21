@@ -55,48 +55,48 @@
 	</string-array>
 
     <string-array name="sort_playlists">
-        <item>@string/sort_A_Z</item>
-        <item>@string/sort_Z_A</item>
+        <item>@string/label_sort_A_Z</item>
+        <item>@string/label_sort_Z_A</item>
     </string-array>
 
 	<string-array name="sort_artists">
-	    <item>@string/sort_A_Z</item>
-	    <item>@string/sort_Z_A</item>
+	    <item>@string/label_sort_A_Z</item>
+	    <item>@string/label_sort_Z_A</item>
 	</string-array>
 	
 	<string-array name="sort_album_artists">
-	    <item>@string/sort_A_Z</item>
-	    <item>@string/sort_Z_A</item>
+	    <item>@string/label_sort_A_Z</item>
+	    <item>@string/label_sort_Z_A</item>
 	</string-array>
 	
 	<string-array name="sort_albums">
-	    <item>@string/sort_A_Z</item>
-	    <item>@string/sort_Z_A</item>
-	    <item>@string/sort_artist_A_Z</item>
-	    <item>@string/sort_artist_Z_A</item>
+	    <item>@string/label_sort_A_Z</item>
+	    <item>@string/label_sort_Z_A</item>
+	    <item>@string/label_sort_artist_A_Z</item>
+	    <item>@string/label_sort_artist_Z_A</item>
 	</string-array>
 	
 	<string-array name="sort_songs">
-	    <item>@string/sort_A_Z</item>
-	    <item>@string/sort_Z_A</item>
-	    <item>@string/track_asc</item>
-	    <item>@string/track_desc</item>
-	    <item>@string/filename_A_Z</item>
-	    <item>@string/filename_Z_A</item>
-	    <item>@string/sort_artist_A_Z</item>
-	    <item>@string/sort_artist_Z_A</item>
-	    <item>@string/sort_album_A_Z</item>
-	    <item>@string/sort_album_Z_A</item>
+	    <item>@string/label_sort_A_Z</item>
+	    <item>@string/label_sort_Z_A</item>
+	    <item>@string/label_track_asc</item>
+	    <item>@string/label_track_desc</item>
+	    <item>@string/label_filename_A_Z</item>
+	    <item>@string/label_filename_Z_A</item>
+	    <item>@string/label_sort_artist_A_Z</item>
+	    <item>@string/label_sort_artist_Z_A</item>
+	    <item>@string/label_sort_album_A_Z</item>
+	    <item>@string/label_sort_album_Z_A</item>
 	</string-array>
 
     <string-array name="sort_genre">
-        <item>@string/sort_A_Z</item>
-        <item>@string/sort_Z_A</item>
+        <item>@string/label_sort_A_Z</item>
+        <item>@string/label_sort_Z_A</item>
     </string-array>
 	
 	<string-array name="sort_files">
-	    <item>@string/sort_A_Z</item>
-	    <item>@string/sort_Z_A</item>
+	    <item>@string/label_sort_A_Z</item>
+	    <item>@string/label_sort_Z_A</item>
 	</string-array>
 	
 	

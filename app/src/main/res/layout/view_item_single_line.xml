@@ -16,7 +16,7 @@
         android:gravity="center"
         android:orientation="horizontal" >
 
-        <eu.chepy.audiokit.ui.views.CustomTextView
+        <eu.chepy.opus.player.ui.views.CustomTextView
                 android:id="@+id/line_one"
                 android:layout_margin="@dimen/list_preferred_item_padding"
                 android:layout_width="fill_parent"

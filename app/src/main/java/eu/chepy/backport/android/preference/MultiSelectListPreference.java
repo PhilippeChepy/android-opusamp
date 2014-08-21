@@ -35,7 +35,7 @@ import android.util.AttributeSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import eu.chepy.audiokit.R;
+import eu.chepy.opus.player.R;
 
 /**
  * A {@link PreferenceCompat} that displays a list of entries as a dialog.

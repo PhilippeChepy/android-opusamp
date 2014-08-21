@@ -20,7 +20,7 @@
             android:drawableLeft="@drawable/ic_action_cancel_dark"
             android:drawablePadding="8dp"
             android:gravity="center_vertical"
-            android:text="@string/label_cancel" />
+            android:text="@string/actionbar_confirmation_text_cancel" />
 
     </FrameLayout>
 
@@ -47,7 +47,7 @@
             android:drawableLeft="@drawable/ic_action_tick_dark"
             android:drawablePadding="8dp"
             android:gravity="center_vertical"
-            android:text="@string/label_done" />
+            android:text="@string/actionbar_confirmation_text_done" />
 
     </FrameLayout>
 

@@ -6,7 +6,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <eu.chepy.audiokit.ui.views.CustomTextView
+    <eu.chepy.opus.player.ui.views.CustomTextView
         android:id="@+id/dragable_list_empty"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

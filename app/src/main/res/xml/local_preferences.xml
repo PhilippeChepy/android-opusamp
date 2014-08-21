@@ -38,7 +38,6 @@
             android:entryValues="@array/preference_values_genre_details"
             android:key="@string/preference_key_genre_display"
             android:title="@string/preference_title_genre_display"
-            android:summary="@string/preference_summary_genre_display"
             android:dialogTitle="@string/preference_title_genre_display" />
     </PreferenceCategory>
 

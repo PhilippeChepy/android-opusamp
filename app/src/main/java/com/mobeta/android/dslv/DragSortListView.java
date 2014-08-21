@@ -49,7 +49,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import eu.chepy.audiokit.R;
+import eu.chepy.opus.player.R;
 
 /**
  * ListView subclass that mediates drag and drop resorting of items.

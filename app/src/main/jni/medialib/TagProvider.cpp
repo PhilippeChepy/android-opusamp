@@ -202,7 +202,7 @@ bool findCoverArt(inputstream_context_s * inputstream_context, bool getCover) {
 	return found;
 }
 
-JNIEXPORT void JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_tagsRead(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
+JNIEXPORT void JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_tagsRead(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
 	jfieldID fieldTagDuration = env->GetStaticFieldID(classLibraryScannerService, "tagDuration", "I");
 	jfieldID fieldTagBitrate = env->GetStaticFieldID(classLibraryScannerService, "tagBitrate", "I");
 	jfieldID fieldTagSamplerate = env->GetStaticFieldID(classLibraryScannerService, "tagSamplerate", "I");
@@ -265,7 +265,7 @@ JNIEXPORT void JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_tagsRead(JNI
 	env->ReleaseStringUTFChars(path, media_path);
 }
 
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamOpen(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_coverInputStreamOpen(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
     inputstream_context_s * inputstream_context = new inputstream_context_s();
 
     const char * media_path = env->GetStringUTFChars(path, (jboolean *)0);
@@ -280,7 +280,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputS
     return 0;
 }
 
-JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamClose(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
+JNIEXPORT jint JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_coverInputStreamClose(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 
     if (inputstream_context != NULL) {
@@ -289,7 +289,7 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
     return 0;
 }
 
-JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadGetCount(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
+JNIEXPORT jint JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_coverInputStreamReadGetCount(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 
     if (inputstream_context != NULL) {
@@ -299,7 +299,7 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
     return 0;
 }
 
-JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadSingle(JNIEnv * env, jclass classLibraryScannerService, jlong context, jint position) {
+JNIEXPORT jint JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_coverInputStreamReadSingle(JNIEnv * env, jclass classLibraryScannerService, jlong context, jint position) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 
     if (inputstream_context != NULL) {
@@ -310,7 +310,7 @@ JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputSt
     return -1;
 }
 
-JNIEXPORT jint JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_coverInputStreamReadArray(JNIEnv * env, jclass classLibraryScannerService,
+JNIEXPORT jint JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_coverInputStreamReadArray(JNIEnv * env, jclass classLibraryScannerService,
     jlong context, jbyteArray target, jint offset, jint length, jint nativePos) {
     inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
 

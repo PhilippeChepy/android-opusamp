@@ -25,7 +25,7 @@
         android:gravity="center"
         android:orientation="vertical" >
 
-        <eu.chepy.audiokit.ui.views.CustomTextView
+        <eu.chepy.opus.player.ui.views.CustomTextView
             android:id="@+id/line_one"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
             android:textSize="@dimen/text_size_medium"
             android:textStyle="bold" />
 
-        <eu.chepy.audiokit.ui.views.CustomTextView
+        <eu.chepy.opus.player.ui.views.CustomTextView
             android:id="@+id/line_two"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -50,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:layout_weight="0.0"
-        android:contentDescription="@string/cd_currently_playing"
+        android:contentDescription="@string/imageview_content_description_currently_playing"
         android:adjustViewBounds="false"
         android:paddingRight="15.0dip"
         android:src="@drawable/ic_action_volume_up"

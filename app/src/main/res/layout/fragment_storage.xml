@@ -4,7 +4,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <eu.chepy.audiokit.ui.views.CustomTextView
+    <eu.chepy.opus.player.ui.views.CustomTextView
         android:id="@+id/path"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

@@ -97,7 +97,7 @@ void playbackTimestampCallback(engine_stream_context_s * stream, int64_t played)
  * Method:    engineInitialize
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_engineInitialize(JNIEnv * env, jobject object, jboolean isTranscoder) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineInitialize(JNIEnv * env, jobject object, jboolean isTranscoder) {
 	JavaVM * vm;
 	(*env)->GetJavaVM(env, &vm);
 	jobject obj = (*env)->NewGlobalRef(env, object);
@@ -147,7 +147,7 @@ engine_init_done_error:
  * Method:    engineFinalize
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_engineFinalize(JNIEnv * env, jobject object) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineFinalize(JNIEnv * env, jobject object) {
     jclass cls = (*env)->GetObjectClass(env, object);
 	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
 	engine_context_s * engine = id_to_ptr(engineJ);
@@ -170,7 +170,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_engineFinal
  * Method:    streamInitialize
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamInitialize(JNIEnv * env, jobject object, jstring media_path) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamInitialize(JNIEnv * env, jobject object, jstring media_path) {
     jclass cls = (*env)->GetObjectClass(env, object);
 	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
 	engine_context_s * engine = id_to_ptr(engineJ);
@@ -194,7 +194,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamIniti
  * Method:    streamFinalize
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamFinalize(JNIEnv * env, jobject object, jlong context) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamFinalize(JNIEnv * env, jobject object, jlong context) {
 	engine_stream_context_s * stream = id_to_ptr(context);
 
 	if (stream != NULL) {
@@ -210,7 +210,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamFinal
  * Method:    streamPreload
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamPreload(JNIEnv * env, jobject object, jlong context) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamPreload(JNIEnv * env, jobject object, jlong context) {
 	return 0;
 }
 
@@ -219,7 +219,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamPrelo
  * Method:    streamStart
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamStart(JNIEnv * env, jobject object, jlong context) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamStart(JNIEnv * env, jobject object, jlong context) {
 	engine_stream_context_s * stream = id_to_ptr(context);
 
 	if (stream != NULL) {
@@ -234,7 +234,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamStart
  * Method:    streamStop
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamStop(JNIEnv * env, jobject object, jlong context) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamStop(JNIEnv * env, jobject object, jlong context) {
 	engine_stream_context_s * stream = id_to_ptr(context);
 
 	if (stream != NULL) {
@@ -249,7 +249,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamStop(
  * Method:    streamSetPosition
  * Signature: (JJ)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamSetPosition(JNIEnv * env, jobject object, jlong context, jlong position) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamSetPosition(JNIEnv * env, jobject object, jlong context, jlong position) {
 	engine_stream_context_s * stream = id_to_ptr(context);
 
 	if (stream != NULL) {
@@ -264,7 +264,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamSetPo
   * Method:    streamGetPosition
   * Signature: (J)J
   */
- JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamGetPosition(JNIEnv * env, jobject object, jlong context) {
+ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamGetPosition(JNIEnv * env, jobject object, jlong context) {
  	engine_stream_context_s * stream = id_to_ptr(context);
     int64_t position = 0;
 
@@ -280,7 +280,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamSetPo
  * Method:    streamGetDuration
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_audiokit_utils_jni_JniMediaLib_streamGetDuration(JNIEnv * env, jobject object, jlong context) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamGetDuration(JNIEnv * env, jobject object, jlong context) {
 	engine_stream_context_s * stream = id_to_ptr(context);
 	int64_t result = 0;
 

@@ -46,7 +46,7 @@
                 android:gravity="center_horizontal"
                 android:padding="5dp">
 
-                <eu.chepy.audiokit.ui.views.SquareImageView
+                <eu.chepy.opus.player.ui.views.SquareImageView
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:id="@+id/player_art"
@@ -122,14 +122,14 @@
                     <ImageButton
                         android:id="@+id/playlist_show"
                         style="@style/PlayerButton"
-                        android:contentDescription="@string/cd_playlist"
+                        android:contentDescription="@string/imageview_content_description_playlist"
                         android:visibility="invisible"
                         android:src="@drawable/ic_action_list_2_off" />
 
                     <ImageButton
                         android:id="@+id/song_options"
                         style="@style/PlayerButton"
-                        android:contentDescription="@string/cd_option_menu"
+                        android:contentDescription="@string/imageview_content_description_option_menu"
                         android:src="@drawable/ic_action_overflow" />
                 </LinearLayout>
             </LinearLayout>
@@ -166,7 +166,7 @@
                     android:gravity="center"
                     android:orientation="vertical" >
 
-                    <eu.chepy.audiokit.ui.views.CustomTextView
+                    <eu.chepy.opus.player.ui.views.CustomTextView
                         android:id="@+id/audio_player_track_name"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
@@ -178,7 +178,7 @@
                         android:textIsSelectable="false"
                         android:textSize="16.0dip" />
 
-                    <eu.chepy.audiokit.ui.views.CustomTextView
+                    <eu.chepy.opus.player.ui.views.CustomTextView
                         android:id="@+id/audio_player_artist_name"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
@@ -190,7 +190,7 @@
                         android:textSize="16.0dip" />
                 </LinearLayout>
 
-                <eu.chepy.audiokit.ui.views.CustomTextView
+                <eu.chepy.opus.player.ui.views.CustomTextView
                     android:id="@+id/audio_player_time"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
@@ -217,7 +217,7 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp">
 
-                <eu.chepy.audiokit.ui.views.CustomTextView
+                <eu.chepy.opus.player.ui.views.CustomTextView
                     android:id="@+id/playlist_track_count"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
