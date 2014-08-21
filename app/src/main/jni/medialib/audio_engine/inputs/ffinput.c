@@ -539,13 +539,12 @@ int ffinput_stream_set_position(engine_stream_context_s * stream_context, int64_
         ffinput_stream->format_context->streams[ffinput_stream->stream_index]->time_base.num);
     frame_id = frame_id / 1000;
 
-    avformat_seek_file(
+    // inaccurate seeking, improved by decoding without output...
+    av_seek_frame(
         ffinput_stream->format_context,
         ffinput_stream->stream_index,
-        0,
-        0,
-        0,
-        AVSEEK_FLAG_FRAME);
+        frame_id,
+        AVSEEK_FLAG_ANY);
 
 	ffinput_stream->seek_ts = position;
 	ffinput_stream->seek_frame = frame_id;
