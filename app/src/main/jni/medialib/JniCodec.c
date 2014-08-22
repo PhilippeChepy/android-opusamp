@@ -14,7 +14,6 @@
 #include <jni.h>
 
 #include <audio_engine/engine.h>
-#include <audio_engine/outputs/audiotrack.h> /* this output needs a VM ref */
 #include <audio_engine/utils/log.h>
 #include <audio_engine/utils/memory.h>
 
@@ -61,35 +60,11 @@ void playbackTimestampCallback(engine_stream_context_s * stream, int64_t played)
 	JavaVM * vm = stream->engine->vm;
 	jobject obj = stream->engine->obj;
 	jclass cls  = stream->engine->cls;
-
 	JNIEnv * env;
-	int audiotrack_thread = 0;
 
-	if (stream->engine->output->engine_get_name == audiotrack_get_output()->engine_get_name) {
-		audiotrack_thread = 1;
-	}
-
-	if (audiotrack_thread) {
-		int getEnvStat = (*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_6);
-		if (getEnvStat == JNI_EDETACHED) {
-			if ((*vm)->AttachCurrentThread(vm, &env, NULL) != 0) {
-				LOG_ERROR(LOG_TAG, "playbackTimestampCallback() jni: AttachCurrentThread() failed");
-			}
-		}
-		else if (getEnvStat == JNI_EVERSION) {
-			LOG_ERROR(LOG_TAG, "playbackTimestampCallback() jni: GetEnv() unsupported version");
-		}
-	}
-	else {
-		(*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_6);
-	}
-
+	(*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_6);
 	jmethodID methodPlaybackTimestampNotification = (*env)->GetMethodID(env, cls, "playbackUpdateTimestamp", "(J)V");
 	(*env)->CallVoidMethod(env, obj, methodPlaybackTimestampNotification, (jlong) played);
-
-	if (audiotrack_thread) {
-		(*vm)->DetachCurrentThread(vm);
-	}
 }
 
 /*
@@ -97,7 +72,7 @@ void playbackTimestampCallback(engine_stream_context_s * stream, int64_t played)
  * Method:    engineInitialize
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineInitialize(JNIEnv * env, jobject object, jboolean isTranscoder) {
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineInitialize(JNIEnv * env, jobject object) {
 	JavaVM * vm;
 	(*env)->GetJavaVM(env, &vm);
 	jobject obj = (*env)->NewGlobalRef(env, object);
@@ -111,7 +86,7 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineIn
 	if (engine == NULL) {
 		engine = memory_zero_alloc(sizeof(*engine));
 
-		if (engine_new(engine, isTranscoder ? 1 : 0)) {
+		if (engine_new(engine)) {
 			LOG_ERROR(LOG_TAG, "engine_new() failure");
 			goto engine_init_done_error;
 		}

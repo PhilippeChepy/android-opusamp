@@ -20,7 +20,7 @@ extern "C" {
 
 #include <audio_engine/engine.h>
 
-engine_input_s const * ffinput_get_input();
+engine_input_s * ffinput_get_input();
 
 #ifdef __cplusplus
 }

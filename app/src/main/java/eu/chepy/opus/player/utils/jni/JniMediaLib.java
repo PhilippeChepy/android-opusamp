@@ -55,7 +55,7 @@ public abstract class JniMediaLib {
 
 
 
-    protected native long engineInitialize(boolean isTranscoder);
+    protected native long engineInitialize();
 
     protected native long engineFinalize();
 

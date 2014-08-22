@@ -49,9 +49,9 @@ static JNIEnv * get_env(engine_stream_context_s * stream_context, int threaded) 
 	return env;
 }
 
-static void release_env(engine_stream_context_s * stream_context, int threaded) {
+static void release_env(engine_stream_context_s * stream, int threaded) {
 	if (threaded) {
-		JavaVM * vm = stream_context->engine->vm;
+		JavaVM * vm = stream->engine->vm;
 		(*vm)->DetachCurrentThread(vm);
 	}
 }
@@ -109,17 +109,17 @@ typedef struct {
 } safetrack_stream_context_s;
 
 /* Prototype is used by feeding callback */
-int safetrack_stream_stop(engine_stream_context_s * stream_context);
-int safetrack_stream_flush(engine_stream_context_s * stream_context);
-int safetrack_stream_get_position(engine_stream_context_s * stream_context, int64_t * position);
+int safetrack_stream_stop(engine_stream_context_s * stream);
+int safetrack_stream_flush(engine_stream_context_s * stream);
+int safetrack_stream_get_position(engine_stream_context_s * stream, int64_t * position);
 
 static void * output_thread(void * thread_arg) {
-	engine_stream_context_s * stream_context = thread_arg;
-	safetrack_stream_context_s * audiotrack_stream = stream_context->stream_output_specific;
+	engine_stream_context_s * stream = thread_arg;
+	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 
 	audiotrack_stream->buffer = memory_alloc(sizeof(jshort) * audiotrack_stream->buffer_size);
 
-	JNIEnv * env = get_env(stream_context, 1);
+	JNIEnv * env = get_env(stream, 1);
 
 	jmethodID getPlayStateMethod = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "getPlayState", "()I");
 	jmethodID playMethod = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "play", "()V");
@@ -134,24 +134,24 @@ static void * output_thread(void * thread_arg) {
 		}
 
 		int request_size = audiotrack_stream->buffer_size / 40;
-		int nb_samples = request_size / stream_context->engine->param_channel_count;
-		int got = audiotrack_stream->data_callback(stream_context, audiotrack_stream->user_context, audiotrack_stream->buffer, nb_samples);
+		int nb_samples = request_size / stream->engine->param_channel_count;
+		int got = audiotrack_stream->data_callback(stream, audiotrack_stream->user_context, audiotrack_stream->buffer, nb_samples);
 
 		(*env)->SetShortArrayRegion(env, bytearray, 0, audiotrack_stream->buffer_size, audiotrack_stream->buffer);
-		(*env)->CallIntMethod(env, audiotrack_stream->audiotrack_object, writeMethod, bytearray, 0, got * stream_context->engine->param_channel_count);
+		(*env)->CallIntMethod(env, audiotrack_stream->audiotrack_object, writeMethod, bytearray, 0, got * stream->engine->param_channel_count);
 
 		if (!audiotrack_stream->has_valid_thread) {
 			break;
 		}
 
 		if (got != nb_samples) {
-			if (stream_context->decoder_terminated) {
+			if (stream->decoder_terminated) {
 				LOG_INFO(LOG_TAG, "output_thread(): Terminating (%i/%i)", got, nb_samples);
-				safetrack_stream_flush(stream_context);
+				safetrack_stream_flush(stream);
 
 				jmethodID stopId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "stop", "()V");
 				(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, stopId);
-				audiotrack_stream->state_callback(stream_context, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
+				audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
 				break;
 			}
 			else {
@@ -164,13 +164,13 @@ static void * output_thread(void * thread_arg) {
         audiotrack_stream->written_samples = audiotrack_stream->written_samples + nb_samples;
 
 
-	    int64_t played_ts = (audiotrack_stream->written_samples * (int64_t)1000) / stream_context->engine->param_sampling_rate;
-	    played_ts = stream_context->last_timestamp + played_ts;
+	    int64_t played_ts = (audiotrack_stream->written_samples * (int64_t)1000) / stream->engine->param_sampling_rate;
+	    played_ts = stream->last_timestamp + played_ts;
 
 	    // prevent to much java callbacks.
-	    if (played_ts - stream_context->last_timestamp_update > 100) {
-	        stream_context->last_timestamp_update = played_ts;
-		    stream_context->engine->timestamp_callback(stream_context, played_ts);
+	    if (played_ts - stream->last_timestamp_update > 100) {
+	        stream->last_timestamp_update = played_ts;
+		    stream->engine->output->timestamp_callback(stream, played_ts);
 		}
 	}
 
@@ -180,25 +180,24 @@ static void * output_thread(void * thread_arg) {
 	}
 	/* sync */ pthread_mutex_unlock(&audiotrack_stream->validity_lock);
 
-	release_env(stream_context, 1);
+	release_env(stream, 1);
 	memory_free(audiotrack_stream->buffer);
 	return 0;
 }
 
-int safetrack_new(engine_context_s * engine_context) {
+int safetrack_new(engine_context_s * engine) {
 	return ENGINE_OK; /* Always works, it's SAFE TRACK */
 }
 
-int safetrack_delete(engine_context_s * engine_context) {
+int safetrack_delete(engine_context_s * engine) {
 	return ENGINE_OK; /* Nothing initialized in safetrack_new() */
 }
 
-int safetrack_get_name(engine_context_s * engine_context, char ** output_name) {
-	*output_name = "Safe AudioTrack audio output";
-	return ENGINE_OK;
+char * safetrack_get_name(engine_context_s * engine) {
+	return "Safe AudioTrack audio output";
 }
 
-int safetrack_get_max_channel_count(engine_context_s * engine_context, uint32_t * max_channels) {
+int safetrack_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels) {
 	/*
 		http://androidxref.com/4.2.2_r1/xref/frameworks/av/services/audioflinger/AudioFlinger.h#67
 	*/
@@ -207,7 +206,7 @@ int safetrack_get_max_channel_count(engine_context_s * engine_context, uint32_t 
 }
 
 
-int safetrack_stream_new(engine_context_s * engine_context, engine_stream_context_s * stream_context,
+int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * stream,
 	int stream_type, int stream_latency, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context) {
 
 	int channel_config = 0;
@@ -220,7 +219,7 @@ int safetrack_stream_new(engine_context_s * engine_context, engine_stream_contex
 		goto audiotrack_stream_new_done;
 	}
 
-	if (engine_context->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine_context->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
+	if (engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
 		error_code = ENGINE_INVALID_FORMAT_ERROR;
 		LOG_WARNING(LOG_TAG, "audiotrack_stream_new: ENGINE_INVALID_FORMAT_ERROR");
 		goto audiotrack_stream_new_done;
@@ -231,17 +230,17 @@ int safetrack_stream_new(engine_context_s * engine_context, engine_stream_contex
 	audiotrack_stream->user_context = user_context;
 	audiotrack_stream->stream_type = stream_type;
 
-	stream_context->last_timestamp = 0;
-	stream_context->last_timestamp_update = 0;
+	stream->last_timestamp = 0;
+	stream->last_timestamp_update = 0;
 
 //	if (android_version < 3) {
-		channel_config = engine_context->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO_LEGACY : AUDIO_CHANNEL_OUT_MONO_LEGACY;
+		channel_config = engine->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO_LEGACY : AUDIO_CHANNEL_OUT_MONO_LEGACY;
 //	}
 //	else {
-//		channel_config = engine_context->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO : AUDIO_CHANNEL_OUT_MONO;
+//		channel_config = engine->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO : AUDIO_CHANNEL_OUT_MONO;
 //	}
 
-	JNIEnv * env = get_env(stream_context, 0);
+	JNIEnv * env = get_env(stream, 0);
 	jclass audiotrackClass = (*env)->FindClass(env, "android/media/AudioTrack");
 
 	audiotrack_stream->audiotrack_class = (*env)->NewGlobalRef(env, audiotrackClass);
@@ -251,7 +250,7 @@ int safetrack_stream_new(engine_context_s * engine_context, engine_stream_contex
 	 * int buffer_size = AudioTrack.getMinBufferSize(sampling_rate, channel_config, stream_type);
 	 */
 	jmethodID getMinBufferSizeId = (*env)->GetStaticMethodID(env, audiotrack_stream->audiotrack_class, "getMinBufferSize", "(III)I");
-	audiotrack_stream->buffer_size = (*env)->CallStaticIntMethod(env, audiotrack_stream->audiotrack_class, getMinBufferSizeId, engine_context->param_sampling_rate, channel_config, stream_type);
+	audiotrack_stream->buffer_size = (*env)->CallStaticIntMethod(env, audiotrack_stream->audiotrack_class, getMinBufferSizeId, engine->param_sampling_rate, channel_config, stream_type);
 	audiotrack_stream->buffer_size = audiotrack_stream->buffer_size * 10;
 
 	/*
@@ -261,7 +260,7 @@ int safetrack_stream_new(engine_context_s * engine_context, engine_stream_contex
 	jmethodID ctor = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "<init>", "(IIIIII)V");
 	jobject obj = (*env)->NewObject(env, audiotrack_stream->audiotrack_class, ctor,
 				stream_type,
-				engine_context->param_sampling_rate,
+				engine->param_sampling_rate,
 				channel_config,
 				AUDIOTRACK_ENCODING_PCM16,
 				audiotrack_stream->buffer_size,
@@ -269,12 +268,12 @@ int safetrack_stream_new(engine_context_s * engine_context, engine_stream_contex
 
 
 	audiotrack_stream->audiotrack_object = (*env)->NewGlobalRef(env, obj);
-	release_env(stream_context, 0);
+	release_env(stream, 0);
 
 	audiotrack_stream->has_valid_thread = 0;
 	pthread_mutex_init(&audiotrack_stream->validity_lock, NULL);
 
-	stream_context->stream_output_specific = audiotrack_stream;
+	stream->stream_output_specific = audiotrack_stream;
 	error_code = ENGINE_OK;
 
 audiotrack_stream_new_done:
@@ -282,61 +281,61 @@ audiotrack_stream_new_done:
 		if (audiotrack_stream != NULL) {
 			memory_free(audiotrack_stream);
 		}
-		stream_context->stream_output_specific = NULL;
+		stream->stream_output_specific = NULL;
 	}
 
 	return error_code;
 }
 
-int safetrack_stream_delete(engine_stream_context_s * stream_context) {
-	safetrack_stream_context_s * audiotrack_stream = stream_context->stream_output_specific;
+int safetrack_stream_delete(engine_stream_context_s * stream) {
+	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 
 	if (audiotrack_stream != NULL) {
 		pthread_mutex_destroy(&audiotrack_stream->validity_lock);
 
-        JNIEnv * env = get_env(stream_context, 0);
+        JNIEnv * env = get_env(stream, 0);
         jmethodID releaseId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "release", "()V");
         (*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, releaseId);
 
 		(*env)->DeleteGlobalRef(env, audiotrack_stream->audiotrack_class);
 		(*env)->DeleteGlobalRef(env, audiotrack_stream->audiotrack_object);
-		release_env(stream_context, 0);
+		release_env(stream, 0);
 
 		memory_free(audiotrack_stream);
-		stream_context->stream_output_specific = NULL;
+		stream->stream_output_specific = NULL;
 	}
 
 	return ENGINE_OK;
 }
 
-int safetrack_stream_start(engine_stream_context_s * stream_context) {
-	safetrack_stream_context_s * audiotrack_stream = stream_context->stream_output_specific;
+int safetrack_stream_start(engine_stream_context_s * stream) {
+	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 	int error_code = ENGINE_GENERIC_ERROR;
 
 
-    stream_context->last_timestamp_update = 0;
-	audiotrack_stream->state_callback(stream_context, audiotrack_stream->user_context, STREAM_STATE_STARTED);
+    stream->last_timestamp_update = 0;
+	audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STARTED);
 
 	/* sync */ pthread_mutex_lock(&audiotrack_stream->validity_lock);
 	audiotrack_stream->has_valid_thread = 1;
 	/* sync */ pthread_mutex_unlock(&audiotrack_stream->validity_lock);
 
-	if (pthread_create(&audiotrack_stream->output_thread, NULL, output_thread, stream_context) == 0) {
-		JNIEnv * env = get_env(stream_context, 0);
+	if (pthread_create(&audiotrack_stream->output_thread, NULL, output_thread, stream) == 0) {
+		JNIEnv * env = get_env(stream, 0);
 		jmethodID playId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "play", "()V");
 		(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, playId);
-		release_env(stream_context, 0);
+		release_env(stream, 0);
 		error_code = ENGINE_OK;
 	}
 
 	return error_code;
 }
 
-int safetrack_stream_stop(engine_stream_context_s * stream_context) {
-	safetrack_stream_context_s * audiotrack_stream = stream_context->stream_output_specific;
+int safetrack_stream_stop(engine_stream_context_s * stream) {
+	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 	int error_code = ENGINE_GENERIC_ERROR;
 
-    stream_context->last_timestamp_update = 0;
+    stream->last_timestamp_update = 0;
 
 	if (audiotrack_stream != NULL) {
 		/* sync */ pthread_mutex_lock(&audiotrack_stream->validity_lock);
@@ -348,11 +347,11 @@ int safetrack_stream_stop(engine_stream_context_s * stream_context) {
 				error_code = ENGINE_OK;
 			}
 
-			JNIEnv * env = get_env(stream_context, 0);
+			JNIEnv * env = get_env(stream, 0);
 			jmethodID stopId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "stop", "()V");
 			(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, stopId);
-			release_env(stream_context, 0);
-			audiotrack_stream->state_callback(stream_context, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
+			release_env(stream, 0);
+			audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
 		}
 		else {
 			/* sync */ pthread_mutex_unlock(&audiotrack_stream->validity_lock);
@@ -362,35 +361,35 @@ int safetrack_stream_stop(engine_stream_context_s * stream_context) {
 	return error_code;
 }
 
-int safetrack_stream_flush(engine_stream_context_s * stream_context) {
-	safetrack_stream_context_s * audiotrack_stream = stream_context->stream_output_specific;
+int safetrack_stream_flush(engine_stream_context_s * stream) {
+	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 
 	if (audiotrack_stream != NULL) {
-		JNIEnv * env = get_env(stream_context, 0);
+		JNIEnv * env = get_env(stream, 0);
 		jmethodID flushId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "flush", "()V");
 		(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, flushId);
-		release_env(stream_context, 0);
+		release_env(stream, 0);
 		audiotrack_stream->written_samples = 0;
-		stream_context->last_timestamp_update = 0;
+		stream->last_timestamp_update = 0;
 	}
 
 	return ENGINE_OK;
 }
 
-static engine_output_s const safetrack_output;
+static engine_output_s safetrack_output = {
+	.create = safetrack_new,
+	.destroy = safetrack_delete,
+	.get_name = safetrack_get_name,
+	.get_max_channel_count = safetrack_get_max_channel_count,
+	.stream_create = safetrack_stream_new,
+	.stream_destroy = safetrack_stream_delete,
+	.stream_start = safetrack_stream_start,
+	.stream_stop = safetrack_stream_stop,
+	.stream_flush = safetrack_stream_flush
+};
 
-engine_output_s const * safetrack_get_output() {
+engine_output_s * safetrack_get_output() {
 	return &safetrack_output;
 }
 
-static engine_output_s const safetrack_output = {
-	.engine_new = safetrack_new,
-	.engine_delete = safetrack_delete,
-	.engine_get_name = safetrack_get_name,
-	.engine_get_max_channel_count = safetrack_get_max_channel_count,
-	.engine_stream_new = safetrack_stream_new,
-	.engine_stream_delete = safetrack_stream_delete,
-	.engine_stream_start = safetrack_stream_start,
-	.engine_stream_stop = safetrack_stream_stop,
-	.engine_stream_flush = safetrack_stream_flush
-};
+

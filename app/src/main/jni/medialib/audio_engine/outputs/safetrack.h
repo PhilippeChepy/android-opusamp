@@ -20,7 +20,7 @@ extern "C" {
 
 #include <audio_engine/engine.h>
 
-engine_output_s const * safetrack_get_output();
+engine_output_s * safetrack_get_output();
 
 #ifdef __cplusplus
 }

@@ -64,7 +64,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
 	public LocalMediaPlayer(LocalMediaManager localMediaManager) {
         mediaManager = localMediaManager;
-		if (engineInitialize(false) != 0) {
+		if (engineInitialize() != 0) {
             LogUtils.LOGE(TAG, "unable to initialize engine");
 		}
         else {

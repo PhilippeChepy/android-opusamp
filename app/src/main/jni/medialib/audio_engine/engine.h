@@ -70,53 +70,56 @@ enum engine_result_code_e {
 };
 
 typedef struct engine_context_ engine_context_s;
-
 typedef struct engine_stream_context_ engine_stream_context_s;
 
-typedef long (* engine_data_callback)(engine_stream_context_s * stream_context, void * user_context, void * data_buffer, size_t data_length);
-
-typedef void (* engine_state_callback)(engine_stream_context_s * stream_context, void * user_context, int stream_state);
-
+typedef long (* engine_data_callback)(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t data_length);
+typedef void (* engine_state_callback)(engine_stream_context_s * stream, void * user_context, int stream_state);
 typedef void (* engine_completion_callback)(engine_stream_context_s * stream);
-
 typedef void (* engine_timestamp_callback)(engine_stream_context_s * stream, int64_t played);
 
 typedef struct {
-	int (* engine_new)(engine_context_s * engine_context);
-	int (* engine_delete)(engine_context_s * engine_context);
-	int (* engine_get_name)(engine_context_s * engine_context, char ** output_name);
-	int (* engine_get_max_channel_count)(engine_context_s * engine_context, uint32_t * max_channels);
+	int (* create)(engine_context_s * engine);
+	int (* destroy)(engine_context_s * engine);
+	char * (* get_name)(engine_context_s * engine);
+	int (* get_max_channel_count)(engine_context_s * engine, uint32_t * max_channels);
 
-	int (* engine_stream_new)(engine_context_s * engine_context, engine_stream_context_s * stream_context,
-			int stream_type, int stream_latency, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
-	int (* engine_stream_delete)(engine_stream_context_s * stream_context);
-	int (* engine_stream_start)(engine_stream_context_s * stream_context);
-	int (* engine_stream_stop)(engine_stream_context_s * stream_context);
-	int (* engine_stream_flush)(engine_stream_context_s * stream_context);
+	int (* stream_create)(engine_context_s * engine, engine_stream_context_s * stream, int stream_type, int stream_latency, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
+	int (* stream_destroy)(engine_stream_context_s * stream);
+	int (* stream_start)(engine_stream_context_s * stream);
+	int (* stream_stop)(engine_stream_context_s * stream);
+	int (* stream_flush)(engine_stream_context_s * stream);
+
+    engine_timestamp_callback timestamp_callback;
+	void * context;
 } engine_output_s;
 
 typedef struct {
-	int (* engine_new)(engine_context_s * engine_context);
-	int (* engine_delete)(engine_context_s * engine_context);
-	int (* engine_get_name)(engine_context_s * engine_context, char ** input_name);
-	int (* engine_get_max_channel_count)(engine_context_s * engine_context, uint32_t * max_channels);
+	int (* create)(engine_context_s * engine);
+	int (* destroy)(engine_context_s * engine);
+	char * (* get_name)(engine_context_s * engine);
+	int (* get_max_channel_count)(engine_context_s * engine, uint32_t * max_channels);
 
-	int (* engine_stream_new)(engine_context_s * engine_context, engine_stream_context_s * stream_context,
-			const char * media_path, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
-	int (* engine_stream_delete)(engine_stream_context_s * stream_context);
-	int (* engine_stream_start)(engine_stream_context_s * stream_context);
-	int (* engine_stream_stop)(engine_stream_context_s * stream_context);
+	int (* stream_create)(engine_context_s * engine, engine_stream_context_s * stream, const char * media_path, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
+	int (* stream_destroy)(engine_stream_context_s * stream);
+	int (* stream_start)(engine_stream_context_s * stream);
+	int (* stream_stop)(engine_stream_context_s * stream);
 
-	int (* engine_stream_get_duration)(engine_stream_context_s * stream_context, int64_t * duration);
-	int (* engine_stream_set_position)(engine_stream_context_s * stream_context, int64_t position);
+	int (* stream_get_duration)(engine_stream_context_s * stream, int64_t * duration);
+	int (* stream_set_position)(engine_stream_context_s * stream, int64_t position);
+
+    void * context;
 } engine_input_s;
 
-struct engine_context_ {
-	engine_output_s const * output;
-	engine_input_s const * input;
+typedef struct {
+    int (* processor_new)(engine_context_s * engine_context_s);
+    int (* processor_delete)(engine_context_s * engine_context_s);
+} engine_processor_s;
 
-	engine_completion_callback completion_callback;
-	engine_timestamp_callback timestamp_callback;
+struct engine_context_ {
+	engine_output_s * output;
+	engine_input_s * input;
+
+    engine_completion_callback completion_callback;
 
 	int param_sample_format;
 	int param_sampling_rate;
@@ -128,10 +131,6 @@ struct engine_context_ {
 	int param_sleep_decoder_buffer_threshold;
 	int param_wake_decoder_buffer_threshold;
 
-	void * engine_output_specific;
-	void * engine_input_specific;
-
-    int is_transcoder;
 	JavaVM * vm;
 	jobject obj;
 	jclass cls;
@@ -160,24 +159,22 @@ struct engine_stream_context_ {
 	int64_t last_timestamp_update;
 };
 
-int engine_new(engine_context_s * engine_context, int is_transcoder);
-int engine_delete(engine_context_s * engine_context);
-int engine_set_params(engine_context_s * engine_context, int sample_format, int sampling_rate, int channel_count, int stream_type, int stream_latency);
-int engine_get_output_name(engine_context_s * engine_context, char ** output_name);
-int engine_get_input_name(engine_context_s * engine_context, char ** input_name);
-int engine_get_max_channel_count(engine_context_s * engine_context, uint32_t * max_channels);
+int engine_new(engine_context_s * engine);
+int engine_delete(engine_context_s * engine);
+int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count, int stream_type, int stream_latency);
+int engine_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels);
 
-int engine_stream_new(engine_context_s * engine_context, engine_stream_context_s * stream_context, const char * media_path);
-int engine_stream_delete(engine_stream_context_s * stream_context);
-int engine_stream_start(engine_stream_context_s * stream_context);
-int engine_stream_stop(engine_stream_context_s * stream_context);
-int engine_stream_get_position(engine_stream_context_s * stream_context, int64_t * position);
-int engine_stream_set_position(engine_stream_context_s * stream_context, int64_t position);
+int engine_stream_new(engine_context_s * engine, engine_stream_context_s * stream, const char * media_path);
+int engine_stream_delete(engine_stream_context_s * stream);
+int engine_stream_start(engine_stream_context_s * stream);
+int engine_stream_stop(engine_stream_context_s * stream);
+int engine_stream_get_position(engine_stream_context_s * stream, int64_t * position);
+int engine_stream_set_position(engine_stream_context_s * stream, int64_t position);
 
-int engine_stream_get_duration(engine_stream_context_s * stream_context, int64_t * duration);
+int engine_stream_get_duration(engine_stream_context_s * stream, int64_t * duration);
 
-int engine_set_completion_callback(engine_context_s * engine_context, engine_completion_callback callback);
-int engine_set_timestamp_callback(engine_context_s * engine_context, engine_timestamp_callback callback);
+int engine_set_completion_callback(engine_context_s * engine, engine_completion_callback callback);
+int engine_set_timestamp_callback(engine_context_s * engine, engine_timestamp_callback callback);
 
 #ifdef __cplusplus
 }

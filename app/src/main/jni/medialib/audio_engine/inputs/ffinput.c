@@ -71,16 +71,16 @@ int global_engine_initialized = 0;
 /*
  * Prototype to timestamp when terminated stream.
  */
-int ffinput_stream_set_position(engine_stream_context_s * stream_context, int64_t position);
+int ffinput_stream_set_position(engine_stream_context_s * stream, int64_t position);
 
 static void * ffinput_decoding_thread(void * thread_arg) {
-	engine_stream_context_s * stream_context = thread_arg;
+	engine_stream_context_s * stream = thread_arg;
 	int got_frame;
 	//AVFilterBufferRef *samplesref;
     AVFrame *filtered_frame = av_frame_alloc();
 	int error_code = ENGINE_GENERIC_ERROR;
-    ffinput_input_context_s * context = stream_context->engine->engine_input_specific;
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+    ffinput_input_context_s * context = stream->engine->input->context;
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 
 	for (;;) {
 		error_code = ENGINE_GENERIC_ERROR;
@@ -143,7 +143,7 @@ static void * ffinput_decoding_thread(void * thread_arg) {
                         size_t data_length = av_samples_get_buffer_size(NULL, av_get_channel_layout_nb_channels(av_frame_get_channel_layout(filtered_frame)), filtered_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
                         uint8_t * data = (uint8_t *) filtered_frame->data[0];
 
-                        ffinput_stream->data_callback(stream_context, ffinput_stream->user_context, data, data_length);
+                        ffinput_stream->data_callback(stream, ffinput_stream->user_context, data, data_length);
                         av_frame_unref(filtered_frame);
                     }
                 }
@@ -170,24 +170,24 @@ media_player_decode_frame_done:
 		}
 
 		if (error_code == ENGINE_TERMINATED || error_code == ENGINE_GENERIC_ERROR) {
-			ffinput_stream_set_position(stream_context, 0);
-			ffinput_stream->state_callback(stream_context, ffinput_stream->user_context, STREAM_STATE_TERMINATED);
+			ffinput_stream_set_position(stream, 0);
+			ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_TERMINATED);
 			break;
 		}
 
-		if (stream_context->decoder_is_stopping == 1) {
+		if (stream->decoder_is_stopping == 1) {
 			break;
 		}
 	}
 
     av_frame_free(&filtered_frame);
-	LOG_DEBUG(LOG_TAG, "ffinput_decoding_thread() : terminated. stream_context->decoder_is_stopping = %i", stream_context->decoder_is_stopping);
-	stream_context->decoder_terminated = 1;
+	LOG_DEBUG(LOG_TAG, "ffinput_decoding_thread() : terminated. stream->decoder_is_stopping = %i", stream->decoder_is_stopping);
+	stream->decoder_terminated = 1;
 	return 0;
 }
 
-static int ffinput_init_filters(engine_stream_context_s * stream_context, const char * filter_desc) {
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+static int ffinput_init_filters(engine_stream_context_s * stream, const char * filter_desc) {
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 	int error_code = ENGINE_GENERIC_ERROR;
 	int av_error_code = 0;
 
@@ -195,8 +195,8 @@ static int ffinput_init_filters(engine_stream_context_s * stream_context, const 
 	AVFilter * buffer_sink = avfilter_get_by_name("abuffersink");
 	AVFilterInOut * outputs = avfilter_inout_alloc(); /* XXX */
 	AVFilterInOut * inputs = avfilter_inout_alloc(); /* XXX */
-//	const enum AVSampleFormat out_sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
-	enum AVSampleFormat out_sample_fmts[2] = { AV_SAMPLE_FMT_FLTP, -1 };
+	const enum AVSampleFormat out_sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
+//	enum AVSampleFormat out_sample_fmts[2] = { AV_SAMPLE_FMT_S16, -1 };
 	static const int64_t out_channel_layouts[] = { AV_CH_LAYOUT_STEREO, -1 };
     static const int out_sample_rates[] = { 44100, -1 };
     const AVFilterLink * out_link;
@@ -204,20 +204,13 @@ static int ffinput_init_filters(engine_stream_context_s * stream_context, const 
 
 	char source_args[512];
 
-	if (stream_context->engine->is_transcoder) {
-	    out_sample_fmts[0] = AV_SAMPLE_FMT_FLTP;
-	}
-	else {
-	    out_sample_fmts[0] = AV_SAMPLE_FMT_S16;
-	}
-
 	ffinput_stream->filter_graph = avfilter_graph_alloc(); /* XXX */
 
 	if (ffinput_stream->codec_context->channel_layout == 0) {
 		ffinput_stream->codec_context->channel_layout = av_get_default_channel_layout(ffinput_stream->codec_context->channels);
 	}
 
-	LOG_INFO(LOG_TAG, "stream_context->engine->param_channel_count = %i\n", (int)ffinput_stream->codec_context->channel_layout);
+	LOG_INFO(LOG_TAG, "stream->engine->param_channel_count = %i\n", (int)ffinput_stream->codec_context->channel_layout);
 	LOG_INFO(LOG_TAG, "channel_layout = %"PRIx64"\n", ffinput_stream->codec_context->channel_layout);
 
 	snprintf(source_args, sizeof(source_args), "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"PRIx64,
@@ -306,26 +299,24 @@ static void av_callback(void *ptr, int level, const char *fmt, va_list vl) {
 #endif
 }
 
-int ffinput_new(engine_context_s * engine_context) {
+int ffinput_new(engine_context_s * engine) {
 	ffinput_input_context_s * context;
 	int error_code = ENGINE_GENERIC_ERROR;
 
-	engine_context->engine_input_specific = memory_zero_alloc(sizeof *context);
-
-	if (engine_context->engine_input_specific == NULL) {
+	engine->input->context = memory_zero_alloc(sizeof *context);
+	if (engine->input->context == NULL) {
 		LOG_INFO(LOG_TAG, "ffinput_new: memory allocation failure");
 		error_code = ENGINE_ALLOC_ERROR;
 		goto ffinput_new_done;
 	}
 
-	context = engine_context->engine_input_specific;
-	memset(context, 0, sizeof *context);
+    context = engine->input->context;
 
 	av_log_set_callback(&av_callback);
 
 	context->frame = av_frame_alloc();
   	if (context->frame == NULL) {
-  		memory_free(engine_context->engine_input_specific);
+  		memory_free(engine->input->context);
   		error_code = ENGINE_ALLOC_ERROR;
 		goto ffinput_new_done;
   	}
@@ -343,38 +334,35 @@ ffinput_new_done:
     return error_code;
 }
 
-int ffinput_delete(engine_context_s * engine_context) {
+int ffinput_delete(engine_context_s * engine) {
 	ffinput_input_context_s * context;
 
-	assert(engine_context);
+	assert(engine);
 
-	context = engine_context->engine_input_specific;
+	context = engine->input->context;
 
   	av_freep(&context->frame);
   	memory_free(context);
-  	engine_context->engine_input_specific = NULL;
+  	engine->input->context = NULL;
 
     return ENGINE_OK;
 }
 
-int ffinput_get_name(engine_context_s * engine_context, char ** output_name) {
-	assert(engine_context && output_name);
-
-	*output_name = "ffmpeg audio input";
-	return ENGINE_OK;
+char * ffinput_get_name(engine_context_s * engine) {
+	return "ffmpeg audio input";
 }
 
 
-int ffinput_get_max_channel_count(engine_context_s * engine_context, uint32_t * max_channels) {
+int ffinput_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels) {
 	/*
 		this file, in ffinput_stream_new() :
-			if (stream_context->channel_count == 2) {
+			if (stream->channel_count == 2) {
 	*/
 	*max_channels = 2;
 	return ENGINE_OK;
 }
 
-int ffinput_stream_new(engine_context_s * engine_context, engine_stream_context_s * stream_context,
+int ffinput_stream_new(engine_context_s * engine, engine_stream_context_s * stream,
 		const char * media_path, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context) {
     int av_error_code = 0;
 	int error_code = ENGINE_FILE_ACCESS_ERROR;
@@ -386,12 +374,12 @@ int ffinput_stream_new(engine_context_s * engine_context, engine_stream_context_
 		goto ffinput_stream_new_done;
 	}
 
-	if (engine_context->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine_context->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
+	if (engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
 		error_code = ENGINE_INVALID_FORMAT_ERROR;
 		goto ffinput_stream_new_done;
 	}
 
-	stream_context->stream_input_specific = ffinput_stream;
+	stream->stream_input_specific = ffinput_stream;
 
 	av_error_code = avformat_open_input(&ffinput_stream->format_context, media_path, NULL, NULL);
     if (av_error_code < 0) {
@@ -425,11 +413,11 @@ int ffinput_stream_new(engine_context_s * engine_context, engine_stream_context_
     ffinput_stream->user_context = user_context;
 
     //LOG_ERROR(LOG_TAG, "audio decoder: set filters p");
-    if (engine_context->param_channel_count == 2) {
-    	error_code = ffinput_init_filters(stream_context, "aresample=44100:resampler=soxr:linear_interp=1");
+    if (engine->param_channel_count == 2) {
+    	error_code = ffinput_init_filters(stream, "aresample=44100:resampler=soxr:linear_interp=1");
     }
     else {
-    	error_code = ffinput_init_filters(stream_context, "aresample=44100:resampler=soxr:linear_interp=1");
+    	error_code = ffinput_init_filters(stream, "aresample=44100:resampler=soxr:linear_interp=1");
     }
 
     ffinput_stream->has_valid_thread = 0;
@@ -444,18 +432,18 @@ ffinput_stream_new_done:
 			memory_free(ffinput_stream);
 		}
 
-		stream_context->stream_input_specific = NULL;
+		stream->stream_input_specific = NULL;
 	}
 
 	return error_code;
 }
 
-int ffinput_stream_delete(engine_stream_context_s * stream_context) {
-	if (stream_context == NULL) {
+int ffinput_stream_delete(engine_stream_context_s * stream) {
+	if (stream == NULL) {
 		return ENGINE_OK;
 	}
 
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 
 	if (ffinput_stream != NULL) {
 		pthread_mutex_destroy(&ffinput_stream->validity_lock);
@@ -466,24 +454,24 @@ int ffinput_stream_delete(engine_stream_context_s * stream_context) {
 		}
 		avformat_close_input(&ffinput_stream->format_context);
 
-		memory_free(stream_context->stream_input_specific);
+		memory_free(stream->stream_input_specific);
 	}
-    stream_context->stream_input_specific = NULL;
+    stream->stream_input_specific = NULL;
 
     return ENGINE_OK;
 }
 
-int ffinput_stream_start(engine_stream_context_s * stream_context) {
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+int ffinput_stream_start(engine_stream_context_s * stream) {
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 	int error_code = ENGINE_GENERIC_ERROR;
 
 	pthread_mutex_lock(&ffinput_stream->validity_lock);
 	ffinput_stream->has_valid_thread = 1;
-	ffinput_stream->state_callback(stream_context, ffinput_stream->user_context, STREAM_STATE_STARTED);
-	stream_context->decoder_is_stopping = 0;
-	stream_context->decoder_terminated = 0;
+	ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_STARTED);
+	stream->decoder_is_stopping = 0;
+	stream->decoder_terminated = 0;
 
-    if (pthread_create(&ffinput_stream->decoding_thread, NULL, ffinput_decoding_thread, stream_context) == 0) {
+    if (pthread_create(&ffinput_stream->decoding_thread, NULL, ffinput_decoding_thread, stream) == 0) {
     	error_code = ENGINE_OK;
     }
     pthread_mutex_unlock(&ffinput_stream->validity_lock);
@@ -491,8 +479,8 @@ int ffinput_stream_start(engine_stream_context_s * stream_context) {
     return error_code;
 }
 
-int ffinput_stream_stop(engine_stream_context_s * stream_context) {
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+int ffinput_stream_stop(engine_stream_context_s * stream) {
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 	int error_code = ENGINE_GENERIC_ERROR;
 
 	LOG_DEBUG(LOG_TAG, "ffinput_stream_stop()");
@@ -500,12 +488,12 @@ int ffinput_stream_stop(engine_stream_context_s * stream_context) {
 	pthread_mutex_lock(&ffinput_stream->validity_lock);
 	if (ffinput_stream->has_valid_thread) {
 		ffinput_stream->has_valid_thread = 0;
-		stream_context->decoder_is_stopping = 1;
-		/* sync */ pthread_cond_broadcast(&stream_context->buffer_full_cond);
+		stream->decoder_is_stopping = 1;
+		/* sync */ pthread_cond_broadcast(&stream->buffer_full_cond);
 		if (pthread_join(ffinput_stream->decoding_thread, NULL) == 0) {
 			error_code = ENGINE_OK;
 		}
-		ffinput_stream->state_callback(stream_context, ffinput_stream->user_context, STREAM_STATE_STOPPED);
+		ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_STOPPED);
 		LOG_DEBUG(LOG_TAG, "ffinput_stream_stop() : stopped");
 	}
 	else {
@@ -516,8 +504,8 @@ int ffinput_stream_stop(engine_stream_context_s * stream_context) {
 	return error_code;
 }
 
-int ffinput_stream_get_duration(engine_stream_context_s * stream_context, int64_t * duration) {
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+int ffinput_stream_get_duration(engine_stream_context_s * stream, int64_t * duration) {
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 
 	if (duration == NULL) {
 		return ENGINE_GENERIC_ERROR;
@@ -531,8 +519,8 @@ int ffinput_stream_get_duration(engine_stream_context_s * stream_context, int64_
 	return ENGINE_OK; /* TODO: add error checking */
 }
 
-int ffinput_stream_set_position(engine_stream_context_s * stream_context, int64_t position) {
-	ffinput_stream_context_s * ffinput_stream = stream_context->stream_input_specific;
+int ffinput_stream_set_position(engine_stream_context_s * stream, int64_t position) {
+	ffinput_stream_context_s * ffinput_stream = stream->stream_input_specific;
 
     int64_t frame_id = av_rescale(position,
         ffinput_stream->format_context->streams[ffinput_stream->stream_index]->time_base.den,
@@ -552,22 +540,19 @@ int ffinput_stream_set_position(engine_stream_context_s * stream_context, int64_
 	return ENGINE_OK; /* TODO: add error checking */
 }
 
-static engine_input_s const ffinput_input;
-
-engine_input_s const * ffinput_get_input() {
-	return &ffinput_input;
-}
-
-static engine_input_s const ffinput_input = {
-	.engine_new = ffinput_new,
-	.engine_delete = ffinput_delete,
-	.engine_get_name = ffinput_get_name,
-	.engine_get_max_channel_count = ffinput_get_max_channel_count,
-	.engine_stream_new = ffinput_stream_new,
-	.engine_stream_delete = ffinput_stream_delete,
-	.engine_stream_start = ffinput_stream_start,
-	.engine_stream_stop = ffinput_stream_stop,
-	.engine_stream_get_duration = ffinput_stream_get_duration,
-	.engine_stream_set_position = ffinput_stream_set_position
+static engine_input_s ffinput_input = {
+	.create = ffinput_new,
+	.destroy = ffinput_delete,
+	.get_name = ffinput_get_name,
+	.get_max_channel_count = ffinput_get_max_channel_count,
+	.stream_create = ffinput_stream_new,
+	.stream_destroy = ffinput_stream_delete,
+	.stream_start = ffinput_stream_start,
+	.stream_stop = ffinput_stream_stop,
+	.stream_get_duration = ffinput_stream_get_duration,
+	.stream_set_position = ffinput_stream_set_position
 };
 
+engine_input_s * ffinput_get_input() {
+	return &ffinput_input;
+}
