@@ -37,21 +37,6 @@ enum sample_format_e {
 #endif
 };
 
-enum stream_type_e {
-    STREAM_TYPE_VOICE_CALL = 0,
-    STREAM_TYPE_SYSTEM = 1,
-    STREAM_TYPE_RING = 2,
-    STREAM_TYPE_MUSIC = 3,
-    STREAM_TYPE_ALARM = 4,
-    STREAM_TYPE_NOTIFICATION = 5,
-    STREAM_TYPE_BLUETOOTH_SCO = 6,
-    STREAM_TYPE_ENFORCED_AUDIBLE = 7,
-    STREAM_TYPE_DTMF = 8,
-    STREAM_TYPE_TTS = 9,
-    STREAM_TYPE_FM = 10,
-    STREAM_TYPE_MAX
-};
-
 enum stream_state_e {
 	STREAM_STATE_STARTED,
 	STREAM_STATE_STOPPED,
@@ -71,6 +56,7 @@ enum engine_result_code_e {
 
 typedef struct engine_context_ engine_context_s;
 typedef struct engine_stream_context_ engine_stream_context_s;
+typedef struct engine_processor_ engine_processor_s;
 
 typedef long (* engine_data_callback)(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t data_length);
 typedef void (* engine_state_callback)(engine_stream_context_s * stream, void * user_context, int stream_state);
@@ -83,7 +69,7 @@ typedef struct {
 	char * (* get_name)(engine_context_s * engine);
 	int (* get_max_channel_count)(engine_context_s * engine, uint32_t * max_channels);
 
-	int (* stream_create)(engine_context_s * engine, engine_stream_context_s * stream, int stream_type, int stream_latency, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
+	int (* stream_create)(engine_context_s * engine, engine_stream_context_s * stream, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context);
 	int (* stream_destroy)(engine_stream_context_s * stream);
 	int (* stream_start)(engine_stream_context_s * stream);
 	int (* stream_stop)(engine_stream_context_s * stream);
@@ -110,26 +96,36 @@ typedef struct {
     void * context;
 } engine_input_s;
 
-typedef struct {
-    int (* processor_new)(engine_context_s * engine_context_s);
-    int (* processor_delete)(engine_context_s * engine_context_s);
-} engine_processor_s;
+struct engine_processor_ {
+    int (* create)(engine_processor_s * processor);
+    int (* destroy)(engine_processor_s * processor);
+    char * (* get_name)(engine_context_s * engine);
+
+    int (* set_property)(engine_processor_s * processor, int property, void * value);
+    int (* get_property)(engine_processor_s * processor, int property, void * value);
+    int (* apply_properties)(engine_processor_s * processor);
+    int (* process)(engine_processor_s * processor, void * data_buffer, size_t data_length);
+
+    engine_context_s * engine;
+    void * context;
+};
 
 struct engine_context_ {
 	engine_output_s * output;
 	engine_input_s * input;
 
+	engine_processor_s ** processor_list;
+	size_t processor_count;
+
     engine_completion_callback completion_callback;
 
-	int param_sample_format;
-	int param_sampling_rate;
-	int param_channel_count;
-	int param_stream_latency;
-	int param_stream_type;
+	int sample_format;
+	int sampling_rate;
+	int channel_count;
 
-	int param_buffer_size; /* capacity of engine_stream_context_.audio_buffer */
-	int param_sleep_decoder_buffer_threshold;
-	int param_wake_decoder_buffer_threshold;
+	int default_audio_buffer_size; /* capacity of engine_stream_context_.audio_buffer */
+	int decoder_thread_sleep_threshold;
+	int decoder_thread_wake_threshold;
 
 	JavaVM * vm;
 	jobject obj;
@@ -161,8 +157,10 @@ struct engine_stream_context_ {
 
 int engine_new(engine_context_s * engine);
 int engine_delete(engine_context_s * engine);
-int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count, int stream_type, int stream_latency);
+int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count);
 int engine_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels);
+
+int engine_init_dsp(engine_context_s * engine);
 
 int engine_stream_new(engine_context_s * engine, engine_stream_context_s * stream, const char * media_path);
 int engine_stream_delete(engine_stream_context_s * stream);

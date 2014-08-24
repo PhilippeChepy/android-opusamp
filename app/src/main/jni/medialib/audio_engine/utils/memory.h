@@ -19,13 +19,16 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <stdlib.h>
+#include <string.h>
 
 extern unsigned long memory_alloc_counter;
 
 void * memory_alloc(size_t size);
+void * memory_realloc(void * ptr, size_t newsize);
 void * memory_zero_alloc(size_t size);
 void * memory_free(void * ptr);
 
+#define memory_zero(dest, len) memset(dest, 0, len)
 void * memory_clone(const void * source, size_t size);
 int memory_compare(const void * source1, const void * source2, size_t size);
 #define memory_copy(dest, src, len)     memcpy(dest, src, len)

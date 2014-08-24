@@ -96,8 +96,13 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineIn
 			goto engine_init_done_error;
 		}
 
-		if (engine_set_params(engine, SAMPLE_FORMAT_S16_NE, 44100, channel_count, STREAM_TYPE_MUSIC, 250)) {
+		if (engine_set_params(engine, SAMPLE_FORMAT_S16_NE, 44100, channel_count)) {
 			LOG_ERROR(LOG_TAG, "engine_set_params() failure");
+			goto engine_init_done_error;
+		}
+
+		if (engine_init_dsp(engine)) {
+			LOG_ERROR(LOG_TAG, "engine_init_dsp() failure");
 			goto engine_init_done_error;
 		}
 	}

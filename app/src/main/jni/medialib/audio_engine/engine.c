@@ -14,6 +14,8 @@
 #include <audio_engine/engine.h>
 #include <audio_engine/outputs/safetrack.h>
 #include <audio_engine/inputs/ffinput.h>
+#include <audio_engine/effects/equalizer.h>
+#include <audio_engine/utils/memory.h>
 #include <audio_engine/utils/log.h>
 
 #include <fcntl.h>
@@ -25,13 +27,22 @@
 long input_data_callback(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t data_length) {
 	size_t total_write_length = 0;
 
+	size_t processor_index;
+
+	/* processing raw samples*/
+	for (processor_index = 0 ; processor_index < stream->engine->processor_count ; processor_index++) {
+	    engine_processor_s * processor = stream->engine->processor_list[processor_index];
+	    processor->process(processor, data_buffer, data_length);
+	}
+
+    /* writing data to audio buffer */
 	do {
 		if (stream->decoder_is_stopping) {
 			break;
 		}
 
 		/* sync */ pthread_mutex_lock(&stream->buffer_lock);
-		if (stream->audio_buffer.used >= stream->engine->param_sleep_decoder_buffer_threshold) {
+		if (stream->audio_buffer.used >= stream->engine->decoder_thread_sleep_threshold) {
 			/* sync */ stream->decoder_is_waiting = 1;
 			if (!stream->decoder_is_stopping) {
 				/* sync */ pthread_cond_wait(&stream->buffer_full_cond, &stream->buffer_lock);
@@ -78,7 +89,7 @@ void output_state_callback(engine_stream_context_s * stream, void * user_context
 
 long output_data_callback(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t nb_samples) {
 	size_t total_read_length = 0;
-	size_t data_length = nb_samples * stream->engine->param_channel_count;
+	size_t data_length = nb_samples * stream->engine->channel_count;
 
 	do {
 		/* sync */ pthread_mutex_lock(&stream->buffer_lock);
@@ -90,8 +101,7 @@ long output_data_callback(engine_stream_context_s * stream, void * user_context,
 		total_read_length += read_length;
 
 		/* waking up decoder thread if buffer is at  "param_wake_decoder_buffer_threshold" capacity */
-		if (stream->audio_buffer.used < stream->engine->param_wake_decoder_buffer_threshold &&
-				stream->decoder_is_waiting) {
+		if (stream->audio_buffer.used < stream->engine->decoder_thread_wake_threshold && stream->decoder_is_waiting) {
 			/* sync */ stream->decoder_is_waiting = 0;
 			/* sync */ pthread_cond_broadcast(&stream->buffer_full_cond);
 		}
@@ -102,7 +112,7 @@ long output_data_callback(engine_stream_context_s * stream, void * user_context,
 		}
 	} while (total_read_length < data_length);
 
-	return (total_read_length / sizeof(int16_t)) / stream->engine->param_channel_count;
+	return (total_read_length / sizeof(int16_t)) / stream->engine->channel_count;
 }
 
 int engine_new(engine_context_s * engine) {
@@ -111,54 +121,67 @@ int engine_new(engine_context_s * engine) {
 	engine->input = ffinput_get_input();
 	engine_error_code = engine->input->create(engine);
 	if (engine_error_code != ENGINE_OK) {
-		LOG_INFO(LOG_TAG, "engine_new: input ffinput is returning an error.");
+		LOG_INFO(LOG_TAG, "engine_new: input '%s' is not available.", engine->input->get_name(engine));
 		goto engine_new_done;
 	}
 	else {
-		LOG_INFO(LOG_TAG, "engine_new: using ffinput input.");
+		LOG_INFO(LOG_TAG, "engine_new: using '%s' input.", engine->input->get_name(engine));
 	}
 
 /*	output = opensl_get_output(); / * >= API9 (gingerbread) + */
     engine->output = safetrack_get_output(); /* otherwise (low performences) */
 
+LOG_INFO(LOG_TAG, "engine_new: creating output.");
 	engine_error_code = engine->output->create(engine);
+LOG_INFO(LOG_TAG, "engine_new: output created.");
 
 	if (engine_error_code == ENGINE_OK) {
 	    LOG_INFO(LOG_TAG, "engine_new: using '%s' output.", engine->output->get_name(engine));
 		engine->completion_callback = NULL;
-		engine->param_buffer_size = 100 * 1024;
-		engine->param_sleep_decoder_buffer_threshold = 100 * 1024;
-		engine->param_wake_decoder_buffer_threshold = 40  * 1024;
+		engine->default_audio_buffer_size = 100 * 1024;
+		engine->decoder_thread_sleep_threshold = 100 * 1024;
+		engine->decoder_thread_wake_threshold = 40  * 1024;
 	}
     else {
         LOG_INFO(LOG_TAG, "engine_new: output '%s' is not available.", engine->output->get_name(engine));
+        goto engine_new_done;
     }
+
+    engine->processor_count = 0;
+    engine->processor_list = NULL;
 
 engine_new_done:
 	return engine_error_code;
 }
 
 int engine_delete(engine_context_s * engine) {
+    size_t processor_index;
+
 	LOG_INFO(LOG_TAG, "engine_delete: deleting engine.");
 	if (engine == NULL) {
 		return ENGINE_INVALID_PARAMETER_ERROR;
 	}
 
+    for (processor_index = 0 ; processor_index < engine->processor_count ; processor_index++) {
+        LOG_INFO(LOG_TAG, "engine_delete: destroying '%s' dsp.", engine->processor_list[processor_index]->get_name(engine));
+        engine->processor_list[processor_index]->destroy(engine->processor_list[processor_index]);
+    }
+
 	return engine->output->destroy(engine);
 }
 
-int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count, int stream_type, int stream_latency) {
+int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count) {
 	int engine_error_code = ENGINE_GENERIC_ERROR;
 
 	if (sampling_rate < 1 || sampling_rate > 192000) {
 		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
-		LOG_ERROR(LOG_TAG, "engine_stream_new: invalid sampling rate (%i)", sampling_rate);
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sampling rate (%i)", sampling_rate);
 		goto engine_set_params_done;
 	}
 
 	if (channel_count < 1 || channel_count > 8) {
 		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
-		LOG_ERROR(LOG_TAG, "engine_stream_new: invalid channel_count (%i)", channel_count);
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid channel_count (%i)", channel_count);
 		goto engine_set_params_done;
 	}
 
@@ -169,27 +192,39 @@ int engine_set_params(engine_context_s * engine, int sample_format, int sampling
 	case SAMPLE_FORMAT_FLOAT32_BE:
 		break;
 	default:
-		LOG_ERROR(LOG_TAG, "engine_stream_new: invalid sample format");
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sample format");
 		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
 		goto engine_set_params_done;
 	}
 
-	if (stream_latency < 1 || stream_latency > 2000) {
-		engine_error_code = ENGINE_INVALID_PARAMETER_ERROR;
-		LOG_ERROR(LOG_TAG, "engine_stream_new: invalid latency (%i)", stream_latency);
-		goto engine_set_params_done;
-	}
-
-	engine->param_sample_format = sample_format;
-	engine->param_sampling_rate = sampling_rate;
-	engine->param_channel_count = channel_count;
-	engine->param_stream_type = stream_type;
-	engine->param_stream_latency = stream_latency;
+	engine->sample_format = sample_format;
+	engine->sampling_rate = sampling_rate;
+	engine->channel_count = channel_count;
 
 	engine_error_code = ENGINE_OK;
 
 engine_set_params_done:
 	return engine_error_code;
+}
+
+int engine_init_dsp(engine_context_s * engine) {
+    size_t processor_index;
+
+    LOG_INFO(LOG_TAG, "engine_init_dsp:");
+
+    engine->processor_count = 1;
+    engine->processor_list = (engine_processor_s **)memory_zero_alloc(sizeof(engine_processor_s *) * engine->processor_count);
+
+    engine->processor_list[0] = get_equalizer_processor();
+    engine->processor_list[0]->engine = engine;
+
+    for (processor_index = 0 ; processor_index < engine->processor_count ; processor_index++) {
+        LOG_INFO(LOG_TAG, "engine_init_dsp: creating '%s' dsp.", engine->processor_list[processor_index]->get_name(engine));
+        engine->processor_list[processor_index]->create(engine->processor_list[processor_index]);
+
+    }
+
+    return ENGINE_OK;
 }
 
 int engine_set_completion_callback(engine_context_s * engine, engine_completion_callback callback) {
@@ -236,7 +271,7 @@ int engine_stream_new(engine_context_s * engine, engine_stream_context_s * strea
 		goto stream_new_done;
 	}
 
-	if (circular_buffer_new(&stream->audio_buffer, engine->param_buffer_size) != CIRCULAR_BUFFER_OK) {
+	if (circular_buffer_new(&stream->audio_buffer, engine->default_audio_buffer_size) != CIRCULAR_BUFFER_OK) {
 		LOG_ERROR(LOG_TAG, "engine_stream_new: unable to allocate circular buffer");
 		goto stream_new_done;
 	}
@@ -265,7 +300,6 @@ int engine_stream_new(engine_context_s * engine, engine_stream_context_s * strea
 
 	LOG_INFO(LOG_TAG, "engine_stream_new: allocating output engine (0x%08x).", (int)engine->output);
 	engine_error_code = engine->output->stream_create(engine, stream,
-			engine->param_stream_type, engine->param_stream_latency,
 			output_data_callback, output_state_callback, stream);
 
 stream_new_done:
@@ -340,7 +374,7 @@ int engine_stream_get_position(engine_stream_context_s * stream, int64_t * posit
 		return ENGINE_INVALID_PARAMETER_ERROR;
 	}
 
-	*position = (stream->last_timestamp * 1000) / stream->engine->param_sampling_rate;
+	*position = (stream->last_timestamp * 1000) / stream->engine->sampling_rate;
 	return ENGINE_OK;
 }
 

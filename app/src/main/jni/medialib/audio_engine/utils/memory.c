@@ -26,6 +26,10 @@ void * memory_alloc(size_t size) {
 	return ptr;
 }
 
+void * memory_realloc(void * ptr, size_t newsize) {
+    return realloc(ptr, newsize);
+}
+
 void * memory_zero_alloc(size_t size) {
 	void * ptr = calloc(1, size);
 

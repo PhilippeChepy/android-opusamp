@@ -374,7 +374,7 @@ int ffinput_stream_new(engine_context_s * engine, engine_stream_context_s * stre
 		goto ffinput_stream_new_done;
 	}
 
-	if (engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
+	if (engine->sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
 		error_code = ENGINE_INVALID_FORMAT_ERROR;
 		goto ffinput_stream_new_done;
 	}
@@ -413,7 +413,7 @@ int ffinput_stream_new(engine_context_s * engine, engine_stream_context_s * stre
     ffinput_stream->user_context = user_context;
 
     //LOG_ERROR(LOG_TAG, "audio decoder: set filters p");
-    if (engine->param_channel_count == 2) {
+    if (engine->channel_count == 2) {
     	error_code = ffinput_init_filters(stream, "aresample=44100:resampler=soxr:linear_interp=1");
     }
     else {

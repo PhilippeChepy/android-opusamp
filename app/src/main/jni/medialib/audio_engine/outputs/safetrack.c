@@ -56,6 +56,21 @@ static void release_env(engine_stream_context_s * stream, int threaded) {
 	}
 }
 
+enum stream_type_e {
+    STREAM_TYPE_VOICE_CALL = 0,
+    STREAM_TYPE_SYSTEM = 1,
+    STREAM_TYPE_RING = 2,
+    STREAM_TYPE_MUSIC = 3,
+    STREAM_TYPE_ALARM = 4,
+    STREAM_TYPE_NOTIFICATION = 5,
+    STREAM_TYPE_BLUETOOTH_SCO = 6,
+    STREAM_TYPE_ENFORCED_AUDIBLE = 7,
+    STREAM_TYPE_DTMF = 8,
+    STREAM_TYPE_TTS = 9,
+    STREAM_TYPE_FM = 10,
+    STREAM_TYPE_MAX
+};
+
 /*
  * https://android.googlesource.com/platform/frameworks/base/+/android-2.2.3_r2.1/include/media/AudioSystem.h
  *
@@ -134,11 +149,11 @@ static void * output_thread(void * thread_arg) {
 		}
 
 		int request_size = audiotrack_stream->buffer_size / 40;
-		int nb_samples = request_size / stream->engine->param_channel_count;
+		int nb_samples = request_size / stream->engine->channel_count;
 		int got = audiotrack_stream->data_callback(stream, audiotrack_stream->user_context, audiotrack_stream->buffer, nb_samples);
 
 		(*env)->SetShortArrayRegion(env, bytearray, 0, audiotrack_stream->buffer_size, audiotrack_stream->buffer);
-		(*env)->CallIntMethod(env, audiotrack_stream->audiotrack_object, writeMethod, bytearray, 0, got * stream->engine->param_channel_count);
+		(*env)->CallIntMethod(env, audiotrack_stream->audiotrack_object, writeMethod, bytearray, 0, got * stream->engine->channel_count);
 
 		if (!audiotrack_stream->has_valid_thread) {
 			break;
@@ -164,7 +179,7 @@ static void * output_thread(void * thread_arg) {
         audiotrack_stream->written_samples = audiotrack_stream->written_samples + nb_samples;
 
 
-	    int64_t played_ts = (audiotrack_stream->written_samples * (int64_t)1000) / stream->engine->param_sampling_rate;
+	    int64_t played_ts = (audiotrack_stream->written_samples * (int64_t)1000) / stream->engine->sampling_rate;
 	    played_ts = stream->last_timestamp + played_ts;
 
 	    // prevent to much java callbacks.
@@ -207,7 +222,7 @@ int safetrack_get_max_channel_count(engine_context_s * engine, uint32_t * max_ch
 
 
 int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * stream,
-	int stream_type, int stream_latency, engine_data_callback data_callback, engine_state_callback state_callback, void * user_context) {
+	engine_data_callback data_callback, engine_state_callback state_callback, void * user_context) {
 
 	int channel_config = 0;
 	int error_code = ENGINE_GENERIC_ERROR;
@@ -219,7 +234,7 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 		goto audiotrack_stream_new_done;
 	}
 
-	if (engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->param_sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
+	if (engine->sample_format == SAMPLE_FORMAT_FLOAT32_LE || engine->sample_format == SAMPLE_FORMAT_FLOAT32_BE) {
 		error_code = ENGINE_INVALID_FORMAT_ERROR;
 		LOG_WARNING(LOG_TAG, "audiotrack_stream_new: ENGINE_INVALID_FORMAT_ERROR");
 		goto audiotrack_stream_new_done;
@@ -228,13 +243,13 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 	audiotrack_stream->data_callback = data_callback;
 	audiotrack_stream->state_callback = state_callback;
 	audiotrack_stream->user_context = user_context;
-	audiotrack_stream->stream_type = stream_type;
+	audiotrack_stream->stream_type = STREAM_TYPE_MUSIC;
 
 	stream->last_timestamp = 0;
 	stream->last_timestamp_update = 0;
 
 //	if (android_version < 3) {
-		channel_config = engine->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO_LEGACY : AUDIO_CHANNEL_OUT_MONO_LEGACY;
+		channel_config = engine->channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO_LEGACY : AUDIO_CHANNEL_OUT_MONO_LEGACY;
 //	}
 //	else {
 //		channel_config = engine->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO : AUDIO_CHANNEL_OUT_MONO;
@@ -250,7 +265,7 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 	 * int buffer_size = AudioTrack.getMinBufferSize(sampling_rate, channel_config, stream_type);
 	 */
 	jmethodID getMinBufferSizeId = (*env)->GetStaticMethodID(env, audiotrack_stream->audiotrack_class, "getMinBufferSize", "(III)I");
-	audiotrack_stream->buffer_size = (*env)->CallStaticIntMethod(env, audiotrack_stream->audiotrack_class, getMinBufferSizeId, engine->param_sampling_rate, channel_config, stream_type);
+	audiotrack_stream->buffer_size = (*env)->CallStaticIntMethod(env, audiotrack_stream->audiotrack_class, getMinBufferSizeId, engine->sampling_rate, channel_config, audiotrack_stream->stream_type);
 	audiotrack_stream->buffer_size = audiotrack_stream->buffer_size * 10;
 
 	/*
@@ -259,8 +274,8 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 	 */
 	jmethodID ctor = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "<init>", "(IIIIII)V");
 	jobject obj = (*env)->NewObject(env, audiotrack_stream->audiotrack_class, ctor,
-				stream_type,
-				engine->param_sampling_rate,
+				audiotrack_stream->stream_type,
+				engine->sampling_rate,
 				channel_config,
 				AUDIOTRACK_ENCODING_PCM16,
 				audiotrack_stream->buffer_size,

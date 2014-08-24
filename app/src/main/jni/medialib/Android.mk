@@ -22,12 +22,15 @@ SRCS :=  audio_engine/outputs/safetrack.c \
 	audio_engine/utils/memory.c \
 	audio_engine/utils/circular_buffer.c \
 	audio_engine/effects/equalizer.c \
+	audio_engine/effects/utils/fft.c \
 	audio_engine/engine.c \
 	JniCodec.c \
 	TagProvider.cpp
 
 LOCAL_SRC_FILES := $(SRCS)
-LOCAL_C_INCLUDES := $(LOCAL_PATH)
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/audio_engine/effects/supereq/fft/simd/ $(LOCAL_PATH)/audio_engine/effects/supereq/fft/dft/
+
+
 
 LOCAL_STATIC_LIBRARIES = libffmpeg libtaglib
 
