@@ -54,7 +54,6 @@ import eu.chepy.opus.player.core.service.providers.local.database.Entities;
 import eu.chepy.opus.player.core.service.providers.local.database.OpenHelper;
 import eu.chepy.opus.player.core.service.providers.local.ui.activities.SearchPathActivity;
 import eu.chepy.opus.player.core.service.providers.local.ui.activities.SettingsActivity;
-import eu.chepy.opus.player.ui.activities.SoundEffectsActivity;
 import eu.chepy.opus.player.ui.utils.MusicConnector;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 import eu.chepy.opus.player.ui.utils.uil.ProviderImageDownloader;
@@ -107,8 +106,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
      */
     public final LocationAction ACTION_LOCATION = new LocationAction();
 
-    public final AudioFxAction ACTION_AUDIO_FX = new AudioFxAction();
-
     public final SettingsAction ACTION_SETTINGS = new SettingsAction();
 
 
@@ -126,8 +123,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
     public AbstractProviderAction ACTION_LIST[] = new AbstractProviderAction[] {
-            ACTION_LOCATION,
-            ACTION_AUDIO_FX,
             ACTION_SETTINGS
     };
 
@@ -3084,24 +3079,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             intent.putExtra(KEY_PROVIDER_ID, providerId);
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
-        }
-    }
-
-    public class AudioFxAction implements AbstractProviderAction {
-
-        @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.drawer_item_label_library_soundfx);
-        }
-
-        @Override
-        public boolean isVisible() {
-            return false;
-        }
-
-        @Override
-        public void launch(Activity source) {
-            source.startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
         }
     }
 

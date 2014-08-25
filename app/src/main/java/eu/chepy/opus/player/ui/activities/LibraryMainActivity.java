@@ -84,6 +84,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     private static final int DRAWERITEM_APPLICATION_SETTINGS_ID = 101;
 
+    private static final int DRAWERITEM_AUDIO_FX_ID = 102;
+
 
 
     /*
@@ -304,10 +306,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                     getSupportActionBar().hide();
                 }
             }
-
-
-            // now you call whatever function your app uses
-            // to consume the txt file whose location you now know
         }
     }
 
@@ -457,6 +455,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                     break;
                 case DRAWERITEM_APPLICATION_SETTINGS_ID:
                     startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
+                    break;
+                case DRAWERITEM_AUDIO_FX_ID:
+                    startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
                     break;
                 default:
                     final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getMediaProvider();
@@ -884,6 +885,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
 
         objects.add(NavigationMenuSection.create(DRAWERITEM_SEPARATOR_ID, getString(R.string.drawer_section_label_label_settings)));
+
+        // TODO: add appropriate icon.
+        objects.add(NavigationMenuItem.create(DRAWERITEM_AUDIO_FX_ID, getString(R.string.drawer_item_label_library_soundfx), R.drawable.ic_action_database, false));
         objects.add(NavigationMenuItem.create(DRAWERITEM_LIBRARY_SETTINGS_ID, getString(R.string.drawer_item_label_manage_libraries), R.drawable.ic_action_database, false));
         objects.add(NavigationMenuItem.create(DRAWERITEM_APPLICATION_SETTINGS_ID, getString(R.string.drawer_item_label_application_settings), R.drawable.ic_action_settings, false));
 

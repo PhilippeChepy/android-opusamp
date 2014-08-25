@@ -14,13 +14,26 @@ package eu.chepy.opus.player.ui.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.ui.views.VerticalSeekBar;
 
 public class SoundEffectsActivity extends ActionBarActivity {
+
+    private BandView bandList[] = new BandView[18];
+
+    private String frequencies[] = new String[] {
+            "55 Hz", "77 Hz", "110 Hz",
+            "156 Hz", "220 Hz", "311 Hz", "440 Hz", "622 Hz", "880 Hz", "1.2 kHz",
+            "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
+            "20 kHz"
+    };
 
     private CheckBox equalizerEnabledCheckbox;
 
@@ -33,10 +46,47 @@ public class SoundEffectsActivity extends ActionBarActivity {
         setContentView(R.layout.view_equalizer);
 
         equalizerEnabledCheckbox = (CheckBox) findViewById(R.id.equalizer_enabled);
-        bandContainerLayout = (LinearLayout) findViewById(R.id.equalizer_bands);
+        equalizerEnabledCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                doUpdateBandState();
+            }
+        });
 
-        for (int bandIndex = 0 ; bandIndex < 10 ; bandIndex++) {
-            VerticalSeekBar.inflate(this, R.layout.view_equalizer_band, bandContainerLayout);
+
+        bandContainerLayout = (LinearLayout) findViewById(R.id.equalizer_bands);
+        for (int bandIndex = 0 ; bandIndex < 18 ; bandIndex++) {
+            final View bandView = LayoutInflater.from(this).inflate(R.layout.view_equalizer_band, bandContainerLayout, false);
+
+            bandList[bandIndex] = new BandView();
+
+            bandList[bandIndex].band = bandView;
+            bandList[bandIndex].freq1 = (TextView) bandView.findViewById(R.id.band_freq1);
+            bandList[bandIndex].freq2 = (TextView) bandView.findViewById(R.id.band_freq2);
+
+            bandList[bandIndex].seekBar = (VerticalSeekBar) bandView.findViewById(R.id.band_seekbar);
+            bandList[bandIndex].seekBar.setMax(48);
+            bandList[bandIndex].seekBar.setProgress(24);
+
+            bandList[bandIndex].freq1.setText(frequencies[bandIndex]);
+            bandList[bandIndex].freq2.setText(frequencies[bandIndex]);
+
+            bandContainerLayout.addView(bandView);
         }
+        doUpdateBandState();
+    }
+
+    protected void doUpdateBandState() {
+        for (int bandIndex = 0 ; bandIndex < 18 ; bandIndex++) {
+            bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
+        }
+    }
+
+
+    class BandView {
+        View band;
+        TextView freq1;
+        TextView freq2;
+        VerticalSeekBar seekBar;
     }
 }

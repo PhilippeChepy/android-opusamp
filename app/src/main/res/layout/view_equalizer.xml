@@ -45,7 +45,7 @@
                 android:text="@string/label_enable_equalizer" />
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:orientation="horizontal">
 
@@ -60,14 +60,14 @@
                         android:layout_marginTop="30.0dip"
                         android:layout_weight="1.0"
                         android:gravity="top"
-                        android:text="+15db" />
+                        android:text="+24dB" />
 
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.0"
                         android:gravity="center"
-                        android:text="0db" />
+                        android:text="0dB" />
 
                     <TextView
                         android:layout_width="fill_parent"
@@ -75,7 +75,7 @@
                         android:layout_marginBottom="50.0dip"
                         android:layout_weight="1.0"
                         android:gravity="bottom"
-                        android:text="-15db" />
+                        android:text="-24dB" />
                 </LinearLayout>
 
                 <HorizontalScrollView
@@ -87,8 +87,9 @@
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
                         android:layout_marginBottom="20.0dip"
-                        android:orientation="horizontal"
-                        android:weightSum="10.0" />
+                        android:orientation="horizontal">
+
+                    </LinearLayout>
                 </HorizontalScrollView>
             </LinearLayout>
         </LinearLayout>
