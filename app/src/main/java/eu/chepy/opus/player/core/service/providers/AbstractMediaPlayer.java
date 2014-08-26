@@ -38,6 +38,11 @@ public interface AbstractMediaPlayer {
 	public long playerGetPosition();
 	public long playerGetDuration();
 
+    public boolean equalizerIsEnabled();
+    public long equalizerSetEnabled(boolean enabled);
+    public long equalizerBandSetGain(int band, int gain);
+    public long equalizerBandGetGain(int band);
+
 
     /*
         Player status listener

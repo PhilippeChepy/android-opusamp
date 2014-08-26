@@ -101,8 +101,8 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineIn
 			goto engine_init_done_error;
 		}
 
-		if (engine_init_dsp(engine)) {
-			LOG_ERROR(LOG_TAG, "engine_init_dsp() failure");
+		if (engine_dsp_init(engine)) {
+			LOG_ERROR(LOG_TAG, "engine_dsp_init() failure");
 			goto engine_init_done_error;
 		}
 	}
@@ -191,6 +191,12 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamFi
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamPreload(JNIEnv * env, jobject object, jlong context) {
+	engine_stream_context_s * stream = id_to_ptr(context);
+
+	if (stream != NULL) {
+		engine_stream_preload(stream);
+	}
+
 	return 0;
 }
 
@@ -272,3 +278,51 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_streamGe
 
 	return result;
 }
+
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineEqualizerSetEnabled(JNIEnv * env, jobject object, jboolean enabled) {
+    jclass cls = (*env)->GetObjectClass(env, object);
+	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
+	engine_context_s * engine = id_to_ptr(engineJ);
+
+    if (engine != NULL) {
+		engine_dsp_set_enabled(engine, 0, enabled ? 1 : 0);
+	}
+
+	return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineEqualizerBandSetValue(JNIEnv * env, jobject object, jint bandId, jint gain) {
+    jclass cls = (*env)->GetObjectClass(env, object);
+	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
+	engine_context_s * engine = id_to_ptr(engineJ);
+
+    if (engine != NULL) {
+        int _gain = (int)gain;
+		engine_dsp_set_property(engine, 0, (int)bandId, &_gain);
+	}
+
+	return 0;
+}
+
+JNIEXPORT jint JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineEqualizerBandGetValue(JNIEnv * env, jobject object, jint bandId) {
+    jclass cls = (*env)->GetObjectClass(env, object);
+	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
+	engine_context_s * engine = id_to_ptr(engineJ);
+
+    if (engine != NULL) {
+        int _gain = 0;
+		engine_dsp_get_property(engine, 0, (int)bandId, &_gain);
+		return _gain;
+	}
+
+	return 0;
+}
+
+JNIEXPORT jboolean JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineEqualizerIsEnabled(JNIEnv * env, jobject object) {
+    jclass cls = (*env)->GetObjectClass(env, object);
+	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
+	engine_context_s * engine = id_to_ptr(engineJ);
+
+    return engine_dsp_is_enabled(engine, 0) ? JNI_TRUE : JNI_FALSE;
+}
+

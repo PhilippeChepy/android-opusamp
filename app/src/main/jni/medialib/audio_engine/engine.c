@@ -32,7 +32,9 @@ long input_data_callback(engine_stream_context_s * stream, void * user_context, 
 	/* processing raw samples*/
 	for (processor_index = 0 ; processor_index < stream->engine->processor_count ; processor_index++) {
 	    engine_processor_s * processor = stream->engine->processor_list[processor_index];
-	    processor->process(processor, data_buffer, data_length);
+	    if (processor->enabled) {
+	        processor->process(processor, data_buffer, data_length);
+	    }
 	}
 
     /* writing data to audio buffer */
@@ -207,7 +209,7 @@ engine_set_params_done:
 	return engine_error_code;
 }
 
-int engine_init_dsp(engine_context_s * engine) {
+int engine_dsp_init(engine_context_s * engine) {
     size_t processor_index;
 
     LOG_INFO(LOG_TAG, "engine_init_dsp:");
@@ -217,6 +219,7 @@ int engine_init_dsp(engine_context_s * engine) {
 
     engine->processor_list[0] = get_equalizer_processor();
     engine->processor_list[0]->engine = engine;
+    engine->processor_list[0]->enabled = 0;
 
     for (processor_index = 0 ; processor_index < engine->processor_count ; processor_index++) {
         LOG_INFO(LOG_TAG, "engine_init_dsp: creating '%s' dsp.", engine->processor_list[processor_index]->get_name(engine));
@@ -225,6 +228,23 @@ int engine_init_dsp(engine_context_s * engine) {
     }
 
     return ENGINE_OK;
+}
+
+int engine_dsp_is_enabled(engine_context_s * engine, int dsp_id) {
+    return engine->processor_list[dsp_id]->enabled;
+}
+
+int engine_dsp_set_enabled(engine_context_s * engine, int dsp_id, int enabled) {
+    engine->processor_list[dsp_id]->enabled = enabled;
+    return ENGINE_OK;
+}
+
+int engine_dsp_set_property(engine_context_s * engine, int dsp_id, int property, void * value) {
+    return engine->processor_list[dsp_id]->set_property(engine->processor_list[dsp_id], property, value);
+}
+
+int engine_dsp_get_property(engine_context_s * engine, int dsp_id, int property, void * value) {
+    return engine->processor_list[dsp_id]->get_property(engine->processor_list[dsp_id], property, value);
 }
 
 int engine_set_completion_callback(engine_context_s * engine, engine_completion_callback callback) {
@@ -322,6 +342,32 @@ int engine_stream_delete(engine_stream_context_s * stream) {
 	return ENGINE_OK;
 }
 
+int engine_stream_preload(engine_stream_context_s * stream) {
+    LOG_INFO(LOG_TAG, "engine_stream_preload");
+    struct timespec sleep_time;
+
+	if (stream == NULL) {
+		return ENGINE_INVALID_PARAMETER_ERROR;
+	}
+
+	stream->decoder_is_waiting = 0;
+
+	if (stream->engine->input->stream_start(stream) < 0) {
+		LOG_ERROR(LOG_TAG, "Unable to start input engine");
+		return ENGINE_GENERIC_ERROR;
+	}
+
+    sleep_time.tv_sec  = 0;
+    sleep_time.tv_nsec = 50000000L; /* 50 ms */
+
+	while (stream->decoder_is_waiting == 0) {
+        nanosleep(&sleep_time, NULL);
+	}
+	stream->engine->input->stream_stop(stream);
+
+	return ENGINE_OK;
+}
+
 int engine_stream_start(engine_stream_context_s * stream) {
 	LOG_INFO(LOG_TAG, "engine_stream_start");
 
@@ -335,13 +381,6 @@ int engine_stream_start(engine_stream_context_s * stream) {
 		LOG_ERROR(LOG_TAG, "Unable to start input engine");
 		return ENGINE_GENERIC_ERROR;
 	}
-
-/*
-TODO: !!!
-	while (stream->audio_buffer.used * 4 < stream->audio_buffer.used * 1) {
-		sleep(10);
-	}
-*/
 
 	if (stream->engine->output->stream_start(stream) < 0) {
 		LOG_ERROR(LOG_TAG, "Unable to start output engine");

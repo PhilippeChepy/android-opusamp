@@ -192,8 +192,28 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 		
 		return -1;
 	}
-	
-	private ArrayList<OnProviderCompletionListener> listenerList = new ArrayList<OnProviderCompletionListener>();
+
+    @Override
+    public boolean equalizerIsEnabled() {
+        return engineEqualizerIsEnabled();
+    }
+
+    @Override
+    public long equalizerSetEnabled(boolean enabled) {
+        return engineEqualizerSetEnabled(enabled);
+    }
+
+    @Override
+    public long equalizerBandSetGain(int band, int gain) {
+        return engineEqualizerBandSetValue(band, gain);
+    }
+
+    @Override
+    public long equalizerBandGetGain(int band) {
+        return engineEqualizerBandGetValue(band);
+    }
+
+    private ArrayList<OnProviderCompletionListener> listenerList = new ArrayList<OnProviderCompletionListener>();
 
 	@Override
 	public void addCompletionListener(OnProviderCompletionListener listener) {

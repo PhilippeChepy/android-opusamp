@@ -90,7 +90,7 @@ void equalizer_param_create(equalizer_param_s * param, float lower, float upper,
 	param->lower = lower;
 	param->upper = upper;
 	param->gain = gain;
-	equalizer_param_print(param);
+	//equalizer_param_print(param);
 }
 
 void equalizer_param_destroy(equalizer_param_s * param) {
@@ -494,9 +494,15 @@ int equalizer_impl_apply_properties(engine_processor_s * processor) {
 
 	for (ch = 0 ; ch < 2 ; ch++) {
         float preamp = pow(10, (GAIN_HALF - slider_positions[ch * 19]) / -20.0);
+        LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : preamp = %e", ch * 19, preamp);
 
         for(i = 0 ; i < 18 ; i++) {
             band_values[i + ch * 18] = preamp * pow(10, (GAIN_HALF - slider_positions[1 + i + ch * 19]) / -20.0);
+            LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : band[%i] = %e (10^((14 - %i)/-20)",
+                    1 + i + ch * 19,
+                    i + ch * 18,
+                    band_values[i + ch * 18],
+                    slider_positions[1 + i + ch * 19]);
         }
 	}
 
@@ -538,8 +544,10 @@ char * equalizer_get_name(engine_context_s * engine) {
 int equalizer_set_property(engine_processor_s * processor, int property, void *value) {
     equalizer_state_s * equalizer_state = (equalizer_state_s *)processor->context;
 
+    LOG_INFO(LOG_TAG, "property [%i] = %i", property, *((int *)value));
     pthread_mutex_lock(&equalizer_state->table_lock);
         slider_positions[property] = *((int *)value);
+        equalizer_impl_apply_properties(processor);
         equalizer_state->needs_table_update = 1;
     pthread_mutex_unlock(&equalizer_state->table_lock);
 

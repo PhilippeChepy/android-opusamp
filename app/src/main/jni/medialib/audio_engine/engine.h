@@ -107,6 +107,7 @@ struct engine_processor_ {
     int (* process)(engine_processor_s * processor, void * data_buffer, size_t data_length);
 
     engine_context_s * engine;
+    int enabled;
     void * context;
 };
 
@@ -160,10 +161,15 @@ int engine_delete(engine_context_s * engine);
 int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count);
 int engine_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels);
 
-int engine_init_dsp(engine_context_s * engine);
+int engine_dsp_init(engine_context_s * engine);
+int engine_dsp_is_enabled(engine_context_s * engine, int dsp_id);
+int engine_dsp_set_enabled(engine_context_s * engine, int dsp_id, int enabled);
+int engine_dsp_set_property(engine_context_s * engine, int dsp_id, int property, void * value);
+int engine_dsp_get_property(engine_context_s * engine, int dsp_id, int property, void * value);
 
 int engine_stream_new(engine_context_s * engine, engine_stream_context_s * stream, const char * media_path);
 int engine_stream_delete(engine_stream_context_s * stream);
+int engine_stream_preload(engine_stream_context_s * stream);
 int engine_stream_start(engine_stream_context_s * stream);
 int engine_stream_stop(engine_stream_context_s * stream);
 int engine_stream_get_position(engine_stream_context_s * stream, int64_t * position);
