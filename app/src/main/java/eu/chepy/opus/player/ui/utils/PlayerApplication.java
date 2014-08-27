@@ -824,12 +824,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         }
 
 
-        String base64EncodedPublicKey =
-                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjLhj4p4ORoh54q1RGf4HwZTngM0LNNFR6Dpw2k+nfiys4S" +
-                        "S70WceuQTB1g+I0HqwSOn7P+R+Zw4HVAks+w4p/AlDpKd5eilIfztxP77gFBOBGIbSMhfZNkASBrAyiqBeTM8I8cwY" +
-                        "QAbIOd9H/j/xAg3vz4iNwWbB6PUFXiJSeo2nQB5VwSZYlwCb8xOGpnQbrzg8ZfP1MzWXZ9gOFjCvViczaCL5xN5WRg" +
-                        "V4NQgQ+n7ecuVFYHxeu/VNxy3/m9AeqQcA1P4+7c0YYoMZN34uRIDWlXsQuohIPG6COfcfnYOqoCk3d9Htp+QzCqVK" +
-                        "jSFN8loHWiDKvSEWf0+ffxpWuQIDAQAB";
+        String base64EncodedPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj127PTqHlOpyDVEhSXTQuaEeCH74Rvb0k7NDW0uPj/DthoPX70eOqhLrJ/+jw6fTLmFMIxiBOdTfAvDO6TonIuVgMtooRoz7msrY3gNCT3MUnWWz6907zrfs7J6ocSHQeNzUViuOHHoEoCVvqNhAxtNEUlfvK54Jrkv6kOBg7Kp1WgEOb7O66C5KOiByzP/MReUA+647mUNfehSAi0xFnxfLPKPAKqForbIc3628vpRZ7uSC+nAcdSYVWoDaWcUTagwI7ljflCyKk6Ww6YkCpWP3NlttIao5Ay97TGP7aEAHm5CXlIEosojzYeqAd2gik0aTYXaSJB88jh0ajcaKhwIDAQAB";
 
         instance.iabHelper = new IabHelper(context, base64EncodedPublicKey);
 
