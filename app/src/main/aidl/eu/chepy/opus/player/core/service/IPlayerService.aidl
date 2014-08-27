@@ -20,8 +20,8 @@ interface IPlayerService {
 	void play();
 	void pause(boolean keepNotification);
 	void stop();
-	void next();
-	void prev();
+	boolean next();
+	boolean prev();
 
 	boolean isPlaying();
 	

@@ -89,7 +89,17 @@ public class MusicConnector {
     public static void doPrevAction() {
         if (PlayerApplication.playerService != null) {
             try {
+                boolean isPlaying = PlayerApplication.playerService.isPlaying();
+
+                if (isPlaying) {
+                    PlayerApplication.playerService.stop();
+                }
+
                 PlayerApplication.playerService.prev();
+
+                if (isPlaying) {
+                    PlayerApplication.playerService.play();
+                }
             }
             catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "doPrevAction", 0, remoteException);
@@ -148,7 +158,17 @@ public class MusicConnector {
     public static void doNextAction() {
         if (PlayerApplication.playerService != null) {
             try {
+                boolean isPlaying = PlayerApplication.playerService.isPlaying();
+
+                if (isPlaying) {
+                    PlayerApplication.playerService.stop();
+                }
+
                 PlayerApplication.playerService.next();
+
+                if (isPlaying) {
+                    PlayerApplication.playerService.play();
+                }
             }
             catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "doNextAction", 0, remoteException);

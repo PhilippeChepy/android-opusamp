@@ -158,22 +158,22 @@ public class NotificationHelper {
             case 1:
                 // Play and playerPause
                 action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_TOGGLEPAUSE);
-                pendingIntent = PendingIntent.getBroadcast(service.context, 1, action, 0);
+                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 1, action, 0);
                 return pendingIntent;
             case 2:
                 // Next track
             	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
-                pendingIntent = PendingIntent.getBroadcast(service.context, 2, action, 0);
+                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
                 return pendingIntent;
             case 3:
                 // Previous track
             	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
-                pendingIntent = PendingIntent.getBroadcast(service.context, 3, action, 0);
+                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
                 return pendingIntent;
             case 4:
                 // Stop and collapse the notification
             	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_STOP);
-                pendingIntent = PendingIntent.getBroadcast(service.context, 4, action, 0);
+                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 4, action, 0);
                 return pendingIntent;
             default:
                 break;

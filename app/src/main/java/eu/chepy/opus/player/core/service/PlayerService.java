@@ -19,7 +19,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
@@ -53,34 +52,100 @@ import eu.chepy.opus.player.utils.LogUtils;
 public class PlayerService extends Service implements AbstractMediaPlayer.OnProviderCompletionListener {
 
 	private final static String TAG = "PlayerService";
-	
-	public static final int SHUFFLE_NONE = 0;
-	
-	public static final int SHUFFLE_AUTO = 1;
-	
-	public static final int REPEAT_NONE = 0;
-	
-	public static final int REPEAT_CURRENT = 1;
-	
-	public static final int REPEAT_ALL = 2;
 
 
+
+    /*
+        Command
+     */
     public static final String COMMAND_KEY = "command";
 
-    public static final String ACTION_APPWIDGET_COMMAND = "eu.chepy.audiokit.service.APPWIDGET";
+    public static final String ACTION_APPWIDGET_COMMAND = "eu.chepy.opus.player.service.APPWIDGET";
 
-    public static final String ACTION_NOTIFICATION_COMMAND = "eu.chepy.audiokit.service.NOTIFICATION";
+    public static final String ACTION_NOTIFICATION_COMMAND = "eu.chepy.opus.player.service.NOTIFICATION";
 
-	public static final String ACTION_TOGGLEPAUSE = "eu.chepy.audiokit.TOGGLE_PAUSE";
-	
-	public static final String ACTION_NEXT = "eu.chepy.audiokit.NEXT";
-	
-	public static final String ACTION_PREVIOUS = "eu.chepy.audiokit.PREVIOUS";
-	
-	public static final String ACTION_STOP = "eu.chepy.audiokit.STOP";
+    public static final String ACTION_TOGGLEPAUSE = "eu.chepy.opus.player.TOGGLE_PAUSE";
+
+    public static final String ACTION_NEXT = "eu.chepy.opus.player.NEXT";
+
+    public static final String ACTION_PREVIOUS = "eu.chepy.opus.player.PREVIOUS";
+
+    public static final String ACTION_STOP = "eu.chepy.opus.player.STOP";
 
 
 
+    /*
+        Shuffle modes
+     */
+    public static final int SHUFFLE_NONE = 0;
+
+    public static final int SHUFFLE_AUTO = 1;
+
+
+
+    /*
+        Repeat modes
+     */
+    public static final int REPEAT_NONE = 0;
+
+    public static final int REPEAT_CURRENT = 1;
+
+    public static final int REPEAT_ALL = 2;
+
+
+
+    /*
+
+     */
+    private WakeLock wakelock;
+
+    private NotificationHelper notificationHelper;
+
+    private RemoteControlClientHelper remoteControlClient;
+
+    private AudioManager audioManager;
+
+    private final PlayerServiceImpl playerServiceImpl = new PlayerServiceImpl();
+
+    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
+
+    private final BroadcastReceiver broadcastReceiver = new ServiceIntentReceiver();
+
+    public boolean hasNotification;
+
+    private final Widget4x1 widgetMedium = Widget4x1.getInstance();
+
+    private final Widget4x2 widgetLarge = Widget4x2.getInstance();
+
+
+
+    int repeatMode = REPEAT_NONE;
+
+    int shuffleMode = SHUFFLE_NONE;
+
+
+
+    private Cursor playlist = null;
+
+    private ArrayList<Integer> playlistOrder;
+
+    private int playlistOrderIndex;
+
+
+
+    private AbstractMedia currentMedia;
+
+    private AbstractMedia nextMedia;
+
+    private Lock preloadingMutex = new ReentrantLock();
+
+    private Lock notifyMutex = new ReentrantLock();
+
+
+
+    /*
+
+     */
     private int[] requestedFields = new int[] {
             AbstractMediaProvider.SONG_ID,
             AbstractMediaProvider.SONG_URI,
@@ -94,14 +159,6 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
     private int[] sortOrder = new int[] {
             AbstractMediaProvider.PLAYLIST_ENTRY_POSITION
     };
-
-    private Cursor playlist = null;
-
-    private ArrayList<Integer> playlistOrder;
-
-    private int playlistOrderIndex;
-
-
 
     private static final int COLUMN_SONG_ID = 0;
 
@@ -119,162 +176,59 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 
 
-    private final Widget4x1 widgetMedium = Widget4x1.getInstance();
+    @Override
+    public void onCodecCompletion() {
+        /* Playback is stopped */
+        boolean hasLooped = false;
 
-    private final Widget4x2 widgetLarge = Widget4x2.getInstance();
-
-
-
-    public Context context;
-
-	private RemoteCallbackList<IPlayerServiceListener> listeners = new RemoteCallbackList<IPlayerServiceListener>();
-
-	private AbstractMedia currentTrack;
-
-	private Lock broadcastMutex = new ReentrantLock();
-	
-	int repeatMode = REPEAT_NONE;
-	
-	int shuffleMode = SHUFFLE_NONE;
-
-	private WakeLock wakelock;
-	
-	private NotificationHelper notificationHelper;
-
-    private RemoteControlClientHelper remoteControlClient;
-
-    private AudioManager audioManager;
-	
-	protected AbstractMedia unloadTrack(AbstractMedia track) {
-		if (track != null) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			if (track == currentTrack) {
-				mediaPlayer.playerStop();
-                mediaPlayer.finalizeContent(currentTrack);
-			}
-            mediaPlayer.finalizeContent(track);
-		}
-		return null;
-	}
-	
-	protected AbstractMedia loadTrack() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-        final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-		return mediaPlayer.initializeContent(playlist.getString(COLUMN_SONG_URI));
-	}
-	
-	protected void initPlaylist() {
-		if (playlist != null) {
-			playlist.close();
-		}
-
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-
-		playlist = mediaProvider.buildCursor(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA,
-                requestedFields,
-                sortOrder,
-                null,
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST,
-                null);
-
-        int playlistLength = playlist != null ? playlist.getCount() : 0;
-
-        playlistOrder = new ArrayList<Integer>();
-        for (int playlistIndex = 0 ; playlistIndex < playlistLength ; playlistIndex++) {
-            playlistOrder.add(playlistIndex);
+        try {
+            hasLooped = playerServiceImpl.next();
+            if (!hasLooped) {
+                playerServiceImpl.play();
+            }
         }
-        Collections.shuffle(playlistOrder);
-        playlistOrderIndex = 0;
-	}
+        catch (final RemoteException remoteException) {
+            LogUtils.LOGException(TAG, "onCodecCompletion", 0, remoteException);
+        }
 
-    protected void doUpdateWidgets(final SongInformations currentSong) {
-        widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
-        widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
-    }
-
-    protected void doSetProviderListeners() {
-        for (int providerIndex = 0 ; providerIndex < PlayerApplication.mediaManagers.length ; providerIndex++) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[providerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-            mediaPlayer.addCompletionListener(this);
+        if (hasLooped) {
+            playerServiceImpl.notifyStop(); /* cannot play anymore */
         }
     }
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
+    @Override
+    public void onCodecTimestampUpdate(long newPosition) {
+        /* Playing, request for timestamp update */
+        playerServiceImpl.notifyTimestampUpdate(newPosition);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             if (intent.hasExtra(COMMAND_KEY)) {
                 MusicConnector.doManageControlIntent(intent);
             }
         }
 
-		return Service.START_STICKY;
-	}
-	
-	@Override
-	public IBinder onBind(Intent intent) {
-		return binder;
-	}
+        PowerManager powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "whatever");
 
-    @TargetApi(14)
-    private void setAudioListener() {
-        if (PlayerApplication.hasICS()) {
-            audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusChange(int focusChange) {
-                    if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                        remoteControlClient.release();
-                        try {
-                            binder.pause(false);
-                        } catch (final Exception exception) {
-                            LogUtils.LOGException(TAG, "setAudioListener", 0, exception);
-                        }
-                    }
-                }
-            };
-        }
-    }
-
-	@Override
-	public void onCreate() {
-		super.onCreate();
+        notificationHelper = new NotificationHelper(this);
+        remoteControlClient = new RemoteControlClientHelper();
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
+
         setAudioListener();
 
-		notificationHelper = new NotificationHelper(this);
-        remoteControlClient = new RemoteControlClientHelper();
-	    registerReceiver(broadcastReceiver, new IntentFilter(ACTION_NOTIFICATION_COMMAND));
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        /**/
-        context = getApplicationContext();
+        hasNotification = false;
+        repeatMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, REPEAT_NONE);
+        shuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
+        int position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
 
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "whatever");
-
-        Context applicationContext = getApplicationContext();
-        int position = 0;
-
-        if (applicationContext != null) {
-            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext);
-            repeatMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, REPEAT_NONE);
-            shuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
-            //initPlaylist(sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_ID, 0));
-            position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
-        }
-        else {
-            repeatMode = REPEAT_NONE;
-            shuffleMode = SHUFFLE_NONE;
-            //initPlaylist(0);
-        }
-        initPlaylist();
+        reloadPlaylist();
 
         if (playlist != null && playlist.getCount() > 0) {
             try {
@@ -282,94 +236,482 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                     position = 0;
                 }
 
-                binder.queueSetPosition(position);
+                playerServiceImpl.queueSetPosition(position);
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "onStartCommand", 0, remoteException);
             }
         }
 
-        doSetProviderListeners();
-        doUpdateWidgets(new SongInformations());
-	}
-	
-	@Override
-	public void onDestroy() {
-		unregisterReceiver(broadcastReceiver);
-	    
-	    stopForeground(true);
-	    hasNotification = false;
-	}
-
-	@Override
-	public void onCodecCompletion() {
-		try {
-			switch (repeatMode) {
-			case REPEAT_NONE:
-				binder.next();
-				if (playlist.getPosition() == 0) {
-					binder.stop(); /* for service notification to clients */
-				}
-				else {
-					binder.play();
-				}
-				break;
-			case REPEAT_ALL:
-				binder.next();
-				binder.play();
-				break;
-			case REPEAT_CURRENT:
-				binder.play();
-				break;
-			}
-		} catch (final RemoteException exception) {
-			LogUtils.LOGException(TAG, "onCodecCompletion", 0, exception);
-		}
-	}
-	
-	@Override
-	public void onCodecTimestampUpdate(final long newPosition) {
-		binder.notifySetPosition(newPosition);
-	}
-
-    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
-
-	
-	private final BroadcastReceiver broadcastReceiver = new ServiceIntentReceiver();
-
-	private final IPlayerServiceStubImpl binder = new IPlayerServiceStubImpl();
-
-	public boolean hasNotification;
-	
-	class IPlayerServiceStubImpl extends IPlayerService.Stub {
-
-		@Override
-		public void registerPlayerCallback(IPlayerServiceListener playerServiceCallback) throws RemoteException {
-			if (!listeners.register(playerServiceCallback)) {
-				throw new RemoteException();
-			}
-		}
-
-		@Override
-		public void unregisterPlayerCallback(IPlayerServiceListener playerServiceCallback) throws RemoteException {
-			if (!listeners.unregister(playerServiceCallback)) {
-				throw new RemoteException();
-			}
-		}
-
-        @Override
-        public void notifyProviderChanged() {
-            doSetProviderListeners();
+        try {
+            playerServiceImpl.notifyProviderChanged();
+        } catch (final RemoteException remoteException) {
+            LogUtils.LOGException(TAG, "onStartCommand", 1, remoteException);
         }
 
-        @TargetApi(14)
-		private void notifyPlay() {
+        doUpdateWidgets(new SongInformations());
+
+        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_NOTIFICATION_COMMAND));
+
+        return Service.START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(broadcastReceiver);
+
+        stopForeground(true);
+        hasNotification = false;
+
+        super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return playerServiceImpl;
+    }
+
+
+
+    class PlayerServiceImpl extends IPlayerService.Stub {
+
+        private RemoteCallbackList<IPlayerServiceListener> playerServiceListeners;
+
+        public PlayerServiceImpl() {
+            playerServiceListeners = new RemoteCallbackList<IPlayerServiceListener>();
+        }
+
+        @Override
+        public void play() throws RemoteException {
+            if (playlist == null || playlist.getCount() == 0) {
+                return;
+            }
+
+            if (isPlaying()) {
+                return;
+            }
+
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            if (currentMedia == null) {
+                preloadingMutex.lock();
+                    if (nextMedia != null && nextMedia.getMediaUri().equals(playlist.getString(COLUMN_SONG_URI))) {
+                        currentMedia = nextMedia;
+                        nextMedia = null;
+                    }
+                    else if (playlist.getCount() > 0) {
+                        if (nextMedia != null) {
+                            mediaPlayer.finalizeContent(nextMedia);
+                            nextMedia = null;
+                        }
+
+                        next();
+                        preloadMediaAsync(playlist.getString(COLUMN_SONG_URI));
+                        prev();
+
+                        currentMedia = loadMedia(playlist.getString(COLUMN_SONG_URI));
+
+                    }
+                preloadingMutex.unlock();
+            }
+
+            if (currentMedia != null) {
+                mediaPlayer.playerSetContent(currentMedia);
+            }
+
+            mediaPlayer.playerPlay();
+            wakelock.acquire();
+            notifyPlay();
+        }
+
+        @Override
+        public void pause(boolean keepNotification) throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            if (mediaPlayer.playerIsPlaying()) {
+                mediaPlayer.playerPause(true);
+                notifyPause(keepNotification);
+                wakelock.release();
+            }
+        }
+
+        @Override
+        public void stop() throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            mediaPlayer.playerStop();
+            currentMedia = unloadMedia(currentMedia);
+            nextMedia = unloadMedia(nextMedia);
+
+            notifyStop();
+            if (wakelock.isHeld()) {
+                wakelock.release();
+            }
+        }
+
+        @Override
+        public boolean next() throws RemoteException {
+            boolean looped = false;
+            currentMedia = unloadMedia(currentMedia);
+
+            if (playlist != null && playlist.getCount() > 1) {
+                if (shuffleMode == SHUFFLE_NONE) {
+                    if (!playlist.moveToNext()) {
+                        playlist.moveToFirst();
+                        looped = true;
+                    }
+                }
+                else if (shuffleMode == SHUFFLE_AUTO) {
+                    playlistOrderIndex++;
+                    if (playlistOrderIndex >= playlistOrder.size()) {
+                        playlistOrderIndex = 0;
+                        looped = true;
+                    }
+
+                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
+                }
+
+                notifySetQueuePosition();
+            }
+
+            return looped;
+        }
+
+        @Override
+        public boolean prev() throws RemoteException {
+            boolean looped = false;
+            currentMedia = unloadMedia(currentMedia);
+
+            if (playlist != null && playlist.getCount() > 1) {
+                if (shuffleMode == SHUFFLE_NONE) {
+                    if (!playlist.moveToPrevious()) {
+                        playlist.moveToLast();
+                        looped = true;
+                    }
+                }
+                else if (shuffleMode == SHUFFLE_AUTO) {
+                    playlistOrderIndex--;
+                    if (playlistOrderIndex < 0) {
+                        playlistOrderIndex = playlistOrder.size() - 1;
+                        looped = true;
+                    }
+
+                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
+                }
+
+                notifySetQueuePosition();
+            }
+
+            return looped;
+        }
+
+        @Override
+        public boolean isPlaying() throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            return mediaPlayer.playerIsPlaying();
+        }
+
+        @Override
+        public long getDuration() throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            return mediaPlayer.playerGetDuration();
+        }
+
+        @Override
+        public long getPosition() throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            return mediaPlayer.playerGetPosition();
+        }
+
+        @Override
+        public void setPosition(long position) throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            mediaPlayer.playerSeek(position);
+            notifyTimestampUpdate(position);
+        }
+
+        @Override
+        public int getShuffleMode() throws RemoteException {
+            return shuffleMode;
+        }
+
+        @Override
+        public void setShuffleMode(int mode) throws RemoteException {
+            shuffleMode = mode;
+            if (shuffleMode == SHUFFLE_AUTO) {
+                if (getRepeatMode() == REPEAT_CURRENT) {
+                    setRepeatMode(REPEAT_ALL);
+                }
+            }
+
+            notifyShuffleChange();
+        }
+
+        @Override
+        public int getRepeatMode() throws RemoteException {
+            return repeatMode;
+        }
+
+        @Override
+        public void setRepeatMode(int mode) throws RemoteException {
+            repeatMode = mode;
+            if (repeatMode == REPEAT_CURRENT) {
+                if (getShuffleMode() != SHUFFLE_NONE) {
+                    setShuffleMode(SHUFFLE_NONE);
+                }
+            }
+
+            notifyRepeatChange();
+        }
+
+        @Override
+        public void queueAdd(String media) throws RemoteException {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+            mediaProvider.playlistAdd(null, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
+
+            int position = playlist.getPosition();
+
+            reloadPlaylist();
+
+            if (!playlist.moveToPosition(position)) {
+                playlist.moveToLast();
+            }
+
+            if (playlist.getCount() == 1) {
+                play();
+            }
+
+            notifyQueueChanged();
+        }
+
+        @Override
+        public void queueMove(int indexFrom, int indexTo) throws RemoteException {
+            if (indexFrom == indexTo) {
+                return;
+            }
+
+            int position = playlist.getPosition();
+            if (indexFrom < position && indexTo >= position) {
+                position--;
+            }
+            else if (indexFrom > position && indexTo <= position) {
+                position++;
+            }
+            else if (indexFrom == position) {
+                position = indexTo;
+            }
+
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+            mediaProvider.playlistMove(null, indexFrom, indexTo);
+
+            reloadPlaylist();
+
+            if (!playlist.moveToPosition(position)) {
+                playlist.moveToLast();
+            }
+
+            //notifyQueueChanged(); // TODO: test without this
+        }
+
+        @Override
+        public void queueRemove(int entry) throws RemoteException {
+            int position = playlist.getPosition();
+            if (entry < position) {
+                position--;
+            }
+
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+            mediaProvider.playlistRemove(null, entry);
+
+            boolean wasPlaying = isPlaying();
+
+            if (position == entry) {
+                wasPlaying = false;
+                stop();
+                currentMedia = unloadMedia(currentMedia);
+            }
+            else {
+                pause(true);
+            }
+
+            reloadPlaylist();
+
+            if (playlist.getCount() == 0) {
+                notifySetQueuePosition();
+            }
+            else {
+                if (!playlist.moveToPosition(position)) {
+                    playlist.moveToLast();
+                }
+
+                notifySetQueuePosition();
+                if (wasPlaying) {
+                    play();
+                }
+            }
+
+            notifyQueueChanged();
+        }
+
+        @Override
+        public void queueClear() throws RemoteException {
+            if (isPlaying()) {
+                stop();
+                currentMedia = unloadMedia(currentMedia);
+            }
+
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+
+            mediaProvider.playlistClear(null);
+            reloadPlaylist();
+
+            notifyQueueChanged();
+        }
+
+        @Override
+        public void queueReload() throws RemoteException {
+            final int position = playlist.getPosition();
+
+            boolean wasPlaying = isPlaying();
+
+            if (wasPlaying) {
+                pause(true);
+            }
+
+            reloadPlaylist();
+
+            if (!playlist.moveToPosition(position)) {
+                playlist.moveToFirst();
+            }
+
+            if (currentMedia != null && playlist.getCount() > 0) {
+                final String mediaUri = currentMedia.getMediaUri();
+                if (!TextUtils.isEmpty(mediaUri) && mediaUri.equals(playlist.getString(COLUMN_SONG_URI))) {
+                    if (wasPlaying) {
+                        play();
+                    }
+                }
+                else {
+                    currentMedia = unloadMedia(currentMedia);
+                }
+            }
+
+            notifyQueueChanged();
+        }
+
+
+        @Override
+        public void queueSetPosition(int position) throws RemoteException {
+            currentMedia = unloadMedia(currentMedia);
+            nextMedia = unloadMedia(nextMedia);
+
+            if (playlist != null && playlist.getCount() > 0) {
+                LogUtils.LOGD(TAG, "setQueuePosition() : moving to position " + position);
+
+                if (shuffleMode == SHUFFLE_NONE) {
+                    if (playlist.getPosition() != position) {
+                        if (!playlist.moveToPosition(position)) {
+                            playlist.moveToFirst();
+                        }
+                    }
+                } else if (shuffleMode == SHUFFLE_AUTO) {
+                    int currentTrackIndex = playlistOrder.get(playlistOrderIndex);
+                    if (currentTrackIndex != position) {
+                        int indexOfPosition = playlistOrder.indexOf(position);
+                        playlistOrder.set(indexOfPosition, currentTrackIndex);
+                        playlistOrder.set(playlistOrderIndex, position);
+
+                        playlist.moveToPosition(position);
+                    }
+                }
+
+                notifySetQueuePosition();
+            }
+        }
+
+        @Override
+        public int queueGetPosition() throws RemoteException {
+            if (playlist == null || playlist.getCount() == 0) {
+                return -1;
+            }
+
+            if (shuffleMode == SHUFFLE_NONE) {
+                return playlist.getInt(COLUMN_PLAYLIST_ENTRY_POSITION);
+            }
+            else if (shuffleMode == SHUFFLE_AUTO) {
+                return playlistOrder.get(playlistOrderIndex);
+            }
+
+            return 0;
+        }
+
+        @Override
+        public int queueGetSize() throws RemoteException {
+            return playlist.getCount();
+        }
+
+        @Override
+        public void registerPlayerCallback(IPlayerServiceListener playerServiceListener) throws RemoteException {
+            if (!playerServiceListeners.register(playerServiceListener)) {
+                throw new RemoteException();
+            }
+        }
+
+        @Override
+        public void unregisterPlayerCallback(IPlayerServiceListener playerServiceListener) throws RemoteException {
+            if (!playerServiceListeners.unregister(playerServiceListener)) {
+                throw new RemoteException();
+            }
+        }
+
+        @Override
+        public void notifyProviderChanged() throws RemoteException {
+            lockNotify();
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            mediaPlayer.addCompletionListener(PlayerService.this);
+            unlockNotify();
+        }
+
+        public void notifyTimestampUpdate(long timestamp) {
+            lockNotify();
+            int count = playerServiceListeners.beginBroadcast();
+            try {
+                for (int index = 0 ; index < count ; index++) {
+                    playerServiceListeners.getBroadcastItem(index).onSeek(timestamp);
+                }
+            }
+            catch (final RemoteException exception) {
+                LogUtils.LOGException(TAG, "notifyTimestampUpdate", 0, exception);
+            }
+            playerServiceListeners.finishBroadcast();
+            unlockNotify();
+        }
+
+        public void notifyPlay() {
+            lockNotify();
+            /*
+                System ui update
+             */
             int audioFocus = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
             if (PlayerApplication.hasICS()) {
-                audioFocus = audioManager.requestAudioFocus(
-                        audioFocusChangeListener,
-                        AudioManager.STREAM_MUSIC,
-                        AudioManager.AUDIOFOCUS_GAIN);
+                audioFocus = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
             }
 
             remoteControlClient.register(PlayerService.this, audioManager);
@@ -380,76 +722,75 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                 else {
                     final SongInformations currentSong = new SongInformations();
 
-                    remoteControlClient.updateMetadata(
-                            currentSong.art,
-                            currentSong.trackName,
-                            currentSong.artistName,
-                            currentSong.albumName,
-                            playlist.getLong(COLUMN_SONG_DURATION));
-
-                    notificationHelper.buildNotification(
-                            currentSong.albumName,
-                            currentSong.artistName,
-                            currentSong.trackName,
-                            currentSong.art);
-
+                    doUpdateRemoteClient(currentSong);
+                    doUpdateNotification(currentSong);
                     doUpdateWidgets(currentSong);
 
                     startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, notificationHelper.getNotification());
                     hasNotification = true;
                 }
                 remoteControlClient.updateState(true);
-
-                broadcastMutex.lock();
-                final int broadcastItemCount = listeners.beginBroadcast();
-                for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-                    try {
-                        listeners.getBroadcastItem(itemIndex).onPlay();
-                    }
-                    catch (final RemoteException remoteException) {
-                        LogUtils.LOGException(TAG, "notifyPlay()", 0, remoteException);
-                    }
-                }
-                listeners.finishBroadcast();
-                broadcastMutex.unlock();
             }
-		}
 
-        @TargetApi(14)
-		private void notifyPause(boolean keepNotification) {
+            /*
+                Client ui update
+             */
+            int count = playerServiceListeners.beginBroadcast();
+            try {
+                for (int index = 0 ; index < count ; index++) {
+                    playerServiceListeners.getBroadcastItem(index).onPlay();
+                }
+            }
+            catch (final RemoteException exception) {
+                LogUtils.LOGException(TAG, "notifyPlay", 0, exception);
+            }
+            playerServiceListeners.finishBroadcast();
+            unlockNotify();
+        }
+
+        public void notifyPause(boolean keepNotification) {
+            lockNotify();
+            /*
+                System ui update
+             */
             remoteControlClient.updateState(false);
 
-			if (keepNotification) {
-				notificationHelper.goToIdleState(false);
-			}
-			else {
+            if (keepNotification) {
+                notificationHelper.goToIdleState(false);
+            }
+            else {
                 stopForeground(true);
                 hasNotification = false;
 
                 if (PlayerApplication.hasICS()) {
                     audioManager.abandonAudioFocus(audioFocusChangeListener);
                 }
-			}
+            }
 
             doUpdateWidgets(new SongInformations());
-			
-			broadcastMutex.lock();
-			final int broadcastItemCount = listeners.beginBroadcast();
-	        for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-	            try {
-	            	listeners.getBroadcastItem(itemIndex).onPause();
-	            }  
-	            catch (final RemoteException remoteException) {
-	            	LogUtils.LOGException(TAG, "notifyPause()", 0, remoteException);
-	            } 
-	        } 
-	        listeners.finishBroadcast();
-	        broadcastMutex.unlock();
-		}
 
-        @TargetApi(14)
-		private void notifyStop() {
-			stopForeground(true);
+            /*
+                Client ui update
+             */
+            int count = playerServiceListeners.beginBroadcast();
+            try {
+                for (int index = 0 ; index < count ; index++) {
+                    playerServiceListeners.getBroadcastItem(index).onPause();
+                }
+            }
+            catch (final RemoteException exception) {
+                LogUtils.LOGException(TAG, "notifyPause", 0, exception);
+            }
+            playerServiceListeners.finishBroadcast();
+            unlockNotify();
+        }
+
+        public void notifyStop() {
+            lockNotify();
+            /*
+                System ui update
+             */
+            stopForeground(true);
             remoteControlClient.stop();
             remoteControlClient.release();
 
@@ -458,517 +799,112 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             if (PlayerApplication.hasICS()) {
                 audioManager.abandonAudioFocus(audioFocusChangeListener);
             }
-			hasNotification = false;
-			
-			broadcastMutex.lock();
-			final int broadcastItemCount = listeners.beginBroadcast();
-	        for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-	            try {
-	            	listeners.getBroadcastItem(itemIndex).onStop();
-	            }  
-	            catch (final RemoteException remoteException) {
-	            	LogUtils.LOGException(TAG, "notifyStop()", 0, remoteException);
-	            } 
-	        } 
-	        listeners.finishBroadcast();
-	        broadcastMutex.unlock();
-		}
-		
-		private void notifyShuffleChange() {
-			broadcastMutex.lock();
-			final int broadcastItemCount = listeners.beginBroadcast();
-	        for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-	            try {
-	            	listeners.getBroadcastItem(itemIndex).onShuffleModeChanged();
-	            }  
-	            catch (final RemoteException remoteException) {
-	            	LogUtils.LOGException(TAG, "notifyShuffleChange()", 0, remoteException);
-	            } 
-	        } 
-	        listeners.finishBroadcast();
-	        broadcastMutex.unlock();
-		}
-		
-		private void notifyRepeatChange() {
-			broadcastMutex.lock();
-			final int broadcastItemCount = listeners.beginBroadcast();
-	        for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-	            try {
-	            	listeners.getBroadcastItem(itemIndex).onRepeatModeChanged();
-	            }  
-	            catch (final RemoteException remoteException) {
-	            	LogUtils.LOGException(TAG, "notifyRepeatChange()", 0, remoteException);
-	            } 
-	        } 
-	        listeners.finishBroadcast();
-	        broadcastMutex.unlock();
-		}
-
-        private void notifySetQueuePosition() {
             hasNotification = false;
 
-            doUpdateWidgets(new SongInformations());
-
-            broadcastMutex.lock();
-            final int broadcastItemCount = listeners.beginBroadcast();
-            for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-                try {
-                    listeners.getBroadcastItem(itemIndex).onQueuePositionChanged();
-                }
-                catch (final RemoteException remoteException) {
-                    LogUtils.LOGException(TAG, "notifySetQueuePosition()", 0, remoteException);
+            /*
+                Client ui update
+             */
+            int count = playerServiceListeners.beginBroadcast();
+            try {
+                for (int index = 0 ; index < count ; index++) {
+                    playerServiceListeners.getBroadcastItem(index).onStop();
                 }
             }
-            listeners.finishBroadcast();
-            broadcastMutex.unlock();
+            catch (final RemoteException exception) {
+                LogUtils.LOGException(TAG, "notifyStop", 0, exception);
+            }
+            playerServiceListeners.finishBroadcast();
+            unlockNotify();
         }
 
         private void notifyQueueChanged() {
+            lockNotify();
             hasNotification = false;
 
             doUpdateWidgets(new SongInformations());
 
-            broadcastMutex.lock();
-            final int broadcastItemCount = listeners.beginBroadcast();
-            for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
+            final int count = playerServiceListeners.beginBroadcast();
+            for (int index = 0 ; index < count; index++) {
                 try {
-                    listeners.getBroadcastItem(itemIndex).onQueueChanged();
+                    playerServiceListeners.getBroadcastItem(index).onQueueChanged();
                 }
                 catch (final RemoteException remoteException) {
-                    LogUtils.LOGException(TAG, "notifyQueueChanged()", 0, remoteException);
+                    LogUtils.LOGException(TAG, "notifyQueueChanged", 0, remoteException);
                 }
             }
-            listeners.finishBroadcast();
-            broadcastMutex.unlock();
+            playerServiceListeners.finishBroadcast();
+
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            final SharedPreferences.Editor edit = sharedPreferences.edit();
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
+            edit.apply();
+            unlockNotify();
         }
-		
-		public void notifySetPosition(long position) {
-			broadcastMutex.lock();
-			final int broadcastItemCount = listeners.beginBroadcast();
 
-	        for (int itemIndex = 0 ; itemIndex < broadcastItemCount; itemIndex++) {
-	            try {
-	            	listeners.getBroadcastItem(itemIndex).onSeek(position);
-	            }  
-	            catch (final RemoteException remoteException) {
-	            	LogUtils.LOGException(TAG, "notifySetPosition()", 0, remoteException);
-	            } 
-	        } 
-	        listeners.finishBroadcast();
-	        broadcastMutex.unlock();
-		}
-
-		@Override
-		public synchronized void play() throws RemoteException {
-            if (playlist == null || playlist.getCount() == 0) {
-                return;
+        private void notifyShuffleChange() {
+            lockNotify();
+            final int count = playerServiceListeners.beginBroadcast();
+            for (int index = 0 ; index < count; index++) {
+                try {
+                    playerServiceListeners.getBroadcastItem(index).onShuffleModeChanged();
+                }
+                catch (final RemoteException remoteException) {
+                    LogUtils.LOGException(TAG, "notifyShuffleChange", 0, remoteException);
+                }
             }
+            playerServiceListeners.finishBroadcast();
 
-			if (isPlaying()) {
-				return;
-			}
-			
-			if (currentTrack == null) {
-				if (playlist.getCount() > 0) {
-					currentTrack = loadTrack();
-				}
-			}
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            final SharedPreferences.Editor edit = sharedPreferences.edit();
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, shuffleMode);
+            edit.apply();
+            unlockNotify();
+        }
 
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			if (currentTrack != null) {
-				mediaPlayer.playerSetContent(currentTrack);
-			}
-
-            mediaPlayer.playerPlay();
-            wakelock.acquire();
-            notifyPlay();
-		}
-
-		@Override
-		public synchronized void pause(boolean keepNotification) throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			if (mediaPlayer.playerIsPlaying()) {
-				mediaPlayer.playerPause(true);
-				notifyPause(keepNotification);
-				wakelock.release();
-			}
-		}
-
-		@Override
-		public synchronized void stop() throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			mediaPlayer.playerStop();
-			if (currentTrack != null) {
-				currentTrack = unloadTrack(currentTrack);
-			}
-
-			notifyStop();
-			if (wakelock.isHeld()) {
-				wakelock.release();
-			}
-		}
-
-		@Override
-		public synchronized void next() throws RemoteException {
-			if (playlist != null && playlist.getCount() > 1) {
-				boolean wasPlaying = isPlaying();
-				
-				currentTrack = unloadTrack(currentTrack);
-
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (!playlist.moveToNext()) {
-                        playlist.moveToFirst();
-                    }
+        private void notifyRepeatChange() {
+            lockNotify();
+            final int count = playerServiceListeners.beginBroadcast();
+            for (int index = 0 ; index < count; index++) {
+                try {
+                    playerServiceListeners.getBroadcastItem(index).onRepeatModeChanged();
                 }
-                else if (shuffleMode == SHUFFLE_AUTO) {
-                    playlistOrderIndex++;
-                    if (playlistOrderIndex >= playlistOrder.size()) {
-                        playlistOrderIndex = 0;
-                    }
-
-                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
+                catch (final RemoteException remoteException) {
+                    LogUtils.LOGException(TAG, "notifyRepeatChange", 0, remoteException);
                 }
-
-				final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-				final Editor edit = sharedPreferences.edit();
-				edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-				edit.commit();
-				
-				notifySetQueuePosition();
-				
-				if (wasPlaying) {
-					play();
-				}
-			}
-		}
-
-		@Override
-		public synchronized void prev() throws RemoteException {
-			if (playlist != null && playlist.getCount() > 1) {
-				boolean wasPlaying = isPlaying();
-				
-				currentTrack = unloadTrack(currentTrack);
-				
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (!playlist.moveToPrevious()) {
-                        playlist.moveToLast();
-                    }
-                }
-                else if (shuffleMode == SHUFFLE_AUTO) {
-                    playlistOrderIndex--;
-                    if (playlistOrderIndex < 0) {
-                        playlistOrderIndex = playlistOrder.size() - 1;
-                    }
-
-                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
-                }
-
-				
-				final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-				final Editor edit = sharedPreferences.edit();
-				edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-				edit.commit();
-
-                notifySetQueuePosition();
-				
-				if (wasPlaying) {
-					play();
-				}
-			}
-		}
-
-		@Override
-		public synchronized boolean isPlaying() throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			return mediaPlayer.playerIsPlaying();
-		}
-
-		@Override
-		public synchronized long getDuration() throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			return mediaPlayer.playerGetDuration();
-		}
-
-		@Override
-		public synchronized long getPosition() throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			return mediaPlayer.playerGetPosition();
-		}
-
-		@Override
-		public synchronized void setPosition(long position) throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
-			mediaPlayer.playerSeek(position);
-			notifySetPosition(position);
-		}
-
-		@Override
-		public int getShuffleMode() throws RemoteException {
-			return shuffleMode;
-		}
-
-		@Override
-		public synchronized void setShuffleMode(int mode) throws RemoteException {
-			shuffleMode = mode;
-			if (shuffleMode == SHUFFLE_AUTO) {
-				if (getRepeatMode() == REPEAT_CURRENT) {
-					setRepeatMode(REPEAT_ALL);
-				}
-			}
-			
-			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			final Editor edit = sharedPreferences.edit();
-			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, shuffleMode);
-			edit.commit();
-			
-			notifyShuffleChange();
-		}
-
-		@Override
-		public synchronized int getRepeatMode() throws RemoteException {
-			return repeatMode;
-		}
-
-		@Override
-		public synchronized void setRepeatMode(int mode) throws RemoteException {
-			repeatMode = mode;
-			if (repeatMode == REPEAT_CURRENT) {
-				if (getShuffleMode() != SHUFFLE_NONE) {
-					setShuffleMode(SHUFFLE_NONE);
-				}
-			}
-			
-			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			final Editor edit = sharedPreferences.edit();
-			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, repeatMode);
-			edit.commit();
-			notifyRepeatChange();
-		}
-
-		@Override
-		public synchronized int queueGetPosition() throws RemoteException {
-			if (playlist == null || playlist.getCount() == 0) {
-				return -1;
-			}
-
-            if (shuffleMode == SHUFFLE_NONE) {
-                return playlist.getInt(COLUMN_PLAYLIST_ENTRY_POSITION);
             }
-            else if (shuffleMode == SHUFFLE_AUTO) {
-                return playlistOrder.get(playlistOrderIndex);
-            }
+            playerServiceListeners.finishBroadcast();
 
-			return 0;
-		}
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            final SharedPreferences.Editor edit = sharedPreferences.edit();
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, repeatMode);
+            edit.apply();
+            unlockNotify();
+        }
 
-		@Override
-		public synchronized int queueGetSize() throws RemoteException {
-			return playlist.getCount();
-		}
+        private void notifySetQueuePosition() {
+            lockNotify();
+            hasNotification = false;
 
-		@Override
-		public synchronized void queueSetPosition(int position) throws RemoteException {
-			if (playlist != null && playlist.getCount() > 0) {
-				LogUtils.LOGD(TAG, "setQueuePosition() : moving to position " + position);
+            doUpdateWidgets(new SongInformations());
 
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (playlist.getPosition() != position) {
-                        currentTrack = unloadTrack(currentTrack);
-                        if (!playlist.moveToPosition(position)) {
-                            playlist.moveToFirst();
-                        }
-                    }
+            final int count = playerServiceListeners.beginBroadcast();
+            for (int index = 0 ; index < count; index++) {
+                try {
+                    playerServiceListeners.getBroadcastItem(index).onQueuePositionChanged();
                 }
-                else if (shuffleMode == SHUFFLE_AUTO) {
-                    int currentTrackIndex = playlistOrder.get(playlistOrderIndex);
-                    if (currentTrackIndex != position) {
-                        currentTrack = unloadTrack(currentTrack);
-
-                        // TODO: better indexing ?
-                        int indexOfPosition = playlistOrder.indexOf(position);
-                        playlistOrder.set(indexOfPosition, currentTrackIndex);
-                        playlistOrder.set(playlistOrderIndex, position);
-
-                        playlist.moveToPosition(position);
-                    }
+                catch (final RemoteException remoteException) {
+                    LogUtils.LOGException(TAG, "notifySetQueuePosition", 0, remoteException);
                 }
-
-				final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-				final Editor edit = sharedPreferences.edit();
-				edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-				edit.commit();
-				
-				notifySetQueuePosition();
-			}
-		}
-
-		@Override
-		public synchronized void queueAdd(String mediaId) throws RemoteException {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-			mediaProvider.playlistAdd(null, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, mediaId, 0, null);
-
-            int position = playlist.getPosition();
-
-			initPlaylist();
-
-            if (!playlist.moveToPosition(position)) {
-                playlist.moveToLast();
             }
-			
-			if (playlist.getCount() == 1) {
-				play();
-			}
+            playerServiceListeners.finishBroadcast();
 
-            notifyQueueChanged();
-		}
-
-		@Override
-		public synchronized void queueMove(int indexFrom, int indexTo) throws RemoteException {
-			if (indexFrom == indexTo) {
-				return;
-			}
-			
-			int position = playlist.getPosition();
-			if (indexFrom < position && indexTo >= position) {
-				position--;
-			}
-			else if (indexFrom > position && indexTo <= position) {
-				position++;
-			}
-			else if (indexFrom == position) {
-				position = indexTo;
-			}
-
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-			mediaProvider.playlistMove(null, indexFrom, indexTo);
-			
-			initPlaylist();
-			
-			if (!playlist.moveToPosition(position)) {
-				playlist.moveToLast();
-			}
-			
-			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			final Editor edit = sharedPreferences.edit();
-			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-			edit.apply();
-
-            notifyQueueChanged();
-		}
-
-		@Override
-		public synchronized void queueRemove(int entry) throws RemoteException {
-            LogUtils.LOGD(TAG, "trying to remove " + entry);
-			int position = playlist.getPosition();
-			if (entry < position) {
-				position--;
-			}
-
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-			mediaProvider.playlistRemove(null, entry);
-		
-			boolean wasPlaying = isPlaying();
-			
-			if (position == entry) {
-                wasPlaying = false;
-				currentTrack = unloadTrack(currentTrack);
-			}
-            else {
-                pause(true);
-            }
-			
-			initPlaylist();
-			
-			if (playlist.getCount() == 0) {
-				notifySetQueuePosition();
-			}
-			else {
-				if (!playlist.moveToPosition(position)) {
-					playlist.moveToLast();
-				}
-				
-				notifySetQueuePosition();
-				if (wasPlaying) {
-					play();
-				}
-			}
-			
-			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			final Editor edit = sharedPreferences.edit();
-			edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
-			edit.apply();
-
-            notifyQueueChanged();
-		}
-
-		@Override
-		public synchronized void queueClear() throws RemoteException {
-			if (isPlaying()) {
-				currentTrack = unloadTrack(currentTrack);
-			}
-
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-
-            mediaProvider.playlistClear(null);
-			initPlaylist();
-
-			final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			final Editor edit = sharedPreferences.edit();
-			edit.remove(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION);
-			edit.apply();
-
-            notifyQueueChanged();
-		}
-
-		@Override
-		public void queueReload() throws RemoteException {
-			final int position = playlist.getPosition();
-			
-			boolean wasPlaying = isPlaying();
-			
-			if (wasPlaying) {
-				pause(true);
-			}				
-			
-			initPlaylist();
-			
-			if (!playlist.moveToPosition(position)) {
-				playlist.moveToFirst();
-			}
-			
-			if (currentTrack != null && playlist.getCount() > 0) {
-                final String mediaUri = currentTrack.getMediaUri();
-				if (!TextUtils.isEmpty(mediaUri) && mediaUri.equals(playlist.getString(COLUMN_SONG_URI))) {
-					if (wasPlaying) {
-						play();
-					}
-				}
-				else {
-					currentTrack = unloadTrack(currentTrack);
-				}
-			}
-
-            notifyQueueChanged();
-		}
-	}
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            final SharedPreferences.Editor edit = sharedPreferences.edit();
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
+            edit.apply();
+            unlockNotify();
+        }
+    }
 
     public class SongInformations {
         String albumName;
@@ -985,17 +921,16 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         boolean initialized;
 
         public SongInformations() {
-            if (playlist != null && playlist.getCount() > 0) {
+            initialized = playlist != null && playlist.getCount() > 0;
+
+            if (initialized) {
                 albumName = playlist.getString(COLUMN_SONG_ALBUM);
                 artistName = playlist.getString(COLUMN_SONG_ARTIST);
                 trackName = playlist.getString(COLUMN_SONG_TITLE);
 
                 songId = playlist.getInt(COLUMN_SONG_ID);
 
-                songArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
-                        PlayerApplication.playerManagerIndex + "/" +
-                        songId;
+                songArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" + PlayerApplication.playerManagerIndex + "/" + songId;
 
                 art = null;
                 if (!TextUtils.isEmpty(songArtUri)) {
@@ -1005,13 +940,109 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                         art = null;
                     }
                 }
-                LogUtils.LOGD(TAG, "SongInformation.initialized : true");
-                initialized = true;
-            }
-            else {
-                LogUtils.LOGD(TAG, "SongInformation.initialized : false");
-                initialized = false;
             }
         }
+    }
+
+    @TargetApi(14)
+    private void setAudioListener() {
+        if (PlayerApplication.hasICS()) {
+            audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                        remoteControlClient.release();
+                        try {
+                            playerServiceImpl.pause(false);
+                        } catch (final Exception exception) {
+                            LogUtils.LOGException(TAG, "setAudioListener", 0, exception);
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    protected void doUpdateWidgets(final SongInformations currentSong) {
+        widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
+        widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
+    }
+
+    protected void doUpdateRemoteClient(final SongInformations currentSong) {
+        remoteControlClient.updateMetadata(currentSong.art, currentSong.trackName, currentSong.artistName, currentSong.albumName, playlist.getLong(COLUMN_SONG_DURATION));
+    }
+
+    protected void doUpdateNotification(final SongInformations currentSong) {
+        notificationHelper.buildNotification(currentSong.albumName, currentSong.artistName, currentSong.trackName, currentSong.art);
+    }
+
+    protected void reloadPlaylist() {
+        if (playlist != null) {
+            playlist.close();
+        }
+
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+
+        playlist = mediaProvider.buildCursor(
+                AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA,
+                requestedFields,
+                sortOrder,
+                null,
+                AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST,
+                null);
+
+        int playlistLength = playlist != null ? playlist.getCount() : 0;
+
+        playlistOrder = new ArrayList<Integer>();
+        for (int playlistIndex = 0 ; playlistIndex < playlistLength ; playlistIndex++) {
+            playlistOrder.add(playlistIndex);
+        }
+
+        Collections.shuffle(playlistOrder);
+        playlistOrderIndex = 0;
+    }
+
+    protected AbstractMedia unloadMedia(AbstractMedia track) {
+        if (track != null) {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+            if (currentMedia != null && track.getMediaUri().equals(currentMedia.getMediaUri())) {
+                mediaPlayer.playerStop();
+            }
+            mediaPlayer.finalizeContent(track);
+        }
+        return null;
+    }
+
+    protected AbstractMedia loadMedia(final String songUri) {
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+        final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+
+        final AbstractMedia ret = mediaPlayer.initializeContent(songUri);
+        mediaPlayer.preloadContent(ret);
+        return ret;
+    }
+
+    protected void preloadMediaAsync(final String songUri) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LogUtils.LOGD(TAG, "preloading : " + songUri);
+
+                preloadingMutex.lock();
+                nextMedia = loadMedia(songUri);
+                preloadingMutex.unlock();
+            }
+        }).start();
+    }
+
+    protected void lockNotify() {
+        notifyMutex.lock();
+    }
+
+    protected void unlockNotify() {
+        notifyMutex.unlock();
     }
 }
