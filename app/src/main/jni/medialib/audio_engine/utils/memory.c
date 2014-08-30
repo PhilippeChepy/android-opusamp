@@ -60,3 +60,26 @@ int memory_compare(const void * source1, const void * source2, size_t size) {
 	return memcmp(source1, source2, size);
 }
 
+
+
+
+
+void * memory_aligned_alloc(size_t alignment, size_t size) {
+    void *pa, *ptr;
+
+    pa = memory_alloc((size+alignment-1)+sizeof(void *));
+    if(!pa) {
+        return NULL;
+    }
+
+    ptr = (void*)( ((long)pa+sizeof(void *)+alignment-1)&~(alignment-1) );
+
+    *((void **)ptr-1)=pa;
+
+    return ptr;
+}
+
+void memory_aligned_free(void *ptr) {
+    if(ptr)
+        memory_free(*((void **)ptr-1));
+}

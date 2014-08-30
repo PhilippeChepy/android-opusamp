@@ -33,6 +33,9 @@ void * memory_clone(const void * source, size_t size);
 int memory_compare(const void * source1, const void * source2, size_t size);
 #define memory_copy(dest, src, len)     memcpy(dest, src, len)
 
+void * memory_aligned_alloc(size_t alignment, size_t bytes);
+void memory_aligned_free(void *raw_data);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
