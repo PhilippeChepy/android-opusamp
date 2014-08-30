@@ -82,7 +82,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     static final String ITEM_DEBUG_SKU = "android.test.purchased";
 
-    static final String ITEM_RELEASE_SKU = "eu.chepy.audiokit.noads";
+    static final String ITEM_RELEASE_SKU = "eu.chepy.audiokit.premium";
 
     static String ITEM_SKU;
 
