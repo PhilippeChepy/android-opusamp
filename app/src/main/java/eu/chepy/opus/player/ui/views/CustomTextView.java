@@ -16,13 +16,15 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
+import eu.chepy.opus.player.ui.utils.TypefaceCache;
+
 public class CustomTextView extends TextView {
 
     public CustomTextView(Context context, AttributeSet attributeSet)
     {
         super(context, attributeSet);
         if (!isInEditMode()) {
-            //setTypeface(TypefaceCache.getTypeface("RobotoLight.ttf", context));
+            setTypeface(TypefaceCache.getTypeface("RobotoLight.ttf", context));
         }
     }
 }

@@ -123,6 +123,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
     public AbstractProviderAction ACTION_LIST[] = new AbstractProviderAction[] {
+            ACTION_LOCATION,
             ACTION_SETTINGS
     };
 

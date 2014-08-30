@@ -18,6 +18,7 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import eu.chepy.opus.player.R;
+import eu.chepy.opus.player.ui.utils.TypefaceCache;
 
 public class CustomLinkTextView extends TextView {
 
@@ -25,7 +26,7 @@ public class CustomLinkTextView extends TextView {
     {
         super(context, attributeSet);
         if (!isInEditMode()) {
-            //setTypeface(TypefaceCache.getTypeface("RobotoLight.ttf", context));
+            setTypeface(TypefaceCache.getTypeface("RobotoLight.ttf", context));
 
             final Resources resources = getResources();
             if (resources != null) {
