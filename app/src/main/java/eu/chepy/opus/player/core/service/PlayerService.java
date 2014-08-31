@@ -177,12 +177,19 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
     @Override
     public void onCodecCompletion() {
+        LogUtils.LOGD(TAG, "completed in JAVA!");
         /* Playback is stopped */
         boolean hasLooped = false;
 
         try {
-            hasLooped = playerServiceImpl.next();
-            if (!hasLooped) {
+            if (repeatMode != REPEAT_CURRENT) {
+                hasLooped = playerServiceImpl.next();
+            }
+            else {
+                playerServiceImpl.setPosition(0);
+            }
+
+            if (!hasLooped || repeatMode != REPEAT_NONE) {
                 playerServiceImpl.play();
             }
         }
@@ -291,24 +298,28 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
         @Override
         public void play() throws RemoteException {
-            if (playlist == null || playlist.getCount() == 0) {
-                return;
-            }
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
 
             if (isPlaying()) {
                 return;
             }
 
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
-
             if (currentMedia == null) {
                 preloadingMutex.lock();
                     if (nextMedia != null && nextMedia.getMediaUri().equals(playlist.getString(COLUMN_SONG_URI))) {
-                        currentMedia = nextMedia;
+                        LogUtils.LOGI(TAG, "Using preloaded content");
+                        AbstractMedia media = nextMedia;
                         nextMedia = null;
+
+                        next();
+                        preloadMediaAsync(playlist.getString(COLUMN_SONG_URI));
+                        prev();
+
+                        currentMedia = media;
                     }
                     else if (playlist.getCount() > 0) {
+                        LogUtils.LOGI(TAG, "NOT using preloaded content");
                         if (nextMedia != null) {
                             mediaPlayer.finalizeContent(nextMedia);
                             nextMedia = null;
@@ -326,11 +337,10 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
             if (currentMedia != null) {
                 mediaPlayer.playerSetContent(currentMedia);
+                mediaPlayer.playerPlay();
+                wakelock.acquire();
+                notifyPlay();
             }
-
-            mediaPlayer.playerPlay();
-            wakelock.acquire();
-            notifyPlay();
         }
 
         @Override
@@ -1012,7 +1022,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                             playerServiceImpl.play();
                         }
                         else {
-                            playerServiceImpl.prev();
+                            playerServiceImpl.next();
                         }
                     } else if (action.equals(PlayerService.ACTION_STOP)) {
                         playerServiceImpl.stop();
