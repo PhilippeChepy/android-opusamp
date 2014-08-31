@@ -153,6 +153,15 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             SharedPreferencesCompat.EditorCompat.putStringSet(editor, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
             editor.apply();
         }
+
+        final String genreMode = resources.getString(R.string.preference_key_genre_display);
+        if (TextUtils.isEmpty(genreMode)) {
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+            editor.putString(
+                    resources.getString(R.string.preference_key_genre_display),
+                    resources.getString(R.string.preference_list_value_genre_show_albums));
+            editor.apply();
+        }
     }
 
     public SQLiteDatabase getWritableDatabase() {

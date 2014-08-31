@@ -33,7 +33,7 @@
 
         <ListPreference
             android:capitalize="words"
-            android:defaultValue="@array/preference_values_genre_details"
+            android:defaultValue="@string/preference_list_value_genre_show_albums"
             android:entries="@array/preference_values_genre_details"
             android:entryValues="@array/preference_values_genre_details"
             android:key="@string/preference_key_genre_display"
