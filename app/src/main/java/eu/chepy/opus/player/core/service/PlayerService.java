@@ -309,14 +309,10 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                 preloadingMutex.lock();
                     if (nextMedia != null && nextMedia.getMediaUri().equals(playlist.getString(COLUMN_SONG_URI))) {
                         LogUtils.LOGI(TAG, "Using preloaded content");
-                        AbstractMedia media = nextMedia;
+                        currentMedia = nextMedia;
                         nextMedia = null;
 
-                        next();
-                        preloadMediaAsync(playlist.getString(COLUMN_SONG_URI));
-                        prev();
-
-                        currentMedia = media;
+                        preloadMediaAsync();
                     }
                     else if (playlist.getCount() > 0) {
                         LogUtils.LOGI(TAG, "NOT using preloaded content");
@@ -325,9 +321,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                             nextMedia = null;
                         }
 
-                        next();
-                        preloadMediaAsync(playlist.getString(COLUMN_SONG_URI));
-                        prev();
+                        preloadMediaAsync();
 
                         currentMedia = loadMedia(playlist.getString(COLUMN_SONG_URI));
 
@@ -376,22 +370,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             currentMedia = unloadMedia(currentMedia);
 
             if (playlist != null && playlist.getCount() > 1) {
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (!playlist.moveToNext()) {
-                        playlist.moveToFirst();
-                        looped = true;
-                    }
-                }
-                else if (shuffleMode == SHUFFLE_AUTO) {
-                    playlistOrderIndex++;
-                    if (playlistOrderIndex >= playlistOrder.size()) {
-                        playlistOrderIndex = 0;
-                        looped = true;
-                    }
-
-                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
-                }
-
+                looped = doMoveToNextPosition();
                 notifySetQueuePosition();
             }
 
@@ -404,22 +383,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             currentMedia = unloadMedia(currentMedia);
 
             if (playlist != null && playlist.getCount() > 1) {
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (!playlist.moveToPrevious()) {
-                        playlist.moveToLast();
-                        looped = true;
-                    }
-                }
-                else if (shuffleMode == SHUFFLE_AUTO) {
-                    playlistOrderIndex--;
-                    if (playlistOrderIndex < 0) {
-                        playlistOrderIndex = playlistOrder.size() - 1;
-                        looped = true;
-                    }
-
-                    playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
-                }
-
+                looped = doMoveToPrevPosition();
                 notifySetQueuePosition();
             }
 
@@ -1041,6 +1005,46 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         }
     }
 
+    protected boolean doMoveToNextPosition() {
+        boolean looped = false;
+        if (shuffleMode == SHUFFLE_NONE) {
+            if (!playlist.moveToNext()) {
+                playlist.moveToFirst();
+                looped = true;
+            }
+        }
+        else if (shuffleMode == SHUFFLE_AUTO) {
+            playlistOrderIndex++;
+            if (playlistOrderIndex >= playlistOrder.size()) {
+                playlistOrderIndex = 0;
+                looped = true;
+            }
+
+            playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
+        }
+        return looped;
+    }
+
+    protected boolean doMoveToPrevPosition() {
+        boolean looped = false;
+        if (shuffleMode == SHUFFLE_NONE) {
+            if (!playlist.moveToPrevious()) {
+                playlist.moveToLast();
+                looped = true;
+            }
+        }
+        else if (shuffleMode == SHUFFLE_AUTO) {
+            playlistOrderIndex--;
+            if (playlistOrderIndex < 0) {
+                playlistOrderIndex = playlistOrder.size() - 1;
+                looped = true;
+            }
+
+            playlist.moveToPosition(playlistOrder.get(playlistOrderIndex));
+        }
+        return looped;
+    }
+
     protected void reloadPlaylist() {
         if (playlist != null) {
             playlist.close();
@@ -1068,15 +1072,21 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         playlistOrderIndex = 0;
     }
 
-    protected AbstractMedia unloadMedia(AbstractMedia track) {
+    protected AbstractMedia unloadMedia(final AbstractMedia track) {
         if (track != null) {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
             final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
 
-            if (currentMedia != null && track.getMediaUri().equals(currentMedia.getMediaUri())) {
+            if (currentMedia != null && track.getMediaUri().equals(currentMedia.getMediaUri()) && mediaPlayer.playerIsPlaying()) {
                 mediaPlayer.playerStop();
             }
-            mediaPlayer.finalizeContent(track);
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    mediaPlayer.finalizeContent(track);
+                }
+            }).start();
         }
         return null;
     }
@@ -1090,15 +1100,38 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         return ret;
     }
 
-    protected void preloadMediaAsync(final String songUri) {
+    protected void preloadMediaAsync() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                LogUtils.LOGD(TAG, "preloading : " + songUri);
+                try {
+                    Thread.sleep(5000); // TODO: that's a hack :( preload
+                    // TODO: enable preloading at
+                    //      get int delay = AbstractMediaProvider.preloadingPreferedDelay();
+                    //      if (delay > 0) {
+                    //          Thread.sleep(delay);
+                    //      }
+                    //      else {
+                    //          Thread.sleep(currentSong.duration - currentTimestamp - delay);
+                    //      }
+                }
+                catch (final Exception interruptException) {
 
-                preloadingMutex.lock();
-                nextMedia = loadMedia(songUri);
-                preloadingMutex.unlock();
+                }
+
+                doMoveToNextPosition();
+                final String songUri = playlist.getString(COLUMN_SONG_URI);
+                doMoveToPrevPosition();
+
+                if (nextMedia != null && nextMedia.getMediaUri().equals(songUri)) {
+                    LogUtils.LOGD(TAG, "already preloaded : " + songUri);
+                }
+                else {
+                    LogUtils.LOGD(TAG, "preloading : " + songUri);
+                    preloadingMutex.lock();
+                    nextMedia = loadMedia(songUri);
+                    preloadingMutex.unlock();
+                }
             }
         }).start();
     }

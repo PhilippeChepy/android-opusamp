@@ -48,18 +48,11 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
     @Override
 	protected void playbackEndNotification() {
-		new Thread(
-				new Runnable() {
-					
-					@Override
-					public void run() {
-						playerStop();
-						for (OnProviderCompletionListener listener : listenerList) {
-							listener.onCodecCompletion();
-						}
-					}
-				}
-				).start();
+        playing = false;
+
+        for (OnProviderCompletionListener listener : listenerList) {
+            listener.onCodecCompletion();
+        }
 	}
 
 	public LocalMediaPlayer(LocalMediaManager localMediaManager) {
