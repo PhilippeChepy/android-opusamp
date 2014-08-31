@@ -156,11 +156,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         int position = 0;
         if (menuInfo != null) {
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            position = info.position - 1;
+            position = info.position;
         }
 
-        cursor.moveToPosition(position);
-        doOnCreateContextMenu(menu);
+        doOnCreateContextMenu(menu, position);
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
@@ -228,7 +227,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 @Override
                 public void createMenu(final Menu menu, int position) {
                     cursor.moveToPosition(position);
-                    doOnCreateContextMenu(menu);
+                    doOnCreateContextMenu(menu, position);
                 }
             };
 
@@ -292,12 +291,12 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 if (placeHolderView != null) {
                     ((ImageView) placeHolderView).setImageResource(R.drawable.no_art_normal);
 
-                    final String songArtUri =
+                    final String artUri =
                             ProviderImageDownloader.SCHEME_URI_PREFIX +
                             ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
                             PlayerApplication.libraryManagerIndex + "/" +
                             contentSourceId;
-                    PlayerApplication.normalImageLoader.displayImage(songArtUri, (ImageView) placeHolderView);
+                    PlayerApplication.normalImageLoader.displayImage(artUri, (ImageView) placeHolderView);
                 }
 
                 actionbarBackground = getResources().getDrawable(R.drawable.holo_background);
@@ -564,16 +563,15 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             final Intent intent = new Intent(LibraryDetailActivity.this, LibraryDetailActivity.class);
+            cursor.moveToPosition(position);
 
             switch (contentType) {
                 case CONTENT_TYPE_PLAYLIST:
                 case CONTENT_TYPE_ARTIST:
-                    if (position > 0) {
-                        doPlayAction(position - 1);
-                    }
+                    doPlayAction(position - 1);
                     break;
                 case CONTENT_TYPE_ALBUM:
-                    if (position > 0) {
+                    if (position != 0) {
                         doPlayAction(position - 1);
                     }
                     else {
@@ -582,12 +580,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     break;
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
-                    if (position > 0) {
-                        cursor.moveToPosition(position - 1);
-                        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM);
-                        intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ID));
-                        startActivity(intent);
-                    }
+                    cursor.moveToPosition(position - 1);
+                    intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM);
+                    intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ID));
+                    startActivity(intent);
                     break;
 
             }
@@ -676,27 +672,32 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         }
     }
 
-    public void doOnCreateContextMenu(Menu menu) {
+    public void doOnCreateContextMenu(Menu menu, int position) {
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
+                cursor.moveToPosition(position);
                 PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             case CONTENT_TYPE_ALBUM_ARTIST:
+                cursor.moveToPosition(position);
                 PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             case CONTENT_TYPE_ALBUM:
-                if (cursor.getPosition() == -1) {
+                if (position == 0) {
                     menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.menuitem_label_use_file_art);
                     menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.menuitem_label_restore_file_art);
                 }
                 else {
+                    cursor.moveToPosition(position);
                     PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 }
                 break;
             case CONTENT_TYPE_PLAYLIST:
+                cursor.moveToPosition(position);
                 PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1, true);
                 break;
             case CONTENT_TYPE_GENRE:
+                cursor.moveToPosition(position);
                 PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             default:
