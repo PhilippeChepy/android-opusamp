@@ -41,7 +41,6 @@ import eu.chepy.opus.player.core.service.providers.AbstractMedia;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaPlayer;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
-import eu.chepy.opus.player.ui.utils.MusicConnector;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 import eu.chepy.opus.player.ui.utils.uil.ProviderImageDownloader;
 import eu.chepy.opus.player.ui.widgets.Widget4x1;
@@ -109,7 +108,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
     private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
 
-    private final BroadcastReceiver broadcastReceiver = new ServiceIntentReceiver();
+    private BroadcastReceiver broadcastReceiver;
 
     public boolean hasNotification;
 
@@ -203,12 +202,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            if (intent.hasExtra(COMMAND_KEY)) {
-                MusicConnector.doManageControlIntent(intent);
-            }
-        }
+    public void onCreate() {
+        super.onCreate();
 
         PowerManager powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
         wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "whatever");
@@ -250,7 +245,21 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
         doUpdateWidgets(new SongInformations());
 
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                doManageCommandIntent(intent);
+            }
+        };
+
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_NOTIFICATION_COMMAND));
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            doManageCommandIntent(intent);
+        }
 
         return Service.START_STICKY;
     }
@@ -974,6 +983,52 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
     protected void doUpdateNotification(final SongInformations currentSong) {
         notificationHelper.buildNotification(currentSong.albumName, currentSong.artistName, currentSong.trackName, currentSong.art);
+    }
+
+    protected void doManageCommandIntent(final Intent intent) {
+        if (intent.hasExtra(COMMAND_KEY)) {
+            final String source = intent.getAction();
+            final String action = intent.getStringExtra(PlayerService.COMMAND_KEY);
+
+            boolean isNotificationControl = source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND);
+            boolean isWidgetControl = source.equals(PlayerService.ACTION_APPWIDGET_COMMAND);
+            boolean isRemoteControl = isNotificationControl || isWidgetControl;
+
+            if (action != null && isRemoteControl) {
+                try {
+                    if (action.equals(PlayerService.ACTION_PREVIOUS)) {
+                        if (playerServiceImpl.isPlaying()) {
+                            playerServiceImpl.pause(true);
+                            playerServiceImpl.prev();
+                            playerServiceImpl.play();
+                        }
+                        else {
+                            playerServiceImpl.prev();
+                        }
+                    } else if (action.equals(PlayerService.ACTION_NEXT)) {
+                        if (playerServiceImpl.isPlaying()) {
+                            playerServiceImpl.pause(true);
+                            playerServiceImpl.next();
+                            playerServiceImpl.play();
+                        }
+                        else {
+                            playerServiceImpl.prev();
+                        }
+                    } else if (action.equals(PlayerService.ACTION_STOP)) {
+                        playerServiceImpl.stop();
+                    } else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
+                        if (playerServiceImpl.isPlaying()) {
+                            playerServiceImpl.pause(isNotificationControl);
+                        } else {
+                            playerServiceImpl.play();
+                        }
+                    }
+                }
+                catch (final RemoteException remoteException) {
+                    LogUtils.LOGException(TAG, "doManageCommandIntent", 0, remoteException);
+                }
+            }
+        }
     }
 
     protected void reloadPlaylist() {

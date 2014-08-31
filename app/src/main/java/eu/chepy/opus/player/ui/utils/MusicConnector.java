@@ -14,6 +14,7 @@ package eu.chepy.opus.player.ui.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -86,30 +87,6 @@ public class MusicConnector {
         return false;
     }
 
-    public static void doPrevAction() {
-        if (PlayerApplication.playerService != null) {
-            try {
-                boolean isPlaying = PlayerApplication.playerService.isPlaying();
-
-                if (isPlaying) {
-                    PlayerApplication.playerService.stop();
-                }
-
-                PlayerApplication.playerService.prev();
-
-                if (isPlaying) {
-                    PlayerApplication.playerService.play();
-                }
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doPrevAction", 0, remoteException);
-            }
-        }
-        else {
-            LogUtils.LOGService(TAG, "doPrevAction", 0);
-        }
-    }
-
     public static boolean doStopAction() {
         if (PlayerApplication.playerService != null) {
             try {
@@ -155,27 +132,27 @@ public class MusicConnector {
         return false;
     }
 
-    public static void doNextAction() {
-        if (PlayerApplication.playerService != null) {
-            try {
-                boolean isPlaying = PlayerApplication.playerService.isPlaying();
-
-                if (isPlaying) {
-                    PlayerApplication.playerService.stop();
-                }
-
-                PlayerApplication.playerService.next();
-
-                if (isPlaying) {
-                    PlayerApplication.playerService.play();
-                }
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doNextAction", 0, remoteException);
-            }
+    public static void doPrevAction() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
+        try {
+            pendingIntent.send();
         }
-        else {
-            LogUtils.LOGService(TAG, "doNextAction", 0);
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doPrevAction", 0, exception);
+        }
+    }
+
+    public static void doNextAction() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doNextAction", 0, exception);
         }
     }
 
@@ -382,33 +359,6 @@ public class MusicConnector {
                 .show();
         return true;
     }
-
-    public static void doManageControlIntent(Intent intent) {
-        final String source = intent.getAction();
-        final String action = intent.getStringExtra(PlayerService.COMMAND_KEY);
-
-        boolean isRemoteControl = source != null &&
-                (source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND) ||
-                source.equals(PlayerService.ACTION_APPWIDGET_COMMAND));
-
-        if (action != null && isRemoteControl) {
-            if (action.equals(PlayerService.ACTION_PREVIOUS)) {
-                MusicConnector.doPrevAction();
-            }
-            else if (action.equals(PlayerService.ACTION_NEXT)) {
-                MusicConnector.doNextAction();
-            }
-            else if (action.equals(PlayerService.ACTION_STOP)) {
-                MusicConnector.doStopAction();
-            }
-            else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
-                boolean isNotificationControl = source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND);
-                MusicConnector.doPlayAction(isNotificationControl);
-            }
-        }
-    }
-
-
 
 
 
