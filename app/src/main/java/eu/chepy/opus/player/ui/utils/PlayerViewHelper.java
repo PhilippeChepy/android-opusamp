@@ -517,12 +517,13 @@ public class PlayerViewHelper implements
             return;
         }
 
-        if (cursor.getCount() <= 0) {
-            slidingUpPanelLayout.collapsePanel();
-            slidingUpPanelLayout.hidePanel();
-        }
-        else {
-            slidingUpPanelLayout.showPanel();
+        if (slidingUpPanelLayout != null) {
+            if (cursor.getCount() <= 0) {
+                slidingUpPanelLayout.collapsePanel();
+                slidingUpPanelLayout.hidePanel();
+            } else {
+                slidingUpPanelLayout.showPanel();
+            }
         }
 
         playlistCursor = cursor;

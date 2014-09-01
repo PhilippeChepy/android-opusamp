@@ -46,7 +46,6 @@ public class CarModeActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         getSupportLoaderManager().destroyLoader(0);
 
         getPlayerView().onActivityDestroy();

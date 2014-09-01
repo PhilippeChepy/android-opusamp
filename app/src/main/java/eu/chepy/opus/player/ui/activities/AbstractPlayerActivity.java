@@ -83,13 +83,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        //ImageLoaderFactory.getInstance().stop();
-    }
-
-    @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
         getPlayerView().registerServiceListener();
     }
