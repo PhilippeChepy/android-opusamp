@@ -106,8 +106,7 @@ FFMPEG_FLAGS_COMMON="--disable-gpl \
 --enable-filter=aconvert \
 --enable-zlib"
 
-CFLAGS="-std=c99 -O3 -fomit-frame-pointer -w -pipe -fpic -fPIC -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DDEBUG -I../soxr/src/"
-#-DNDEBUG 
+CFLAGS="-std=c99 -O3 -fomit-frame-pointer -w -pipe -fpic -fPIC -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DNDEBUG -I../soxr/src/"
 LDFLAGS="-lm -lz -Wl,--no-undefined -Wl,-z,noexecstack -L../../libs/$platform/ -lsoxr"
 
 echo -n "* Cleaning previous build. "

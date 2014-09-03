@@ -22,8 +22,8 @@
 
 static JavaVMAttachArgs vmAttach;
 
-static JNIEnv * get_env(engine_stream_context_s * stream_context, int threaded) {
-	JavaVM * vm = stream_context->engine->vm;
+static JNIEnv * get_env(engine_context_s * engine, int threaded) {
+	JavaVM * vm = engine->vm;
 	JNIEnv * env;
 
     vmAttach.version = JNI_VERSION_1_6;  /* must be JNI_VERSION_1_2 */
@@ -49,9 +49,9 @@ static JNIEnv * get_env(engine_stream_context_s * stream_context, int threaded) 
 	return env;
 }
 
-static void release_env(engine_stream_context_s * stream, int threaded) {
+static void release_env(engine_context_s * engine, int threaded) {
 	if (threaded) {
-		JavaVM * vm = stream->engine->vm;
+		JavaVM * vm = engine->vm;
 		(*vm)->DetachCurrentThread(vm);
 	}
 }
@@ -130,11 +130,12 @@ int safetrack_stream_get_position(engine_stream_context_s * stream, int64_t * po
 
 static void * output_thread(void * thread_arg) {
 	engine_stream_context_s * stream = thread_arg;
+	engine_context_s * engine = stream->engine;
 	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 
 	audiotrack_stream->buffer = memory_alloc(sizeof(jshort) * audiotrack_stream->buffer_size);
 
-	JNIEnv * env = get_env(stream, 1);
+	JNIEnv * env = get_env(engine, 1);
 
 	jmethodID getPlayStateMethod = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "getPlayState", "()I");
 	jmethodID playMethod = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "play", "()V");
@@ -163,10 +164,6 @@ static void * output_thread(void * thread_arg) {
 			if (stream->decoder_terminated) {
 				LOG_INFO(LOG_TAG, "output_thread(): Terminating (%i/%i)", got, nb_samples);
 				safetrack_stream_flush(stream);
-
-				jmethodID stopId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "stop", "()V");
-				(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, stopId);
-				audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
 				break;
 			}
 			else {
@@ -189,14 +186,21 @@ static void * output_thread(void * thread_arg) {
 		}
 	}
 
+    memory_free(audiotrack_stream->buffer);
+
 	/* sync */ pthread_mutex_lock(&audiotrack_stream->validity_lock);
 	if (audiotrack_stream->has_valid_thread) {
 		audiotrack_stream->has_valid_thread = 0;
 	}
 	/* sync */ pthread_mutex_unlock(&audiotrack_stream->validity_lock);
 
-	release_env(stream, 1);
-	memory_free(audiotrack_stream->buffer);
+    jmethodID stopId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "stop", "()V");
+    (*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, stopId);
+    audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
+
+    // from this point, don't use anymore audiotrack_stream and stream.
+	release_env(engine, 1);
+
 	return 0;
 }
 
@@ -255,7 +259,7 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 //		channel_config = engine->param_channel_count == 2 ? AUDIO_CHANNEL_OUT_STEREO : AUDIO_CHANNEL_OUT_MONO;
 //	}
 
-	JNIEnv * env = get_env(stream, 0);
+	JNIEnv * env = get_env(stream->engine, 0);
 	jclass audiotrackClass = (*env)->FindClass(env, "android/media/AudioTrack");
 
 	audiotrack_stream->audiotrack_class = (*env)->NewGlobalRef(env, audiotrackClass);
@@ -283,7 +287,7 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
 
 
 	audiotrack_stream->audiotrack_object = (*env)->NewGlobalRef(env, obj);
-	release_env(stream, 0);
+	release_env(stream->engine, 0);
 
 	audiotrack_stream->has_valid_thread = 0;
 	pthread_mutex_init(&audiotrack_stream->validity_lock, NULL);
@@ -308,13 +312,13 @@ int safetrack_stream_delete(engine_stream_context_s * stream) {
 	if (audiotrack_stream != NULL) {
 		pthread_mutex_destroy(&audiotrack_stream->validity_lock);
 
-        JNIEnv * env = get_env(stream, 0);
+        JNIEnv * env = get_env(stream->engine, 0);
         jmethodID releaseId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "release", "()V");
         (*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, releaseId);
 
 		(*env)->DeleteGlobalRef(env, audiotrack_stream->audiotrack_class);
 		(*env)->DeleteGlobalRef(env, audiotrack_stream->audiotrack_object);
-		release_env(stream, 0);
+		release_env(stream->engine, 0);
 
 		memory_free(audiotrack_stream);
 		stream->stream_output_specific = NULL;
@@ -336,10 +340,10 @@ int safetrack_stream_start(engine_stream_context_s * stream) {
 	/* sync */ pthread_mutex_unlock(&audiotrack_stream->validity_lock);
 
 	if (pthread_create(&audiotrack_stream->output_thread, NULL, output_thread, stream) == 0) {
-		JNIEnv * env = get_env(stream, 0);
+		JNIEnv * env = get_env(stream->engine, 0);
 		jmethodID playId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "play", "()V");
 		(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, playId);
-		release_env(stream, 0);
+		release_env(stream->engine, 0);
 		error_code = ENGINE_OK;
 	}
 
@@ -362,10 +366,10 @@ int safetrack_stream_stop(engine_stream_context_s * stream) {
 				error_code = ENGINE_OK;
 			}
 
-			JNIEnv * env = get_env(stream, 0);
+			JNIEnv * env = get_env(stream->engine, 0);
 			jmethodID stopId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "stop", "()V");
 			(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, stopId);
-			release_env(stream, 0);
+			release_env(stream->engine, 0);
 			audiotrack_stream->state_callback(stream, audiotrack_stream->user_context, STREAM_STATE_STOPPED);
 		}
 		else {
@@ -380,10 +384,10 @@ int safetrack_stream_flush(engine_stream_context_s * stream) {
 	safetrack_stream_context_s * audiotrack_stream = stream->stream_output_specific;
 
 	if (audiotrack_stream != NULL) {
-		JNIEnv * env = get_env(stream, 0);
+		JNIEnv * env = get_env(stream->engine, 0);
 		jmethodID flushId = (*env)->GetMethodID(env, audiotrack_stream->audiotrack_class, "flush", "()V");
 		(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, flushId);
-		release_env(stream, 0);
+		release_env(stream->engine, 0);
 		audiotrack_stream->written_samples = 0;
 		stream->last_timestamp_update = 0;
 	}
