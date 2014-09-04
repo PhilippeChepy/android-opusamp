@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.internal.view.SupportMenuItem;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -101,15 +102,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     /*
         Actionbar search system
      */
-    private SearchView searchView = null;
+    private SearchView searchView;
 
 
 
     /*
         Actionbar items
      */
-    private MenuItem sortMenuItem = null;
+    private MenuItem sortMenuItem;
 
+    private MenuItem searchMenuItem;
     //private MenuItem recentMenuItem = null;
 
 
@@ -168,7 +170,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
-        final MenuItem searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
+        searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
         searchMenuItem.setIcon(R.drawable.ic_action_search_dark);
         MenuItemCompat.setActionView(searchMenuItem, searchView);
         MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -376,6 +378,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public boolean onSearchRequested() {
+        final SupportMenuItem search = (SupportMenuItem)searchMenuItem;
+        search.expandActionView();
+        return true;
     }
 
     @Override
