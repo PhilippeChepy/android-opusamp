@@ -49,9 +49,6 @@ import java.util.ArrayList;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider.ContentType;
-import eu.chepy.opus.player.core.service.providers.AbstractProviderAction;
 import eu.chepy.opus.player.core.service.providers.index.database.Entities;
 import eu.chepy.opus.player.ui.adapter.ux.NavigationDrawerAdapter;
 import eu.chepy.opus.player.ui.adapter.ux.PagerAdapter;
@@ -283,21 +280,21 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                         path = pathFile.getParent();
                     }
 
-                    mediaManager.getMediaProvider().setProperty(
-                            ContentType.CONTENT_TYPE_STORAGE,
+                    mediaManager.getProvider().setProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                             path,
-                            AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
                             null,
                             null);
-                    int position = (Integer) mediaManager.getMediaProvider().getProperty(
-                            ContentType.CONTENT_TYPE_STORAGE,
+                    int position = (Integer) mediaManager.getProvider().getProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                             dataUri.getPath(),
-                            AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
 
                     libraryAdapter.doRefresh();
 
                     MusicConnector.doContextActionPlay(
-                            ContentType.CONTENT_TYPE_STORAGE,
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                             String.valueOf(position),
                             MusicConnector.storage_sort_order,
                             position);
@@ -326,7 +323,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         getSupportLoaderManager().destroyLoader(0);
 
         for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
-            mediaManager.getMediaProvider().removeLibraryChangeListener(libraryChangeListener);
+            mediaManager.getProvider().removeLibraryChangeListener(libraryChangeListener);
         }
 
         getPlayerView().onActivityDestroy();
@@ -387,7 +384,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         switch (requestCode) {
             case DRAWERITEM_LIBRARY_SETTINGS_ID:
-            case AbstractMediaProvider.ACTIVITY_NEED_UI_REFRESH:
+            case AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH:
                 doInitLibrary();
                 break;
         }
@@ -460,8 +457,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                     startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
                     break;
                 default:
-                    final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getMediaProvider();
-                    final AbstractProviderAction providerAction = mediaProvider.getAbstractProviderAction(menuItemId - 200);
+                    final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+                    final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(menuItemId - 200);
                     if (providerAction != null) {
                         providerAction.launch(this);
                     }
@@ -513,7 +510,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     private final MenuItem.OnMenuItemClickListener reloadOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
-            PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getMediaProvider().scanStart();
+            PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanStart();
             return true;
         }
     };
@@ -529,8 +526,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             if (currentItemClass.equals(PlaylistFragment.class)) {
                 int sortIndex = 0;
                 switch (MusicConnector.playlists_sort_order) {
-                    case +AbstractMediaProvider.PLAYLIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaProvider.PLAYLIST_NAME: sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_playlists, sortIndex, playlistFragmentAlertDialogClickListener);
@@ -538,8 +535,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(ArtistFragment.class)) {
                 int sortIndex = 0;
                 switch (MusicConnector.artists_sort_order) {
-                    case +AbstractMediaProvider.ARTIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaProvider.ARTIST_NAME: sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_artists, sortIndex, artistFragmentAlertDialogClickListener);
@@ -547,8 +544,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(AlbumArtistFragment.class)) {
                 int sortIndex = 0;
                 switch (MusicConnector.album_artists_sort_order) {
-                    case +AbstractMediaProvider.ALBUM_ARTIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaProvider.ALBUM_ARTIST_NAME: sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_album_artists, sortIndex, albumArtistFragmentAlertDialogClickListener);
@@ -556,10 +553,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(AlbumFragment.class)) {
                 int sortIndex = 0;
                 switch (MusicConnector.albums_sort_order) {
-                    case +AbstractMediaProvider.ALBUM_NAME:   sortIndex = 0;  break;
-                    case -AbstractMediaProvider.ALBUM_NAME:   sortIndex = 1;  break;
-                    case +AbstractMediaProvider.ALBUM_ARTIST: sortIndex = 2;  break;
-                    case -AbstractMediaProvider.ALBUM_ARTIST: sortIndex = 3;  break;
+                    case +AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
+                    case -AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 3;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_albums, sortIndex, albumFragmentAlertDialogClickListener);
@@ -567,16 +564,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(SongFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
                 switch (MusicConnector.songs_sort_order) {
-                    case +AbstractMediaProvider.SONG_TITLE:   sortIndex = 0;  break;
-                    case -AbstractMediaProvider.SONG_TITLE:   sortIndex = 1;  break;
-                    case +AbstractMediaProvider.SONG_TRACK:   sortIndex = 2;  break;
-                    case -AbstractMediaProvider.SONG_TRACK:   sortIndex = 3;  break;
-                    case +AbstractMediaProvider.SONG_URI:     sortIndex = 4;  break;
-                    case -AbstractMediaProvider.SONG_URI:     sortIndex = 5;  break;
-                    case +AbstractMediaProvider.SONG_ARTIST:  sortIndex = 6;  break;
-                    case -AbstractMediaProvider.SONG_ARTIST:  sortIndex = 7;  break;
-                    case +AbstractMediaProvider.SONG_ALBUM:   sortIndex = 8;  break;
-                    case -AbstractMediaProvider.SONG_ALBUM:   sortIndex = 9; break;
+                    case +AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.SONG_TRACK:   sortIndex = 2;  break;
+                    case -AbstractMediaManager.Provider.SONG_TRACK:   sortIndex = 3;  break;
+                    case +AbstractMediaManager.Provider.SONG_URI:     sortIndex = 4;  break;
+                    case -AbstractMediaManager.Provider.SONG_URI:     sortIndex = 5;  break;
+                    case +AbstractMediaManager.Provider.SONG_ARTIST:  sortIndex = 6;  break;
+                    case -AbstractMediaManager.Provider.SONG_ARTIST:  sortIndex = 7;  break;
+                    case +AbstractMediaManager.Provider.SONG_ALBUM:   sortIndex = 8;  break;
+                    case -AbstractMediaManager.Provider.SONG_ALBUM:   sortIndex = 9; break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_songs, sortIndex, songFragmentAlertDialogClickListener);
@@ -584,8 +581,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(GenreFragment.class)) {
                 int sortIndex = 0;
                 switch (MusicConnector.genres_sort_order) {
-                    case +AbstractMediaProvider.GENRE_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaProvider.GENRE_NAME: sortIndex = 1;  break;
+                    case +AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_genre, sortIndex, genreFragmentAlertDialogClickListener);
@@ -593,8 +590,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             else if (currentItemClass.equals(StorageFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
                 switch (MusicConnector.storage_sort_order) {
-                    case AbstractMediaProvider.STORAGE_DISPLAY_NAME:               sortIndex = 0;  break;
-                    case -AbstractMediaProvider.STORAGE_DISPLAY_NAME:              sortIndex = 1;  break;
+                    case AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:               sortIndex = 0;  break;
+                    case -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:              sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_files, sortIndex, storageFragmentAlertDialogClickListener);
@@ -610,8 +607,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.playlists_sort_order = AbstractMediaProvider.PLAYLIST_NAME; break;
-                case 1:  MusicConnector.playlists_sort_order = -AbstractMediaProvider.PLAYLIST_NAME; break;
+                case 0:  MusicConnector.playlists_sort_order = AbstractMediaManager.Provider.PLAYLIST_NAME; break;
+                case 1:  MusicConnector.playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
             }
 
             libraryAdapter.doRefresh();
@@ -624,8 +621,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.artists_sort_order = AbstractMediaProvider.ARTIST_NAME; break;
-                case 1:  MusicConnector.artists_sort_order = -AbstractMediaProvider.ARTIST_NAME; break;
+                case 0:  MusicConnector.artists_sort_order = AbstractMediaManager.Provider.ARTIST_NAME; break;
+                case 1:  MusicConnector.artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
             }
 
             libraryAdapter.doRefresh();
@@ -638,8 +635,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.album_artists_sort_order = AbstractMediaProvider.ALBUM_ARTIST_NAME; break;
-                case 1:  MusicConnector.album_artists_sort_order = -AbstractMediaProvider.ALBUM_ARTIST_NAME; break;
+                case 0:  MusicConnector.album_artists_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
+                case 1:  MusicConnector.album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
             }
 
             libraryAdapter.doRefresh();
@@ -652,10 +649,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.albums_sort_order = AbstractMediaProvider.ALBUM_NAME; break;
-                case 1:  MusicConnector.albums_sort_order = -AbstractMediaProvider.ALBUM_NAME;  break;
-                case 2:  MusicConnector.albums_sort_order = AbstractMediaProvider.ALBUM_ARTIST;  break;
-                case 3:  MusicConnector.albums_sort_order = -AbstractMediaProvider.ALBUM_ARTIST; break;
+                case 0:  MusicConnector.albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME; break;
+                case 1:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_NAME;  break;
+                case 2:  MusicConnector.albums_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST;  break;
+                case 3:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
             }
 
             libraryAdapter.doRefresh();
@@ -668,16 +665,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.songs_sort_order = AbstractMediaProvider.SONG_TITLE; break;
-                case 1:  MusicConnector.songs_sort_order = -AbstractMediaProvider.SONG_TITLE; break;
-                case 2:  MusicConnector.songs_sort_order = AbstractMediaProvider.SONG_TRACK; break;
-                case 3:  MusicConnector.songs_sort_order = -AbstractMediaProvider.SONG_TRACK; break;
-                case 4:  MusicConnector.songs_sort_order = AbstractMediaProvider.SONG_URI; break;
-                case 5:  MusicConnector.songs_sort_order = -AbstractMediaProvider.SONG_URI; break;
-                case 6:  MusicConnector.songs_sort_order = AbstractMediaProvider.SONG_ARTIST; break;
-                case 7:  MusicConnector.songs_sort_order = -AbstractMediaProvider.SONG_ARTIST; break;
-                case 8:  MusicConnector.songs_sort_order = AbstractMediaProvider.SONG_ALBUM; break;
-                case 9:  MusicConnector.songs_sort_order = -AbstractMediaProvider.SONG_ALBUM; break;
+                case 0:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 1:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 2:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 3:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 4:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
+                case 5:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
+                case 6:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 7:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 8:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 9:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
             libraryAdapter.doRefresh();
@@ -690,8 +687,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.genres_sort_order = AbstractMediaProvider.GENRE_NAME; break;
-                case 1:  MusicConnector.genres_sort_order = -AbstractMediaProvider.GENRE_NAME; break;
+                case 0:  MusicConnector.genres_sort_order = AbstractMediaManager.Provider.GENRE_NAME; break;
+                case 1:  MusicConnector.genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
             }
 
             libraryAdapter.doRefresh();
@@ -704,8 +701,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.storage_sort_order = AbstractMediaProvider.STORAGE_DISPLAY_NAME; break;
-                case 1:  MusicConnector.storage_sort_order = -AbstractMediaProvider.STORAGE_DISPLAY_NAME; break;
+                case 0:  MusicConnector.storage_sort_order = AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
+                case 1:  MusicConnector.storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
             }
 
             libraryAdapter.doRefresh();
@@ -742,7 +739,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     };
 
-    private AbstractMediaProvider.OnLibraryChangeListener libraryChangeListener = new AbstractMediaProvider.OnLibraryChangeListener() {
+    private AbstractMediaManager.Provider.OnLibraryChangeListener libraryChangeListener = new AbstractMediaManager.Provider.OnLibraryChangeListener() {
 
         @Override
         public void libraryChanged() {
@@ -780,34 +777,34 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         libraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         // Only show tabs that were set in preferences
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_PLAYLIST)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
             libraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_ARTIST)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
             libraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
             libraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_ALBUM)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
             libraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_MEDIA)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
             libraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_GENRE)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
             libraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
         }
 
-        if (mediaProvider.hasContentType(ContentType.CONTENT_TYPE_STORAGE)) {
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
             libraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
         }
 
@@ -871,12 +868,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         ArrayList<AbstractNavigationDrawerItem> objects = new ArrayList<AbstractNavigationDrawerItem>();
         objects.add(NavigationMenuSection.create(DRAWERITEM_SEPARATOR_ID, getString(R.string.drawer_section_label_media_management)));
 
-        final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getMediaProvider();
-        final AbstractProviderAction providerActionList[] = mediaProvider.getAbstractProviderActionList();
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getAbstractProviderActionList();
 
         if (providerActionList != null) {
             for (int index = 0; index < providerActionList.length; index++) {
-                final AbstractProviderAction providerAction = providerActionList[index];
+                final AbstractMediaManager.ProviderAction providerAction = providerActionList[index];
 
                 if (providerAction.isVisible()) {
                     objects.add(NavigationMenuItem.create(200 + index, providerAction.getDescription(), R.drawable.ic_action_tiles_large, false));
@@ -896,14 +893,14 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         //    Launching scan.
         for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
-            mediaManager.getMediaProvider().addLibraryChangeListener(libraryChangeListener);
+            mediaManager.getProvider().addLibraryChangeListener(libraryChangeListener);
         }
 
-        if (mediaProvider.scanIsRunning()) {
+        if (provider.scanIsRunning()) {
             libraryChangeListener.libraryScanStarted();
         }
         else {
-            mediaProvider.scanStart();
+            provider.scanStart();
         }
     }
 

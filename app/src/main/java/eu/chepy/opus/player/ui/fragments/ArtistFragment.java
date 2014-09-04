@@ -32,7 +32,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.activities.LibraryDetailActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
@@ -64,9 +63,9 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.ARTIST_ID,
-            AbstractMediaProvider.ARTIST_NAME,
-            AbstractMediaProvider.ARTIST_VISIBLE
+            AbstractMediaManager.Provider.ARTIST_ID,
+            AbstractMediaManager.Provider.ARTIST_NAME,
+            AbstractMediaManager.Provider.ARTIST_VISIBLE
     };
 
     public static final int COLUMN_ARTIST_ID = 0;
@@ -85,8 +84,8 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_ARTIST));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST));
     }
 
 	@Override
@@ -199,7 +198,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
 		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
         cursor.moveToPosition(position);
 
-        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_ARTIST);
+        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ARTIST_ID));
 		startActivity(intent);
 	}

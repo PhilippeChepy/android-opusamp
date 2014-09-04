@@ -37,10 +37,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import eu.chepy.opus.player.core.NotificationHelper;
 import eu.chepy.opus.player.core.RemoteControlClientHelper;
-import eu.chepy.opus.player.core.service.providers.AbstractMedia;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaPlayer;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 import eu.chepy.opus.player.ui.utils.uil.ProviderImageDownloader;
 import eu.chepy.opus.player.ui.widgets.Widget4x1;
@@ -48,7 +45,7 @@ import eu.chepy.opus.player.ui.widgets.Widget4x2;
 import eu.chepy.opus.player.utils.LogUtils;
 
 
-public class PlayerService extends Service implements AbstractMediaPlayer.OnProviderCompletionListener {
+public class PlayerService extends Service implements AbstractMediaManager.Player.OnProviderCompletionListener {
 
 	private final static String TAG = "PlayerService";
 
@@ -132,9 +129,9 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
 
 
-    private AbstractMedia currentMedia;
+    private AbstractMediaManager.Media currentMedia;
 
-    private AbstractMedia nextMedia;
+    private AbstractMediaManager.Media nextMedia;
 
     private Lock preloadingMutex = new ReentrantLock();
 
@@ -146,17 +143,17 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
 
      */
     private int[] requestedFields = new int[] {
-            AbstractMediaProvider.SONG_ID,
-            AbstractMediaProvider.SONG_URI,
-            AbstractMediaProvider.SONG_TITLE,
-            AbstractMediaProvider.SONG_ARTIST,
-            AbstractMediaProvider.SONG_ALBUM,
-            AbstractMediaProvider.PLAYLIST_ENTRY_POSITION,
-            AbstractMediaProvider.SONG_DURATION
+            AbstractMediaManager.Provider.SONG_ID,
+            AbstractMediaManager.Provider.SONG_URI,
+            AbstractMediaManager.Provider.SONG_TITLE,
+            AbstractMediaManager.Provider.SONG_ARTIST,
+            AbstractMediaManager.Provider.SONG_ALBUM,
+            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+            AbstractMediaManager.Provider.SONG_DURATION
     };
 
     private int[] sortOrder = new int[] {
-            AbstractMediaProvider.PLAYLIST_ENTRY_POSITION
+            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
     };
 
     private static final int COLUMN_SONG_ID = 0;
@@ -299,7 +296,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         @Override
         public void play() throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
             if (isPlaying()) {
                 return;
@@ -317,7 +314,7 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
                     else if (playlist.getCount() > 0) {
                         LogUtils.LOGI(TAG, "NOT using preloaded content");
                         if (nextMedia != null) {
-                            mediaPlayer.finalizeContent(nextMedia);
+                            player.finalizeContent(nextMedia);
                             nextMedia = null;
                         }
 
@@ -330,8 +327,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             }
 
             if (currentMedia != null) {
-                mediaPlayer.playerSetContent(currentMedia);
-                mediaPlayer.playerPlay();
+                player.playerSetContent(currentMedia);
+                player.playerPlay();
                 wakelock.acquire();
                 notifyPlay();
             }
@@ -340,10 +337,10 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         @Override
         public void pause(boolean keepNotification) throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            if (mediaPlayer.playerIsPlaying()) {
-                mediaPlayer.playerPause(true);
+            if (player.playerIsPlaying()) {
+                player.playerPause(true);
                 notifyPause(keepNotification);
                 wakelock.release();
             }
@@ -352,9 +349,9 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         @Override
         public void stop() throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            mediaPlayer.playerStop();
+            player.playerStop();
             currentMedia = unloadMedia(currentMedia);
             nextMedia = unloadMedia(nextMedia);
 
@@ -393,33 +390,33 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         @Override
         public boolean isPlaying() throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            return mediaPlayer.playerIsPlaying();
+            return player.playerIsPlaying();
         }
 
         @Override
         public long getDuration() throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            return mediaPlayer.playerGetDuration();
+            return player.playerGetDuration();
         }
 
         @Override
         public long getPosition() throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            return mediaPlayer.playerGetPosition();
+            return player.playerGetPosition();
         }
 
         @Override
         public void setPosition(long position) throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            mediaPlayer.playerSeek(position);
+            player.playerSeek(position);
             notifyTimestampUpdate(position);
         }
 
@@ -460,8 +457,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         @Override
         public void queueAdd(String media) throws RemoteException {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-            mediaProvider.playlistAdd(null, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
+            final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+            provider.playlistAdd(null, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
 
             int position = playlist.getPosition();
 
@@ -496,8 +493,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-            mediaProvider.playlistMove(null, indexFrom, indexTo);
+            final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+            provider.playlistMove(null, indexFrom, indexTo);
 
             reloadPlaylist();
 
@@ -516,8 +513,8 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-            mediaProvider.playlistRemove(null, entry);
+            final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+            provider.playlistRemove(null, entry);
 
             boolean wasPlaying = isPlaying();
 
@@ -557,9 +554,9 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+            final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-            mediaProvider.playlistClear(null);
+            provider.playlistClear(null);
             reloadPlaylist();
 
             notifyQueueChanged();
@@ -665,9 +662,9 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         public void notifyProviderChanged() throws RemoteException {
             lockNotify();
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            mediaPlayer.addCompletionListener(PlayerService.this);
+            player.addCompletionListener(PlayerService.this);
             unlockNotify();
         }
 
@@ -1051,14 +1048,14 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         }
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        playlist = mediaProvider.buildCursor(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA,
+        playlist = provider.buildCursor(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
                 requestedFields,
                 sortOrder,
                 null,
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST,
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
                 null);
 
         int playlistLength = playlist != null ? playlist.getCount() : 0;
@@ -1072,31 +1069,31 @@ public class PlayerService extends Service implements AbstractMediaPlayer.OnProv
         playlistOrderIndex = 0;
     }
 
-    protected AbstractMedia unloadMedia(final AbstractMedia track) {
+    protected AbstractMediaManager.Media unloadMedia(final AbstractMediaManager.Media track) {
         if (track != null) {
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            if (currentMedia != null && track.getMediaUri().equals(currentMedia.getMediaUri()) && mediaPlayer.playerIsPlaying()) {
-                mediaPlayer.playerStop();
+            if (currentMedia != null && track.getMediaUri().equals(currentMedia.getMediaUri()) && player.playerIsPlaying()) {
+                player.playerStop();
             }
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    mediaPlayer.finalizeContent(track);
+                    player.finalizeContent(track);
                 }
             }).start();
         }
         return null;
     }
 
-    protected AbstractMedia loadMedia(final String songUri) {
+    protected AbstractMediaManager.Media loadMedia(final String songUri) {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-        final AbstractMediaPlayer mediaPlayer = mediaManager.getMediaPlayer();
+        final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-        final AbstractMedia ret = mediaPlayer.initializeContent(songUri);
-        mediaPlayer.preloadContent(ret);
+        final AbstractMediaManager.Media ret = player.initializeContent(songUri);
+        player.preloadContent(ret);
         return ret;
     }
 

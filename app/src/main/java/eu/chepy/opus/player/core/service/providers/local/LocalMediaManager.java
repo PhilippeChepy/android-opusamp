@@ -1,21 +1,19 @@
 package eu.chepy.opus.player.core.service.providers.local;
 
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaPlayer;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 
 public class LocalMediaManager implements AbstractMediaManager {
 
-    private AbstractMediaPlayer mediaPlayer;
+    private Player player;
 
-    private AbstractMediaProvider mediaProvider;
+    private Provider provider;
 
     private int providerId;
 
     public LocalMediaManager(int providerId) {
         this.providerId = providerId;
-        mediaPlayer = new LocalMediaPlayer(this);
-        mediaProvider = new LocalMediaProvider(this, providerId);
+        player = new LocalPlayer(this);
+        provider = new LocalProvider(this, providerId);
     }
 
     @Override
@@ -29,12 +27,12 @@ public class LocalMediaManager implements AbstractMediaManager {
     }
 
     @Override
-    public AbstractMediaProvider getMediaProvider() {
-        return mediaProvider;
+    public Provider getProvider() {
+        return provider;
     }
 
     @Override
-    public AbstractMediaPlayer getMediaPlayer() {
-        return mediaPlayer;
+    public Player getPlayer() {
+        return player;
     }
 }

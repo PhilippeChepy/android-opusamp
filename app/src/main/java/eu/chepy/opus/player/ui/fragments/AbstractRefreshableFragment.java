@@ -17,8 +17,7 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.view.View;
 
-import eu.chepy.opus.player.core.service.providers.AbstractEmptyContentAction;
-import eu.chepy.opus.player.core.service.providers.AbstractProviderAction;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.ui.views.CustomLinkTextView;
 import eu.chepy.opus.player.ui.views.CustomTextView;
 
@@ -31,13 +30,13 @@ public abstract class AbstractRefreshableFragment extends Fragment {
     /*
         Empty actions
      */
-    private AbstractEmptyContentAction emptyContentAction;
+    private AbstractMediaManager.AbstractEmptyContentAction emptyContentAction;
 
 
 
     public abstract void doRefresh();
 
-    protected void setEmptyContentAction(final AbstractEmptyContentAction emptyContentAction) {
+    protected void setEmptyContentAction(final AbstractMediaManager.AbstractEmptyContentAction emptyContentAction) {
         this.emptyContentAction = emptyContentAction;
     }
 
@@ -53,10 +52,7 @@ public abstract class AbstractRefreshableFragment extends Fragment {
             actionView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    final AbstractProviderAction providerAction = emptyContentAction.getAction();
-                    if (providerAction != null) {
-                        providerAction.launch(getActivity());
-                    }
+                    emptyContentAction.launch(getActivity());
                 }
             });
         }

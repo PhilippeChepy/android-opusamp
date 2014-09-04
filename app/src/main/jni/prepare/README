@@ -1,3 +1,3 @@
 Move prepare in your jni folder.
 Update paths in prepare/*.mk
-run build-prereq.sh
+run build.sh

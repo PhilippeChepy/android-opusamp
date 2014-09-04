@@ -32,7 +32,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.activities.LibraryDetailActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
@@ -64,10 +63,10 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.ALBUM_ID,
-            AbstractMediaProvider.ALBUM_NAME,
-            AbstractMediaProvider.ALBUM_ARTIST,
-            AbstractMediaProvider.ALBUM_VISIBLE
+            AbstractMediaManager.Provider.ALBUM_ID,
+            AbstractMediaManager.Provider.ALBUM_NAME,
+            AbstractMediaManager.Provider.ALBUM_ARTIST,
+            AbstractMediaManager.Provider.ALBUM_VISIBLE
     };
 
     public static final int COLUMN_ALBUM_ID = 0;
@@ -89,8 +88,8 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM));
     }
 
 	@Override
@@ -157,7 +156,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
         final int[] sortFields = new int[] { MusicConnector.albums_sort_order };
 
         return PlayerApplication.buildAlbumLoader(PlayerApplication.libraryManagerIndex,
-                requestedFields, sortFields, PlayerApplication.lastSearchFilter, AbstractMediaProvider.ContentType.CONTENT_TYPE_DEFAULT, null);
+                requestedFields, sortFields, PlayerApplication.lastSearchFilter, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
     }
 
     @Override
@@ -204,7 +203,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
 		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
         cursor.moveToPosition(position);
 
-        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM);
+        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ALBUM_ID));
 		startActivity(intent);
 	}

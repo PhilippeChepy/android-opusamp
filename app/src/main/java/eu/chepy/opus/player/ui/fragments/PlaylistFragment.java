@@ -32,7 +32,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.activities.LibraryDetailActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
@@ -64,9 +63,9 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
 	private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.PLAYLIST_ID,
-            AbstractMediaProvider.PLAYLIST_NAME,
-            AbstractMediaProvider.PLAYLIST_VISIBLE
+            AbstractMediaManager.Provider.PLAYLIST_ID,
+            AbstractMediaManager.Provider.PLAYLIST_NAME,
+            AbstractMediaManager.Provider.PLAYLIST_VISIBLE
     };
 
     public static final int COLUMN_PLAYLIST_ID = 0;
@@ -87,8 +86,8 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST));
     }
 
     @Override
@@ -200,7 +199,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
 		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
         cursor.moveToPosition(position);
 
-        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST);
+        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_PLAYLIST_ID));
 		/* launch activity */ startActivity(intent);
 	}

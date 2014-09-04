@@ -32,7 +32,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.activities.LibraryDetailActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
@@ -64,9 +63,9 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.GENRE_ID,
-            AbstractMediaProvider.GENRE_NAME,
-            AbstractMediaProvider.GENRE_VISIBLE
+            AbstractMediaManager.Provider.GENRE_ID,
+            AbstractMediaManager.Provider.GENRE_NAME,
+            AbstractMediaManager.Provider.GENRE_VISIBLE
     };
 
     public static final int COLUMN_GENRE_ID = 0;
@@ -87,8 +86,8 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_GENRE));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE));
     }
 
 	@Override
@@ -199,7 +198,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
 		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
         cursor.moveToPosition(position);
 
-        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaProvider.ContentType.CONTENT_TYPE_GENRE);
+        intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_GENRE_ID));
 		startActivity(intent);
 	}

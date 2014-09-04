@@ -22,16 +22,16 @@ import android.widget.TextView;
 import java.util.List;
 
 import eu.chepy.opus.player.R;
-import eu.chepy.opus.player.core.service.providers.Metadata;
+import eu.chepy.opus.player.core.service.providers.MediaMetadata;
 
 public class MetadataListAdapter extends BaseAdapter {
 
-    private List<Metadata> metadataList;
+    private List<MediaMetadata> mediaMetadataList;
 
     private Context context;
 
-    public MetadataListAdapter(Context context, List<Metadata> metadataList) {
-        this.metadataList = metadataList;
+    public MetadataListAdapter(Context context, List<MediaMetadata> mediaMetadataList) {
+        this.mediaMetadataList = mediaMetadataList;
         this.context = context;
     }
 
@@ -57,12 +57,12 @@ public class MetadataListAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return metadataList.get(position);
+        return mediaMetadataList.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        return metadataList.get(position).index;
+        return mediaMetadataList.get(position).index;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class MetadataListAdapter extends BaseAdapter {
             viewHolder = (Holder) view.getTag();
         }
 
-        final Metadata reviewItem = metadataList.get(position);
+        final MediaMetadata reviewItem = mediaMetadataList.get(position);
         if (viewHolder != null) {
             viewHolder.textView1.setText(reviewItem.description);
             viewHolder.textView2.setText(reviewItem.value);
@@ -94,7 +94,7 @@ public class MetadataListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return metadataList.size();
+        return mediaMetadataList.size();
     }
 
     private final class Holder {

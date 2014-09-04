@@ -50,7 +50,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.IPlayerServiceListener;
 import eu.chepy.opus.player.core.service.PlayerService;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.ui.activities.CarModeActivity;
 import eu.chepy.opus.player.ui.activities.LibraryMainActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
@@ -86,15 +86,15 @@ public class PlayerViewHelper implements
     private Cursor playlistCursor;
 
     private int[] requestedFields = new int[] {
-            AbstractMediaProvider.SONG_ID,
-            AbstractMediaProvider.SONG_TITLE,
-            AbstractMediaProvider.SONG_ARTIST,
-            AbstractMediaProvider.PLAYLIST_ENTRY_POSITION,
-            AbstractMediaProvider.SONG_VISIBLE,
+            AbstractMediaManager.Provider.SONG_ID,
+            AbstractMediaManager.Provider.SONG_TITLE,
+            AbstractMediaManager.Provider.SONG_ARTIST,
+            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+            AbstractMediaManager.Provider.SONG_VISIBLE,
     };
 
     private int[] sortFields = new int[] {
-            AbstractMediaProvider.PLAYLIST_ENTRY_POSITION
+            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
     };
 
     private static final int COLUMN_SONG_ID = 0;
@@ -507,7 +507,7 @@ public class PlayerViewHelper implements
                 requestedFields,
                 sortFields,
                 null,
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_PLAYLIST,
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
                 null);
     }
 
@@ -671,7 +671,7 @@ public class PlayerViewHelper implements
     }
 
     protected boolean doAddToPlaylistAction() {
-        return MusicConnector.doContextActionAddToPlaylist(hostActivity, AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), MusicConnector.songs_sort_order);
+        return MusicConnector.doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), MusicConnector.songs_sort_order);
     }
 
     protected boolean doClearAction() {

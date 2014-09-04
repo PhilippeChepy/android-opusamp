@@ -41,8 +41,6 @@ import java.util.ArrayList;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
-import eu.chepy.opus.player.core.service.providers.AbstractProviderAction;
 import eu.chepy.opus.player.core.service.providers.MediaManagerFactory;
 import eu.chepy.opus.player.core.service.providers.MediaManagerFactory.MediaManagerDescription;
 import eu.chepy.opus.player.core.service.providers.index.database.Entities;
@@ -240,7 +238,7 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
                         /*
                             Delete provider specific content
                          */
-                        mediaManager.getMediaProvider().erase();
+                        mediaManager.getProvider().erase();
                         doRefresh();
                     }
 
@@ -273,8 +271,8 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
 
     protected void doLibraryConfiguration(int mediaProviderId, int mediaProviderType) {
         final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
-        final AbstractMediaProvider mediaProvider = localLibraryProvider.getMediaProvider();
-        final AbstractProviderAction providerAction = mediaProvider.getAbstractProviderAction(0);
+        final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
+        final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(0);
 
         if (providerAction != null) {
             /* launch activity */ providerAction.launch(this);

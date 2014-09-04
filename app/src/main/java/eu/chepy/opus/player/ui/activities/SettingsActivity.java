@@ -174,7 +174,7 @@ public class SettingsActivity extends PreferenceActivity {
 
                         for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
                             publishProgress(index + 1);
-                            PlayerApplication.mediaManagers[index].getMediaProvider().databaseMaintain();
+                            PlayerApplication.mediaManagers[index].getProvider().databaseMaintain();
                         }
 
                         return null;

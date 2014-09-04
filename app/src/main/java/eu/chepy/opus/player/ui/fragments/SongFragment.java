@@ -31,7 +31,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
 import eu.chepy.opus.player.ui.utils.MusicConnector;
@@ -60,10 +59,10 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.SONG_ID,
-            AbstractMediaProvider.SONG_TITLE,
-            AbstractMediaProvider.SONG_ARTIST,
-            AbstractMediaProvider.SONG_VISIBLE,
+            AbstractMediaManager.Provider.SONG_ID,
+            AbstractMediaManager.Provider.SONG_TITLE,
+            AbstractMediaManager.Provider.SONG_ARTIST,
+            AbstractMediaManager.Provider.SONG_VISIBLE,
     };
 
     public static final int COLUMN_SONG_ID = 0;
@@ -86,8 +85,8 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA));
     }
         
 	@Override
@@ -158,7 +157,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                 requestedFields,
                 sortFields,
                 PlayerApplication.lastSearchFilter,
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_DEFAULT, null);
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
 	}
 
 	@Override

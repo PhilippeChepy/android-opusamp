@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 
 public class ProviderImageDownloader extends BaseImageDownloader {
@@ -61,26 +60,26 @@ public class ProviderImageDownloader extends BaseImageDownloader {
 
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[managerId];
 
-                if (!mediaManager.getMediaProvider().hasFeature(AbstractMediaProvider.Feature.SUPPORT_ART)) {
+                if (!mediaManager.getProvider().hasFeature(AbstractMediaManager.Provider.Feature.SUPPORT_ART)) {
                     return super.getStreamFromOtherSource(imageUri, extra);
                 }
 
                 if (subType.equals(SUBTYPE_MEDIA)) {
-                    inputStream = (InputStream) mediaManager.getMediaProvider().getProperty(
-                            AbstractMediaProvider.ContentType.CONTENT_TYPE_MEDIA,
+                    inputStream = (InputStream) mediaManager.getProvider().getProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
                             objectId,
-                            AbstractMediaProvider.ContentProperty.CONTENT_ART_STREAM);
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
                 } else if (subType.equals(SUBTYPE_ALBUM)) {
-                    inputStream = (InputStream) mediaManager.getMediaProvider().getProperty(
-                            AbstractMediaProvider.ContentType.CONTENT_TYPE_ALBUM,
+                    inputStream = (InputStream) mediaManager.getProvider().getProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
                             objectId,
-                            AbstractMediaProvider.ContentProperty.CONTENT_ART_STREAM);
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
                 }
                 else if (subType.equals(SUBTYPE_STORAGE)) {
-                    inputStream = (InputStream) mediaManager.getMediaProvider().getProperty(
-                            AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+                    inputStream = (InputStream) mediaManager.getProvider().getProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                             objectId,
-                            AbstractMediaProvider.ContentProperty.CONTENT_ART_STREAM);
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
                 }
             }
 

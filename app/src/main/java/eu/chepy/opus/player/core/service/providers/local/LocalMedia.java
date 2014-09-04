@@ -12,9 +12,9 @@
  */
 package eu.chepy.opus.player.core.service.providers.local;
 
-import eu.chepy.opus.player.core.service.providers.AbstractMedia;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 
-public class LocalMedia implements AbstractMedia {
+public class LocalMedia implements AbstractMediaManager.Media {
 	
 	public static final String TAG = "JniCodecContext";
 

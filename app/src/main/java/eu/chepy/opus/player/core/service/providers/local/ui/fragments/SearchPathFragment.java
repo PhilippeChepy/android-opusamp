@@ -31,8 +31,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
-import eu.chepy.opus.player.core.service.providers.local.LocalMediaProvider;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
+import eu.chepy.opus.player.core.service.providers.local.LocalProvider;
 import eu.chepy.opus.player.core.service.providers.local.database.Entities;
 import eu.chepy.opus.player.core.service.utils.AbstractSimpleCursorLoader;
 import eu.chepy.opus.player.ui.adapter.holder.GridViewHolder;
@@ -70,9 +70,9 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
     protected SQLiteDatabase getReadableDatabase() {
         int index = PlayerApplication.getManagerIndex(providerId);
 
-        final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[index].getMediaProvider();
-        if (mediaProvider instanceof LocalMediaProvider) {
-            return ((LocalMediaProvider) mediaProvider).getReadableDatabase();
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
+        if (provider instanceof LocalProvider) {
+            return ((LocalProvider) provider).getReadableDatabase();
         }
 
         return null;
@@ -81,9 +81,9 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
     protected SQLiteDatabase getWritableDatabase() {
         int index = PlayerApplication.getManagerIndex(providerId);
 
-        final AbstractMediaProvider mediaProvider = PlayerApplication.mediaManagers[index].getMediaProvider();
-        if (mediaProvider instanceof LocalMediaProvider) {
-            return ((LocalMediaProvider) mediaProvider).getWritableDatabase();
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
+        if (provider instanceof LocalProvider) {
+            return ((LocalProvider) provider).getWritableDatabase();
         }
 
         return null;
@@ -123,7 +123,7 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            providerId = arguments.getInt(AbstractMediaProvider.KEY_PROVIDER_ID);
+            providerId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
         }
 
         getLoaderManager().initLoader(0, null, this);

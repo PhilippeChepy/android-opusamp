@@ -27,7 +27,7 @@ import android.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import eu.chepy.opus.player.R;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.core.service.providers.local.database.Entities;
 import eu.chepy.opus.player.core.service.providers.local.database.OpenHelper;
 import eu.chepy.opus.player.core.service.providers.local.ui.fragments.SearchPathFragment;
@@ -50,7 +50,7 @@ public class SearchPathActivity extends ActionBarActivity {
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 
-        providerId = getIntent().getIntExtra(AbstractMediaProvider.KEY_PROVIDER_ID, -1);
+        providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
 		
 		getSupportActionBar().show();
 		
@@ -58,11 +58,11 @@ public class SearchPathActivity extends ActionBarActivity {
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
-        searchBundle.putInt(AbstractMediaProvider.KEY_PROVIDER_ID, providerId);
+        searchBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
 		
 		Bundle excludedBundle = new Bundle();
 		excludedBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_EXCLUDE_PATH);
-        excludedBundle.putInt(AbstractMediaProvider.KEY_PROVIDER_ID, providerId);
+        excludedBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
 		
 		pagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
 		pagerAdapter.addFragment(new SearchPathFragment(), searchBundle, R.string.tab_label_accept_path);

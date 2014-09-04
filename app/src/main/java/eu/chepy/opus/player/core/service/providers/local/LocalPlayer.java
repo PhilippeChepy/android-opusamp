@@ -15,14 +15,13 @@ package eu.chepy.opus.player.core.service.providers.local;
 
 import java.util.ArrayList;
 
-import eu.chepy.opus.player.core.service.providers.AbstractMedia;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaPlayer;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.utils.LogUtils;
 import eu.chepy.opus.player.utils.jni.JniMediaLib;
 
-public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer {
+public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Player {
 
-	public static final String TAG = LocalMediaPlayer.class.getSimpleName();
+	public static final String TAG = LocalPlayer.class.getSimpleName();
 
 	private static LocalMedia currentContext = null;
 	
@@ -55,7 +54,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
         }
 	}
 
-	public LocalMediaPlayer(LocalMediaManager localMediaManager) {
+	public LocalPlayer(LocalMediaManager localMediaManager) {
         mediaManager = localMediaManager;
 		if (engineInitialize() != 0) {
             LogUtils.LOGE(TAG, "unable to initialize engine");
@@ -72,7 +71,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 	}
 
 	@Override
-	public AbstractMedia initializeContent(String mediaUri) {
+	public AbstractMediaManager.Media initializeContent(String mediaUri) {
 		LocalMedia codecContext = new LocalMedia(mediaUri);
 		codecContext.nativeContext = streamInitialize(mediaUri);
 		
@@ -81,7 +80,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 
     // TODO: use at "end - 25000ms" when playing content.
 	@Override
-	public void preloadContent(AbstractMedia context) {
+	public void preloadContent(AbstractMediaManager.Media context) {
 		if (context instanceof LocalMedia) {
 			LocalMedia codecContext = (LocalMedia)context;
             streamPreload(codecContext.nativeContext);
@@ -89,7 +88,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 	}
 
 	@Override
-	public void finalizeContent(AbstractMedia context) {
+	public void finalizeContent(AbstractMediaManager.Media context) {
 		if (context instanceof LocalMedia) {
 			LocalMedia codecContext = (LocalMedia)context;
             streamFinalize(codecContext.nativeContext);
@@ -98,7 +97,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
 	}
 
 	@Override
-	public synchronized void playerSetContent(AbstractMedia context) {
+	public synchronized void playerSetContent(AbstractMediaManager.Media context) {
 		if (context instanceof LocalMedia) {
 			if (currentContext != null && playing) {
 				playerPause(true);
@@ -149,7 +148,7 @@ public class LocalMediaPlayer extends JniMediaLib implements AbstractMediaPlayer
                 streamStop(currentContext.nativeContext);
                 streamSetPosition(currentContext.nativeContext, 0);
 
-                ((LocalMediaProvider)(mediaManager.getMediaProvider())).setLastPlayed(currentContext.getMediaUri());
+                ((LocalProvider)(mediaManager.getProvider())).setLastPlayed(currentContext.getMediaUri());
 
 				playing = false;
 			}

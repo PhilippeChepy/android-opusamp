@@ -24,7 +24,6 @@ import android.preference.PreferenceManager;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 
 public class SettingsActivity extends PreferenceActivity {
@@ -40,7 +39,7 @@ public class SettingsActivity extends PreferenceActivity {
         providerId = 0;
 
         if (intent != null) {
-            providerId = intent.getIntExtra(AbstractMediaProvider.KEY_PROVIDER_ID, 0);
+            providerId = intent.getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, 0);
         }
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -78,8 +77,8 @@ public class SettingsActivity extends PreferenceActivity {
                 final AbstractMediaManager mediaManager =
                         PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
 
-                final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-                mediaProvider.getAbstractProviderAction(0).launch(SettingsActivity.this);
+                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                provider.getAbstractProviderAction(0).launch(SettingsActivity.this);
                 return true;
             }
         });

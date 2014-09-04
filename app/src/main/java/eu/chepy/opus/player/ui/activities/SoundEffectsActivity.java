@@ -23,7 +23,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import eu.chepy.opus.player.R;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaPlayer;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 import eu.chepy.opus.player.ui.views.VerticalSeekBar;
 
@@ -84,19 +84,19 @@ public class SoundEffectsActivity extends ActionBarActivity {
     }
 
     protected void doUpdateBandState() {
-        final AbstractMediaPlayer mediaPlayer = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getMediaPlayer();
+        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
 
-        equalizerEnabledCheckbox.setChecked(mediaPlayer.equalizerIsEnabled());
+        equalizerEnabledCheckbox.setChecked(player.equalizerIsEnabled());
 
         for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
             bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
-            bandList[bandIndex].seekBar.setProgress((int)mediaPlayer.equalizerBandGetGain(bandIndex));
+            bandList[bandIndex].seekBar.setProgress((int) player.equalizerBandGetGain(bandIndex));
         }
     }
 
     protected void applyBandState() {
-        final AbstractMediaPlayer mediaPlayer = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getMediaPlayer();
-        mediaPlayer.equalizerSetEnabled(equalizerEnabledCheckbox.isChecked());
+        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+        player.equalizerSetEnabled(equalizerEnabledCheckbox.isChecked());
 
         for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
             bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
@@ -121,9 +121,9 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            final AbstractMediaPlayer mediaPlayer = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getMediaPlayer();
-            mediaPlayer.equalizerBandSetGain(bandIndex, progress);
-            mediaPlayer.equalizerBandSetGain(bandIndex + 19, progress);
+            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+            player.equalizerBandSetGain(bandIndex, progress);
+            player.equalizerBandSetGain(bandIndex + 19, progress);
         }
 
         @Override

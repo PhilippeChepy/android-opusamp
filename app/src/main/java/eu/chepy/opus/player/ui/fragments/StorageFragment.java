@@ -30,7 +30,6 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
 import eu.chepy.opus.player.ui.utils.MusicConnector;
@@ -61,11 +60,11 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaProvider.STORAGE_ID,
-            AbstractMediaProvider.STORAGE_DISPLAY_NAME,
-            AbstractMediaProvider.STORAGE_DISPLAY_DETAIL,
-            AbstractMediaProvider.SONG_ART,
-            AbstractMediaProvider.SONG_VISIBLE
+            AbstractMediaManager.Provider.STORAGE_ID,
+            AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME,
+            AbstractMediaManager.Provider.STORAGE_DISPLAY_DETAIL,
+            AbstractMediaManager.Provider.SONG_ART,
+            AbstractMediaManager.Provider.SONG_VISIBLE
     };
 
     public static final int COLUMN_STORAGE_ID = 0;
@@ -91,8 +90,8 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
         super.onCreate(savedInstanceState);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
-        setEmptyContentAction(mediaProvider.getEmptyContentAction(AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE));
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE));
     }
 
     @Override
@@ -210,18 +209,18 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        boolean hasChild = (Boolean) mediaProvider.getProperty(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+        boolean hasChild = (Boolean) provider.getProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                 position,
-                AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
 
         if (hasChild) {
-            mediaProvider.setProperty(
-                    AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+            provider.setProperty(
+                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     position,
-                    AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_UPDATE_VIEW,
+                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_UPDATE_VIEW,
                     null,
                     null
             );
@@ -234,18 +233,18 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     public boolean handleBackButton() {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        boolean hasParent = (Boolean) mediaProvider.getProperty(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+        boolean hasParent = (Boolean) provider.getProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                 null,
-                AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_HAS_PARENT);
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_HAS_PARENT);
 
         if (hasParent) {
-            mediaProvider.setProperty(
-                    AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+            provider.setProperty(
+                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     0,  // Parent dir is always 0.
-                    AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_UPDATE_VIEW,
+                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_UPDATE_VIEW,
                     null,
                     null
             );
@@ -257,23 +256,23 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     protected void doLocationUpdate() {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        String currentPath = (String) mediaProvider.getProperty(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+        String currentPath = (String) provider.getProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                 null,
-                AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION);
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION);
         pathTextView.setText(currentPath);
     }
 
     protected void doOnCreateContextMenu(Menu menu, int position) {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaProvider mediaProvider = mediaManager.getMediaProvider();
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        boolean hasChild = (Boolean) mediaProvider.getProperty(
-                AbstractMediaProvider.ContentType.CONTENT_TYPE_STORAGE,
+        boolean hasChild = (Boolean) provider.getProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                 position,
-                AbstractMediaProvider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_HAS_CHILD);
 
         if (!hasChild) {
             PlayerApplication.createStorageContextMenu(menu, FRAGMENT_GROUP_ID);

@@ -46,10 +46,8 @@ import java.util.Set;
 
 import eu.chepy.backport.android.content.SharedPreferencesCompat;
 import eu.chepy.opus.player.R;
-import eu.chepy.opus.player.core.service.providers.AbstractEmptyContentAction;
-import eu.chepy.opus.player.core.service.providers.AbstractMediaProvider;
-import eu.chepy.opus.player.core.service.providers.AbstractProviderAction;
-import eu.chepy.opus.player.core.service.providers.Metadata;
+import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
+import eu.chepy.opus.player.core.service.providers.MediaMetadata;
 import eu.chepy.opus.player.core.service.providers.local.database.Entities;
 import eu.chepy.opus.player.core.service.providers.local.database.OpenHelper;
 import eu.chepy.opus.player.core.service.providers.local.ui.activities.SearchPathActivity;
@@ -61,11 +59,11 @@ import eu.chepy.opus.player.utils.Base64;
 import eu.chepy.opus.player.utils.LogUtils;
 import eu.chepy.opus.player.utils.jni.JniMediaLib;
 
-public class LocalMediaProvider implements AbstractMediaProvider {
+public class LocalProvider implements AbstractMediaManager.Provider {
 
 
 
-    public static final String TAG = LocalMediaProvider.class.getSimpleName();
+    public static final String TAG = LocalProvider.class.getSimpleName();
 
 
 
@@ -104,9 +102,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     /*
         Actions interfaces
      */
-    public final LocationAction ACTION_LOCATION = new LocationAction();
 
-    public final SettingsAction ACTION_SETTINGS = new SettingsAction();
 
 
 
@@ -122,14 +118,14 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
 
-    public AbstractProviderAction ACTION_LIST[] = new AbstractProviderAction[] {
-            ACTION_LOCATION,
-            ACTION_SETTINGS
+    public AbstractMediaManager.ProviderAction ACTION_LIST[] = new AbstractMediaManager.ProviderAction[] {
+            new LocationAction(),
+            new SettingsAction()
     };
 
 
 
-    public LocalMediaProvider(LocalMediaManager mediaManager, int providerId) {
+    public LocalProvider(LocalMediaManager mediaManager, int providerId) {
         this.mediaManager = mediaManager;
         this.providerId = providerId;
 
@@ -675,7 +671,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                 }
                 return -1;
             case CONTENT_METADATA_LIST:
-                ArrayList<Metadata> metadataList = new ArrayList<Metadata>();
+                ArrayList<MediaMetadata> mediaMetadataList = new ArrayList<MediaMetadata>();
                 // TODO: add metadatas.
                 switch (contentType) {
                     case CONTENT_TYPE_ALBUM:
@@ -746,10 +742,10 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
 
                         // Data compilation
-                        metadataList.add(new Metadata(0, resources.getString(R.string.label_metadata_album_track_count), String.valueOf(trackCount), false));
-                        metadataList.add(new Metadata(1, resources.getString(R.string.label_metadata_album_duration), totalDuration, false));
-                        metadataList.add(new Metadata(2, resources.getQuantityString(R.plurals.label_metadata_album_artists, artists.size()), TextUtils.join(", ", artists), false));
-                        metadataList.add(new Metadata(2, resources.getQuantityString(R.plurals.label_metadata_album_genres, genres.size()), TextUtils.join(", ", genres), false));
+                        mediaMetadataList.add(new MediaMetadata(0, resources.getString(R.string.label_metadata_album_track_count), String.valueOf(trackCount), false));
+                        mediaMetadataList.add(new MediaMetadata(1, resources.getString(R.string.label_metadata_album_duration), totalDuration, false));
+                        mediaMetadataList.add(new MediaMetadata(2, resources.getQuantityString(R.plurals.label_metadata_album_artists, artists.size()), TextUtils.join(", ", artists), false));
+                        mediaMetadataList.add(new MediaMetadata(2, resources.getQuantityString(R.plurals.label_metadata_album_genres, genres.size()), TextUtils.join(", ", genres), false));
 
                         break;
                     case CONTENT_TYPE_MEDIA:
@@ -816,12 +812,12 @@ public class LocalMediaProvider implements AbstractMediaProvider {
                                         value = PlayerApplication.formatSecs(cursor.getInt(columnIndex));
                                     }
 
-                                    metadataList.add(new Metadata(columnIndex, resources.getString(fieldLabelIds[columnIndex]), value, editable));
+                                    mediaMetadataList.add(new MediaMetadata(columnIndex, resources.getString(fieldLabelIds[columnIndex]), value, editable));
                                 }
                             }
                         }
                 }
-                return metadataList;
+                return mediaMetadataList;
             default:
         }
         return null;
@@ -864,7 +860,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     @Override
-    public AbstractEmptyContentAction getEmptyContentAction(ContentType contentType) {
+    public AbstractMediaManager.AbstractEmptyContentAction getEmptyContentAction(ContentType contentType) {
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
                 return EMPTY_ACTION_ARTIST;
@@ -881,12 +877,12 @@ public class LocalMediaProvider implements AbstractMediaProvider {
     }
 
     @Override
-    public AbstractProviderAction getAbstractProviderAction(int index) {
+    public AbstractMediaManager.ProviderAction getAbstractProviderAction(int index) {
         return ACTION_LIST[index];
     }
 
     @Override
-    public AbstractProviderAction[] getAbstractProviderActionList() {
+    public AbstractMediaManager.ProviderAction[] getAbstractProviderActionList() {
         return ACTION_LIST;
     }
 
@@ -1090,16 +1086,16 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         for (int field : requestedFields) {
             switch (field) {
-                case AbstractMediaProvider.ALBUM_ID:
+                case AbstractMediaManager.Provider.ALBUM_ID:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album._ID);
                     break;
-                case AbstractMediaProvider.ALBUM_NAME:
+                case AbstractMediaManager.Provider.ALBUM_NAME:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME);
                     break;
-                case AbstractMediaProvider.ALBUM_ARTIST:
+                case AbstractMediaManager.Provider.ALBUM_ARTIST:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST);
                     break;
-                case AbstractMediaProvider.ALBUM_VISIBLE:
+                case AbstractMediaManager.Provider.ALBUM_VISIBLE:
                     columnsList.add("(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
@@ -1208,13 +1204,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         for (int field : requestedFields) {
             switch (field) {
-                case AbstractMediaProvider.ARTIST_ID:
+                case AbstractMediaManager.Provider.ARTIST_ID:
                     columnsList.add(Entities.Artist._ID);
                     break;
-                case AbstractMediaProvider.ARTIST_NAME:
+                case AbstractMediaManager.Provider.ARTIST_NAME:
                     columnsList.add(Entities.Artist.COLUMN_FIELD_ARTIST_NAME);
                     break;
-                case AbstractMediaProvider.ARTIST_VISIBLE:
+                case AbstractMediaManager.Provider.ARTIST_VISIBLE:
                     columnsList.add("(" + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
@@ -1272,13 +1268,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         for (int field : requestedFields) {
             switch (field) {
-                case AbstractMediaProvider.GENRE_ID:
+                case AbstractMediaManager.Provider.GENRE_ID:
                     columnsList.add(Entities.Genre._ID);
                     break;
-                case AbstractMediaProvider.GENRE_NAME:
+                case AbstractMediaManager.Provider.GENRE_NAME:
                     columnsList.add(Entities.Genre.COLUMN_FIELD_GENRE_NAME);
                     break;
-                case AbstractMediaProvider.GENRE_VISIBLE:
+                case AbstractMediaManager.Provider.GENRE_VISIBLE:
                     columnsList.add("(" + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
@@ -1337,13 +1333,13 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         for (int field : requestedFields) {
             switch (field) {
-                case AbstractMediaProvider.PLAYLIST_ID:
+                case AbstractMediaManager.Provider.PLAYLIST_ID:
                     columnsList.add(Entities.Playlist._ID);
                     break;
-                case AbstractMediaProvider.PLAYLIST_NAME:
+                case AbstractMediaManager.Provider.PLAYLIST_NAME:
                     columnsList.add(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME);
                     break;
-                case AbstractMediaProvider.PLAYLIST_VISIBLE:
+                case AbstractMediaManager.Provider.PLAYLIST_VISIBLE:
                     columnsList.add("(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + "<> 0) AND (" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + "= 0)");
                     break;
             }
@@ -1400,118 +1396,118 @@ public class LocalMediaProvider implements AbstractMediaProvider {
 
         for (int field : requestedFields) {
             switch (field) {
-                case AbstractMediaProvider.SONG_ID:
+                case AbstractMediaManager.Provider.SONG_ID:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media._ID);
                     break;
-                case AbstractMediaProvider.SONG_URI:
+                case AbstractMediaManager.Provider.SONG_URI:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI);
                     break;
-                case AbstractMediaProvider.SONG_ART:
+                case AbstractMediaManager.Provider.SONG_ART:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART);
                     break;
-                case AbstractMediaProvider.SONG_DURATION:
+                case AbstractMediaManager.Provider.SONG_DURATION:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DURATION);
                     break;
-                case AbstractMediaProvider.SONG_BITRATE:
+                case AbstractMediaManager.Provider.SONG_BITRATE:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_BITRATE);
                     break;
-                case AbstractMediaProvider.SONG_SAMPLE_RATE:
+                case AbstractMediaManager.Provider.SONG_SAMPLE_RATE:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_SAMPLE_RATE);
                     break;
-                case AbstractMediaProvider.SONG_CODEC:
+                case AbstractMediaManager.Provider.SONG_CODEC:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_CODEC);
                     break;
-                case AbstractMediaProvider.SONG_SCORE:
+                case AbstractMediaManager.Provider.SONG_SCORE:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_SCORE);
                     break;
-                case AbstractMediaProvider.SONG_FIRST_PLAYED:
+                case AbstractMediaManager.Provider.SONG_FIRST_PLAYED:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED);
                     break;
-                case AbstractMediaProvider.SONG_LAST_PLAYED:
+                case AbstractMediaManager.Provider.SONG_LAST_PLAYED:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED);
                     break;
-                case AbstractMediaProvider.SONG_TITLE:
+                case AbstractMediaManager.Provider.SONG_TITLE:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE);
                     break;
-                case AbstractMediaProvider.SONG_ARTIST:
+                case AbstractMediaManager.Provider.SONG_ARTIST:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST);
                     break;
-                case AbstractMediaProvider.SONG_ARTIST_ID:
+                case AbstractMediaManager.Provider.SONG_ARTIST_ID:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST_ID);
                     break;
-                case AbstractMediaProvider.SONG_ALBUM_ARTIST:
+                case AbstractMediaManager.Provider.SONG_ALBUM_ARTIST:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
                     break;
-                case AbstractMediaProvider.SONG_ALBUM_ARTIST_ID:
+                case AbstractMediaManager.Provider.SONG_ALBUM_ARTIST_ID:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID);
                     break;
-                case AbstractMediaProvider.SONG_ALBUM:
+                case AbstractMediaManager.Provider.SONG_ALBUM:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM);
                     break;
-                case AbstractMediaProvider.SONG_ALBUM_ID:
+                case AbstractMediaManager.Provider.SONG_ALBUM_ID:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID);
                     break;
-                case AbstractMediaProvider.SONG_GENRE:
+                case AbstractMediaManager.Provider.SONG_GENRE:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_GENRE);
                     break;
-                case AbstractMediaProvider.SONG_GENRE_ID:
+                case AbstractMediaManager.Provider.SONG_GENRE_ID:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_GENRE_ID);
                     break;
-                case AbstractMediaProvider.SONG_YEAR:
+                case AbstractMediaManager.Provider.SONG_YEAR:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_YEAR);
                     break;
-                case AbstractMediaProvider.SONG_TRACK:
+                case AbstractMediaManager.Provider.SONG_TRACK:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK);
                     break;
-                case AbstractMediaProvider.SONG_DISC:
+                case AbstractMediaManager.Provider.SONG_DISC:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC);
                     break;
-                case AbstractMediaProvider.SONG_BPM:
+                case AbstractMediaManager.Provider.SONG_BPM:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_BPM);
                     break;
-                case AbstractMediaProvider.SONG_COMMENT:
+                case AbstractMediaManager.Provider.SONG_COMMENT:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_COMMENT);
                     break;
-                case AbstractMediaProvider.SONG_LYRICS:
+                case AbstractMediaManager.Provider.SONG_LYRICS:
                     usesSongTable = true;
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LYRICS);
                     break;
-                case AbstractMediaProvider.SONG_VISIBLE:
+                case AbstractMediaManager.Provider.SONG_VISIBLE:
                     usesSongTable = true;
                     columnsList.add(
                             "(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_USER_HIDDEN + "= 0) AND (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0)"
                     );
                     break;
 //                case AbstractMediaProvider.SONG_HAS_EMBEDDED_ART:
-                case AbstractMediaProvider.PLAYLIST_ENTRY_ID:
+                case AbstractMediaManager.Provider.PLAYLIST_ENTRY_ID:
                     usesPlaylistEntryTable = true;
                     columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID);
                     break;
-                case AbstractMediaProvider.PLAYLIST_ENTRY_POSITION:
+                case AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:
                     usesPlaylistEntryTable = true;
                     columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION);
                     break;
@@ -3010,7 +3006,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
             final String lhsName = lhs.getName().toUpperCase(Locale.getDefault());
             final String rhsName = rhs.getName().toUpperCase(Locale.getDefault());
 
-            if (MusicConnector.storage_sort_order == AbstractMediaProvider.STORAGE_DISPLAY_NAME) {
+            if (MusicConnector.storage_sort_order == AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME) {
                 return lhsName.compareTo(rhsName);
             }
             else // if (MusicConnector.storage_sort_order == MusicConnector.SORT_Z_A)  {
@@ -3071,7 +3067,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         HashMap<String, Long> genreIdMap;
     }
 
-    public class LocationAction implements AbstractProviderAction {
+    public class LocationAction implements AbstractMediaManager.ProviderAction {
 
         @Override
         public String getDescription() {
@@ -3092,7 +3088,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
     }
 
-    public class SettingsAction implements AbstractProviderAction {
+    public class SettingsAction implements AbstractMediaManager.ProviderAction {
 
         @Override
         public String getDescription() {
@@ -3113,7 +3109,7 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         }
     }
 
-    public class AlbumArtistEmptyAction implements AbstractEmptyContentAction {
+    public class AlbumArtistEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
         public String getDescription() {
@@ -3124,14 +3120,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         public String getActionDescription() {
             return PlayerApplication.context.getString(R.string.ni_artists_hint);
         }
-
-        @Override
-        public AbstractProviderAction getAction() {
-            return ACTION_LOCATION;
-        }
     }
 
-    public class AlbumEmptyAction implements AbstractEmptyContentAction {
+    public class AlbumEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
         public String getDescription() {
@@ -3142,14 +3133,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         public String getActionDescription() {
             return PlayerApplication.context.getString(R.string.ni_albums_hint);
         }
-
-        @Override
-        public AbstractProviderAction getAction() {
-            return ACTION_LOCATION;
-        }
     }
 
-    public class ArtistEmptyAction implements AbstractEmptyContentAction {
+    public class ArtistEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
         public String getDescription() {
@@ -3160,14 +3146,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         public String getActionDescription() {
             return PlayerApplication.context.getString(R.string.ni_artists_hint);
         }
-
-        @Override
-        public AbstractProviderAction getAction() {
-            return ACTION_LOCATION;
-        }
     }
 
-    public class GenreEmptyAction implements AbstractEmptyContentAction {
+    public class GenreEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
         public String getDescription() {
@@ -3178,14 +3159,9 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         public String getActionDescription() {
             return PlayerApplication.context.getString(R.string.ni_genres_hint);
         }
-
-        @Override
-        public AbstractProviderAction getAction() {
-            return ACTION_LOCATION;
-        }
     }
 
-    public class SongEmptyAction implements AbstractEmptyContentAction {
+    public class SongEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
         public String getDescription() {
@@ -3195,11 +3171,6 @@ public class LocalMediaProvider implements AbstractMediaProvider {
         @Override
         public String getActionDescription() {
             return PlayerApplication.context.getString(R.string.ni_songs_hint);
-        }
-
-        @Override
-        public AbstractProviderAction getAction() {
-            return ACTION_LOCATION;
         }
     }
 }

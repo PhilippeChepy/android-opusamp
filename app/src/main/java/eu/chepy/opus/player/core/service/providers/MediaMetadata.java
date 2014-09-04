@@ -12,7 +12,7 @@
  */
 package eu.chepy.opus.player.core.service.providers;
 
-public class Metadata {
+public class MediaMetadata {
 
     public int index;
 
@@ -22,7 +22,7 @@ public class Metadata {
 
     public boolean editable;
 
-    public Metadata(int index, String description, String value, boolean editable) {
+    public MediaMetadata(int index, String description, String value, boolean editable) {
         this.index = index;
         this.description = description;
         this.value = value;

@@ -22,12 +22,14 @@ public class MediaManagerFactory {
         MediaManagerDescription list[] = new MediaManagerDescription[7];
 
         list[0] = new MediaManagerDescription(AbstractMediaManager.LOCAL_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_local_media_manager), true);
+        /*
         list[1] = new MediaManagerDescription(AbstractMediaManager.DLNA_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_dlna_media_manager), false);
         list[2] = new MediaManagerDescription(AbstractMediaManager.DEEZER_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_deezer_media_manager), false);
         list[3] = new MediaManagerDescription(AbstractMediaManager.GOOGLE_MUSIC_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_google_music_media_manager), false);
         list[4] = new MediaManagerDescription(AbstractMediaManager.GROOVESHARK_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_grooveshark_media_manager), false);
         list[5] = new MediaManagerDescription(AbstractMediaManager.QOBUZ_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_qobuz_media_manager), false);
         list[6] = new MediaManagerDescription(AbstractMediaManager.SPOTIFY_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_spotify_media_manager), false);
+        */
         return list;
     }
 
@@ -35,6 +37,7 @@ public class MediaManagerFactory {
         switch (mediaManagerType) {
             case AbstractMediaManager.LOCAL_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_local_media_manager);
+        /*
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_dlna_media_manager);
             case AbstractMediaManager.DEEZER_MEDIA_MANAGER:
@@ -47,6 +50,7 @@ public class MediaManagerFactory {
                 return PlayerApplication.context.getString(R.string.label_qobuz_media_manager);
             case AbstractMediaManager.SPOTIFY_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_spotify_media_manager);
+         */
             default:
                 return "";
         }
