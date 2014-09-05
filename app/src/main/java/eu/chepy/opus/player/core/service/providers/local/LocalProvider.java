@@ -330,12 +330,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     int position = PlayerApplication.playerService.queueGetPosition();
 
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                        File selection = fileList.get(position);
-                        fileList.clear();
-                        fileList.add(selection);
+                        try {
+                            final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                            final List<File> filePlaylist = new ArrayList<File>();
+                            filePlaylist.add(selection);
 
-                        if (!doPlaylistAddContent(null, position + 1, fileList, false)) {
-                            return false;
+                            if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
+                                return false;
+                            }
+                        }
+                        catch (final IOException exception) {
+                            LogUtils.LOGException(TAG, "playNext", 0, exception);
                         }
                     }
                     if (!doPlaylistAddContent(null, position + 1, contentType, sourceId, sortOrder, filter)) {
@@ -415,12 +420,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
 
                     if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                        File selection = fileList.get(position);
-                        fileList.clear();
-                        fileList.add(selection);
+                        try {
+                            final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                            final List<File> filePlaylist = new ArrayList<File>();
+                            filePlaylist.add(selection);
 
-                        if (!doPlaylistAddContent(null, position, fileList, false)) {
-                            return false;
+                            if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
+                                return false;
+                            }
+                        }
+                        catch (final IOException exception) {
+                            LogUtils.LOGException(TAG, "playlistAdd", 0, exception);
                         }
                     }
                     else if (!doPlaylistAddContent(playlistId, position, contentType, sourceId, sortOrder, filter)) {
