@@ -25,7 +25,6 @@ import android.widget.RemoteViews;
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.PlayerService;
 import eu.chepy.opus.player.ui.activities.LibraryMainActivity;
-import eu.chepy.opus.player.ui.utils.MusicConnector;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
 
 public class Widget4x2 extends AppWidgetBase {
@@ -79,20 +78,20 @@ public class Widget4x2 extends AppWidgetBase {
         return mAppWidgetIds.length > 0;
     }
 
-    public void notifyChange(final PlayerService service, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art) {
+    public void notifyChange(final PlayerService service, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (hasInstances(service)) {
             initialized = true;
-            performUpdate(service, null, hasData, trackName, artistName, albumName, art);
+            performUpdate(service, null, hasData, trackName, artistName, albumName, art, isPlaying);
         }
     }
 
     public void uninit(final PlayerService service) {
         initialized = false;
-        performUpdate(service, null, false, null, null, null, null);
+        performUpdate(service, null, false, null, null, null, null, false);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-    public void performUpdate(final PlayerService service, final int[] appWidgetIds, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art) {
+    public void performUpdate(final PlayerService service, final int[] appWidgetIds, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (initialized) {
             final RemoteViews appWidgetView = new RemoteViews(service.getPackageName(), R.layout.home_widget_4x2);
 
@@ -112,7 +111,6 @@ public class Widget4x2 extends AppWidgetBase {
             }
 
             // Set correct drawable for pause state
-            final boolean isPlaying = MusicConnector.isPlaying();
             if (isPlaying) {
                 appWidgetView.setImageViewResource(R.id.four_by_two_control_play, R.drawable.btn_playback_pause_transparent);
                 if (PlayerApplication.hasICS_MR1()) {

@@ -332,6 +332,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 wakelock.acquire();
                 notifyPlay();
             }
+
+            notifyPlay();
         }
 
         @Override
@@ -344,6 +346,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 notifyPause(keepNotification);
                 wakelock.release();
             }
+
+            notifyPause(true);
         }
 
         @Override
@@ -944,8 +948,15 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void doUpdateWidgets(final SongInformations currentSong) {
-        widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
-        widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art);
+        try {
+            boolean isPlaying = playerServiceImpl.isPlaying();
+
+            widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art, isPlaying);
+            widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art, isPlaying);
+        }
+        catch (final Exception exception) {
+            LogUtils.LOGException(TAG, "doUpdateWidgets", 0, exception);
+        }
     }
 
     protected void doUpdateRemoteClient(final SongInformations currentSong) {
