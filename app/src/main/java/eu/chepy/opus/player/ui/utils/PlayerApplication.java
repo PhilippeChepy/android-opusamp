@@ -888,7 +888,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
                         setFreemium(false);
                     }
                     // instance.iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
-                    
+
                     if (iabStarted != null) {
                         iabStarted.run();
                     }
