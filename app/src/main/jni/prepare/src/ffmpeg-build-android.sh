@@ -76,7 +76,6 @@ FFMPEG_FLAGS_COMMON="--disable-gpl \
 --enable-protocol=file \
 --enable-protocol=pipe \
 --disable-encoders \
---enable-encoder=vorbis \
 --disable-muxers \
 --disable-indevs \
 --disable-outdevs \
@@ -98,7 +97,6 @@ FFMPEG_FLAGS_COMMON="--disable-gpl \
 --enable-demuxer=wav \
 --enable-demuxer=ape \
 --enable-demuxer=xwma \
---enable-muxer=ogg \
 --disable-parsers \
 --enable-parser=mpegaudio \
 --enable-parser=aac \
