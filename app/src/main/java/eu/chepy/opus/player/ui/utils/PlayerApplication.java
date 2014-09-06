@@ -774,10 +774,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
     private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
 
     public static boolean isFreemium() {
-        // TODO:
-        //final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        //return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
-        return false;
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
     }
 
     public static void setFreemium(boolean freemium) {
@@ -809,6 +807,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         editor.apply();
     }
 
+    private static Runnable iabStarted = null;
 
     public static void iabStart(final Runnable onStarted) {
         if (!isFreemium() || instance.iabHelper != null) {
@@ -822,6 +821,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
             ITEM_SKU = ITEM_RELEASE_SKU;
         }
 
+        iabStarted = onStarted;
 
         String base64EncodedPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj127PTqHlOpyDVEhSXTQuaEeCH74Rvb0k7NDW0uPj/DthoPX70eOqhLrJ/+jw6fTLmFMIxiBOdTfAvDO6TonIuVgMtooRoz7msrY3gNCT3MUnWWz6907zrfs7J6ocSHQeNzUViuOHHoEoCVvqNhAxtNEUlfvK54Jrkv6kOBg7Kp1WgEOb7O66C5KOiByzP/MReUA+647mUNfehSAi0xFnxfLPKPAKqForbIc3628vpRZ7uSC+nAcdSYVWoDaWcUTagwI7ljflCyKk6Ww6YkCpWP3NlttIao5Ay97TGP7aEAHm5CXlIEosojzYeqAd2gik0aTYXaSJB88jh0ajcaKhwIDAQAB";
 
@@ -836,7 +836,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 }
                 else {
                     LogUtils.LOGI(TAG, "In-app Billing is set up OK");
-                    iabCheck(onStarted);
+                    iabCheck();
                 }
             }
         });
@@ -857,7 +857,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return instance.iabHelper.handleActivityResult(requestCode, resultCode, data);
     }
 
-    private static void iabCheck(final Runnable onFinished) {
+    private static void iabCheck() {
         new AsyncTask<Void, Void, Void>() {
             protected Inventory inventory;
 
@@ -882,10 +882,16 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 super.onPostExecute(aVoid);
 
                 if (inventory != null) {
+                    LogUtils.LOGW(TAG, "inventory got");
                     if (inventory.hasPurchase(ITEM_SKU)) {
+                        LogUtils.LOGW(TAG, "inventory got : has purchase");
                         setFreemium(false);
                     }
-                    onFinished.run();
+                    // instance.iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
+                    
+                    if (iabStarted != null) {
+                        iabStarted.run();
+                    }
                 }
             }
         }.execute();
@@ -912,7 +918,11 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
             else {
                 LogUtils.LOGI(TAG, "receivedInventory: success");
-                instance.iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
+                setFreemium(false);
+
+                if (iabStarted != null) {
+                    iabStarted.run();
+                }
             }
         }
     };
