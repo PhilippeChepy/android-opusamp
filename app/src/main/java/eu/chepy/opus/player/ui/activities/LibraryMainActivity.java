@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -193,19 +192,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     @Override
     public boolean onContextItemSelected(android.view.MenuItem item) {
-        return item.getGroupId() == Menu.NONE && getPlayerView().onContextItemSelected(item);
+        return item.getGroupId() == Menu.NONE && super.onContextItemSelected(item);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        setContentView(R.layout.activity_library_main);
-
-        initPlayerView(savedInstanceState);
+        super.onCreate(savedInstanceState, R.layout.activity_library_main, Window.FEATURE_INDETERMINATE_PROGRESS);
 
         libraryPager = (ViewPager) findViewById(R.id.pager_viewpager);
         libraryPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
@@ -242,18 +234,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         doInitLibrary();
         doInitLibraryContent();
-        getSupportLoaderManager().initLoader(0, null, getPlayerView());
-
-        if (PlayerApplication.playerService == null) {
-            final Context context = getApplicationContext();
-
-            if (context != null) {
-                PlayerApplication.connectService(this);
-            }
-        }
-        else {
-            getPlayerView().registerServiceListener();
-        }
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -301,7 +281,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                             MusicConnector.storage_sort_order,
                             position);
 
-                    getPlayerView().getSlidingPanel().expandPanel();
+                    getSlidingPanel().expandPanel();
                     getSupportActionBar().hide();
                 }
             }
@@ -328,13 +308,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             mediaManager.getProvider().removeLibraryChangeListener(libraryChangeListener);
         }
 
-        getPlayerView().onActivityDestroy();
-        getPlayerView().unregisterServiceListener();
-        PlayerApplication.unregisterServiceCallback(this);
-
-        unbindDrawables(findViewById(R.id.drawer_layout));
         super.onDestroy();
-        System.gc();
     }
 
     @Override

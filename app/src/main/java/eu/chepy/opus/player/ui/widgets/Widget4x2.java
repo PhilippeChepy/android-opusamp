@@ -78,35 +78,31 @@ public class Widget4x2 extends AppWidgetBase {
         return mAppWidgetIds.length > 0;
     }
 
-    public void notifyChange(final PlayerService service, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
+    public void notifyChange(final PlayerService service, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (hasInstances(service)) {
             initialized = true;
-            performUpdate(service, null, hasData, trackName, artistName, albumName, art, isPlaying);
+            performUpdate(service, null, trackName, artistName, albumName, art, isPlaying);
         }
     }
 
     public void uninit(final PlayerService service) {
         initialized = false;
-        performUpdate(service, null, false, null, null, null, null, false);
+        performUpdate(service, null, null, null, null, null, false);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-    public void performUpdate(final PlayerService service, final int[] appWidgetIds, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
+    public void performUpdate(final PlayerService service, final int[] appWidgetIds, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (initialized) {
             final RemoteViews appWidgetView = new RemoteViews(service.getPackageName(), R.layout.home_widget_4x2);
 
-            if (hasData) {
-                // Set the titles and artwork
-                appWidgetView.setTextViewText(R.id.four_by_two_trackname, trackName);
-                appWidgetView.setTextViewText(R.id.four_by_two_artistname, artistName);
-                appWidgetView.setTextViewText(R.id.four_by_two_albumname, albumName);
+            // Set the titles and artwork
+            appWidgetView.setTextViewText(R.id.four_by_two_trackname, trackName);
+            appWidgetView.setTextViewText(R.id.four_by_two_artistname, artistName);
+            appWidgetView.setTextViewText(R.id.four_by_two_albumname, albumName);
+            if (art != null) {
                 appWidgetView.setImageViewBitmap(R.id.four_by_two_albumart, art);
             }
             else {
-                // Set the titles and artwork
-                appWidgetView.setTextViewText(R.id.four_by_two_trackname, null);
-                appWidgetView.setTextViewText(R.id.four_by_two_artistname, null);
-                appWidgetView.setTextViewText(R.id.four_by_two_albumname, null);
                 appWidgetView.setImageViewResource(R.id.four_by_two_albumart, R.drawable.no_art_small);
             }
 
@@ -116,7 +112,8 @@ public class Widget4x2 extends AppWidgetBase {
                 if (PlayerApplication.hasICS_MR1()) {
                     appWidgetView.setContentDescription(R.id.four_by_two_control_play, service.getString(R.string.imageview_content_description_play));
                 }
-            } else {
+            }
+            else {
                 appWidgetView.setImageViewResource(R.id.four_by_two_control_play, R.drawable.btn_playback_play_transparent);
                 if (PlayerApplication.hasICS_MR1()) {
                     appWidgetView.setContentDescription(R.id.four_by_two_control_play, service.getString(R.string.imageview_content_description_play));

@@ -133,14 +133,22 @@ public class PlayerApplication extends Application implements ServiceConnection 
             return;
         }
 
-        additionalCallbacks.add(additionalConnectionCallback);
-        connecting = true;
-        if (context != null) {
-            final Intent playerService = new Intent(context, PlayerService.class);
-            context.bindService(playerService, instance, Context.BIND_AUTO_CREATE);
-            context.startService(playerService);
+        if (additionalConnectionCallback != null) {
+            additionalCallbacks.add(additionalConnectionCallback);
         }
-        connecting = false;
+
+        if (playerService == null) {
+            connecting = true;
+            if (context != null) {
+                final Intent playerService = new Intent(context, PlayerService.class);
+                context.bindService(playerService, instance, Context.BIND_AUTO_CREATE);
+                context.startService(playerService);
+            }
+            connecting = false;
+        }
+        else if (additionalConnectionCallback != null) {
+            additionalConnectionCallback.onServiceConnected(null, (IBinder)playerService);
+        }
     }
 
     public synchronized static void unregisterServiceCallback(ServiceConnection additionalCallback) {

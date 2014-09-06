@@ -29,6 +29,11 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.view.View;
+
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -172,6 +177,21 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
+    /*
+     * Current song informations
+     */
+    private String currentTrack = null;
+
+    private String currentArtist = null;
+
+    private String currentAlbum = null;
+
+    private String currentArtUri = null;
+
+    private Bitmap currentArt = null;
+
+
+
     @Override
     public void onCodecCompletion() {
         LogUtils.LOGD(TAG, "completed in JAVA!");
@@ -247,7 +267,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             LogUtils.LOGException(TAG, "onStartCommand", 1, remoteException);
         }
 
-        doUpdateWidgets(new SongInformations());
+        doUpdateWidgets();
 
         broadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -505,8 +525,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (!playlist.moveToPosition(position)) {
                 playlist.moveToLast();
             }
-
-            //notifyQueueChanged(); // TODO: test without this
         }
 
         @Override
@@ -704,11 +722,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                     notificationHelper.goToIdleState(true);
                 }
                 else {
-                    final SongInformations currentSong = new SongInformations();
-
-                    doUpdateRemoteClient(currentSong);
-                    doUpdateNotification(currentSong);
-                    doUpdateWidgets(currentSong);
+                    doUpdateRemoteClient();
+                    doUpdateNotification();
+                    doUpdateWidgets();
 
                     startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, notificationHelper.getNotification());
                     hasNotification = true;
@@ -751,7 +767,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 }
             }
 
-            doUpdateWidgets(new SongInformations());
+            doUpdateWidgets();
 
             /*
                 Client ui update
@@ -778,7 +794,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             remoteControlClient.stop();
             remoteControlClient.release();
 
-            doUpdateWidgets(new SongInformations());
+            doUpdateWidgets();
 
             if (PlayerApplication.hasICS()) {
                 audioManager.abandonAudioFocus(audioFocusChangeListener);
@@ -805,7 +821,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             lockNotify();
             hasNotification = false;
 
-            doUpdateWidgets(new SongInformations());
+            doUpdateWidgets();
 
             final int count = playerServiceListeners.beginBroadcast();
             for (int index = 0 ; index < count; index++) {
@@ -869,7 +885,56 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             lockNotify();
             hasNotification = false;
 
-            doUpdateWidgets(new SongInformations());
+            if (playlist != null && playlist.getPosition() >= 0) {
+                currentTrack = playlist.getString(COLUMN_SONG_TITLE);
+                currentArtist = playlist.getString(COLUMN_SONG_ARTIST);
+                currentAlbum = playlist.getString(COLUMN_SONG_ALBUM);
+                //currentArt = null;
+                currentArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" + PlayerApplication.playerManagerIndex + "/" + playlist.getInt(COLUMN_SONG_ID);
+
+                PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, new ImageLoadingListener() {
+
+                    @Override
+                    public void onLoadingStarted(String imageUri, View view) {
+                    }
+
+                    @Override
+                    public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+                        currentArt = null;
+                        doUpdateNotification();
+                        doUpdateRemoteClient();
+                        doUpdateWidgets();
+                    }
+
+                    @Override
+                    public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                        if (imageUri.equals(currentArtUri)) {
+                            currentArt = loadedImage;
+                            doUpdateNotification();
+                            doUpdateRemoteClient();
+                            doUpdateWidgets();
+                        }
+                    }
+
+                    @Override
+                    public void onLoadingCancelled(String imageUri, View view) {
+                        currentArt = null;
+                        doUpdateNotification();
+                        doUpdateRemoteClient();
+                        doUpdateWidgets();
+                    }
+                });
+            }
+            else {
+                currentTrack = null;
+                currentArtist = null;
+                currentAlbum = null;
+                currentArt = null;
+
+                currentArtUri = null;
+            }
+
+            doUpdateWidgets();
 
             final int count = playerServiceListeners.beginBroadcast();
             for (int index = 0 ; index < count; index++) {
@@ -887,44 +952,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlist.getPosition());
             edit.apply();
             unlockNotify();
-        }
-    }
-
-    public class SongInformations {
-        String albumName;
-
-        String artistName;
-
-        String trackName;
-
-        int songId;
-
-        String songArtUri;
-        Bitmap art;
-
-        boolean initialized;
-
-        public SongInformations() {
-            initialized = playlist != null && playlist.getCount() > 0;
-
-            if (initialized) {
-                albumName = playlist.getString(COLUMN_SONG_ALBUM);
-                artistName = playlist.getString(COLUMN_SONG_ARTIST);
-                trackName = playlist.getString(COLUMN_SONG_TITLE);
-
-                songId = playlist.getInt(COLUMN_SONG_ID);
-
-                songArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" + PlayerApplication.playerManagerIndex + "/" + songId;
-
-                art = null;
-                if (!TextUtils.isEmpty(songArtUri)) {
-                    art = PlayerApplication.normalImageLoader.loadImageSync(songArtUri);
-
-                    if (art != null && art.isRecycled()) {
-                        art = null;
-                    }
-                }
-            }
         }
     }
 
@@ -947,24 +974,24 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    protected void doUpdateWidgets(final SongInformations currentSong) {
+    protected void doUpdateWidgets() {
         try {
             boolean isPlaying = playerServiceImpl.isPlaying();
 
-            widgetLarge.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art, isPlaying);
-            widgetMedium.notifyChange(PlayerService.this, currentSong.initialized, currentSong.trackName, currentSong.artistName, currentSong.albumName, currentSong.art, isPlaying);
+            widgetLarge.notifyChange(PlayerService.this, currentTrack, currentArtist, currentAlbum, currentArt, isPlaying);
+            widgetMedium.notifyChange(PlayerService.this, currentTrack, currentArtist, currentAlbum, currentArt, isPlaying);
         }
         catch (final Exception exception) {
             LogUtils.LOGException(TAG, "doUpdateWidgets", 0, exception);
         }
     }
 
-    protected void doUpdateRemoteClient(final SongInformations currentSong) {
-        remoteControlClient.updateMetadata(currentSong.art, currentSong.trackName, currentSong.artistName, currentSong.albumName, playlist.getLong(COLUMN_SONG_DURATION));
+    protected void doUpdateRemoteClient() {
+        remoteControlClient.updateMetadata(currentArt, currentTrack, currentArtist, currentAlbum, playlist.getLong(COLUMN_SONG_DURATION));
     }
 
-    protected void doUpdateNotification(final SongInformations currentSong) {
-        notificationHelper.buildNotification(currentSong.albumName, currentSong.artistName, currentSong.trackName, currentSong.art);
+    protected void doUpdateNotification() {
+        notificationHelper.buildNotification(currentAlbum, currentArtist, currentTrack, currentArt);
     }
 
     protected void doManageCommandIntent(final Intent intent) {

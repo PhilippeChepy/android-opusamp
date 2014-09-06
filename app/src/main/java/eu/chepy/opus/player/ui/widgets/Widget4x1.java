@@ -78,34 +78,32 @@ public class Widget4x1 extends AppWidgetBase {
         return mAppWidgetIds.length > 0;
     }
 
-    public void notifyChange(final PlayerService service, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
+    public void notifyChange(final PlayerService service, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (hasInstances(service)) {
             initialized = true;
-            performUpdate(service, null, hasData, trackName, artistName, albumName, art, isPlaying);
+            performUpdate(service, null, trackName, artistName, albumName, art, isPlaying);
         }
     }
 
     public void uninit(final PlayerService service) {
         initialized = false;
-        performUpdate(service, null, false, null, null, null, null, false);
+        performUpdate(service, null, null, null, null, null, false);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-    public void performUpdate(final PlayerService service, final int[] appWidgetIds, boolean hasData, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
+    public void performUpdate(final PlayerService service, final int[] appWidgetIds, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
         if (initialized) {
             final RemoteViews appWidgetView = new RemoteViews(service.getPackageName(), R.layout.home_widget_4x1);
 
-            if (hasData) {
-                // Set the titles and artwork
-                appWidgetView.setTextViewText(R.id.four_by_one_trackname, trackName);
-                appWidgetView.setTextViewText(R.id.four_by_one_separator, " - ");
-                appWidgetView.setTextViewText(R.id.four_by_one_artistname, artistName);
+            // Set the titles and artwork
+            appWidgetView.setTextViewText(R.id.four_by_one_trackname, trackName);
+            appWidgetView.setTextViewText(R.id.four_by_one_separator, " - ");
+            appWidgetView.setTextViewText(R.id.four_by_one_artistname, artistName);
+
+            if (art != null) {
                 appWidgetView.setImageViewBitmap(R.id.four_by_one_albumart, art);
             }
             else {
-                appWidgetView.setTextViewText(R.id.four_by_one_trackname, null);
-                appWidgetView.setTextViewText(R.id.four_by_one_separator, null);
-                appWidgetView.setTextViewText(R.id.four_by_one_artistname, null);
                 appWidgetView.setImageViewResource(R.id.four_by_one_albumart, R.drawable.no_art_small);
             }
 

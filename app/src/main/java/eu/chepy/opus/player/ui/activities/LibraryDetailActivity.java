@@ -15,13 +15,11 @@ package eu.chepy.opus.player.ui.activities;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -152,21 +150,25 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        int position = 0;
-        if (menuInfo != null) {
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            position = info.position;
-        }
+        if (v == contentList) {
+            int position = 0;
+            if (menuInfo != null) {
+                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+                position = info.position;
+            }
 
-        doOnCreateContextMenu(menu, position);
-        super.onCreateContextMenu(menu, v, menuInfo);
+            doOnCreateContextMenu(menu, position);
+        }
+        else {
+            super.onCreateContextMenu(menu, v, menuInfo);
+        }
     }
 
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (item.getGroupId() != CONTEXT_MENU_GROUP_ID && item.getGroupId() != CONTEXT_ART_GROUP_ID) {
-            return getPlayerView().onContextItemSelected(item);
+            return super.onContextItemSelected(item);
         }
 
         return doOnContextItemSelected(item.getGroupId(), item.getItemId());
@@ -174,14 +176,9 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState, R.layout.activity_library_detail, 0);
 
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         getSupportActionBar().show();
-        setContentView(R.layout.activity_library_detail);
-
-        initPlayerView(savedInstanceState);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Bundle parameters = getIntent().getExtras();
@@ -319,33 +316,13 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
         getSupportLoaderManager().initLoader(0, null, this);
         getSupportLoaderManager().initLoader(1, null, this);
-
-        if (PlayerApplication.playerService == null) {
-            final Context context = getApplicationContext();
-
-            if (context != null) {
-                PlayerApplication.connectService(this);
-            }
-        }
-        else {
-            getPlayerView().registerServiceListener();
-        }
-
-        System.gc();
     }
 
     @Override
     protected void onDestroy() {
         getSupportLoaderManager().destroyLoader(0);
         getSupportLoaderManager().destroyLoader(1);
-
-        getPlayerView().onActivityDestroy();
-        getPlayerView().unregisterServiceListener();
-        PlayerApplication.unregisterServiceCallback(this);
-
-        unbindDrawables(findViewById(R.id.drawer_layout));
         super.onDestroy();
-        System.gc();
     }
 
     @Override
@@ -362,7 +339,6 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        getPlayerView().saveInstanceState(outState, getSupportActionBar().isShowing());
     }
 
 
@@ -373,7 +349,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         if (i == 0) {
-            return getPlayerView().onCreateLoader(i, bundle);
+            return super.onCreateLoader(i, bundle);
         }
 
         int[] requestedFields;
@@ -439,7 +415,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
         switch (cursorLoader.getId()) {
         case 0:
-            getPlayerView().onLoaderReset(cursorLoader);
+            super.onLoaderReset(cursorLoader);
             break;
         case 1:
             if (adapter != null) {
@@ -454,7 +430,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         switch (cursorLoader.getId()) {
         case 0:
-            getPlayerView().onLoadFinished(cursorLoader, cursor);
+            super.onLoadFinished(cursorLoader, cursor);
             break;
         case 1:
             if (adapter != null) {
