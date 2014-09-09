@@ -70,31 +70,28 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 		super.finalize();
 	}
 
-	@Override
-	public AbstractMediaManager.Media initializeContent(String mediaUri) {
-		LocalMedia codecContext = new LocalMedia(mediaUri);
-		codecContext.nativeContext = streamInitialize(mediaUri);
-		
-		return codecContext;
-	}
+    @Override
+    public boolean loadMedia(AbstractMediaManager.Media media) {
+        ((LocalMedia) media).nativeContext = streamInitialize(((LocalMedia) media).sourceUri);
 
-    // TODO: use at "end - 25000ms" when playing content.
-	@Override
-	public void preloadContent(AbstractMediaManager.Media context) {
-		if (context instanceof LocalMedia) {
-			LocalMedia codecContext = (LocalMedia)context;
-            streamPreload(codecContext.nativeContext);
-		}
-	}
+        if (((LocalMedia) media).nativeContext != 0) {
+            streamPreload(((LocalMedia) media).nativeContext);
+            return true;
+        }
 
-	@Override
-	public void finalizeContent(AbstractMediaManager.Media context) {
-		if (context instanceof LocalMedia) {
-			LocalMedia codecContext = (LocalMedia)context;
-            streamFinalize(codecContext.nativeContext);
-			codecContext.nativeContext = 0;
-		}
-	}
+        return false;
+    }
+
+    @Override
+    public void unloadMedia(AbstractMediaManager.Media media) {
+        if (media instanceof LocalMedia) {
+            LocalMedia codecContext = (LocalMedia)media;
+            if (codecContext.nativeContext != 0) {
+                streamFinalize(codecContext.nativeContext);
+                codecContext.nativeContext = 0;
+            }
+        }
+    }
 
 	@Override
 	public synchronized void playerSetContent(AbstractMediaManager.Media context) {
@@ -148,7 +145,7 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
                 streamStop(currentContext.nativeContext);
                 streamSetPosition(currentContext.nativeContext, 0);
 
-                ((LocalProvider)(mediaManager.getProvider())).setLastPlayed(currentContext.getMediaUri());
+                ((LocalProvider)(mediaManager.getProvider())).setLastPlayed(currentContext.getUri());
 
 				playing = false;
 			}

@@ -33,10 +33,26 @@ public interface AbstractMediaManager {
 
 
 
-    public interface Media {
+    public abstract class Media {
         public static final String TAG = Media.class.getSimpleName();
 
-        public String getMediaUri();
+        public abstract String getUri();
+
+        public abstract boolean isLoaded();
+
+        public abstract void load();
+
+        public abstract void unload();
+
+        public String name = null;
+
+        public String album = null;
+
+        public String artist = null;
+
+        public String artUri = null;
+
+        public long duration = 0;
     }
 
 
@@ -148,6 +164,7 @@ public interface AbstractMediaManager {
         /*
             Playlist management
          */
+        public Media[] getCurrentPlaylist(Player player);
         public String playlistNew(String playlistName);
         public boolean playlistDelete(String playlistId);
         public boolean playlistAdd(String playlistId, ContentType contentType, String sourceId, int sortOrder, String filter);
@@ -226,9 +243,8 @@ public interface AbstractMediaManager {
         /*
             Stream management
          */
-        public Media initializeContent(String mediaPath);
-        public void preloadContent(Media context);
-        public void finalizeContent(Media context);
+        public boolean loadMedia(Media media);
+        public void unloadMedia(Media media);
 
 
 

@@ -360,6 +360,67 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     @Override
+    public AbstractMediaManager.Media[] getCurrentPlaylist(AbstractMediaManager.Player player) {
+
+        int[] requestedFields = new int[] {
+                AbstractMediaManager.Provider.SONG_ID,
+                AbstractMediaManager.Provider.SONG_URI,
+                AbstractMediaManager.Provider.SONG_TITLE,
+                AbstractMediaManager.Provider.SONG_ARTIST,
+                AbstractMediaManager.Provider.SONG_ALBUM,
+                AbstractMediaManager.Provider.SONG_DURATION
+        };
+
+        int[] sortOrder = new int[] {
+                AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
+        };
+
+        final int COLUMN_SONG_ID = 0;
+
+        final int COLUMN_SONG_URI = 1;
+
+        final int COLUMN_SONG_TITLE = 2;
+
+        final int COLUMN_SONG_ARTIST = 3;
+
+        final int COLUMN_SONG_ALBUM = 4;
+
+        final int COLUMN_SONG_DURATION = 5;
+
+        Cursor cursor = buildCursor(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
+                requestedFields,
+                sortOrder,
+                null,
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
+                null);
+
+        if (cursor == null) {
+            return null;
+        }
+
+        LocalMedia[] playlist = new LocalMedia[cursor.getCount()];
+
+        int i = -1;
+        while (cursor.moveToNext()) {
+            i++;
+            playlist[i] = new LocalMedia(player, cursor.getString(COLUMN_SONG_URI));
+            playlist[i].name = cursor.getString(COLUMN_SONG_TITLE);
+            playlist[i].album = cursor.getString(COLUMN_SONG_ALBUM);
+            playlist[i].artist = cursor.getString(COLUMN_SONG_ARTIST);
+            playlist[i].duration = cursor.getLong(COLUMN_SONG_DURATION);
+            playlist[i].artUri =
+                    ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
+                            PlayerApplication.playerManagerIndex + "/" + cursor.getInt(COLUMN_SONG_ID);
+
+            //playlist[i].load();
+        }
+        cursor.close();
+
+        return playlist;
+    }
+
+    @Override
     public String playlistNew(String playlistName) {
         SQLiteDatabase database = openHelper.getWritableDatabase();
 
