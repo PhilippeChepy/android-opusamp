@@ -955,6 +955,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     protected boolean doPlayAction() {
         if (PlayerApplication.playerService != null) {
             try {
+                PlayerApplication.playerService.stop();
                 PlayerApplication.playerService.queueSetPosition(playlistCursor.getPosition());
                 PlayerApplication.playerService.play();
                 return true;

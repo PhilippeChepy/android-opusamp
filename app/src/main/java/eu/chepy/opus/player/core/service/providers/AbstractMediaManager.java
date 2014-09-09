@@ -265,7 +265,6 @@ public interface AbstractMediaManager {
         public long equalizerBandSetGain(int band, int gain);
         public long equalizerBandGetGain(int band);
 
-
         void addCompletionListener(OnProviderCompletionListener listener);
         void removeCompletionListener(OnProviderCompletionListener listener);
         void resetListeners();
