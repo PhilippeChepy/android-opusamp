@@ -336,11 +336,6 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         }
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
-
 
 
     /*

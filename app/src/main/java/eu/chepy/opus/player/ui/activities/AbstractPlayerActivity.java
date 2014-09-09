@@ -481,14 +481,27 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        savedInstanceState.getBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, true);
+        if (savedInstanceState.getBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, true)) {
+            getSupportActionBar().show();
+        }
+        else {
+            getSupportActionBar().hide();
+        }
     }
 
-
+    @Override
+    public void onBackPressed() {
+        if (getSlidingPanel() != null && getSlidingPanel().isPanelExpanded()) {
+            getSlidingPanel().collapsePanel();
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
 
     /*
-        Player service listener
-     */
+            Player service listener
+         */
     private PlayerServiceListenerImpl playerServiceListener = new PlayerServiceListenerImpl();
 
     public final class PlayerServiceListenerImpl extends IPlayerServiceListener.Stub {
