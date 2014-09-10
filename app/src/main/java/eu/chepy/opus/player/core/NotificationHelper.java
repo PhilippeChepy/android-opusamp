@@ -57,7 +57,7 @@ public class NotificationHelper {
 
         if (PlayerApplication.hasHoneycomb()) {
             notification = new NotificationCompat.Builder(service)
-                    .setSmallIcon(R.drawable.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentIntent(getPendingIntent())
                     .setContent(notificationTemplate)
                     .build();
@@ -75,7 +75,7 @@ public class NotificationHelper {
             notification = new Notification();
             notification.contentView = notificationTemplate;
             notification.flags |= Notification.FLAG_ONGOING_EVENT;
-            notification.icon = R.drawable.ic_launcher;
+            notification.icon = R.drawable.ic_notification;
             notification.contentIntent = getPendingIntent();
         }
     }

@@ -78,9 +78,9 @@ public class Widget4x2 extends AppWidgetBase {
         return mAppWidgetIds.length > 0;
     }
 
-    public void notifyChange(final PlayerService service, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying) {
+    public void notifyChange(final PlayerService service, final String trackName, final String artistName, final String albumName, final Bitmap art, boolean isPlaying, boolean hasPlaylist) {
         if (hasInstances(service)) {
-            initialized = true;
+            initialized = hasPlaylist;
             performUpdate(service, null, trackName, artistName, albumName, art, isPlaying);
         }
     }

@@ -64,6 +64,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public static final String ACTION_NOTIFICATION_COMMAND = "eu.chepy.opus.player.service.NOTIFICATION";
 
+    public static final String ACTION_CLIENT_COMMAND = "eu.chepy.opus.player.service.CLIENT";
+
     public static final String ACTION_TOGGLEPAUSE = "eu.chepy.opus.player.TOGGLE_PAUSE";
 
     public static final String ACTION_NEXT = "eu.chepy.opus.player.NEXT";
@@ -169,6 +171,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                                 playerServiceImpl.play();
                             }
                             else {
+                                playerServiceImpl.setPosition(0);
                                 playerServiceImpl.notifyStop(); /* cannot play anymore */
                             }
 
@@ -309,11 +312,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             if (player.playerIsPlaying()) {
                 player.playerPause(true);
-                notifyPause(keepNotification);
                 wakelock.release();
             }
 
-            notifyPause(true);
+            notifyPause(keepNotification);
         }
 
         @Override
@@ -780,7 +782,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         private void notifySetQueuePosition() {
             uiUpdateExecutor.submit(runnableRefreshSongData);
-            mediaManagementExecutor.submit(loadingManagementRunnable);
 
             lockNotify();
             final int count = playerServiceListeners.beginBroadcast();
@@ -825,10 +826,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         try {
             boolean isPlaying = playerServiceImpl.isPlaying();
 
-            final AbstractMediaManager.Media media = playlist[playlistIndex];
+            if (playlist.length > 0) {
+                final AbstractMediaManager.Media media = playlist[playlistIndex];
 
-            widgetLarge.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying);
-            widgetMedium.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying);
+                widgetLarge.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying, true);
+                widgetMedium.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying, true);
+            }
+            else {
+                widgetLarge.notifyChange(PlayerService.this, null, null, null, null, isPlaying, false);
+                widgetMedium.notifyChange(PlayerService.this, null, null, null, null, isPlaying, false);
+            }
         }
         catch (final Exception exception) {
             LogUtils.LOGException(TAG, "doUpdateWidgets", 0, exception);
@@ -836,13 +843,23 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void doUpdateRemoteClient() {
-        final AbstractMediaManager.Media media = playlist[playlistIndex];
-        remoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
+        if (playlist.length > 0) {
+            final AbstractMediaManager.Media media = playlist[playlistIndex];
+            remoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
+        }
+        else {
+            remoteControlClient.updateMetadata(currentArt, null, null, null, 0);
+        }
     }
 
     protected void doUpdateNotification() {
-        final AbstractMediaManager.Media media = playlist[playlistIndex];
-        notificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
+        if (playlist.length > 0) {
+            final AbstractMediaManager.Media media = playlist[playlistIndex];
+            notificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
+        }
+        else {
+            notificationHelper.buildNotification(null, null, null, null);
+        }
 
         try {
             if (playerServiceImpl.isPlaying()) {
@@ -889,7 +906,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         if (playerServiceImpl.isPlaying()) {
                             playerServiceImpl.pause(isNotificationControl);
                         } else {
-                            playerServiceImpl.play();
+                            if (playlist != null && playlist.length > 0) {
+                                playerServiceImpl.play();
+                            }
                         }
                     }
                 }
@@ -1051,6 +1070,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void run() {
+            LogUtils.LOGD(TAG, "keepNotification = " + keepNotification);
             /*
                 System ui update
              */
@@ -1098,7 +1118,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             currentArt = null;
 
             try {
-                Thread.sleep(1500); // Hack to avoid cpu burn out.
+                // Avoid cpu stress that can break gapless :s
+                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
             }
             catch (final Exception interruptException) {
                 LogUtils.LOGException(TAG, "refreshData", 0, interruptException);
@@ -1112,6 +1133,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
                 PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, artImageLoaderListener);
             }
+
+            mediaManagementExecutor.submit(loadingManagementRunnable);
         }
     };
 
@@ -1135,21 +1158,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void run() {
             LogUtils.LOGI(TAG, "loader in action !");
-
-            try {
-                Thread.sleep(2000); // that's a hack :( preload
-                // TODO: enable preloading at
-                //      get int delay = AbstractMediaProvider.preloadingPreferedDelay();
-                //      if (delay > 0) {
-                //          Thread.sleep(delay);
-                //      }
-                //      else {
-                //          Thread.sleep(currentSong.duration - currentTimestamp - delay);
-                //      }
-            }
-            catch (final Exception interruptException) {
-                LogUtils.LOGException(TAG, "LoadingManagementRunnable", 0, interruptException);
-            }
+            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
             int nextPlaylistIndex = playlistIndex;
 

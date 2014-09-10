@@ -866,7 +866,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         objects.add(NavigationMenuSection.create(DRAWERITEM_SEPARATOR_ID, getString(R.string.drawer_section_label_label_settings)));
 
-        // TODO: add appropriate icon.
         objects.add(NavigationMenuItem.create(DRAWERITEM_AUDIO_FX_ID, getString(R.string.drawer_item_label_library_soundfx), R.drawable.ic_action_database, false));
         objects.add(NavigationMenuItem.create(DRAWERITEM_LIBRARY_SETTINGS_ID, getString(R.string.drawer_item_label_manage_libraries), R.drawable.ic_action_database, false));
         objects.add(NavigationMenuItem.create(DRAWERITEM_APPLICATION_SETTINGS_ID, getString(R.string.drawer_item_label_application_settings), R.drawable.ic_action_settings, false));
