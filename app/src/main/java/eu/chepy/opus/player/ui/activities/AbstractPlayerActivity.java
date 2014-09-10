@@ -329,7 +329,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         PlayerApplication.additionalCallbacks.remove(this);
         try {
-            PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
+            if (PlayerApplication.playerService != null) { // Avoid NPE while killing process (in dev only).
+                PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
+            }
         }
         catch (final RemoteException exception) {
             LogUtils.LOGException(TAG, "onServiceConnected", 0, exception);

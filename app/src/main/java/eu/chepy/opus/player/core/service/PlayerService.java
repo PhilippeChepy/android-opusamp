@@ -301,8 +301,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (!player.playerIsPlaying()) {
                 player.playerPlay();
                 wakelock.acquire();
-                notifyPlay();
             }
+
+            notifyPlay();
         }
 
         @Override
@@ -884,25 +885,31 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 try {
                     if (action.equals(PlayerService.ACTION_PREVIOUS)) {
                         if (playerServiceImpl.isPlaying()) {
-                            playerServiceImpl.stop();
+                            playerServiceImpl.pause(true);
+                            playerServiceImpl.setPosition(0);
                             playerServiceImpl.prev();
                             playerServiceImpl.play();
                         }
                         else {
                             playerServiceImpl.prev();
                         }
-                    } else if (action.equals(PlayerService.ACTION_NEXT)) {
+                    }
+                    else if (action.equals(PlayerService.ACTION_NEXT)) {
                         if (playerServiceImpl.isPlaying()) {
-                            playerServiceImpl.stop();
+                            playerServiceImpl.pause(true);
+                            playerServiceImpl.setPosition(0);
                             playerServiceImpl.next();
                             playerServiceImpl.play();
                         }
                         else {
                             playerServiceImpl.next();
                         }
-                    } else if (action.equals(PlayerService.ACTION_STOP)) {
+                    }
+                    else if (action.equals(PlayerService.ACTION_STOP)) {
                         playerServiceImpl.stop();
-                    } else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
+                    }
+                    else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
+                        LogUtils.LOGD(TAG, "pause");
                         if (playerServiceImpl.isPlaying()) {
                             playerServiceImpl.pause(isNotificationControl);
                         } else {

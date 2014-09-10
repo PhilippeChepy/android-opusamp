@@ -132,6 +132,43 @@ LogUtils.LOGD(TAG, "play with notif=" + keepNotification);
         return false;
     }
 
+
+    public static void doPlayActionIntent() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_TOGGLEPAUSE);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 1, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doPlayActionIntent", 0, exception);
+        }
+    }
+
+    public static void doPrevActionIntent() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doPrevActionIntent", 0, exception);
+        }
+    }
+
+    public static void doNextActionIntent() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doNextActionIntent", 0, exception);
+        }
+    }
+
     public static void doPrevAction() {
         final Intent action = new Intent(PlayerService.ACTION_CLIENT_COMMAND);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);

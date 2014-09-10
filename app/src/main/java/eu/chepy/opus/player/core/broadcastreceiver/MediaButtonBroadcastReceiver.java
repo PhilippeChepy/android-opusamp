@@ -29,13 +29,13 @@ public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
             final KeyEvent event = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
             if (event != null && event.getAction() == KeyEvent.ACTION_UP) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
-                    MusicConnector.doPlayAction(true);
+                    MusicConnector.doPlayActionIntent();
                 }
                 else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
-                    MusicConnector.doNextAction();
+                    MusicConnector.doNextActionIntent();
                 }
                 else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
-                    MusicConnector.doPrevAction();
+                    MusicConnector.doPrevActionIntent();
                 }
             }
         }
