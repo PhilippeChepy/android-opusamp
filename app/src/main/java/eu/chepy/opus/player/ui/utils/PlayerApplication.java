@@ -784,6 +784,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean isFreemium() {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
+        //return false;
     }
 
     public static void setFreemium(boolean freemium) {

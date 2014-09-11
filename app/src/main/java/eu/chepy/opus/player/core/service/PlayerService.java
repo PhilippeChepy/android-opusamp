@@ -242,7 +242,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
         };
 
-        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_NOTIFICATION_COMMAND));
+        final IntentFilter intentFilter = new IntentFilter(ACTION_NOTIFICATION_COMMAND);
+        intentFilter.addAction(ACTION_CLIENT_COMMAND);
+
+        registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
@@ -879,7 +882,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             boolean isNotificationControl = source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND);
             boolean isWidgetControl = source.equals(PlayerService.ACTION_APPWIDGET_COMMAND);
-            boolean isRemoteControl = isNotificationControl || isWidgetControl;
+            boolean isClientControl = source.equals(PlayerService.ACTION_CLIENT_COMMAND);
+            boolean isRemoteControl = isNotificationControl || isWidgetControl || isClientControl;
 
             if (action != null && isRemoteControl) {
                 try {
