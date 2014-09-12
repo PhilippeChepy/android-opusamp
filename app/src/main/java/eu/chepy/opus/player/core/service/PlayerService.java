@@ -1126,8 +1126,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private Runnable runnableRefreshSongData = new Runnable() {
         @Override
         public void run() {
-            currentArt = null;
-
             try {
                 // Avoid cpu stress that can break gapless :s
                 Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
