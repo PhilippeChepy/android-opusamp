@@ -108,7 +108,7 @@ public class MusicConnector {
 
     public static boolean doPlayAction(boolean keepNotification) {
         boolean isPlaying = isPlaying();
-LogUtils.LOGD(TAG, "play with notif=" + keepNotification);
+        LogUtils.LOGD(TAG, "play with notif=" + keepNotification);
 
         if (PlayerApplication.playerService != null) {
             try {

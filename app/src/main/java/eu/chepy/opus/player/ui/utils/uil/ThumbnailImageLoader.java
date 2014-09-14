@@ -60,6 +60,7 @@ public class ThumbnailImageLoader extends ImageLoader {
 
         ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
                 .threadPoolSize(4)
+                .threadPriority(Thread.MIN_PRIORITY)
                 .diskCacheExtraOptions(100, 100, null)
                 .diskCacheSize(Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_thumbnail_cache_size), "20")) * 1024 * 1024)
                 .diskCacheFileNameGenerator(instance.fileNameGenerator)

@@ -60,6 +60,7 @@ public class NormalImageLoader extends ImageLoader {
 
         ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
                 .threadPoolSize(2)
+                .threadPriority(Thread.MIN_PRIORITY)
                 .diskCacheExtraOptions(500, 500, null)
                 .diskCacheSize(Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_cache_size), "30")) * 1024 * 1024)
                 .diskCacheFileNameGenerator(instance.fileNameGenerator)
