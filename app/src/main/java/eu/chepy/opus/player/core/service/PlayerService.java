@@ -298,8 +298,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             // should never happen..
             if (!playlist[playlistIndex].isLoaded()) {
                 playlist[playlistIndex].load();
-                mediaManagementExecutor.submit(loadingManagementRunnable);
             }
+            mediaManagementExecutor.submit(loadingManagementRunnable);
 
             if (!player.playerIsPlaying()) {
                 player.playerPlay();
@@ -1142,8 +1142,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
                 PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, artImageLoaderListener);
             }
-
-            mediaManagementExecutor.submit(loadingManagementRunnable);
         }
     };
 
