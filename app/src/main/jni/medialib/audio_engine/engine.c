@@ -24,7 +24,7 @@
 
 #define LOG_TAG "(jni).engine"
 
-long input_data_callback(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t data_length) {
+long input_data_callback(engine_stream_context_s * stream, void * data_buffer, size_t data_length) {
 	size_t total_write_length = 0;
 
 	size_t processor_index;
@@ -59,7 +59,7 @@ long input_data_callback(engine_stream_context_s * stream, void * user_context, 
 	return (long)total_write_length;
 }
 
-void input_state_callback(engine_stream_context_s * stream, void * user_context, int stream_state) {
+void input_state_callback(engine_stream_context_s * stream, int stream_state) {
 	LOG_INFO(LOG_TAG, "input_state_callback: %i", stream_state);
 
 	pthread_mutex_lock(&stream->state_lock);
@@ -74,7 +74,7 @@ void input_state_callback(engine_stream_context_s * stream, void * user_context,
 	pthread_mutex_unlock(&stream->state_lock);
 }
 
-void output_state_callback(engine_stream_context_s * stream, void * user_context, int stream_state) {
+void output_state_callback(engine_stream_context_s * stream, int stream_state) {
 	LOG_INFO(LOG_TAG, "output_state_callback: %i", stream_state);
 
 	pthread_mutex_lock(&stream->state_lock);
@@ -89,7 +89,7 @@ void output_state_callback(engine_stream_context_s * stream, void * user_context
 	pthread_mutex_unlock(&stream->state_lock);
 }
 
-long output_data_callback(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t nb_samples) {
+long output_data_callback(engine_stream_context_s * stream, void * data_buffer, size_t nb_samples) {
 	size_t total_read_length = 0;
 	size_t data_length = nb_samples * stream->engine->channel_count;
 
@@ -117,8 +117,38 @@ long output_data_callback(engine_stream_context_s * stream, void * user_context,
 	return (total_read_length / sizeof(int16_t)) / stream->engine->channel_count;
 }
 
-int engine_new(engine_context_s * engine) {
+int engine_new(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count) {
 	int engine_error_code = ENGINE_GENERIC_ERROR;
+
+	if (sampling_rate < 1 || sampling_rate > 192000) {
+		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sampling rate (%i)", sampling_rate);
+		goto engine_new_done;
+	}
+
+	if (channel_count < 1 || channel_count > 8) {
+		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid channel_count (%i)", channel_count);
+		goto engine_new_done;
+	}
+
+	switch (sample_format) {
+	case SAMPLE_FORMAT_S16_LE:
+	case SAMPLE_FORMAT_S16_BE:
+	case SAMPLE_FORMAT_FLOAT32_LE:
+	case SAMPLE_FORMAT_FLOAT32_BE:
+		break;
+	default:
+		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sample format");
+		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
+		goto engine_new_done;
+	}
+
+	engine->sample_format = sample_format;
+	engine->sampling_rate = sampling_rate;
+	engine->channel_count = channel_count;
+
+	engine_error_code = ENGINE_OK;
 
 	engine->input = ffinput_get_input();
 	engine_error_code = engine->input->create(engine);
@@ -172,43 +202,6 @@ int engine_delete(engine_context_s * engine) {
 	return engine->output->destroy(engine);
 }
 
-int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count) {
-	int engine_error_code = ENGINE_GENERIC_ERROR;
-
-	if (sampling_rate < 1 || sampling_rate > 192000) {
-		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
-		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sampling rate (%i)", sampling_rate);
-		goto engine_set_params_done;
-	}
-
-	if (channel_count < 1 || channel_count > 8) {
-		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
-		LOG_ERROR(LOG_TAG, "engine_set_params: invalid channel_count (%i)", channel_count);
-		goto engine_set_params_done;
-	}
-
-	switch (sample_format) {
-	case SAMPLE_FORMAT_S16_LE:
-	case SAMPLE_FORMAT_S16_BE:
-	case SAMPLE_FORMAT_FLOAT32_LE:
-	case SAMPLE_FORMAT_FLOAT32_BE:
-		break;
-	default:
-		LOG_ERROR(LOG_TAG, "engine_set_params: invalid sample format");
-		engine_error_code = ENGINE_INVALID_FORMAT_ERROR;
-		goto engine_set_params_done;
-	}
-
-	engine->sample_format = sample_format;
-	engine->sampling_rate = sampling_rate;
-	engine->channel_count = channel_count;
-
-	engine_error_code = ENGINE_OK;
-
-engine_set_params_done:
-	return engine_error_code;
-}
-
 int engine_dsp_init(engine_context_s * engine) {
     size_t processor_index;
 
@@ -253,7 +246,7 @@ int engine_set_completion_callback(engine_context_s * engine, engine_completion_
 }
 
 int engine_set_timestamp_callback(engine_context_s * engine, engine_timestamp_callback callback) {
-	engine->output->timestamp_callback = callback;
+	engine->timestamp_callback = callback;
 	return ENGINE_OK;
 }
 
@@ -319,8 +312,7 @@ int engine_stream_new(engine_context_s * engine, engine_stream_context_s * strea
 	}
 
 	LOG_INFO(LOG_TAG, "engine_stream_new: allocating output engine (0x%08x).", (int)engine->output);
-	engine_error_code = engine->output->stream_create(engine, stream,
-			output_data_callback, output_state_callback, stream);
+	engine_error_code = engine->output->stream_create(engine, stream, output_data_callback, output_state_callback, stream);
 
 stream_new_done:
 	return engine_error_code;

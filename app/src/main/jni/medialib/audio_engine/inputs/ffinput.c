@@ -126,25 +126,27 @@ static void * ffinput_decoding_thread(void * thread_arg) {
                     av_error_code = av_buffersrc_add_frame_flags(ffinput_stream->buffer_source_context, context->frame, 0);
                     if (av_error_code < 0) {
                         LOG_ERROR(LOG_TAG, "error while feeding the audio filtergraph, stopping");
-                        goto media_player_decode_frame_done;
+                        // TODO: maybe necessary? goto media_player_decode_frame_done;
                     }
-                    /* pull filtered audio from the filtergraph */
-                    while (1) {
-                        av_error_code = av_buffersink_get_frame(ffinput_stream->buffer_sink_context, filtered_frame);
+                    else {
+                        /* pull filtered audio from the filtergraph */
+                        while (1) {
+                            av_error_code = av_buffersink_get_frame(ffinput_stream->buffer_sink_context, filtered_frame);
 
-                        if(av_error_code == AVERROR(EAGAIN) || av_error_code == AVERROR_EOF) {
-                            break;
+                            if(av_error_code == AVERROR(EAGAIN) || av_error_code == AVERROR_EOF) {
+                                break;
+                            }
+                            if(av_error_code < 0) {
+                                //return E_MEDIA_PLAYER_ERROR_FILTERING; /* E_ENGINE_ERROR_FILTERING -> goto end */
+                                goto media_player_decode_frame_done;
+                            }
+
+                            size_t data_length = av_samples_get_buffer_size(NULL, av_get_channel_layout_nb_channels(av_frame_get_channel_layout(filtered_frame)), filtered_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+                            uint8_t * data = (uint8_t *) filtered_frame->data[0];
+
+                            ffinput_stream->data_callback(stream, data, data_length);
+                            av_frame_unref(filtered_frame);
                         }
-                        if(av_error_code < 0) {
-                            //return E_MEDIA_PLAYER_ERROR_FILTERING; /* E_ENGINE_ERROR_FILTERING -> goto end */
-                            goto media_player_decode_frame_done;
-                        }
-
-                        size_t data_length = av_samples_get_buffer_size(NULL, av_get_channel_layout_nb_channels(av_frame_get_channel_layout(filtered_frame)), filtered_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
-                        uint8_t * data = (uint8_t *) filtered_frame->data[0];
-
-                        ffinput_stream->data_callback(stream, ffinput_stream->user_context, data, data_length);
-                        av_frame_unref(filtered_frame);
                     }
                 }
             }
@@ -171,7 +173,7 @@ media_player_decode_frame_done:
 
 		if (error_code == ENGINE_TERMINATED || error_code == ENGINE_GENERIC_ERROR) {
 			ffinput_stream_set_position(stream, 0);
-			ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_TERMINATED);
+			ffinput_stream->state_callback(stream, STREAM_STATE_TERMINATED);
 			break;
 		}
 
@@ -467,7 +469,7 @@ int ffinput_stream_start(engine_stream_context_s * stream) {
 
 	pthread_mutex_lock(&ffinput_stream->validity_lock);
 	ffinput_stream->has_valid_thread = 1;
-	ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_STARTED);
+	ffinput_stream->state_callback(stream, STREAM_STATE_STARTED);
 	stream->decoder_is_stopping = 0;
 	stream->decoder_terminated = 0;
 
@@ -493,7 +495,7 @@ int ffinput_stream_stop(engine_stream_context_s * stream) {
 		if (pthread_join(ffinput_stream->decoding_thread, NULL) == 0) {
 			error_code = ENGINE_OK;
 		}
-		ffinput_stream->state_callback(stream, ffinput_stream->user_context, STREAM_STATE_STOPPED);
+		ffinput_stream->state_callback(stream, STREAM_STATE_STOPPED);
 		LOG_DEBUG(LOG_TAG, "ffinput_stream_stop() : stopped");
 	}
 	else {
@@ -516,7 +518,7 @@ int ffinput_stream_get_duration(engine_stream_context_s * stream, int64_t * dura
 				ffinput_stream->format_context->streams[ffinput_stream->stream_index]->time_base.den);
 	*duration = max_frame_id;
 
-	return ENGINE_OK; /* TODO: add error checking */
+	return ENGINE_OK;
 }
 
 int ffinput_stream_set_position(engine_stream_context_s * stream, int64_t position) {
@@ -537,7 +539,7 @@ int ffinput_stream_set_position(engine_stream_context_s * stream, int64_t positi
 	ffinput_stream->seek_ts = position;
 	ffinput_stream->seek_frame = frame_id;
 	avcodec_flush_buffers(ffinput_stream->format_context->streams[ffinput_stream->stream_index]->codec);
-	return ENGINE_OK; /* TODO: add error checking */
+	return ENGINE_OK;
 }
 
 static engine_input_s ffinput_input = {

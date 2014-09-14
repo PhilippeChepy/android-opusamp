@@ -58,8 +58,8 @@ typedef struct engine_context_ engine_context_s;
 typedef struct engine_stream_context_ engine_stream_context_s;
 typedef struct engine_processor_ engine_processor_s;
 
-typedef long (* engine_data_callback)(engine_stream_context_s * stream, void * user_context, void * data_buffer, size_t data_length);
-typedef void (* engine_state_callback)(engine_stream_context_s * stream, void * user_context, int stream_state);
+typedef long (* engine_data_callback)(engine_stream_context_s * stream, void * data_buffer, size_t data_length);
+typedef void (* engine_state_callback)(engine_stream_context_s * stream, int stream_state);
 typedef void (* engine_completion_callback)(engine_stream_context_s * stream);
 typedef void (* engine_timestamp_callback)(engine_stream_context_s * stream, int64_t played);
 
@@ -75,8 +75,7 @@ typedef struct {
 	int (* stream_stop)(engine_stream_context_s * stream);
 	int (* stream_flush)(engine_stream_context_s * stream);
 
-    engine_timestamp_callback timestamp_callback;
-	void * context;
+    void * context;
 } engine_output_s;
 
 typedef struct {
@@ -118,6 +117,7 @@ struct engine_context_ {
 	engine_processor_s ** processor_list;
 	size_t processor_count;
 
+    engine_timestamp_callback timestamp_callback;
     engine_completion_callback completion_callback;
 
 	int sample_format;
@@ -154,11 +154,14 @@ struct engine_stream_context_ {
 
 	int64_t last_timestamp;
 	int64_t last_timestamp_update;
+
+	engine_data_callback data_callback;
+	engine_state_callback state_callback;
+	void * user_context;
 };
 
-int engine_new(engine_context_s * engine);
+int engine_new(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count);
 int engine_delete(engine_context_s * engine);
-int engine_set_params(engine_context_s * engine, int sample_format, int sampling_rate, int channel_count);
 int engine_get_max_channel_count(engine_context_s * engine, uint32_t * max_channels);
 
 int engine_dsp_init(engine_context_s * engine);

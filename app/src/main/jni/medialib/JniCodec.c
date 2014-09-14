@@ -78,26 +78,18 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineIn
 	jobject obj = (*env)->NewGlobalRef(env, object);
 	jclass cls  = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env, obj));
 
-	uint32_t channel_count;
-
 	jlong engineJ = (*env)->GetLongField(env, obj, (*env)->GetFieldID(env, cls, "engineContext", "J"));
 	engine_context_s * engine = id_to_ptr(engineJ);
 
 	if (engine == NULL) {
 		engine = memory_zero_alloc(sizeof(*engine));
 
-		if (engine_new(engine)) {
+        engine->vm = vm;
+        engine->obj = obj;
+        engine->cls = cls;
+
+		if (engine_new(engine, SAMPLE_FORMAT_S16_NE, 44100, 2)) {
 			LOG_ERROR(LOG_TAG, "engine_new() failure");
-			goto engine_init_done_error;
-		}
-
-		if (engine_get_max_channel_count(engine, &channel_count)) {
-			LOG_ERROR(LOG_TAG, "engine_get_max_channel_count() failure");
-			goto engine_init_done_error;
-		}
-
-		if (engine_set_params(engine, SAMPLE_FORMAT_S16_NE, 44100, channel_count)) {
-			LOG_ERROR(LOG_TAG, "engine_set_params() failure");
 			goto engine_init_done_error;
 		}
 
@@ -109,10 +101,6 @@ JNIEXPORT jlong JNICALL Java_eu_chepy_opus_player_utils_jni_JniMediaLib_engineIn
 
 	engine_set_completion_callback(engine, &playbackEndedCallback);
 	engine_set_timestamp_callback(engine, &playbackTimestampCallback);
-
-	engine->vm = vm;
-	engine->obj = obj;
-	engine->cls = cls;
 
     (*env)->SetLongField(env, obj, (*env)->GetFieldID(env, cls, "engineContext", "J"), ptr_to_id(engine));
 

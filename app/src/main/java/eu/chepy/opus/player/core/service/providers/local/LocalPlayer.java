@@ -97,7 +97,7 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 	public synchronized void playerSetContent(AbstractMediaManager.Media context) {
 		if (context instanceof LocalMedia) {
 			if (currentContext != null && playing) {
-				playerPause(true);
+				playerStop();
 			}
 			
 			currentContext = (LocalMedia) context;
