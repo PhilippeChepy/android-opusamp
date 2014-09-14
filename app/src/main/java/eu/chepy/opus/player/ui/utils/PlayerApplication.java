@@ -490,7 +490,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean genreDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String genreId, int sortOrder, int position, String albumId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return MusicConnector.doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder, position);
+                return MusicConnector.doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
                 return MusicConnector.doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:

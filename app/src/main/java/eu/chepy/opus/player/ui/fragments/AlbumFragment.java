@@ -32,7 +32,7 @@ import android.widget.GridView;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
-import eu.chepy.opus.player.ui.activities.LibraryDetailActivity;
+import eu.chepy.opus.player.ui.activities.LibraryDetailWithHeaderActivity;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
 import eu.chepy.opus.player.ui.utils.MusicConnector;
@@ -200,7 +200,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
+		Intent intent = new Intent(PlayerApplication.context, LibraryDetailWithHeaderActivity.class);
         cursor.moveToPosition(position);
 
         intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);

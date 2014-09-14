@@ -1,21 +1,30 @@
 package eu.chepy.opus.player.ui.activities;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.PopupMenu;
+import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+
+import com.nineoldandroids.view.ViewHelper;
 
 import eu.chepy.opus.player.R;
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
@@ -23,10 +32,11 @@ import eu.chepy.opus.player.ui.adapter.LibraryAdapter;
 import eu.chepy.opus.player.ui.adapter.LibraryAdapterFactory;
 import eu.chepy.opus.player.ui.utils.MusicConnector;
 import eu.chepy.opus.player.ui.utils.PlayerApplication;
+import eu.chepy.opus.player.ui.utils.uil.ProviderImageDownloader;
 
-public class LibraryDetailActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String TAG = LibraryDetailActivity.class.getSimpleName();
+    public static final String TAG = LibraryDetailWithHeaderActivity.class.getSimpleName();
 
     private static final int CONTEXT_MENU_GROUP_ID = 1;
 
@@ -61,13 +71,28 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
 
 
+    /*
+        Action bar fadin effect
+     */
+    private Drawable actionbarBackground;
+
+    private int actionbarHeight;
+
+    private int minHeaderTranslation;
+
+    private View header;
+
+    private ImageView placeHolderView;
+
+    private TypedValue mTypedValue = new TypedValue();
+
+
+
     private static final int COLUMN_SONG_ID = 0;
 
     private static final int COLUMN_SONG_TITLE = 1;
 
     private static final int COLUMN_SONG_ARTIST = 2;
-
-    private static final int COLUMN_SONG_VISIBLE = 3;
 
     private static final int COLUMN_ALBUM_ID = 0;
 
@@ -75,7 +100,21 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     private static final int COLUMN_ALBUM_ARTIST = 2;
 
-    private static final int COLUMN_ALBUM_VISIBLE = 3;
+
+    private static final int COLUMN_ID = 0;
+
+    private int COLUMN_VISIBLE = 0;
+
+
+
+    private static final int SELECT_IMAGE_LEGACY = 0;
+
+    private static final int SELECT_IMAGE_KITKAT = 1;
+
+
+    private static final int CONTEXT_MENUITEM_USE_FILE_ART = 100;
+
+    private static final int CONTEXT_MENUITEM_RESTORE_ART = 101;
 
 
 
@@ -110,12 +149,18 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             return super.onContextItemSelected(item);
         }
 
-        return doOnDetailContextItemSelected(item.getItemId());
+        int position = 0;
+        if (item.getMenuInfo() != null) {
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+            position = info.position - 1;
+        }
+
+        return doOnContextItemSelected(position, item.getItemId());
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_detail, 0);
+        super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, 0);
 
         getSupportActionBar().show();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -124,6 +169,22 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         if (parameters != null) {
             contentType = (AbstractMediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
             contentSourceId = parameters.getString(PlayerApplication.CONTENT_SOURCE_ID_KEY);
+
+            switch (contentType) {
+                case CONTENT_TYPE_ARTIST:
+                case CONTENT_TYPE_ALBUM:
+                    COLUMN_VISIBLE = 3;
+                    break;
+                case CONTENT_TYPE_PLAYLIST:
+                    COLUMN_VISIBLE = 3;
+                    break;
+                case CONTENT_TYPE_ALBUM_ARTIST:
+                case CONTENT_TYPE_GENRE:
+                    COLUMN_VISIBLE = 3;
+                    break;
+                default:
+                    throw new IllegalArgumentException();
+            }
 
             final Activity hostActivity = this;
             final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
@@ -137,7 +198,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     return new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem menuItem) {
-                            return doOnDetailContextItemSelected(menuItem.getItemId());
+                            return doOnContextItemSelected(position, menuItem.getItemId());
                         }
                     };
                 }
@@ -161,7 +222,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                     COLUMN_SONG_ID,
                                     COLUMN_SONG_TITLE,
                                     COLUMN_SONG_ARTIST,
-                                    COLUMN_SONG_VISIBLE
+                                    COLUMN_VISIBLE
                             });
                     break;
                 case CONTENT_TYPE_ALBUM_ARTIST:
@@ -171,7 +232,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                     COLUMN_ALBUM_ID,
                                     COLUMN_ALBUM_NAME,
                                     COLUMN_ALBUM_ARTIST,
-                                    COLUMN_ALBUM_VISIBLE
+                                    COLUMN_VISIBLE
                             });
                     break;
                 default:
@@ -179,9 +240,27 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             }
         }
 
-        contentList = (ListView) findViewById(R.id.list_view_base);
-        contentList.setAdapter(adapter);
+        minHeaderTranslation = -getResources().getDimensionPixelSize(R.dimen.header_height) + getActionBarHeight();
 
+        contentList = (ListView) findViewById(R.id.list_view_base);
+        header = findViewById(R.id.header);
+
+        placeHolderView = (ImageView) getLayoutInflater().inflate(R.layout.listview_header_details, contentList, false);
+
+        final String artUri =
+                ProviderImageDownloader.SCHEME_URI_PREFIX +
+                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
+                        PlayerApplication.libraryManagerIndex + "/" +
+                        contentSourceId;
+
+        PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
+
+        actionbarBackground = getResources().getDrawable(R.drawable.holo_background);
+
+        contentList.addHeaderView(placeHolderView);
+        contentList.setOnScrollListener(contentListOnScrollListener);
+
+        contentList.setAdapter(adapter);
         contentList.setOnItemClickListener(contentListOnItemClickListener);
         contentList.setOnCreateContextMenuListener(this);
 
@@ -302,8 +381,90 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 if (adapter != null) {
                     this.cursor = cursor;
                     adapter.changeCursor(cursor);
+
+                    if (contentType == AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM) {
+                        final String songArtUri =
+                                ProviderImageDownloader.SCHEME_URI_PREFIX +
+                                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
+                                        PlayerApplication.libraryManagerIndex + "/" +
+                                        contentSourceId;
+                        PlayerApplication.normalImageLoader.displayImage(songArtUri, placeHolderView);
+                    }
                 }
                 break;
+        }
+    }
+
+    @TargetApi(19)
+    public void doImageChangeRequest() {
+        if (PlayerApplication.hasKitkat()) {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            startActivityForResult(intent, SELECT_IMAGE_KITKAT);
+        } else {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, getString(R.string.label_select_cover)), SELECT_IMAGE_LEGACY);
+        }
+    }
+
+    @TargetApi(19)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
+        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+        switch(requestCode) {
+            case SELECT_IMAGE_KITKAT:
+            case SELECT_IMAGE_LEGACY:
+                if(resultCode == RESULT_OK){
+                    final Uri imageUriData = imageReturnedIntent.getData();
+
+                    if (requestCode == SELECT_IMAGE_KITKAT) {
+                        final int flags = imageReturnedIntent.getFlags()
+                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                        getContentResolver().takePersistableUriPermission(imageUriData, flags);
+                    }
+
+
+                    if (imageUriData != null) {
+                        final String imageUri = imageUriData.toString();
+                        // TODO: clear only old cached image... in provider
+                        //ImageLoader.getInstance().clearMemoryCache();
+                        //ImageLoader.getInstance().clearDiscCache();
+
+                        PlayerApplication.normalImageLoader.displayImage(imageUri, placeHolderView);
+
+                        final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, true);
+                            }
+                        };
+
+                        final DialogInterface.OnClickListener artUpdateSongNegativeOnClickListener = new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, false);
+                            }
+                        };
+
+                        new AlertDialog.Builder(this)
+                                .setTitle(R.string.alert_dialog_title_art_change_tracks)
+                                .setMessage(R.string.alert_dialog_message_art_change_tracks)
+                                .setPositiveButton(android.R.string.yes, artUpdateSongPositiveOnClickListener)
+                                .setNegativeButton(android.R.string.no, artUpdateSongNegativeOnClickListener)
+                                .show();
+                    }
+                }
         }
     }
 
@@ -316,17 +477,26 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+            final Intent intent = new Intent(LibraryDetailWithHeaderActivity.this, LibraryDetailActivity.class);
+
             switch (contentType) {
                 case CONTENT_TYPE_PLAYLIST:
                 case CONTENT_TYPE_ARTIST:
                 case CONTENT_TYPE_ALBUM:
-                    doDetailPlayAction();
+                    position = position - 1;
+                    cursor.moveToPosition(position);
+
+                    if (position == -1) {
+                        openContextMenu(contentList);
+                    }
+                    else {
+                        doPlayDetailAction();
+                    }
                     break;
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
-                    final Intent intent = new Intent(LibraryDetailActivity.this, LibraryDetailWithHeaderActivity.class);
                     intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);
-                    intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ALBUM_ID));
+                    intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ID));
                     startActivity(intent);
                     break;
 
@@ -336,7 +506,68 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
 
 
-    private boolean doDetailPlayAction() {
+    /*
+        Scroll listener of listview (used to set actionbar transparency)
+     */
+    final AbsListView.OnScrollListener contentListOnScrollListener = new AbsListView.OnScrollListener() {
+
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            int scrollY = getScrollY();
+            ViewHelper.setTranslationY(header, Math.max(-scrollY, minHeaderTranslation));
+            float ratio = clamp(ViewHelper.getTranslationY(header) / minHeaderTranslation, 0.0f, 1.0f);
+
+            actionbarBackground.setAlpha((int) (ratio * 255));
+            getSupportActionBar().setBackgroundDrawable(actionbarBackground);
+        }
+    };
+
+    /*
+
+     */
+    public int getActionBarHeight() {
+        if (actionbarHeight != 0) {
+            return actionbarHeight;
+        }
+
+        actionbarHeight = 0;
+        final Resources.Theme theme = getTheme();
+        if (theme != null) {
+            theme.resolveAttribute(android.support.v7.appcompat.R.attr.actionBarSize, mTypedValue, true);
+            actionbarHeight = TypedValue.complexToDimensionPixelSize(mTypedValue.data, getResources().getDisplayMetrics());
+        }
+
+        return actionbarHeight;
+    }
+
+    public static float clamp(float value, float max, float min) {
+        return Math.max(Math.min(value, min), max);
+    }
+
+    public int getScrollY() {
+        View c = contentList.getChildAt(0);
+        if (c == null) {
+            return 0;
+        }
+
+        int firstVisiblePosition = contentList.getFirstVisiblePosition();
+        int top = c.getTop();
+
+        int headerHeight = 0;
+        if (firstVisiblePosition >= 1) {
+            headerHeight = placeHolderView.getHeight();
+        }
+
+        return -top + firstVisiblePosition * c.getHeight() + headerHeight;
+    }
+
+
+
+    private boolean doPlayDetailAction() {
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
                 return PlayerApplication.artistDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
@@ -354,35 +585,56 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     }
 
     public void doOnCreateDetailContextMenu(Menu menu) {
+        int position = cursor.getPosition();
+
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
-                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_SONG_VISIBLE) == 1);
+                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             case CONTENT_TYPE_ALBUM_ARTIST:
-                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_ALBUM_VISIBLE) == 1);
+                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             case CONTENT_TYPE_ALBUM:
-                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_SONG_VISIBLE) == 1);
+                if (position == -1) {
+                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.menuitem_label_use_file_art);
+                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.menuitem_label_restore_file_art);
+                }
+                else {
+                    PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
+                }
                 break;
             case CONTENT_TYPE_PLAYLIST:
-                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_SONG_VISIBLE) == 1, true);
+                PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1, true);
                 break;
             case CONTENT_TYPE_GENRE:
-                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_ALBUM_VISIBLE) == 1);
+                PlayerApplication.createAlbumContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
                 break;
             default:
                 throw new IllegalArgumentException();
         }
     }
 
-    public boolean doOnDetailContextItemSelected(int itemId) {
+    public boolean doOnContextItemSelected(int position, int itemId) {
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
                 return PlayerApplication.artistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
             case CONTENT_TYPE_ALBUM_ARTIST:
                 return PlayerApplication.albumArtistDetailContextItemSelected(this, itemId, MusicConnector.details_albums_sort_order, cursor.getString(COLUMN_ALBUM_ID));
             case CONTENT_TYPE_ALBUM:
-                return PlayerApplication.albumDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+                if (position == -1) {
+                    switch (itemId) {
+                        case CONTEXT_MENUITEM_USE_FILE_ART:
+                            doImageChangeRequest();
+                            break;
+                        case CONTEXT_MENUITEM_RESTORE_ART:
+                            // TODO: art restoration.
+                            break;
+                    }
+                    return true;
+                }
+                else {
+                    return PlayerApplication.albumDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+                }
             case CONTENT_TYPE_PLAYLIST:
                 boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
 
@@ -407,7 +659,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LibraryDetailActivity.this);
+            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LibraryDetailWithHeaderActivity.this);
             int sortIndex = 0; // case MusicConnector.SORT_A_Z
 
             switch (contentType) {

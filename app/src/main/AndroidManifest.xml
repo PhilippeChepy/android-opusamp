@@ -95,6 +95,11 @@
 
         <activity
             android:name=".ui.activities.LibraryDetailActivity"
+            android:theme="@style/AudioKit">
+        </activity>
+
+        <activity
+            android:name=".ui.activities.LibraryDetailWithHeaderActivity"
             android:theme="@style/AudioKit.TransparentActionBar">
         </activity>
 
