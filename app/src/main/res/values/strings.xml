@@ -220,6 +220,26 @@
     <string name="label_metadata_media_disc">Disc</string>
 
 
+    <!-- Setup -->
+    <string name="label_setup_step1_title">"Let's get you set up"</string>
+    <string name="label_setup_step1_description">It should only take a few moments to set up the app.</string>
+
+    <string name="label_setup_verifying_premium_title">Preparing&#8230;</string>
+    <string name="label_setup_verifying_premium_description">OpusAmp is verifying if you are a premium user.</string>
+
+    <string name="label_setup_valid_premium_title">Premium mode</string>
+    <string name="label_setup_valid_premium_description">You already acquired premium mode.\n\nEnjoy your music without limitations!</string>
+
+    <string name="label_setup_invalid_premium_title">Premium mode</string>
+    <string name="label_setup_invalid_premium_description">You don\'t have acquired premium mode.\nYou can do it later in application settings.\n\nWithout premium mode, you can use OpusAMP without any limitations, but after a period of 15 days, ads will be displayed occasionally.</string>
+
+    <string name="label_setup_storage_title">Storage</string>
+    <string name="label_setup_storage_description">Define location of the default library on your Android&#8482; device.\nYou can customize paths or add other libraries later.</string>
+    <string name="label_setup_scan_whole_storage">Whole external memory</string>
+    <string name="label_setup_scan_specific_locations">Intended for music</string>
+
+    <string name="label_internal_storage">Internal Storage</string>
+    <string name="label_external_storage">External Storage </string>
 
     <!-- Units -->
     <string name="unit_MB">%s MB</string>

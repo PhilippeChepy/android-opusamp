@@ -10,6 +10,7 @@
     <color name="holo_orange">#ffffbb33</color>
     <color name="holo_blue_dark">#ff0099cc</color>
 
+    <color name="view_bottombar_color">#aa3f9fe0</color>
 	<color name="view_slider_color">#ff3f9fe0</color>
     <color name="view_scrollingtabs_color">#ff3f9fe0</color>
 

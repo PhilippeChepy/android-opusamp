@@ -160,6 +160,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
     private static Runnable autostopTask;
 
+    protected boolean isFirstRun = false;
+
 
 
     /*
@@ -169,6 +171,13 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
     protected void onCreate(Bundle savedInstanceState, int layout, int windowFeature) {
         super.onCreate(savedInstanceState);
+
+        if (PlayerApplication.isFirstRun()) {
+            isFirstRun = true;
+            final Intent intent = new Intent(this, SetupActivity.class);
+            startActivity(intent);
+            finish();
+        }
 
         if (windowFeature != 0) {
             supportRequestWindowFeature(windowFeature);
@@ -200,8 +209,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                         PlayerApplication.adDisplayReset();
                     }
                 });
-            }
-            else {
+            } else {
                 PlayerApplication.adDisplayInc();
             }
         }

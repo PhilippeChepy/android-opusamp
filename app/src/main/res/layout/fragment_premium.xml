@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="56.0dip">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginTop="40.0dip"
+                android:src="@drawable/ic_logo" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginTop="32.0dip"
+                android:layout_marginRight="38.0dip"
+                android:orientation="horizontal">
+
+                <eu.chepy.opus.player.ui.views.SquareImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_mini_green_tick"/>
+
+                <eu.chepy.opus.player.ui.views.CustomTextView
+                    android:textSize="@dimen/text_size_x_large"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_setup_storage_title" />
+            </LinearLayout>
+
+            <eu.chepy.opus.player.ui.views.CustomTextView
+                android:layout_marginTop="10.0dip"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginRight="38.0dip"
+                android:textSize="@dimen/text_size_small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_setup_storage_description"/>
+
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10.0dip"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginRight="38.0dip"
+                android:layout_marginStart="38.0dip"
+                android:layout_marginEnd="38.0dip">
+
+                <eu.chepy.opus.player.ui.views.CustomRadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_setup_scan_whole_storage"
+                    android:id="@+id/storage_use_whole_sdcard" />
+
+                <eu.chepy.opus.player.ui.views.CustomRadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/label_setup_scan_specific_locations"
+                    android:id="@+id/storage_use_music_directory" />
+            </RadioGroup>
+
+            <eu.chepy.opus.player.ui.views.CustomTextView
+                android:id="@+id/storage_locations"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10.0dip"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginRight="38.0dip"
+                android:visibility="gone"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginTop="32.0dip"
+                android:layout_marginRight="38.0dip"
+                android:orientation="horizontal">
+
+                <eu.chepy.opus.player.ui.views.SquareImageView
+                    android:id="@+id/premium_checking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_mini_checking" />
+
+                <eu.chepy.opus.player.ui.views.SquareImageView
+                    android:id="@+id/premium_ok"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_mini_green_tick"
+                    android:visibility="gone"/>
+
+                <eu.chepy.opus.player.ui.views.SquareImageView
+                    android:id="@+id/premium_failure"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_mini_red_cross"
+                    android:visibility="gone" />
+
+                <eu.chepy.opus.player.ui.views.CustomTextView
+                    android:id="@+id/premium_title"
+                    android:textSize="@dimen/text_size_x_large"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_setup_verifying_premium_title" />
+            </LinearLayout>
+
+            <eu.chepy.opus.player.ui.views.CustomTextView
+                android:layout_marginTop="10.0dip"
+                android:layout_marginLeft="38.0dip"
+                android:layout_marginRight="38.0dip"
+                android:textSize="@dimen/text_size_small"
+                android:id="@+id/premium_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_setup_verifying_premium_description" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:id="@+id/optins"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="38.0dip"
+                    android:layout_marginRight="54.0dip"
+                    android:layout_marginEnd="54.0dip"/>
+
+
+    <!--
+                        <View android:background="#ff999999" android:layout_width="fill_parent" android:layout_height="1.0px" android:layout_marginLeft="34.0dip" android:layout_marginTop="32.0dip" android:layout_marginRight="34.0dip" android:layout_marginBottom="28.0dip" />
+                        <TextView android:id="@+id/toslinks" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="34.0dip" android:layout_marginRight="34.0dip" android:layout_marginBottom="32.0dip" android:text="@string/setting_logging_tos" style="@style/SetupTosLinks" />
+    -->
+            </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:gravity="end"
+        android:background="@color/view_bottombar_color"
+        android:layout_width="fill_parent"
+        android:padding="1dp"
+        android:layout_alignParentBottom="true"
+        android:layout_height="56.0dip">
+
+        <TextView
+            android:id="@+id/next"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:textSize="16.0sp"
+            android:textColor="#ffffffff"
+            android:gravity="center"
+            android:background="@color/view_bottombar_color"
+            android:paddingLeft="32.0dip"
+            android:paddingRight="32.0dip"
+            android:text="@android:string/ok" />
+    </RelativeLayout>
+</RelativeLayout>

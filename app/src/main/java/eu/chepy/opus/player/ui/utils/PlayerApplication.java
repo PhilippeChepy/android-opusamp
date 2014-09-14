@@ -234,12 +234,18 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 currentProvider.getProvider().erase();
             }
 
-            if (libraryManagerIndex >= mediaManagers.length) {
-                libraryManagerIndex = 0;
+            if (mediaManagers == null) {
+                libraryManagerIndex = -1;
+                playerManagerIndex = -1;
             }
+            else {
+                if (libraryManagerIndex >= mediaManagers.length) {
+                    libraryManagerIndex = 0;
+                }
 
-            if (playerManagerIndex >= mediaManagers.length) {
-                playerManagerIndex = 0;
+                if (playerManagerIndex >= mediaManagers.length) {
+                    playerManagerIndex = 0;
+                }
             }
         }
 
@@ -781,6 +787,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
 
+    private static final String CONFIG_FIRST_RUN = "firstRunNeedWizard";
+
     public static boolean isFreemium() {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
@@ -813,6 +821,18 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(CONFIG_NO_DISPLAY, 0);
+        editor.apply();
+    }
+
+    public static boolean isFirstRun() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(CONFIG_FIRST_RUN, true);
+    }
+
+    public static void disableFirstRun() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CONFIG_FIRST_RUN, false);
         editor.apply();
     }
 

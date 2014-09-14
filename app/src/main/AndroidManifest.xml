@@ -42,6 +42,11 @@
         </receiver>
 
         <activity
+            android:name=".ui.activities.SetupActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
+
+        <activity
             android:name=".ui.activities.LibraryMainActivity"
             android:launchMode="singleTop"
             android:theme="@style/AudioKit.NavigationDrawer" >
