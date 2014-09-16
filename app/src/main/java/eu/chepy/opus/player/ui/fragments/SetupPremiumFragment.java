@@ -59,24 +59,19 @@ public class SetupPremiumFragment extends Fragment {
         radioWhole.setOnCheckedChangeListener(onRadioCheckedListener);
         radioIntended.setOnCheckedChangeListener(onRadioCheckedListener);
 
-
-        PlayerApplication.iabStart(new Runnable() {
-            @Override
-            public void run() {
-                premiumChecking.setVisibility(View.GONE);
-                if (PlayerApplication.isFreemium()) {
-                    premiumInvalid.setVisibility(View.VISIBLE);
-                    premiumTitle.setText(R.string.label_setup_invalid_premium_title);
-                    premiumDescription.setText(R.string.label_setup_invalid_premium_description);
+        if (PlayerApplication.isFreemium()) {
+            PlayerApplication.iabStart(new Runnable() {
+                @Override
+                public void run() {
+                    premiumChecking.setVisibility(View.GONE);
+                    doUpdateStatus();
+                    PlayerApplication.iabStop();
                 }
-                else {
-                    premiumValid.setVisibility(View.VISIBLE);
-                    premiumTitle.setText(R.string.label_setup_valid_premium_title);
-                    premiumDescription.setText(R.string.label_setup_valid_premium_description);
-                }
-                PlayerApplication.iabStop();
-            }
-        });
+            });
+        }
+        else {
+            doUpdateStatus();
+        }
 
         onRadioCheckedListener.onCheckedChanged(radioIntended, true);
 
@@ -113,6 +108,19 @@ public class SetupPremiumFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void doUpdateStatus() {
+        if (PlayerApplication.isFreemium()) {
+            premiumInvalid.setVisibility(View.VISIBLE);
+            premiumTitle.setText(R.string.label_setup_invalid_premium_title);
+            premiumDescription.setText(R.string.label_setup_invalid_premium_description);
+        }
+        else {
+            premiumValid.setVisibility(View.VISIBLE);
+            premiumTitle.setText(R.string.label_setup_valid_premium_title);
+            premiumDescription.setText(R.string.label_setup_valid_premium_description);
+        }
     }
 
     private final CompoundButton.OnCheckedChangeListener onRadioCheckedListener= new CompoundButton.OnCheckedChangeListener() {
