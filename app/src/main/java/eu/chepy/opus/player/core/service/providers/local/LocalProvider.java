@@ -1590,120 +1590,140 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         for (int field : sortFields) {
             switch (field) {
                 case SONG_URI:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_URI:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
                     break;
                 case SONG_FIRST_PLAYED:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_FIRST_PLAYED:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
                     break;
                 case SONG_LAST_PLAYED:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_LAST_PLAYED:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
                     break;
                 case SONG_TITLE:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_TITLE:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ARTIST:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ARTIST:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ALBUM_ARTIST:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ALBUM_ARTIST:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
                     break;
                 case SONG_ALBUM:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_ALBUM:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
                     break;
                 case SONG_TRACK:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_TRACK:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
                     break;
                 case SONG_DISC:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
                     break;
                 case -SONG_DISC:
+                    usesSongTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
                     break;
                 case PLAYLIST_ENTRY_POSITION:
+                    usesPlaylistEntryTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
                     orderBy = orderBy + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " COLLATE NOCASE ASC";
                     break;
                 case -PLAYLIST_ENTRY_POSITION:
+                    usesPlaylistEntryTable = true;
                     if (!TextUtils.isEmpty(orderBy)) {
                         orderBy = orderBy + ", ";
                     }
@@ -1720,8 +1740,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String selection = MusicConnector.show_hidden ?
                 "((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " + showFiles + ")" :
-                "(((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0))" +
-                        showFiles + ")";
+                "(((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0))" + showFiles + ")";
         String[] selectionArgs = null;
 
         if (sourceId == null) {
