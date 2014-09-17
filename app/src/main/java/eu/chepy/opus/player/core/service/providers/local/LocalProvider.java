@@ -236,29 +236,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     @Override
-    public Cursor buildCursor(ContentType contentType, int[] fields, int[] sortFields, String filter) {
-        switch (contentType) {
-            case CONTENT_TYPE_ALBUM:
-                return doBuildAlbumCursor(fields, sortFields, filter, ContentType.CONTENT_TYPE_DEFAULT, null);
-            case CONTENT_TYPE_ALBUM_ARTIST:
-                return doBuildAlbumArtistCursor(fields, sortFields, filter);
-            case CONTENT_TYPE_ARTIST:
-                return doBuildArtistCursor(fields, sortFields, filter);
-            case CONTENT_TYPE_GENRE:
-                return doBuildGenreCursor(fields, sortFields, filter);
-            case CONTENT_TYPE_PLAYLIST:
-                return doBuildPlaylistCursor(fields, sortFields, filter);
-            case CONTENT_TYPE_MEDIA:
-                return doBuildMediaCursor(fields, sortFields, filter, ContentType.CONTENT_TYPE_DEFAULT, null);
-            case CONTENT_TYPE_STORAGE:
-                return doBuildStorageCursor(fields, sortFields, filter);
+    public Cursor buildCursor(ContentType contentType, int[] fields, int[] sortFields, String filter, ContentType source, String sourceId) {
+        if (source == null) {
+            source = ContentType.CONTENT_TYPE_DEFAULT;
         }
 
-        return null;
-    }
-
-    @Override
-    public Cursor buildCursor(ContentType contentType, int[] fields, int[] sortFields, String filter, ContentType source, String sourceId) {
         switch (contentType) {
             case CONTENT_TYPE_ALBUM:
                 return doBuildAlbumCursor(fields, sortFields, filter, source, sourceId);
@@ -694,7 +676,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 break;
             case CONTENT_STORAGE_CURRENT_LOCATION:
                 currentFolder = new File((String) target);
-                fileList = getStorageFileList(new SyncScanContext(), null);
+                fileList = getStorageFileList(new SyncScanContext(), null, null);
                 break;
         }
     }
@@ -743,7 +725,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 return -1;
             case CONTENT_METADATA_LIST:
                 ArrayList<MediaMetadata> mediaMetadataList = new ArrayList<MediaMetadata>();
-                // TODO: add metadatas.
+
                 switch (contentType) {
                     case CONTENT_TYPE_ALBUM:
                         final SQLiteDatabase database = getReadableDatabase();
@@ -1903,7 +1885,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             cursor.addRow(currentRow);
         }
 
-        fileList = getStorageFileList(scanContext, filter);
+        fileList = getStorageFileList(scanContext, filter, sortFields);
 
         for (File currentFile : fileList) {
             if (!currentFile.isDirectory()) {
@@ -3059,7 +3041,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         getWritableDatabase().rawQuery("VACUUM;", null);
     }
 
-    protected List<File> getStorageFileList(SyncScanContext scanContext, String filter) {
+    protected List<File> getStorageFileList(SyncScanContext scanContext, String filter, int[] sortFields) {
         if (currentFolder == null) {
             return null;
         }
@@ -3068,6 +3050,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         ArrayList<File> fileList = new ArrayList<File>();
 
         if (currentFileList != null) {
+            storageSortOrder = sortFields;
             Arrays.sort(currentFileList, filenameComparator);
             Arrays.sort(currentFileList, filetypeComparator);
 
@@ -3088,20 +3071,26 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
 
+    protected int[] storageSortOrder = null;
 
-    protected static final Comparator<File> filenameComparator = new Comparator<File>() {
+    protected final Comparator<File> filenameComparator = new Comparator<File>() {
 
         @Override
         public int compare(File lhs, File rhs) {
             final String lhsName = lhs.getName().toUpperCase(Locale.getDefault());
             final String rhsName = rhs.getName().toUpperCase(Locale.getDefault());
 
-            if (MusicConnector.storage_sort_order == AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME) {
+            if (storageSortOrder == null || storageSortOrder.length < 1) {
                 return lhsName.compareTo(rhsName);
             }
-            else // if (MusicConnector.storage_sort_order == MusicConnector.SORT_Z_A)  {
-                return -lhsName.compareTo(rhsName);
-            //}
+            else {
+                if (storageSortOrder[0] == AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME) {
+                    return lhsName.compareTo(rhsName);
+                }
+                else // if (MusicConnector.storage_sort_order == MusicConnector.SORT_Z_A)  {
+                    return -lhsName.compareTo(rhsName);
+                //}
+            }
         }
     };
 

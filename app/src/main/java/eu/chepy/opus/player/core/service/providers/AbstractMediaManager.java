@@ -154,7 +154,6 @@ public interface AbstractMediaManager {
 
 
 
-        public Cursor buildCursor(ContentType contentType, final int[] fields, final int[] sortFields, final String filter);
         public Cursor buildCursor(ContentType contentType, final int[] fields, final int[] sortFields, final String filter, ContentType source, String sourceId);
         public boolean play(ContentType contentType, String sourceId, int sortOrder, int position, String filter);
         public boolean playNext(ContentType contentType, String sourceId, int sortOrder, String filter);

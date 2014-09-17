@@ -263,7 +263,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter);
+                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -281,7 +281,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter);
+                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -290,7 +290,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter);
+                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -299,7 +299,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter);
+                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -317,7 +317,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter);
+                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter, null, null);
             }
         };
     }

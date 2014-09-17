@@ -484,6 +484,8 @@ public class MusicConnector {
                 new int[] {
                         AbstractMediaManager.Provider.PLAYLIST_ID
                 },
+                null,
+                null,
                 null
         );
 
