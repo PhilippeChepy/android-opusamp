@@ -21,6 +21,8 @@ public interface AbstractMediaManager {
 
     public static final int LOCAL_MEDIA_MANAGER = 1;
 
+    public static final int DEEZER_MEDIA_MANAGER = 3;
+
 
 
     public int getMediaManagerType();

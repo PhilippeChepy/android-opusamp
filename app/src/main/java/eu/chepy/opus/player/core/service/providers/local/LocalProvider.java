@@ -69,8 +69,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     private OpenHelper openHelper;
 
-    private int providerId;
-
     private LocalMediaManager mediaManager;
 
 
@@ -125,18 +123,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
 
-    public LocalProvider(LocalMediaManager mediaManager, int providerId) {
+    public LocalProvider(LocalMediaManager mediaManager) {
         this.mediaManager = mediaManager;
-        this.providerId = providerId;
 
-        openHelper = new OpenHelper(PlayerApplication.context, providerId);
+        openHelper = new OpenHelper(PlayerApplication.context, mediaManager.getMediaManagerId());
         scanListeners = new ArrayList<OnLibraryChangeListener>();
 
         currentFolder = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         isAtRootLevel = true;
 
         final Resources resources = PlayerApplication.context.getResources();
-        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
@@ -187,9 +184,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         File filePath = PlayerApplication.context.getFilesDir();
         if (filePath != null) {
-            File providerPrefs = new File(filePath.getPath() + "/shared_prefs/provider-" + providerId + ".xml");
+            File providerPrefs = new File(filePath.getPath() + "/shared_prefs/provider-" + mediaManager.getMediaManagerId() + ".xml");
             if (!providerPrefs.delete()) {
-                LogUtils.LOGE(TAG, "deleting provider-" + providerId + " preferences failed");
+                LogUtils.LOGE(TAG, "deleting provider-" + mediaManager.getMediaManagerId() + " preferences failed");
             }
         }
     }
@@ -880,7 +877,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     @Override
     public boolean hasContentType(ContentType contentType) {
         final Resources resources = PlayerApplication.context.getResources();
-        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
@@ -3161,7 +3158,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public void launch(Activity source) {
             final Intent intent = new Intent(PlayerApplication.context, SearchPathActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, providerId);
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }
@@ -3182,7 +3179,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public void launch(Activity source) {
             final Intent intent = new Intent(PlayerApplication.context, SettingsActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, providerId);
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }

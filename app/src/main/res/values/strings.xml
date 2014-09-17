@@ -26,6 +26,9 @@
     <string name="activity_title_library_management">Libraries</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
 
+    <string name="activity_label_deezer_signin">Connection to Deezer service</string>
+    <string name="activity_label_deezer_signout">Disconnect</string>
+
 
 
     <!-- Dialogs -->
@@ -56,7 +59,7 @@
     <string name="preference_category_title_cache_size">Cache size</string>
     <string name="preference_title_cache_size">Covers</string>
     <string name="preference_title_thumbnail_cache_size">Cover thumbnails</string>
-    <string name="preference_category_title_maintainance">Maintainance operations</string>
+    <string name="preference_category_title_maintainance">Maintenance operations</string>
     <string name="preference_title_optimize_database">Optimize database</string>
     <string name="preference_title_clear_cache">Clear cache memory</string>
 
@@ -267,6 +270,13 @@
     <string name="label_google_music_media_manager">Google Music</string>
     <string name="label_qobuz_media_manager">Qobuz</string>
     <string name="label_spotify_media_manager">Spotify</string>
+
+
+
+    <!-- Deezer specific strings -->
+    <string name="label_deezer_storage_thematic_radio">Thematic Radios</string>
+    <string name="label_deezer_storage_artist_radio">Artist Radios</string>
+
 
     <!-- No items messages for library -->
     <string name="ni_artists">No artists</string>

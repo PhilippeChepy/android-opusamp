@@ -270,6 +270,8 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
     }
 
     protected void doLibraryConfiguration(int mediaProviderId, int mediaProviderType) {
+        LogUtils.LOGD(TAG, "providerId : " + mediaProviderId + " providerType : " + mediaProviderType);
+
         final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
         final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
         final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(0);

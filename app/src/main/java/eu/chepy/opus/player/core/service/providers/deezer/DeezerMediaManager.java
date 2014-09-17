@@ -1,8 +1,8 @@
-package eu.chepy.opus.player.core.service.providers.local;
+package eu.chepy.opus.player.core.service.providers.deezer;
 
 import eu.chepy.opus.player.core.service.providers.AbstractMediaManager;
 
-public class LocalMediaManager implements AbstractMediaManager {
+public class DeezerMediaManager implements AbstractMediaManager {
 
     private Player player;
 
@@ -10,10 +10,10 @@ public class LocalMediaManager implements AbstractMediaManager {
 
     private int providerId;
 
-    public LocalMediaManager(int providerId) {
+    public DeezerMediaManager(int providerId) {
         this.providerId = providerId;
-        player = new LocalPlayer(this);
-        provider = new LocalProvider(this);
+        player = new DeezerPlayer(this);
+        provider = new DeezerProvider(this);
     }
 
     @Override

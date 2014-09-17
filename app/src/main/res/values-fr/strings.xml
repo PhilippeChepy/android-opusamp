@@ -26,6 +26,9 @@
     <string name="activity_title_library_management">Bibliothèques</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
 
+    <string name="activity_label_deezer_signin">Connexion au service Deezer</string>
+    <string name="activity_label_deezer_signout">Déconnexion du service</string>
+
 
 
     <!-- Dialogs -->
@@ -269,6 +272,13 @@
     <string name="label_google_music_media_manager">Google Music</string>
     <string name="label_qobuz_media_manager">Qobuz</string>
     <string name="label_spotify_media_manager">Spotify</string>
+
+
+
+    <!-- Deezer specific strings -->
+    <string name="label_deezer_storage_thematic_radio">Radios thématique</string>
+    <string name="label_deezer_storage_artist_radio">Radios par artiste</string>
+
 
     <!-- No items messages for library -->
     <string name="ni_artists">Pas d\'artistes</string>

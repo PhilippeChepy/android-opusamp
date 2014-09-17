@@ -4,13 +4,12 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- +deezer -->
     <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.INTERNET"/> <!-- +deezer -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> <!-- +deezer -->
 
     <uses-permission android:name="com.android.vending.BILLING" />
-
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:name=".ui.utils.PlayerApplication"
@@ -115,16 +114,6 @@
             android:label="@string/activity_title_preferences" >
         </activity>
 
-        <activity
-            android:name=".core.service.providers.local.ui.activities.SearchPathActivity"
-            android:label="@string/activity_title_library_path" >
-        </activity>
-
-        <activity
-            android:name=".core.service.providers.local.ui.activities.SettingsActivity"
-            android:label="@string/activity_label_files_to_scan" >
-        </activity>
-
         <activity android:name=".ui.activities.SoundEffectsActivity">
         </activity>
 
@@ -136,6 +125,21 @@
         <activity
             android:name=".ui.activities.CarModeActivity"
             android:theme="@style/Theme.AudioKit.FullScreenActivity" >
+        </activity>
+
+        <activity
+            android:name=".core.service.providers.local.ui.activities.SearchPathActivity"
+            android:label="@string/activity_title_library_path" >
+        </activity>
+
+        <activity
+            android:name=".core.service.providers.local.ui.activities.SettingsActivity"
+            android:label="@string/activity_label_files_to_scan" >
+        </activity>
+
+        <activity
+            android:name=".core.service.providers.deezer.ui.activities.ConnectionActivity"
+            android:label="@string/activity_label_files_to_scan" >
         </activity>
 
         <activity
