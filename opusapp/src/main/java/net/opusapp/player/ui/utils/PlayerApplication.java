@@ -12,7 +12,6 @@
  */
 package net.opusapp.player.ui.utils;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -27,17 +26,22 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
 import android.view.Menu;
 import android.webkit.WebView;
 
+import com.google.android.vending.licensing.AESObfuscator;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import net.opusapp.licensing.LicenseChecker;
+import net.opusapp.licensing.LicenseCheckerCallback;
+import net.opusapp.licensing.PlaystoreAccountType;
+import net.opusapp.licensing.ServerManagedPolicy;
 import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerService;
@@ -56,6 +60,9 @@ import net.opusapp.player.utils.iab.Inventory;
 import net.opusapp.player.utils.iab.Purchase;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,6 +133,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
         normalImageLoader = NormalImageLoader.getInstance();
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
+
+        doPrepareTrialCheck();
     }
 
     public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
@@ -718,15 +727,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
-    @TargetApi(8)
-    public static File getMusicDirectory() {
-        if (hasFroyo()) {
-            return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-        }
-
-        return new File(Environment.getExternalStorageDirectory().getPath() + "/Music/");
-    }
-
     public static void saveLibraryIndexes() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -956,6 +956,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         }
     };
 
+    /*
     private static IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
 
         public void onConsumeFinished(Purchase purchase, IabResult result) {
@@ -968,12 +969,56 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
         }
     };
+    */
 
-    public static boolean hasFroyo() {
-        // Can use static final constants like FROYO, declared in later versions
-        // of the OS since they are inlined at compile time. This is guaranteed behavior.
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO;
+    private static final String BASE64_PUBLIC_KEY =
+            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/uBXD8ItJQg" +
+            "Y15Yqw4jcCdzUTJ3L+QG7RSuMjbAJOa8isY/hVyGjnPlTn+S9A" +
+            "/IsjtSx7s3oc86X0HOVEOV2O3a8S9MYKvrjNUVMUVDVyxYA3bg" +
+            "HZuaXU722pn6FewE1merjWbt0rtsMcJMI7uNpIh/3LjeQ65J2K" +
+            "XEWtuFBw1QIDAQAB";
+
+    private static final byte SALT[] = new byte[] {-101, -88, 61, 94, -112, -71, -4, 4, 39, 3, 27, 59, -30, -103, 123, 69, 115, 54, 84, -87};
+
+    private static final String TRIAL_SERVER_URL = "https://opusapp.net:3000/";
+
+    private static LicenseChecker trialChecker;
+
+    private static boolean trialMode = true;
+
+    private static void doPrepareTrialCheck() {
+        //Create an url object to the MobileTrial server
+        URL trialServerUrl = null;
+        try {
+            trialServerUrl = URI.create(TRIAL_SERVER_URL).toURL();
+        } catch (MalformedURLException exception) {
+            LogUtils.LOGException(TAG, "doPrepareTrialCheck", 0, exception);
+        }
+
+        final String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+        // Construct the LicenseChecker with a ServerManaged Policy
+        trialChecker = new LicenseChecker(
+                context, new ServerManagedPolicy(context,
+                new AESObfuscator(SALT, context.getPackageName(), deviceId)),
+                BASE64_PUBLIC_KEY,
+                trialServerUrl,
+                new PlaystoreAccountType());
     }
+
+    public static void doTrialCheck(LicenseCheckerCallback trialLicenseCheckerCallback) {
+        trialChecker.checkAccess(trialLicenseCheckerCallback);
+    }
+
+    public static boolean isTrial() {
+        return trialMode;
+    }
+
+    public static void setTrial(boolean trial) {
+        trialMode = trial;
+    }
+
+
 
     public static boolean hasHoneycomb() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;

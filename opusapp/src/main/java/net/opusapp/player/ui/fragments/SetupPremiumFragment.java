@@ -25,6 +25,10 @@ import java.io.File;
 
 public class SetupPremiumFragment extends Fragment {
 
+    public static final String TAG = SetupPremiumFragment.class.getSimpleName();
+
+
+
     private ImageView premiumChecking;
 
     private ImageView premiumValid;
@@ -59,6 +63,40 @@ public class SetupPremiumFragment extends Fragment {
         radioWhole.setOnCheckedChangeListener(onRadioCheckedListener);
         radioIntended.setOnCheckedChangeListener(onRadioCheckedListener);
 
+        onRadioCheckedListener.onCheckedChanged(radioIntended, true);
+
+        final View next = view.findViewById(R.id.next);
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final ContentValues contentValues = new ContentValues();
+                final OpenHelper localOpenHelper = new OpenHelper(PlayerApplication.context, 1);
+                final SQLiteDatabase localDatabase = localOpenHelper.getWritableDatabase();
+                final String[] directories = StorageOptions.getStorageDirectories();
+
+                if (localDatabase != null) {
+                    for (String directory : directories) {
+                        contentValues.clear();
+
+                        if (radioIntended.isChecked()) {
+                            directory = directory + File.separator + "Music";
+                        }
+
+                        contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, directory);
+                        contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
+                        localDatabase.insert(Entities.ScanDirectory.TABLE_NAME, null, contentValues);
+                    }
+                }
+                localOpenHelper.close();
+
+
+                final Activity activity = getActivity();
+                if (activity != null) {
+                    ((SetupActivity)activity).terminate();
+                }
+            }
+        });
+
         if (PlayerApplication.isFreemium()) {
             PlayerApplication.iabStart(new Runnable() {
                 @Override
@@ -72,40 +110,6 @@ public class SetupPremiumFragment extends Fragment {
         else {
             doUpdateStatus();
         }
-
-        onRadioCheckedListener.onCheckedChanged(radioIntended, true);
-
-        final View next = view.findViewById(R.id.next);
-        next.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            final ContentValues contentValues = new ContentValues();
-            final OpenHelper localOpenHelper = new OpenHelper(PlayerApplication.context, 1);
-            final SQLiteDatabase localDatabase = localOpenHelper.getWritableDatabase();
-            final String[] directories = StorageOptions.getStorageDirectories();
-
-            if (localDatabase != null) {
-                for (String directory : directories) {
-                    contentValues.clear();
-
-                    if (radioIntended.isChecked()) {
-                        directory = directory + File.separator + "Music";
-                    }
-
-                    contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, directory);
-                    contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
-                    localDatabase.insert(Entities.ScanDirectory.TABLE_NAME, null, contentValues);
-                }
-            }
-            localOpenHelper.close();
-
-
-            final Activity activity = getActivity();
-            if (activity != null) {
-                ((SetupActivity)activity).terminate();
-            }
-            }
-        });
 
         return view;
     }

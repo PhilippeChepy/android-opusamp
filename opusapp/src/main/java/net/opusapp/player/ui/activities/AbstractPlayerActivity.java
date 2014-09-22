@@ -15,6 +15,7 @@ package net.opusapp.player.ui.activities;
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
@@ -48,11 +49,14 @@ import android.widget.TimePicker;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.vending.licensing.Policy;
 import com.mobeta.android.dslv.DragSortListView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import net.opusapp.licensing.LicenseCheckerCallback;
+import net.opusapp.licensing.NotLicensedDialog;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerServiceListener;
 import net.opusapp.player.core.service.PlayerService;
@@ -70,7 +74,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         DragSortListView.DropListener, DragSortListView.DragScrollProfile,
         AdapterView.OnItemClickListener,
         View.OnCreateContextMenuListener,
-        ServiceConnection {
+        ServiceConnection,
+        LicenseCheckerCallback {
 
     public static final String TAG = AbstractPlayerActivity.class.getSimpleName();
 
@@ -165,7 +170,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
 
     /*
-        Ad mob
+        Ad mob & licensing
      */
     private InterstitialAd interstitial = null;
 
@@ -189,7 +194,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         setContentView(layout);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        if (PlayerApplication.isFreemium()) {
+        if (PlayerApplication.isFreemium() && !PlayerApplication.isTrial()) {
             int noDisplayCounter = PlayerApplication.adDisplayGetCounter();
 
             if (noDisplayCounter >= 5) {
@@ -320,7 +325,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     protected void onDestroy() {
         super.onDestroy();
 
-        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.isFreemium()) {
+        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.isFreemium() && !PlayerApplication.isTrial()) {
             interstitial.show();
         }
     }
@@ -329,6 +334,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     protected void onResume() {
         super.onResume();
         PlayerApplication.connectService(this);
+
+        PlayerApplication.doTrialCheck(this);
     }
 
     @Override
@@ -1069,5 +1076,58 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         if (!playlistCursor.isClosed()) {
             playlistCursor.moveToPosition(position);
         }
+    }
+
+
+    @Override
+    public void allow(int reason) {
+        if (isFinishing()) {
+            return;
+        }
+
+        LogUtils.LOGI(TAG, "License checking - Licensed");
+        PlayerApplication.setTrial(true);
+    }
+
+    @Override
+    public void dontAllow(int policyReason) {
+        if (isFinishing()) {
+            return;
+        }
+
+        PlayerApplication.setTrial(false);
+        LogUtils.LOGI(TAG, "License checking - Not licensed");
+
+        if (policyReason != Policy.RETRY) {
+            // TODO: show one shot buy premium hint.
+
+            NotLicensedDialog dlg = new NotLicensedDialog(AbstractPlayerActivity.this);
+//            dlg.setBody(getString(R.string.notlicensed));
+//            dlg.setNegativeButton(getString(R.string.continue_app), new DialogInterface.OnClickListener() {
+            dlg.setNegativeButton(new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // Nothing happens.. its a nagware
+                }
+            });
+            dlg.setPositiveButton(new DialogInterface.OnClickListener(){
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            dlg.show();
+        }
+    }
+
+    @Override
+    public void applicationError(int errorCode) {
+        if (isFinishing()) {
+            return;
+        }
+
+        LogUtils.LOGI(TAG, "License checking - applicationError : " + errorCode);
+        PlayerApplication.setTrial(true);
     }
 }
