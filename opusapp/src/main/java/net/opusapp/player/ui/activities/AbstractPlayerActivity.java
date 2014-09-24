@@ -15,7 +15,6 @@ package net.opusapp.player.ui.activities;
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
@@ -56,7 +55,6 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import net.opusapp.licensing.LicenseCheckerCallback;
-import net.opusapp.licensing.NotLicensedDialog;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerServiceListener;
 import net.opusapp.player.core.service.PlayerService;
@@ -1100,24 +1098,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         if (policyReason != Policy.RETRY) {
             // TODO: show one shot buy premium hint.
-
-            NotLicensedDialog dlg = new NotLicensedDialog(AbstractPlayerActivity.this);
-//            dlg.setBody(getString(R.string.notlicensed));
-//            dlg.setNegativeButton(getString(R.string.continue_app), new DialogInterface.OnClickListener() {
-            dlg.setNegativeButton(new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // Nothing happens.. its a nagware
-                }
-            });
-            dlg.setPositiveButton(new DialogInterface.OnClickListener(){
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-            dlg.show();
         }
     }
 

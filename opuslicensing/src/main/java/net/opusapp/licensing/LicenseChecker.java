@@ -90,12 +90,7 @@ public class LicenseChecker {
 	/** 
 	 * Service Url
 	 */
-	private URL mServiceUrl;	
-	
-	/**
-	 *  Custom Views 
-	 */
-	private ChooseAccountDialog chooseAccountDlg = null;
+	private URL mServiceUrl;
 	
 	
 	/**
@@ -187,7 +182,7 @@ public class LicenseChecker {
 					runChecks();
 				}
 			};	
-			identityResolver.setChooseAccountDialog(chooseAccountDlg);
+
 			identityResolver.getIdentity(mAccountType);
 		}
 	}
@@ -347,14 +342,6 @@ public class LicenseChecker {
 			Log.e(TAG, "Package not found. could not get version code.");
 			return "";
 		}
-	}
-	
-	/**
-	 * Setter for title of ChooseAccount Dialog
-	 * @param dlg the ChooseAccountDialog
-	 */
-	public void setChooseAccountTitle (String title){
-		chooseAccountDlg = new ChooseAccountDialog(mContext, title);
 	}
 	
 }
