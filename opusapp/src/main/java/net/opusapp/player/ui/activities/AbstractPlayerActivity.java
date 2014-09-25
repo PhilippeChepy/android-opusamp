@@ -13,8 +13,10 @@
 package net.opusapp.player.ui.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
@@ -333,7 +335,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         super.onResume();
         PlayerApplication.connectService(this);
 
-        PlayerApplication.doTrialCheck(this);
+        if (!PlayerApplication.isExpired()) {
+            PlayerApplication.doTrialCheck(this);
+        }
     }
 
     @Override
@@ -931,7 +935,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             });
         }
 
-
         popupMenu.show();
     }
 
@@ -1076,7 +1079,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         }
     }
 
-
     @Override
     public void allow(int reason) {
         if (isFinishing()) {
@@ -1094,10 +1096,37 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         }
 
         PlayerApplication.setTrial(false);
-        LogUtils.LOGI(TAG, "License checking - Not licensed");
 
         if (policyReason != Policy.RETRY) {
-            // TODO: show one shot buy premium hint.
+            LogUtils.LOGI(TAG, "License checking - Not licensed (!RETRY)");
+            PlayerApplication.setExpired();
+
+            if (PlayerApplication.isFreemium() && !PlayerApplication.hasPremiumDialogFlag()) {
+                PlayerApplication.setPremiumHintDialogFlag();
+
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.alert_dialog_title_premium_hint)
+                        .setMessage(R.string.alert_dialog_message_premium_hint)
+                        .setPositiveButton(R.string.alert_dialog_title_premium_positive_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+
+                                final Intent intent = new Intent(AbstractPlayerActivity.this, SettingsActivity.class);
+                                startActivity(intent);
+                            }
+                        })
+                        .setNegativeButton(R.string.alert_dialog_title_premium_negative_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        })
+                        .show();
+            }
+        }
+        else {
+            LogUtils.LOGI(TAG, "License checking - Not licensed (RETRY)");
         }
     }
 

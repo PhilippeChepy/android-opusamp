@@ -50,6 +50,11 @@
 
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
 
+    <string name="alert_dialog_title_premium_hint">Période d\'essai terminée.</string>
+    <string name="alert_dialog_message_premium_hint">Des publicités vont être affiché occasionnelement à moins que vous n\'achetiez le mode premium.</string>
+    <string name="alert_dialog_title_premium_positive_button">Acheter le mode premium</string>
+    <string name="alert_dialog_title_premium_negative_button">Ignorer</string>
+
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
 
 

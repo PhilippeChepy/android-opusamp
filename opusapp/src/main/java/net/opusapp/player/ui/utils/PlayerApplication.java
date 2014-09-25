@@ -134,7 +134,12 @@ public class PlayerApplication extends Application implements ServiceConnection 
         normalImageLoader = NormalImageLoader.getInstance();
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
 
-        doPrepareTrialCheck();
+        if (isExpired()) {
+            trialMode = false;
+        }
+        else {
+            doPrepareTrialCheck();
+        }
     }
 
     public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
@@ -787,7 +792,13 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
 
-    private static final String CONFIG_FIRST_RUN = "firstRunNeedWizard";
+    private static final String CONFIG_FIRST_RUN = "isFirstRun";
+
+    private static final String CONFIG_EXPIRED = "isTrialExpired";
+
+    private static final String CONFIG_PREMIUM_HINT = "premiumHintFlag";
+
+
 
     public static boolean isFreemium() {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
@@ -1018,6 +1029,29 @@ public class PlayerApplication extends Application implements ServiceConnection 
         trialMode = trial;
     }
 
+    public static void setExpired() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CONFIG_EXPIRED, true);
+        editor.apply();
+    }
+
+    public static boolean isExpired() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(CONFIG_EXPIRED, false);
+    }
+
+    public static void setPremiumHintDialogFlag() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CONFIG_PREMIUM_HINT, true);
+        editor.apply();
+    }
+
+    public static boolean hasPremiumDialogFlag() {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(CONFIG_PREMIUM_HINT, false);
+    }
 
 
     public static boolean hasHoneycomb() {

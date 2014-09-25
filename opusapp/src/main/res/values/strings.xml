@@ -50,6 +50,11 @@
 
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
 
+    <string name="alert_dialog_title_premium_hint">Trial period has expired.</string>
+    <string name="alert_dialog_message_premium_hint">Ads will be displayed occasionally unless you buy premium mode.</string>
+    <string name="alert_dialog_title_premium_positive_button">Buy premium</string>
+    <string name="alert_dialog_title_premium_negative_button">Ignore</string>
+
     <string name="alert_dialog_title_type_of_library">Type of library</string>
 
 
