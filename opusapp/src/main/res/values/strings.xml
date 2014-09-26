@@ -322,5 +322,5 @@
     <string name="label_select_cover">Select cover</string>
     <string name="label_default_library">Music Library</string>
 
-    <string name="label_enable_equalizer">Enable Equalizer</string>
+    <string name="label_enable_equalizer">Enable Equalizer (experimental)</string>
 </resources>

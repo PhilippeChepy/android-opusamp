@@ -325,5 +325,5 @@
     <string name="label_default_library">Bibliothèque musicale</string>
 
     <!-- Equalizer view -->
-    <string name="label_enable_equalizer">Activer l\'equaliseur</string>
+    <string name="label_enable_equalizer">Activer l\'equaliseur (experimental)</string>
 </resources>
