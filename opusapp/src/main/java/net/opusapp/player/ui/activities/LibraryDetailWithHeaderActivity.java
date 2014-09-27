@@ -435,9 +435,11 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
                     if (imageUriData != null) {
                         final String imageUri = imageUriData.toString();
-                        // TODO: clear only old cached image... in provider
-                        //ImageLoader.getInstance().clearMemoryCache();
-                        //ImageLoader.getInstance().clearDiscCache();
+                        PlayerApplication.normalImageLoader.getDiskCache().remove(imageUri);
+                        PlayerApplication.normalImageLoader.getMemoryCache().clear();
+
+                        PlayerApplication.thumbnailImageLoader.getDiskCache().remove(imageUri);
+                        PlayerApplication.thumbnailImageLoader.getMemoryCache().clear();
 
                         PlayerApplication.normalImageLoader.displayImage(imageUri, placeHolderView);
 
