@@ -108,7 +108,7 @@ public class ServerManagedPolicy implements Policy {
 
 		// Update lastCheckTime. This timestamp is using server clock
 		if(rawData != null){
-			setLastCheckTime(rawData.timestamp);
+			setLastCheckTime(System.currentTimeMillis()); //rawData.timestamp);
 		}
 		
 		Log.d(TAG, "Retry Count: " + mRetryCount);
@@ -272,16 +272,16 @@ public class ServerManagedPolicy implements Policy {
 
 		// Detect clock abuse.
 		// Current timestamp should never be smaller than the timestamp of last check
-		if(ts + 1000 < mLastCheckTime){
+		if(mLastCheckTime != 0 && ts < mLastCheckTime){
 			// Clear cache and force server side check
 			clear();
 			return false;
 		}
-	
+
 		// Update check time
 		setLastCheckTime(ts);
 		mPreferences.commit();
-		
+
 		if (mLastResponse == Policy.LICENSED) {
 			// Check if the LICENSED response occurred within the validity timeout.
 			if (ts <= mValidityTimestamp) {
@@ -294,6 +294,7 @@ public class ServerManagedPolicy implements Policy {
 			// max retries.
 			return (ts <= mRetryUntil || mRetryCount <= mMaxRetries);
 		}
+
 		return false;
 	}
 

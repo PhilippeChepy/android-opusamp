@@ -1098,7 +1098,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         PlayerApplication.setTrial(false);
 
         if (policyReason != Policy.RETRY) {
-            LogUtils.LOGI(TAG, "License checking - Not licensed (!RETRY)");
+            LogUtils.LOGI(TAG, "License checking - Not licensed (!RETRY) (reason=" + policyReason +")");
+
             PlayerApplication.setExpired();
 
             if (PlayerApplication.isFreemium() && !PlayerApplication.hasPremiumDialogFlag()) {
