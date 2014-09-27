@@ -12,6 +12,7 @@
  */
 package net.opusapp.player.core.service.providers;
 
+import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.deezer.DeezerMediaManager;
 import net.opusapp.player.core.service.providers.local.LocalMediaManager;
@@ -26,7 +27,7 @@ public class MediaManagerFactory {
         /*
         list[1] = new MediaManagerDescription(AbstractMediaManager.DLNA_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_dlna_media_manager), false);
         */
-        list[2] = new MediaManagerDescription(AbstractMediaManager.DEEZER_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_deezer_media_manager), true);
+        list[2] = new MediaManagerDescription(AbstractMediaManager.DEEZER_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_deezer_media_manager), BuildConfig.DEBUG);
         /*
         list[3] = new MediaManagerDescription(AbstractMediaManager.GOOGLE_MUSIC_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_google_music_media_manager), false);
         list[4] = new MediaManagerDescription(AbstractMediaManager.GROOVESHARK_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_grooveshark_media_manager), false);

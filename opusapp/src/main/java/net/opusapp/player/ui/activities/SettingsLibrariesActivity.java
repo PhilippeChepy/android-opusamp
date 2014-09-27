@@ -400,11 +400,6 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
 
             for (MediaManagerDescription mediaManager : managerList) {
                 if (mediaManager != null && mediaManager.isEnabled) {
-                    // TODO: fix the "!=null check" happened on 6/9/14 (rare)
-                    // go to library, (add path)
-                    // back
-                    // click library, FC.
-
                     managerItemIds.add(mediaManager.typeId);
                     managerItemDescriptions.add(mediaManager.description);
                 }
