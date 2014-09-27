@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/four_by_two"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/four_by_two_height"
+    android:layout_height="match_parent"
+    android:padding="@dimen/widget_margin"
     android:background="@color/transparent_black"
     android:gravity="center"
     android:orientation="horizontal" >
@@ -28,16 +28,6 @@
             android:id="@+id/four_by_two_control_next"
             style="@style/AppWidgetMediaButton"
             android:src="@drawable/btn_playback_next_transparent" />
-<!--
-        <ImageButton
-            android:id="@+id/four_by_two_control_shuffle"
-            style="@style/AppWidgetMediaButton"
-            android:src="@drawable/btn_playback_next_transparent" />
-
-        <ImageButton
-            android:id="@+id/four_by_two_control_repeat"
-            style="@style/AppWidgetMediaButton"
-            android:src="@drawable/btn_playback_next_transparent" />-->
     </LinearLayout>
 
     <ImageView

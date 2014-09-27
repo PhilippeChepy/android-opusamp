@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="40dp"
+    android:updatePeriodMillis="86400000"
+    android:initialLayout="@layout/app_widget_no_playlist"
+    android:widgetCategory="home_screen|keyguard"
+    android:initialKeyguardLayout="@layout/app_widget_no_playlist">
+</appwidget-provider>

@@ -13,14 +13,70 @@
 package net.opusapp.player.ui.widgets;
 
 import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.widget.RemoteViews;
 
 import net.opusapp.player.core.service.PlayerService;
 
-public abstract class AppWidgetBase extends AppWidgetProvider {
+public abstract class AbstractAppWidget extends AppWidgetProvider {
+
+    protected boolean isPlaying;
+
+    protected String track;
+
+    protected String artist;
+
+    protected String album;
+
+    protected Bitmap albumImage;
+
+    protected boolean hasPlaylist = false;
+
+
+
+
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        pushUpdate(context, appWidgetIds);
+    }
+
+
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
+    }
+
+    public void setHasPlaylist(boolean hasPlaylist) {
+        this.hasPlaylist = hasPlaylist;
+    }
+
+    public void setMetadata(final String trackName, final String artistName, final String albumName, final Bitmap art) {
+        track = trackName;
+        artist = artistName;
+        album = albumName;
+        albumImage = art;
+    }
+
+    public void applyUpdate(Context context) {
+        pushUpdate(context, null);
+    }
+
+    protected abstract void pushUpdate(Context context, final int[] appWidgetIds);
+
+    protected void notifyUpdate(final Context context, final int[] appWidgetIds, final RemoteViews views) {
+        final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        if (appWidgetIds != null) {
+            appWidgetManager.updateAppWidget(appWidgetIds, views);
+        } else {
+            appWidgetManager.updateAppWidget(new ComponentName(context, getClass()), views);
+        }
+    }
 
     protected PendingIntent buildPendingIntent(Context context, int which, final ComponentName serviceName) {
         Intent action = new Intent(PlayerService.ACTION_APPWIDGET_COMMAND);

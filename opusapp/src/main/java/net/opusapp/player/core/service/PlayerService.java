@@ -37,8 +37,8 @@ import net.opusapp.player.core.NotificationHelper;
 import net.opusapp.player.core.RemoteControlClientHelper;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.widgets.Widget4x1;
-import net.opusapp.player.ui.widgets.Widget4x2;
+import net.opusapp.player.ui.widgets.AppWidget4x1;
+import net.opusapp.player.ui.widgets.AppWidget4x2;
 import net.opusapp.player.utils.LogUtils;
 
 import java.util.ArrayList;
@@ -119,9 +119,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public boolean hasNotification;
 
-    private final Widget4x1 widgetMedium = Widget4x1.getInstance();
+    private final AppWidget4x1 widgetMedium = AppWidget4x1.getInstance();
 
-    private final Widget4x2 widgetLarge = Widget4x2.getInstance();
+    private final AppWidget4x2 widgetLarge = AppWidget4x2.getInstance();
 
 
 
@@ -830,15 +830,30 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         try {
             boolean isPlaying = playerServiceImpl.isPlaying();
 
-            if (playlist.length > 0) {
+            if (playlist != null && playlist.length > 0) {
                 final AbstractMediaManager.Media media = playlist[playlistIndex];
 
-                widgetLarge.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying, true);
-                widgetMedium.notifyChange(PlayerService.this, media.name, media.artist, media.album, currentArt, isPlaying, true);
+                widgetLarge.setHasPlaylist(true);
+                widgetLarge.setPlaying(isPlaying);
+                widgetLarge.setMetadata(media.name, media.artist, media.album, currentArt);
+                widgetLarge.applyUpdate(this);
+
+                widgetMedium.setHasPlaylist(true);
+                widgetMedium.setPlaying(isPlaying);
+                widgetMedium.setMetadata(media.name, media.artist, media.album, currentArt);
+                widgetMedium.applyUpdate(this);
+
             }
             else {
-                widgetLarge.notifyChange(PlayerService.this, null, null, null, null, isPlaying, false);
-                widgetMedium.notifyChange(PlayerService.this, null, null, null, null, isPlaying, false);
+                widgetLarge.setHasPlaylist(false);
+                widgetLarge.setPlaying(isPlaying);
+                widgetLarge.setMetadata(null, null, null, null);
+                widgetLarge.applyUpdate(this);
+
+                widgetMedium.setHasPlaylist(false);
+                widgetMedium.setPlaying(isPlaying);
+                widgetMedium.setMetadata(null, null, null, null);
+                widgetMedium.applyUpdate(this);
             }
         }
         catch (final Exception exception) {

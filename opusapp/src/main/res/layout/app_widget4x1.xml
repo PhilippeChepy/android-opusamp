@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/four_by_one"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/four_by_one_height"
+    android:layout_height="match_parent"
+    android:padding="@dimen/widget_margin"
     android:background="@color/transparent_black"
     android:gravity="center"
     android:orientation="vertical" >
@@ -104,10 +104,6 @@
                         android:textSize="@dimen/text_size_small" />
                 </LinearLayout>
             </LinearLayout>
-
         </LinearLayout>
-
-
     </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>
