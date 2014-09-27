@@ -336,7 +336,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         PlayerApplication.connectService(this);
 
         if (!PlayerApplication.isExpired()) {
-            PlayerApplication.doTrialCheck(this);
+            PlayerApplication.doTrialCheck(this, this);
         }
     }
 

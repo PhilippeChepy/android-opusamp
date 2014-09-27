@@ -137,9 +137,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
         if (isExpired()) {
             trialMode = false;
         }
-        else {
-            doPrepareTrialCheck();
-        }
     }
 
     public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
@@ -993,11 +990,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     private static final String TRIAL_SERVER_URL = "https://opusapp.net:3000/";
 
-    private static LicenseChecker trialChecker;
-
     private static boolean trialMode = true;
 
-    private static void doPrepareTrialCheck() {
+    public static void doTrialCheck(Activity context, LicenseCheckerCallback trialLicenseCheckerCallback) {
         //Create an url object to the MobileTrial server
         URL trialServerUrl = null;
         try {
@@ -1009,15 +1004,13 @@ public class PlayerApplication extends Application implements ServiceConnection 
         final String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
 
         // Construct the LicenseChecker with a ServerManaged Policy
-        trialChecker = new LicenseChecker(
+        final LicenseChecker trialChecker = new LicenseChecker(
                 context, new ServerManagedPolicy(context,
                 new AESObfuscator(SALT, context.getPackageName(), deviceId)),
                 BASE64_PUBLIC_KEY,
                 trialServerUrl,
                 new PlaystoreAccountType());
-    }
 
-    public static void doTrialCheck(LicenseCheckerCallback trialLicenseCheckerCallback) {
         trialChecker.checkAccess(trialLicenseCheckerCallback);
     }
 
