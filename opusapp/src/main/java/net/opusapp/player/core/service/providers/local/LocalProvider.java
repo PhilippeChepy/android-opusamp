@@ -150,9 +150,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         final String genreMode = resources.getString(R.string.preference_key_genre_display);
         if (TextUtils.isEmpty(genreMode)) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
-            editor.putString(
-                    resources.getString(R.string.preference_key_genre_display),
-                    resources.getString(R.string.preference_list_value_genre_show_albums));
+            editor.putString(resources.getString(R.string.preference_key_genre_display), resources.getString(R.string.preference_list_value_genre_show_albums));
             editor.apply();
         }
     }
@@ -649,7 +647,18 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         doUpdateAlbumCover((String) target, (String) object, (Boolean) options);
                         break;
                     case CONTENT_TYPE_MEDIA:
-                        // TODO:
+                        // TODO: not yet used
+                        break;
+                }
+                break;
+            case CONTENT_ART_ORIGINAL_URI:
+                switch (contentType) {
+                    case CONTENT_TYPE_ALBUM:
+                        doRestoreAlbumCover((String) target, (Boolean) options);
+                        break;
+                    case CONTENT_TYPE_MEDIA:
+                        // TODO: not yet used
+                        break;
                 }
                 break;
             case CONTENT_STORAGE_UPDATE_VIEW:
@@ -2155,6 +2164,32 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
     }
 
+    protected void doRestoreAlbumCover(String albumId, boolean updateTracks) {
+        SQLiteDatabase database = openHelper.getWritableDatabase();
+
+        if (database != null) {
+            final String whereAlbumId[] = new String[] {
+                    albumId
+            };
+
+            database.execSQL(
+                    "UPDATE " + Entities.Album.TABLE_NAME + " " +
+                    "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART + " " +
+                    "WHERE " + Entities.Album._ID + " = ? ", whereAlbumId);
+
+
+            if (updateTracks) {
+                database.execSQL(
+                    "UPDATE " + Entities.Media.TABLE_NAME + " " +
+                    "SET " + Entities.Media.COLUMN_FIELD_ART + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART + ", " +
+                            Entities.Media.COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART + " = " + Entities.Media.COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART + " " +
+                    "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
+            }
+
+            doNotifyLibraryChanges();
+        }
+    }
+
 
 
 
@@ -2574,6 +2609,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         scanContext.coverMap.put(file.getName(), artUri);
 
                         scanContext.mediaCover.put(Entities.Media.COLUMN_FIELD_ART, artUri);
+                        scanContext.mediaCover.put(Entities.Media.COLUMN_FIELD_ORIGINAL_ART, artUri);
+
                         int rows = scanContext.database.update(
                                 Entities.Media.TABLE_NAME,
                                 scanContext.mediaCover,
@@ -2670,6 +2707,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         ") " +
                         "WHERE (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART + " IS NULL) OR (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART + " = '')"
         );
+
+        scanContext.database.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                        Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART + " = " + Entities.Album.COLUMN_FIELD_ALBUM_ART + " " +
+                        "WHERE (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART + " IS NULL) OR (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART + " = '')"
+        );
     }
 
     protected void doSyncDirectoryScan(List<File> fileList, Map<String, Boolean> discardMap, SyncScanContext scanContext) {
@@ -2725,6 +2768,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         String coverUri = getCoverForFile(currentFile.getParentFile(), scanContext);
                         if (!TextUtils.isEmpty(coverUri)) {
                             mediaTags.put(Entities.Media.COLUMN_FIELD_ART, coverUri);
+                            mediaTags.put(Entities.Media.COLUMN_FIELD_ORIGINAL_ART, coverUri);
                         }
                         else {
                             if (coverUri == null) {
@@ -2734,6 +2778,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 }
                             }
                             mediaTags.remove(Entities.Media.COLUMN_FIELD_ART);
+                            mediaTags.remove(Entities.Media.COLUMN_FIELD_ORIGINAL_ART);
                         }
 
 

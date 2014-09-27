@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-
-
     <!-- Application name -->
 <!--    <string name="application_label" translatable="false">OpusAMP</string>-->
 
-
-
     <!-- Service -->
     <string name="service_label">Lecteur de médias audio</string>
-
-
 
     <!-- Widget -->
     <string name="widget_label_4x1">Lecteur Audio 4x1</string>
@@ -19,46 +12,32 @@
     <string name="widget_content_empty_playlist">Liste de lecture vide</string>
     <string name="widget_content_start_app">Ouvrir le lecteur</string>
 
-
-
     <!-- Activities -->
     <string name="activity_title_preferences">Préferences</string>
     <string name="activity_title_library_path">Paramètres de recherche</string>
     <string name="activity_title_library_management">Bibliothèques</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
-
     <string name="activity_label_deezer_signin">Connexion au service Deezer</string>
     <string name="activity_label_deezer_signout">Déconnexion du service</string>
 
-
-
     <!-- Dialogs -->
     <string name="alert_dialog_title_album_properties">Propriétés de l\'album</string>
-
     <string name="alert_dialog_title_media_properties">Propriétés du média</string>
-
     <string name="alert_dialog_title_playlist_is_empty">La liste de lecture est vide</string>
     <string name="alert_dialog_message_playlist_is_empty">Il n\'y a pas de pistes à lire !\nAjoutez d\'abord quelque chose à lire dans la liste de lecture.</string>
-
     <string name="alert_dialog_title_playlist_delete">Confirmation</string>
     <string name="alert_dialog_message_playlist_delete">Voulez vous vraiment supprimer cette liste de lecture ?</string>
-
     <string name="alert_dialog_title_art_change_tracks">Question</string>
     <string name="alert_dialog_message_art_change_tracks">Mettre à jour les pistes avec cette image ?</string>
-
+    <string name="alert_dialog_message_restore_art_change_tracks">Restaurer les images des pistes ?</string>
     <string name="alert_dialog_title_search_path_exists">Chemin déjà inscrit</string>
     <string name="alert_dialog_message_search_path_exists">Ce dossier est déjà dans la liste des dossier à analyser ou à exclure.</string>
-
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
-
     <string name="alert_dialog_title_premium_hint">Période d\'essai terminée.</string>
     <string name="alert_dialog_message_premium_hint">Des publicités vont être affiché occasionnelement à moins que vous n\'achetiez le mode premium.</string>
     <string name="alert_dialog_title_premium_positive_button">Acheter le mode premium</string>
     <string name="alert_dialog_title_premium_negative_button">Ignorer</string>
-
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
-
-
 
     <!-- Global preferences -->
     <string name="preference_screen_title_storage">Stockage</string>
@@ -68,32 +47,25 @@
     <string name="preference_category_title_maintainance">Opérations de maintenance</string>
     <string name="preference_title_optimize_database">Optimiser la base de données</string>
     <string name="preference_title_clear_cache">Nettoyer la mémoire temporaire des image</string>
-
     <string name="preference_default_various_artists">Artistes divers</string>
     <string name="preference_default_unknown_artist">Artistes inconnu</string>
-
     <string name="preference_dialog_title_database_optimization">Optimisation des données</string>
     <string name="progress_dialog_label_global_database">Base de données principale</string>
     <string name="progress_dialog_label_current_database">Base de données : %1$s/%2$s</string>
-
     <string name="preference_screen_title_headphones">Casque et sorties audio</string>
     <string name="preference_title_plug_auto_play">Démarrage automatique de la lecture</string>
     <string name="preference_summary_plug_auto_play">Démarrage automatique de la lecture lors de la connexion d\'un périphérique audio sur l\'appareil</string>
     <string name="preference_title_pause_call">Pause automatique de la lecture</string>
     <string name="preference_summary_pause_call">Pause automatique de la lecture lors des appels téléphoniques</string>
-
     <string name="preference_screen_title_about">Aide / A propos</string>
     <string name="preference_title_premium">Mode premium</string>
     <string name="preference_title_online_help">Aide en ligne</string>
     <string name="preference_title_opensource">Licences Open source</string>
 
-
-
     <!-- Local preferences -->
     <string name="preference_category_title_collection">Bibliothèque</string>
     <string name="preference_title_settings_location">Emplacements</string>
     <string name="preference_summary_settings_location">Définir quels dossiers scanner et exclure pour cette bibliothèque</string>
-
     <string name="preference_category_title_display">Affichage</string>
     <string name="preference_title_tab_visibility">Onglets activés</string>
     <string name="preference_summary_tab_visibility">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
@@ -101,28 +73,20 @@
     <string name="preference_summary_storage_display_details">Afficher des détails sur les medias plutôt que les noms des fichiers (peut être lent quand il y a beaucoup de fichiers).</string>
     <string name="preference_title_genre_display">Affichage du détail des genres</string>
     <!--<string name="preference_summary_genre_display"></string>-->
-
     <string name="preference_list_value_genre_show_albums">Afficher les albums</string>
     <string name="preference_list_value_genre_show_tracks">Afficher les pistes</string>
-
-
 
     <!-- Menu -->
     <string name="menuitem_label_sort">Tri</string>
     <string name="menuitem_label_filter">Filtrer</string>
     <string name="menuitem_label_reload">Recharger</string>
     <string name="menuitem_label_show_hidden">Afficher les objets cachés</string>
-
     <string name="menuitem_label_share">Partager</string>
     <string name="menuitem_label_toggle_car_mode">Mode voiture</string>
     <string name="menuitem_label_delayed_pause">Pause auto.</string>
     <string name="menuitem_label_delayed_pause_in">Pause auto. (%1$s)</string>
-
     <string name="menuitem_label_add_directory">Ajouter un dossier</string>
     <string name="menuitem_label_add_library">Ajouter une bibliothèque</string>
-
-
-
     <string name="menuitem_label_play">Lire</string>
     <string name="menuitem_label_play_next">Lire après</string>
     <string name="menuitem_label_add_to_queue">Ajouter à la file</string>
@@ -137,7 +101,8 @@
     <string name="menuitem_label_use_file_art">Choisir une pochette (depuis un fichier)</string>
     <string name="menuitem_label_restore_file_art">Restaurer la pochette originale</string>
 
-
+    <string name="label_yes">Oui</string>
+    <string name="label_no">Non</string>
 
     <string name="label_sort_A_Z">A-Z</string>
     <string name="label_sort_Z_A">Z-A</string>
@@ -149,8 +114,6 @@
     <string name="label_sort_artist_Z_A">Artiste Z-A</string>
     <string name="label_sort_album_A_Z">Album A-Z</string>
     <string name="label_sort_album_Z_A">Album Z-A</string>
-
-
 
     <!-- View specific labels -->
     <string name="actionbar_confirmation_text_done">Valider</string>
@@ -171,7 +134,6 @@
 
     <string name="tab_label_accept_path">Dossiers parcourus</string>
     <string name="tab_label_exclude_path">Dossiers exclus</string>
-
     <string name="tab_label_artists">Artistes</string>
     <string name="tab_label_album_artists">Artistes d\'albums</string>
     <string name="tab_label_albums">Albums</string>
@@ -190,16 +152,13 @@
     <string name="imageview_content_description_playlist">Afficher/cacher la liste de lecture</string>
     <string name="imageview_content_description_option_menu">Afficher le menu des options</string>
 
-
-
     <!-- Non ui -->
-
-
 
     <!-- Content properties -->
     <string name="label_metadata_unknown">inconnu</string>
     <string name="label_metadata_album_track_count">Nombre de pistes</string>
     <string name="label_metadata_album_duration">Durée totale</string>
+
     <plurals name="label_metadata_album_artists">
         <item quantity="zero">Artiste</item>
         <item quantity="one">Artiste</item>
@@ -228,20 +187,15 @@
     <string name="label_metadata_media_track">Piste</string>
     <string name="label_metadata_media_disc">Disque</string>
 
-
     <!-- Setup -->
     <string name="label_setup_step1_title">Commençons la configuration</string>
     <string name="label_setup_step1_description">"La mise en place de l'application ne devrait prendre que quelques instants."</string>
-
     <string name="label_setup_verifying_premium_title">Preparation en cours&#8230;</string>
     <string name="label_setup_verifying_premium_description">OpusAmp vérifie si vous êtes un utilisateur premium.</string>
-
     <string name="label_setup_valid_premium_title">Mode premium</string>
     <string name="label_setup_valid_premium_description">Vous avez déjà acquis le mode premium.\n\nProfitez de votre musique sans aucunes limites !</string>
-
     <string name="label_setup_invalid_premium_title">Mode premium</string>
     <string name="label_setup_invalid_premium_description">Vous n\'avez pas acquis le mode premium.\nVous pourrez le faire plus tard dans les paramètres de l\'application.\n\nSans le mode premium, vous pouvez utiliser OpusAMP sans limites, cependant après une période de 15 jours, des publicités seront affiché de temps en temps.</string>
-
     <string name="label_setup_storage_title">Stockage</string>
     <string name="label_setup_storage_description">Définis l\'emplacement de la bibliothèque par défaut sur votre appareil Android&#8482;.\nVous pouvez personnaliser les emplacements ou ajouter d\'autres bibliothèques plus tard.</string>
     <string name="label_setup_scan_whole_storage">Toute la mémoire</string>
@@ -254,23 +208,7 @@
     <string name="unit_MB">%s Mo</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <!-- Other UI -->
     <string name="label_local_media_manager">Médias sur ce périphérique</string>
     <string name="label_dlna_media_manager">Médias sur le réseau (DLNA)</string>
     <string name="label_deezer_media_manager">Deezer</string>
@@ -279,12 +217,9 @@
     <string name="label_qobuz_media_manager">Qobuz</string>
     <string name="label_spotify_media_manager">Spotify</string>
 
-
-
     <!-- Deezer specific strings -->
     <string name="label_deezer_storage_thematic_radio">Radios thématique</string>
     <string name="label_deezer_storage_artist_radio">Radios par artiste</string>
-
 
     <!-- No items messages for library -->
     <string name="ni_artists">Pas d\'artistes</string>
@@ -294,7 +229,6 @@
     <string name="ni_files">Pas de fichiers</string>
     <string name="ni_providers">Pas de bibliothèques</string>
     <string name="ni_scan_directories">Pas de dossiers</string>
-
     <string name="ni_artists_hint">Vérifier l\'emplacement des fichiers</string>
     <string name="ni_albums_hint">Vérifier l\'emplacement des fichiers</string>
     <string name="ni_songs_hint">Vérifier l\'emplacement des fichiers</string>

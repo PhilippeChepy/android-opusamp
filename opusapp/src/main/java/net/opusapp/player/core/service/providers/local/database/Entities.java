@@ -35,6 +35,8 @@ public class Entities {
 
         public static final String COLUMN_FIELD_ALBUM_ART       = "album_art";
 
+        public static final String COLUMN_FIELD_ORIGINAL_ALBUM_ART = "original_album_art";
+
         public static final String COLUMN_FIELD_USER_HIDDEN     = "user_hidden";
 
 
@@ -46,6 +48,7 @@ public class Entities {
                     + COLUMN_FIELD_ALBUM_ARTIST + " TEXT, "
                     + COLUMN_FIELD_ALBUM_ARTIST_ID + " INTEGER, "
                     + COLUMN_FIELD_ALBUM_ART + " TEXT, "
+                    + COLUMN_FIELD_ORIGINAL_ALBUM_ART + " TEXT, "
                     + COLUMN_FIELD_USER_HIDDEN + " BOOLEAN);");
         }
 
@@ -162,7 +165,9 @@ public class Entities {
 
         public static final String COLUMN_FIELD_URI             = "uri";
 
-        public static final String COLUMN_FIELD_ART             = "track_art";
+        public static final String COLUMN_FIELD_ART             = "art";
+
+        public static final String COLUMN_FIELD_ORIGINAL_ART    = "original_art";
 
         public static final String COLUMN_FIELD_DURATION        = "duration";
 
@@ -216,6 +221,8 @@ public class Entities {
 
         public static final String COLUMN_FIELD_USE_EMBEDDED_ART = "uses_embedded_art";
 
+        public static final String COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART = "originally_uses_embedded_art";
+
         public static final String COLUMN_FIELD_IS_QUEUE_FILE_ENTRY   = "queue_file_entry"; /* queue entry is file from StorageFragment */
 
         public static final String COLUMN_FIELD_USER_HIDDEN           = "user_hidden";
@@ -227,6 +234,7 @@ public class Entities {
                     + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + COLUMN_FIELD_URI + " TEXT, "
                     + COLUMN_FIELD_ART + " TEXT, "
+                    + COLUMN_FIELD_ORIGINAL_ART + " TEXT, "
                     + COLUMN_FIELD_DURATION + " INTEGER, "
                     + COLUMN_FIELD_BITRATE + " TEXT, "
                     + COLUMN_FIELD_SAMPLE_RATE + " INTEGER, "
@@ -253,6 +261,7 @@ public class Entities {
                     + COLUMN_FIELD_VISIBLE + " BOOLEAN, "
                     + COLUMN_FIELD_HAS_EMBEDDED_ART + " BOOLEAN, "
                     + COLUMN_FIELD_USE_EMBEDDED_ART + " BOOLEAN, "
+                    + COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART + " BOOLEAN, "
                     + COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " BOOLEAN, "
                     + COLUMN_FIELD_USER_HIDDEN + " BOOLEAN);");
         }

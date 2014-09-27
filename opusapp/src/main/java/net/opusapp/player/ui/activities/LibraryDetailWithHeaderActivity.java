@@ -34,6 +34,8 @@ import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 
+
+
 public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final String TAG = LibraryDetailWithHeaderActivity.class.getSimpleName();
@@ -135,7 +137,14 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         if (v == contentList) {
-            doOnCreateDetailContextMenu(menu);
+            int position = -1;
+            if (menuInfo != null) {
+                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+                position = info.position - 1;
+            }
+
+            cursor.moveToPosition(position);
+            doOnCreateDetailContextMenu(position, menu);
         }
         else {
             super.onCreateContextMenu(menu, v, menuInfo);
@@ -149,7 +158,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
             return super.onContextItemSelected(item);
         }
 
-        int position = 0;
+        int position = -1;
         if (item.getMenuInfo() != null) {
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
             position = info.position - 1;
@@ -206,7 +215,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 @Override
                 public void createMenu(final Menu menu, int position) {
                     cursor.moveToPosition(position);
-                    doOnCreateDetailContextMenu(menu);
+                    doOnCreateDetailContextMenu(position, menu);
                 }
             };
 
@@ -262,7 +271,9 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         contentList.setAdapter(adapter);
         contentList.setOnItemClickListener(contentListOnItemClickListener);
-        contentList.setOnCreateContextMenuListener(this);
+        //contentList.setOnCreateContextMenuListener(this);
+
+        registerForContextMenu(contentList);
 
         getSupportLoaderManager().initLoader(0, null, this);
         getSupportLoaderManager().initLoader(1, null, this);
@@ -410,6 +421,89 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
         }
     }
 
+    public void doImageRestorationRequest() {
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+        final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            provider.setProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
+                contentSourceId,
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
+                null,
+                true);
+
+            doArtUIRefresh();
+            }
+        };
+
+        final DialogInterface.OnClickListener artUpdateSongNegativeOnClickListener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            provider.setProperty(
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
+                contentSourceId,
+                AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
+                null,
+                false);
+
+            doArtUIRefresh();
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.alert_dialog_title_art_change_tracks)
+                .setMessage(R.string.alert_dialog_message_restore_art_change_tracks)
+                .setPositiveButton(R.string.label_yes, artUpdateSongPositiveOnClickListener)
+                .setNegativeButton(R.string.label_no, artUpdateSongNegativeOnClickListener)
+                .show();
+    }
+
+    protected void doArtUIRefresh() {
+        String ids[] = new String[cursor.getCount()];
+        int position = cursor.getPosition();
+
+        int idIndex = -1;
+        cursor.moveToPosition(-1);
+        while (cursor.moveToNext()) {
+            idIndex++;
+
+            ids[idIndex] = cursor.getString(COLUMN_ID);
+        }
+        cursor.moveToPosition(position);
+
+        final String artUri =
+                ProviderImageDownloader.SCHEME_URI_PREFIX +
+                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
+                        PlayerApplication.libraryManagerIndex + "/" +
+                        contentSourceId;
+
+        PlayerApplication.normalImageLoader.getDiskCache().remove(artUri);
+        PlayerApplication.normalImageLoader.getMemoryCache().clear();
+
+        PlayerApplication.thumbnailImageLoader.getDiskCache().remove(artUri);
+        PlayerApplication.thumbnailImageLoader.getMemoryCache().clear();
+
+        for (String id : ids) {
+            final String mediaArtUri =
+                    ProviderImageDownloader.SCHEME_URI_PREFIX +
+                            ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
+                            PlayerApplication.libraryManagerIndex + "/" +
+                            id;
+
+            PlayerApplication.normalImageLoader.getDiskCache().remove(mediaArtUri);
+            PlayerApplication.thumbnailImageLoader.getDiskCache().remove(mediaArtUri);
+        }
+
+        PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
+
+        doRefresh();
+    }
+
     @TargetApi(19)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
@@ -435,19 +529,13 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
                     if (imageUriData != null) {
                         final String imageUri = imageUriData.toString();
-                        PlayerApplication.normalImageLoader.getDiskCache().remove(imageUri);
-                        PlayerApplication.normalImageLoader.getMemoryCache().clear();
-
-                        PlayerApplication.thumbnailImageLoader.getDiskCache().remove(imageUri);
-                        PlayerApplication.thumbnailImageLoader.getMemoryCache().clear();
-
-                        PlayerApplication.normalImageLoader.displayImage(imageUri, placeHolderView);
 
                         final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, true);
+                                doArtUIRefresh();
                             }
                         };
 
@@ -456,20 +544,20 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, false);
+                                doArtUIRefresh();
                             }
                         };
 
                         new AlertDialog.Builder(this)
                                 .setTitle(R.string.alert_dialog_title_art_change_tracks)
                                 .setMessage(R.string.alert_dialog_message_art_change_tracks)
-                                .setPositiveButton(android.R.string.yes, artUpdateSongPositiveOnClickListener)
-                                .setNegativeButton(android.R.string.no, artUpdateSongNegativeOnClickListener)
+                                .setPositiveButton(R.string.label_yes, artUpdateSongPositiveOnClickListener)
+                                .setNegativeButton(R.string.label_no, artUpdateSongNegativeOnClickListener)
                                 .show();
                     }
                 }
         }
     }
-
 
 
     /*
@@ -586,9 +674,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
         }
     }
 
-    public void doOnCreateDetailContextMenu(Menu menu) {
-        int position = cursor.getPosition();
-
+    public void doOnCreateDetailContextMenu(int position, Menu menu) {
         switch (contentType) {
             case CONTENT_TYPE_ARTIST:
                 PlayerApplication.createSongContextMenu(menu, CONTEXT_MENU_GROUP_ID, cursor.getInt(COLUMN_VISIBLE) == 1);
@@ -629,7 +715,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                             doImageChangeRequest();
                             break;
                         case CONTEXT_MENUITEM_RESTORE_ART:
-                            // TODO: art restoration.
+                            doImageRestorationRequest();
                             break;
                     }
                     return true;

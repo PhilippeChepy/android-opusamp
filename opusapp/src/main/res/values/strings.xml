@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <!-- Application name -->
     <string name="application_label" translatable="false">OpusAMP</string>
 
@@ -30,6 +29,7 @@
     <string name="alert_dialog_message_playlist_delete">Do you really want to delete this playlist ?</string>
     <string name="alert_dialog_title_art_change_tracks">Question</string>
     <string name="alert_dialog_message_art_change_tracks">Update tracks with this art ?</string>
+    <string name="alert_dialog_message_restore_art_change_tracks">Restore tracks arts ?</string>
     <string name="alert_dialog_title_search_path_exists">Path already registered</string>
     <string name="alert_dialog_message_search_path_exists">This folder is already to be analyzed or excluded.</string>
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
@@ -73,7 +73,6 @@
     <string name="preference_summary_storage_display_details">Display media details instead of file names (may be slow when visualizing lots of files at once).</string>
     <string name="preference_title_genre_display">Details of genres</string>
     <!-- <string name="preference_summary_genre_display"></string> -->
-
     <string name="preference_list_value_genre_show_albums">Display albums</string>
     <string name="preference_list_value_genre_show_tracks">Display tracks</string>
 
@@ -101,6 +100,10 @@
     <string name="menuitem_label_edit">Edit</string>
     <string name="menuitem_label_use_file_art">Change this cover (from file)</string>
     <string name="menuitem_label_restore_file_art">Restore original cover</string>
+
+    <string name="label_yes">Yes</string>
+    <string name="label_no">No</string>
+
     <string name="label_sort_A_Z">A-Z</string>
     <string name="label_sort_Z_A">Z-A</string>
     <string name="label_track_asc">Track # asc.</string>
@@ -117,14 +120,18 @@
     <string name="actionbar_confirmation_text_cancel">Cancel</string>
     <string name="actionbar_drawer_toggle_label_open">Open navigation menu</string>
     <string name="actionbar_drawer_toggle_label_close">Close navigation menu</string>
+
     <string name="drawer_section_label_media_management">Media management</string>
     <string name="drawer_section_label_label_settings">Settings</string>
     <string name="drawer_item_label_manage_libraries">Manage libraries</string>
     <string name="drawer_item_label_library_soundfx">Sound effects</string>
     <string name="drawer_item_label_library_settings">Library settings</string>
     <string name="drawer_item_label_application_settings">Application settings</string>
+
     <string name="searchview_query_hint">Search</string>
+
     <string name="toast_press_back_again">Press BACK again to exit"</string>
+
     <string name="tab_label_accept_path">Scanned</string>
     <string name="tab_label_exclude_path">Excluded</string>
     <string name="tab_label_artists">Artists</string>
@@ -134,6 +141,7 @@
     <string name="tab_label_playlists">Playlists</string>
     <string name="tab_label_genres">Genres</string>
     <string name="tab_label_storage">Files</string>
+
     <string name="imageview_content_description_art">Cover art</string>
     <string name="imageview_content_description_repeat">Repeat one or all</string>
     <string name="imageview_content_description_previous">Skip backwards</string>
@@ -145,7 +153,6 @@
     <string name="imageview_content_description_option_menu">Show option menu</string>
 
     <!-- Non ui -->
-
 
     <!-- Content properties -->
     <string name="label_metadata_unknown">unknown</string>
@@ -193,11 +200,15 @@
     <string name="label_setup_storage_description">Define location of the default library on your Android™ device.\nYou can customize paths or add other libraries later.</string>
     <string name="label_setup_scan_whole_storage">Whole external memory</string>
     <string name="label_setup_scan_specific_locations">Intended for music</string>
+
     <string name="label_internal_storage">Internal Storage</string>
     <string name="label_external_storage">External Storage </string>
 
     <!-- Units -->
     <string name="unit_MB">%s MB</string>
+
+
+    <!-- Other UI -->
     <string name="label_local_media_manager">Medias on this device</string>
     <string name="label_dlna_media_manager">Medias on the network (DLNA)</string>
     <string name="label_deezer_media_manager">Deezer</string>
@@ -222,15 +233,18 @@
     <string name="ni_songs_hint">Check files location</string>
     <string name="ni_genres_hint">Check files location</string>
     <string name="ni_scan_directories">No directories</string>
+
     <string name="fs_parent_directory">Parent directory</string>
     <string name="fs_directory">Directory</string>
+
     <string name="label_new_playlist">New playlist</string>
     <string name="label_new_library">New library</string>
     <string name="label_favorites">Favorites</string>
+
     <string name="share_via">Share via</string>
     <string name="share_body">I\'m currently listening %1$s by %2$s.</string>
-    <string name="label_autostop">Pausing music in…</string>
 
+    <string name="label_autostop">Pausing music in…</string>
     <plurals name="label_autostop_set">
         <item quantity="zero">Pausing music is disabled</item>
         <item quantity="one">Pausing music in %1$d minute</item>
@@ -244,6 +258,7 @@
 
     <string name="label_select_cover">Select cover</string>
     <string name="label_default_library">Music Library</string>
-    <string name="label_enable_equalizer">Enable Equalizer (experimental)</string>
 
+    <!-- Equalizer view -->
+    <string name="label_enable_equalizer">Enable Equalizer (experimental)</string>
 </resources>

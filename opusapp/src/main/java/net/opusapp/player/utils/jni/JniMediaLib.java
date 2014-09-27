@@ -156,6 +156,7 @@ public abstract class JniMediaLib {
             contentValues.put(Entities.Media.COLUMN_FIELD_LYRICS, tagLyrics);
             contentValues.put(Entities.Media.COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
             contentValues.put(Entities.Media.COLUMN_FIELD_USE_EMBEDDED_ART, hasEmbeddedArt);
+            contentValues.put(Entities.Media.COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART, hasEmbeddedArt);
 
             return contentValues;
         }
