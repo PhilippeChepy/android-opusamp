@@ -16,7 +16,8 @@
     <!-- Widget -->
     <string name="widget_label_4x1">Lecteur Audio 4x1</string>
     <string name="widget_label_4x2">Lecteur Audio 4x2</string>
-    <string name="widget_content_start_app">Ouvrir le lecteur audio</string>
+    <string name="widget_content_empty_playlist">Liste de lecture vide</string>
+    <string name="widget_content_start_app">Ouvrir le lecteur</string>
 
 
 

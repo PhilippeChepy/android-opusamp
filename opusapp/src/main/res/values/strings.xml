@@ -10,7 +10,8 @@
     <!-- Widget -->
     <string name="widget_label_4x1">Audio Player (4x1)</string>
     <string name="widget_label_4x2">Audio Player (4x2)</string>
-    <string name="widget_content_start_app">Open audio player for medias</string>
+    <string name="widget_content_empty_playlist">Empty playlist</string>
+    <string name="widget_content_start_app">Open player</string>
 
     <!-- Activities -->
     <string name="activity_title_preferences">Preferences</string>
