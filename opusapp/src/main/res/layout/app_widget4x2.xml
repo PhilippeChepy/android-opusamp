@@ -1,17 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/four_by_two"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="@dimen/appwidget_4x2_height"
     android:padding="@dimen/widget_margin"
     android:background="@color/transparent_black"
-    android:gravity="center"
-    android:orientation="horizontal" >
+    tools:ignore="ContentDescription" >
+
+    <ImageView
+        android:id="@+id/four_by_two_albumart"
+        android:layout_width="@dimen/appwidget_4x2_artwork_size"
+        android:layout_height="@dimen/appwidget_4x2_artwork_size"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/no_art_small"
+        android:scaleType="fitXY" />
 
     <LinearLayout
         android:id="@+id/four_by_two_controls"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/four_by_two_control_height"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/four_by_two_albumart"
+        android:divider="?android:listDivider"
+        android:gravity="center_vertical"
         android:orientation="horizontal" >
 
         <ImageButton
@@ -19,10 +31,22 @@
             style="@style/AppWidgetMediaButton"
             android:src="@drawable/btn_playback_previous_transparent" />
 
+        <ImageView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_toRightOf="@id/four_by_two_albumart"
+            android:background="@color/gray" />
+
         <ImageButton
             android:id="@+id/four_by_two_control_play"
             style="@style/AppWidgetMediaButton"
-            android:src="@drawable/btn_playback_play_transparent" />
+            android:src="@drawable/btn_playback_pause_transparent" />
+
+        <ImageView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_toRightOf="@id/four_by_two_albumart"
+            android:background="@color/gray" />
 
         <ImageButton
             android:id="@+id/four_by_two_control_next"
@@ -31,69 +55,42 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/four_by_two_controls_info_divider"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="1dp"
-        android:layout_above="@id/four_by_two_controls"
-        android:scaleType="fitXY" />
-
-    <ImageView
-        android:id="@+id/four_by_two_albumart"
-        android:layout_width="@dimen/four_by_two_album_art_width"
-        android:layout_height="match_parent"
-        android:layout_above="@id/four_by_two_controls_info_divider"
-        android:adjustViewBounds="true"
-        android:scaleType="fitXY"
-        android:contentDescription="@string/imageview_content_description_art" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_above="@id/four_by_two_controls"
-        android:background="@color/holo_blue_dark" />
+        android:layout_above="@+id/four_by_two_controls"
+        android:layout_alignParentRight="true"
+        android:background="@color/gray"
+        android:layout_toRightOf="@+id/four_by_two_albumart" />
 
     <LinearLayout
         android:id="@+id/four_by_two_info"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/four_by_two_controls"
-        android:layout_toRightOf="@+id/four_by_two_albumart"
-        android:background="@drawable/holo_selector"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical" >
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_vertical"
+        android:layout_toRightOf="@id/four_by_two_albumart"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/notification_info_container_padding_left"
+        android:paddingTop="@dimen/notification_expanded_content_padding_top" >
 
         <TextView
             android:id="@+id/four_by_two_trackname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
+            style="@style/NotificationText"
             android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_small"
-            android:textStyle="bold"
-            android:textIsSelectable="false" />
+            android:textSize="@dimen/text_size_medium"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/four_by_two_albumname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
+            style="@style/NotificationText"
             android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_small"
-            android:textIsSelectable="false" />
+            android:textSize="@dimen/text_size_small" />
 
         <TextView
             android:id="@+id/four_by_two_artistname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
+            style="@style/NotificationText"
             android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_small"
-            android:textIsSelectable="false" />
+            android:textSize="@dimen/text_size_small" />
     </LinearLayout>
 
 </RelativeLayout>

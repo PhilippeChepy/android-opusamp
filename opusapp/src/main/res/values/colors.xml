@@ -6,7 +6,9 @@
     <color name="transparent_white">#ccffffff</color>
 
     <color name="holo_dark">#ff212121</color>
+    <color name="gray">#ff666666</color>
     <color name="holo_light">#fff3f3f3</color>
+
     <color name="holo_orange">#ffffbb33</color>
     <color name="holo_blue_dark">#ff0099cc</color>
 

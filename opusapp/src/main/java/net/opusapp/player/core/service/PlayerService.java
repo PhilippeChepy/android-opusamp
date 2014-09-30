@@ -37,6 +37,7 @@ import net.opusapp.player.core.NotificationHelper;
 import net.opusapp.player.core.RemoteControlClientHelper;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.utils.PlayerApplication;
+import net.opusapp.player.ui.widgets.AbstractAppWidget;
 import net.opusapp.player.ui.widgets.AppWidget4x1;
 import net.opusapp.player.ui.widgets.AppWidget4x2;
 import net.opusapp.player.utils.LogUtils;
@@ -833,26 +834,20 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (playlist != null && playlist.length > 0) {
                 final AbstractMediaManager.Media media = playlist[playlistIndex];
 
-                widgetLarge.setHasPlaylist(true);
-                widgetLarge.setPlaying(isPlaying);
-                widgetLarge.setMetadata(media.name, media.artist, media.album, currentArt);
-                widgetLarge.applyUpdate(this);
+                AbstractAppWidget.setHasPlaylist(true);
+                AbstractAppWidget.setPlaying(isPlaying);
+                AbstractAppWidget.setMetadata(media.name, media.artist, media.album, currentArt);
 
-                widgetMedium.setHasPlaylist(true);
-                widgetMedium.setPlaying(isPlaying);
-                widgetMedium.setMetadata(media.name, media.artist, media.album, currentArt);
+                widgetLarge.applyUpdate(this);
                 widgetMedium.applyUpdate(this);
 
             }
             else {
-                widgetLarge.setHasPlaylist(false);
-                widgetLarge.setPlaying(isPlaying);
-                widgetLarge.setMetadata(null, null, null, null);
-                widgetLarge.applyUpdate(this);
+                AbstractAppWidget.setHasPlaylist(false);
+                AbstractAppWidget.setPlaying(isPlaying);
+                AbstractAppWidget.setMetadata(null, null, null, null);
 
-                widgetMedium.setHasPlaylist(false);
-                widgetMedium.setPlaying(isPlaying);
-                widgetMedium.setMetadata(null, null, null, null);
+                widgetLarge.applyUpdate(this);
                 widgetMedium.applyUpdate(this);
             }
         }
@@ -1004,6 +999,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         Collections.shuffle(playlistOrder);
         playlistOrderIndex = 0;
+
+        doUpdateWidgets();
     }
 
     protected void lockNotify() {

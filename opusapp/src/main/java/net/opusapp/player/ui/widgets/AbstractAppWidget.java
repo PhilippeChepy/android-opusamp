@@ -25,17 +25,17 @@ import net.opusapp.player.core.service.PlayerService;
 
 public abstract class AbstractAppWidget extends AppWidgetProvider {
 
-    protected boolean isPlaying;
+    protected static boolean isPlaying;
 
-    protected String track;
+    protected static String track;
 
-    protected String artist;
+    protected static String artist;
 
-    protected String album;
+    protected static String album;
 
-    protected Bitmap albumImage;
+    protected static Bitmap albumImage;
 
-    protected boolean hasPlaylist = false;
+    protected static boolean hasPlaylist = false;
 
 
 
@@ -48,15 +48,15 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
 
 
 
-    public void setPlaying(boolean playing) {
+    public static void setPlaying(boolean playing) {
         isPlaying = playing;
     }
 
-    public void setHasPlaylist(boolean hasPlaylist) {
-        this.hasPlaylist = hasPlaylist;
+    public static void setHasPlaylist(boolean hasPlaylist) {
+        AbstractAppWidget.hasPlaylist = hasPlaylist;
     }
 
-    public void setMetadata(final String trackName, final String artistName, final String albumName, final Bitmap art) {
+    public static void setMetadata(final String trackName, final String artistName, final String albumName, final Bitmap art) {
         track = trackName;
         artist = artistName;
         album = albumName;

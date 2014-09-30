@@ -8,31 +8,31 @@ android {
         applicationId "net.opusapp.player"
         minSdkVersion 9
         targetSdkVersion 19
-        versionCode 2
-        versionName "1.0.0.1b"
+        versionCode 1
+        versionName "1.0.0.1"
     }
 
     productFlavors {
         x86 {
-            versionCode Integer.parseInt("4" + defaultConfig.versionCode)
+            versionCode 4 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "x86"
             }
         }
         mips {
-            versionCode Integer.parseInt("3" + defaultConfig.versionCode)
+            versionCode 3 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "mips"
             }
         }
         armv7 {
-            versionCode Integer.parseInt("2" + defaultConfig.versionCode)
+            versionCode 2 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi-v7a"
             }
         }
         arm {
-            versionCode Integer.parseInt("1" + defaultConfig.versionCode)
+            versionCode 1 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi"
             }
@@ -45,7 +45,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file("/home/phil/AndroidStudioProjects/keystore/keystore")
+            storeFile file("/home/phil/Projets/android-keystore/keystore")
             storePassword "***REMOVED***"
             keyAlias "android"
             keyPassword "***REMOVED***"
