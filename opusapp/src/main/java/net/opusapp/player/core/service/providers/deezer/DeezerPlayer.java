@@ -44,7 +44,7 @@ public class DeezerPlayer implements AbstractMediaManager.Player {
     }
 
     @Override
-    public void playerSeek(long position) {
+    public void playerSeek(AbstractMediaManager.Media context, long position) {
 
     }
 

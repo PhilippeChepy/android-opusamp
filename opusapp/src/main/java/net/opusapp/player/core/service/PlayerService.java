@@ -171,9 +171,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                             if (!playerServiceImpl.next()) {
                                 playerServiceImpl.play();
                             }
-                            else {
-                                playerServiceImpl.setPosition(0);
-                                playerServiceImpl.notifyStop(); /* cannot play anymore */
+                            else { /* cannot play anymore */
+                                playerServiceImpl.stop();
+                                playerServiceImpl.notifyStop();
+                                playerServiceImpl.notifyTimestampUpdate(0);
                             }
 
                             break;
@@ -340,6 +341,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         public boolean next() throws RemoteException {
             boolean looped = false;
 
+            seekPreviousTrackRunnable.index = playlistIndex;
+            mediaManagementExecutor.submit(seekPreviousTrackRunnable);
+
             if (playlist != null && playlist.length > 1) {
                 looped = doMoveToNextPosition();
                 notifySetQueuePosition();
@@ -348,12 +352,28 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (playlist != null) {
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
-
                 player.playerSetContent(playlist[playlistIndex]);
             }
 
             return looped;
         }
+
+        class SeekPreviousTrackRunnable implements Runnable {
+
+            public int index;
+
+            @Override
+            public void run() {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                
+                player.playerSeek(playlist[index], 0);
+            }
+        }
+
+        SeekPreviousTrackRunnable seekPreviousTrackRunnable = new SeekPreviousTrackRunnable() {
+
+        };
 
         @Override
         public boolean prev() throws RemoteException {
@@ -403,7 +423,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
             final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            player.playerSeek(position);
+            player.playerSeek(playlist[playlistIndex], position);
             notifyTimestampUpdate(position);
         }
 

@@ -660,10 +660,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             @Override
             public void run() {
                 int queuePosition = MusicConnector.getCurrentPlaylistPosition();
+                long position = 0;
 
                 if (playlistCursor != null && queuePosition < playlistCursor.getCount()) {
-                    long position = 0;
-
                     if (PlayerApplication.playerService != null) {
                         try {
                             position = PlayerApplication.playerService.getPosition();
@@ -696,6 +695,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                         bluredImageView.setImageResource(R.drawable.no_art_normal);
                     }
                 }
+LogUtils.LOGE(TAG, "position = " + position);
+                seekbarRunnable.position = (int) position;
+                runOnUiThread(seekbarRunnable);
             }
         };
 

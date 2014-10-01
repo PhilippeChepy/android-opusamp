@@ -162,9 +162,11 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 	}
 
 	@Override
-	public synchronized void playerSeek(long position) {
-		if (currentContext != null) {
-            streamSetPosition(currentContext.nativeContext, position);
+	public synchronized void playerSeek(AbstractMediaManager.Media media, long position) {
+		if (media != null) {
+            if (media instanceof LocalMedia) {
+                streamSetPosition(((LocalMedia)media).nativeContext, position);
+            }
 		}
 	}
 

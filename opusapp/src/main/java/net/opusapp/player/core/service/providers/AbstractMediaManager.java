@@ -258,7 +258,7 @@ public interface AbstractMediaManager {
         public void playerPause(boolean setPaused);
         public void playerStop();
         public boolean playerIsPlaying();
-        public void playerSeek(long position);
+        public void playerSeek(Media context, long position);
         public long playerGetPosition();
         public long playerGetDuration();
 
