@@ -71,6 +71,10 @@
     <string name="preference_summary_tab_visibility">Select what tabs are shown in music library</string>
     <string name="preference_title_storage_display_details">Details in file explorer</string>
     <string name="preference_summary_storage_display_details">Display media details instead of file names (may be slow when visualizing lots of files at once).</string>
+    <string name="preference_title_display_local_art">Display local arts</string>
+    <string name="preference_summary_display_local_art">"If medias doesn't have embedded arts, display an image from the same folder instead."</string>
+    <string name="preference_title_display_source_if_no_meta">Missing tags replacement</string>
+    <string name="preference_summary_display_source_if_no_meta">"If a media doesn't contains tags, display filename instead of an empty title"</string>
     <string name="preference_title_genre_display">Details of genres</string>
     <!-- <string name="preference_summary_genre_display"></string> -->
     <string name="preference_list_value_genre_show_albums">Display albums</string>

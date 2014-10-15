@@ -891,8 +891,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
         Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
-        Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(
-                sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
+        Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
 
         if (userEnabledTabs.size() == 0) {
             userEnabledTabs = defaultTabs;
@@ -1448,6 +1447,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected Cursor doBuildMediaCursor(int[] requestedFields, int[] sortFields, String filter, ContentType contentType, String sourceId) {
+        final Resources resources = PlayerApplication.context.getResources();
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+
+        boolean localArts = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_local_art), false);
+        boolean manageMissingTags = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), true);
+
+
         boolean usesSongTable = false;
         boolean usesPlaylistEntryTable = false;
 
@@ -1465,7 +1471,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.SONG_ART:
                     usesSongTable = true;
-                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART);
+
+                    if (localArts) {
+                        columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART);
+                    }
+                    else {
+                        columnsList.add("NULL AS " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART);
+                    }
                     break;
                 case AbstractMediaManager.Provider.SONG_DURATION:
                     usesSongTable = true;
@@ -1497,7 +1509,20 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.SONG_TITLE:
                     usesSongTable = true;
-                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE);
+
+                    if (manageMissingTags) {
+                        columnsList.add(
+                                "ifnull(" +
+                                    Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + ", " +
+                                    Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI +
+                                ")" +
+                                " AS " + Entities.Media.COLUMN_FIELD_TITLE
+                        );
+                    }
+                    else {
+                        columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE);
+                    }
+
                     break;
                 case AbstractMediaManager.Provider.SONG_ARTIST:
                     usesSongTable = true;
@@ -2049,6 +2074,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             return null;
         }
 
+        final Resources resources = PlayerApplication.context.getResources();
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+        boolean localArts = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_local_art), false);
+
         final String[] columns = new String[] {
                 Entities.Media.COLUMN_FIELD_URI,
                 Entities.Media.COLUMN_FIELD_ART,
@@ -2094,7 +2123,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             if (usesEmbeddedArt) {
                 return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(songArtUri));
             }
-            else {
+            else if (localArts) {
                 try {
                     return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(songArtUri));
                 }
@@ -2112,6 +2141,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             return null;
         }
 
+        final Resources resources = PlayerApplication.context.getResources();
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+        boolean localArts = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_local_art), false);
+
+        // TODO: take localArts into account
         final String[] columns = new String[] { Entities.Album.COLUMN_FIELD_ALBUM_ART };
         final String selection = Entities.Album._ID + " = ? ";
         final String[] selectionArgs = new String[] { albumId };

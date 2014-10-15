@@ -71,8 +71,14 @@
     <string name="preference_summary_tab_visibility">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
     <string name="preference_title_storage_display_details">Détails dans l\'explorateur de fichiers</string>
     <string name="preference_summary_storage_display_details">Afficher des détails sur les medias plutôt que les noms des fichiers (peut être lent quand il y a beaucoup de fichiers).</string>
+    <string name="preference_title_display_local_art">Affichage des pochettes locales</string>
+    <string name="preference_summary_display_local_art">"Si les médias n'ont pas de pochettes embarquées, afficher un fichier image du même dossier à la place."</string>
+    <string name="preference_title_display_source_if_no_meta">Remplacement des métadonnées manquantes</string>
+    <string name="preference_summary_display_source_if_no_meta">"Si un média ne contient pas de métadonnées, afficher le nom du fichier à la place d'un titre vide"</string>
     <string name="preference_title_genre_display">Affichage du détail des genres</string>
     <!--<string name="preference_summary_genre_display"></string>-->
+
+
     <string name="preference_list_value_genre_show_albums">Afficher les albums</string>
     <string name="preference_list_value_genre_show_tracks">Afficher les pistes</string>
 

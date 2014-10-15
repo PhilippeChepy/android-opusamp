@@ -31,6 +31,18 @@
             android:summary="@string/preference_summary_storage_display_details"
             android:defaultValue="false" />
 
+        <CheckBoxPreference
+            android:key="@string/preference_key_display_local_art"
+            android:title="@string/preference_title_display_local_art"
+            android:summary="@string/preference_summary_display_local_art"
+            android:defaultValue="false" />
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_display_source_if_no_tags"
+            android:title="@string/preference_title_display_source_if_no_meta"
+            android:summary="@string/preference_summary_display_source_if_no_meta"
+            android:defaultValue="true" />
+
         <ListPreference
             android:capitalize="words"
             android:defaultValue="@string/preference_list_value_genre_show_albums"

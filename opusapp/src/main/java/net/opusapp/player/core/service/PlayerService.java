@@ -366,7 +366,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             public void run() {
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
-                
+
                 player.playerSeek(playlist[index], 0);
             }
         }
