@@ -13,7 +13,7 @@
     <string name="preference_key_plug_auto_play">plug_auto_play</string>
     <string name="preference_key_pause_call">pause_call</string>
     <string name="preference_key_premium">premium</string>
-    <string name="preference_key_online_help">online_help</string>
+    <string name="preference_key_privacy_policy">online_help</string>
     <string name="preference_key_opensource">opensource</string>
 
     <!-- Local preference keys -->

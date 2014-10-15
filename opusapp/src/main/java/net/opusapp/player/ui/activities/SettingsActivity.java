@@ -208,13 +208,12 @@ public class SettingsActivity extends PreferenceActivity {
 
     @SuppressWarnings("deprecation")
     private void setOnlineHelpListener() {
-        final Preference onlineHelp = findPreference(getString(R.string.preference_key_online_help));
+        final Preference onlineHelp = findPreference(getString(R.string.preference_key_privacy_policy));
         onlineHelp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                // android-opus-player/online-help => 9ed808d1 238a4d52 55bcdbc3 d584bcc4
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://link.opus-mobile.com/?id=d584bcc4"));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://opusamp.com/privacy"));
                 startActivity(browserIntent);
                 return true;
             }

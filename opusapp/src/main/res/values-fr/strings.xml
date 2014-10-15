@@ -57,9 +57,9 @@
     <string name="preference_summary_plug_auto_play">Démarrage automatique de la lecture lors de la connexion d\'un périphérique audio sur l\'appareil</string>
     <string name="preference_title_pause_call">Pause automatique de la lecture</string>
     <string name="preference_summary_pause_call">Pause automatique de la lecture lors des appels téléphoniques</string>
-    <string name="preference_screen_title_about">Aide / A propos</string>
+    <string name="preference_screen_title_about">Informations</string>
     <string name="preference_title_premium">Mode premium</string>
-    <string name="preference_title_online_help">Aide en ligne</string>
+    <string name="preference_title_privacy_policy">Politique de confidentialité</string>
     <string name="preference_title_opensource">Licences Open source</string>
 
     <!-- Local preferences -->

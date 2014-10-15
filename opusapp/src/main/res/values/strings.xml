@@ -57,9 +57,9 @@
     <string name="preference_summary_plug_auto_play">Auto start playback when connecting audio output to the device</string>
     <string name="preference_title_pause_call">Auto pause</string>
     <string name="preference_summary_pause_call">Auto pause playback when receiving call</string>
-    <string name="preference_screen_title_about">Help / About</string>
+    <string name="preference_screen_title_about">Informations</string>
     <string name="preference_title_premium">Premium mode</string>
-    <string name="preference_title_online_help">Online help</string>
+    <string name="preference_title_privacy_policy">Privacy Policy</string>
     <string name="preference_title_opensource">Open source Licenses</string>
 
     <!-- Local preferences -->
