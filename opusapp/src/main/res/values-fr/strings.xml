@@ -198,6 +198,7 @@
     <string name="label_setup_step1_description">"La mise en place de l'application ne devrait prendre que quelques instants."</string>
     <string name="label_setup_verifying_premium_title">Preparation en cours&#8230;</string>
     <string name="label_setup_verifying_premium_description">OpusAmp vérifie si vous êtes un utilisateur premium.</string>
+    <string name="label_setup_privacy_policy_link">Politique de confidentialité</string>
     <string name="label_setup_valid_premium_title">Mode premium</string>
     <string name="label_setup_valid_premium_description">Vous avez déjà acquis le mode premium.\n\nProfitez de votre musique sans aucunes limites !</string>
     <string name="label_setup_invalid_premium_title">Mode premium</string>

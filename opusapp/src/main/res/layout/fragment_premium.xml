@@ -130,21 +130,28 @@
                 android:layout_height="wrap_content"
                 android:text="@string/label_setup_verifying_premium_description" />
 
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:id="@+id/optins"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="38.0dip"
-                    android:layout_marginRight="54.0dip"
-                    android:layout_marginEnd="54.0dip"/>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1.0dp"
+                android:layout_marginBottom="32.0dp"
+                android:layout_marginLeft="34.0dp"
+                android:layout_marginRight="34.0dp"
+                android:layout_marginTop="32.0dp"
+                android:background="#ff999999" />
 
+            <net.opusapp.player.ui.views.CustomLinkTextView
+                android:id="@+id/privacy_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32.0dip"
+                android:layout_marginLeft="34.0dip"
+                android:layout_marginRight="34.0dip"
+                android:textColor="#ff848484"
+                android:textSize="@dimen/text_size_large"
+                android:autoLink="web"
+                android:text="@string/label_setup_privacy_policy_link" />
 
-    <!--
-                        <View android:background="#ff999999" android:layout_width="fill_parent" android:layout_height="1.0px" android:layout_marginLeft="34.0dip" android:layout_marginTop="32.0dip" android:layout_marginRight="34.0dip" android:layout_marginBottom="28.0dip" />
-                        <TextView android:id="@+id/toslinks" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="34.0dip" android:layout_marginRight="34.0dip" android:layout_marginBottom="32.0dip" android:text="@string/setting_logging_tos" style="@style/SetupTosLinks" />
-    -->
-            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
 
     <RelativeLayout

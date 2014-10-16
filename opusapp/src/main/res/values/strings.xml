@@ -196,6 +196,7 @@
     <string name="label_setup_step1_description">It should only take a few moments to set up the app.</string>
     <string name="label_setup_verifying_premium_title">Preparing…</string>
     <string name="label_setup_verifying_premium_description">OpusAmp is verifying if you are a premium user.</string>
+    <string name="label_setup_privacy_policy_link">Privacy Policy</string>
     <string name="label_setup_valid_premium_title">Premium mode</string>
     <string name="label_setup_valid_premium_description">You already acquired premium mode.\n\nEnjoy your music without limitations!</string>
     <string name="label_setup_invalid_premium_title">Premium mode</string>

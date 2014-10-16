@@ -2,7 +2,9 @@ package net.opusapp.player.ui.fragments;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,6 +21,7 @@ import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.ui.activities.SetupActivity;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.StorageOptions;
+import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomRadioButton;
 
 import java.io.File;
@@ -64,6 +67,15 @@ public class SetupPremiumFragment extends Fragment {
         radioIntended.setOnCheckedChangeListener(onRadioCheckedListener);
 
         onRadioCheckedListener.onCheckedChanged(radioIntended, true);
+
+        final CustomLinkTextView privacyLink = (CustomLinkTextView) view.findViewById(R.id.privacy_link);
+        privacyLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://opusamp.com/privacy"));
+                startActivity(browserIntent);
+            }
+        });
 
         final View next = view.findViewById(R.id.next);
         next.setOnClickListener(new View.OnClickListener() {
