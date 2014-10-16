@@ -1512,11 +1512,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                     if (manageMissingTags) {
                         columnsList.add(
-                                "ifnull(" +
-                                    Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + ", " +
-                                    Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI +
-                                ")" +
-                                " AS " + Entities.Media.COLUMN_FIELD_TITLE
+                            "CASE (LENGTH(TRIM(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + "))) "+
+                            "WHEN 0 THEN " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " " +
+                            "ELSE " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " " +
+                            "END " +
+                            "AS " + Entities.Media.COLUMN_FIELD_TITLE
                         );
                     }
                     else {
