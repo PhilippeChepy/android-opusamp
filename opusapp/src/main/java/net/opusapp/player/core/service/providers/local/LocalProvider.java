@@ -2145,31 +2145,36 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
         boolean localArts = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_local_art), false);
 
-        // TODO: take localArts into account
-        final String[] columns = new String[] { Entities.Album.COLUMN_FIELD_ALBUM_ART };
-        final String selection = Entities.Album._ID + " = ? ";
-        final String[] selectionArgs = new String[] { albumId };
+        if (localArts) {
+            final String[] columns = new String[]{Entities.Album.COLUMN_FIELD_ALBUM_ART};
+            final String selection = Entities.Album._ID + " = ? ";
+            final String[] selectionArgs = new String[]{albumId};
 
-        String albumArtUri = null;
-        Cursor cursor = database.query(Entities.Album.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-            albumArtUri = cursor.getString(0);
-        }
-
-        if (cursor != null) {
-            cursor.close();
-        }
-
-        try {
-            if (!TextUtils.isEmpty(albumArtUri)) {
-                return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(albumArtUri));
+            String albumArtUri = null;
+            Cursor cursor = database.query(Entities.Album.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                albumArtUri = cursor.getString(0);
             }
-            return null;
+
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            try {
+                if (!TextUtils.isEmpty(albumArtUri)) {
+                    return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(albumArtUri));
+                }
+                return null;
+            } catch (final FileNotFoundException fileNotFoundException) {
+                return null;
+            }
         }
-        catch (final FileNotFoundException fileNotFoundException) {
-            return null;
+        else {
+            // TODO: add support for embedded arts from media.
         }
+
+        return null;
     }
 
     protected void doUpdateAlbumCover(String albumId, String uri, boolean updateTracks) {
@@ -2184,7 +2189,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             contentValues.put(Entities.Album.COLUMN_FIELD_ALBUM_ART, uri);
 
             database.update(Entities.Album.TABLE_NAME, contentValues, Entities.Album._ID + " = ? ", whereAlbumId);
-
 
             if (updateTracks) {
                 contentValues.clear();
