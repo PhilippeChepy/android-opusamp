@@ -56,27 +56,25 @@ typedef struct {
     equalizer_param_s * band_list;
 } equalizer_state_s;
 
-#define NBANDS 17
+#define NBANDS 9
 static real_t bands[] = {
-    65.406392, 92.498606, 130.81278, 184.99721, 261.62557, 369.99442, 523.25113, 739.9884 , 1046.5023,
-    1479.9768, 2093.0045, 2959.9536, 4186.0091, 5919.9072, 8372.0181, 11839.814, 16744.036
+    44.0, 88.0, 177.0, 355.0, 710.0, 1420.0, 2840.0, 5680.0, 11360.0
 };
 
 #define GAIN_HALF 14
 #define GAIN_RANGE 28
 
-float band_values[36] = {
-    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,   // left
-    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0    // right
+float band_values[20] = {
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // left
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // right
 };
 
 //   0   = -14dB | 14 =   0dB | 28 = +14dB
-int slider_positions[38] = {
+int slider_positions[22] = {
     /* L-preamp */ 14,
-    // 14.0, 14.0, 14, 14, 14, 14, 14, 14
-    /* L-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+    /* L-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
     /* R-preamp */ 14,
-    /* R-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+    /* R-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
 };
 
 #define RINT(x) ((x) >= 0 ? ((int)((x) + 0.5)) : ((int)((x) - 0.5)))
@@ -493,11 +491,11 @@ int equalizer_impl_apply_properties(engine_processor_s * processor) {
 	int i, ch;
 
 	for (ch = 0 ; ch < 2 ; ch++) {
-        float preamp = pow(10, (GAIN_HALF - slider_positions[ch * 19]) / -20.0);
+        float preamp = pow(10, (GAIN_HALF - slider_positions[ch * 11]) / -20.0);
         //LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : preamp = %e", ch * 19, preamp);
 
-        for(i = 0 ; i < 18 ; i++) {
-            band_values[i + ch * 18] = preamp * pow(10, (GAIN_HALF - slider_positions[1 + i + ch * 19]) / -20.0);
+        for(i = 0 ; i < 10 ; i++) {
+            band_values[i + ch * 10] = preamp * pow(10, (GAIN_HALF - slider_positions[1 + i + ch * 11]) / -20.0);
             //LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : band[%i] = %e (10^((14 - %i)/-20)",
             //        1 + i + ch * 19,
             //        i + ch * 18,
@@ -538,17 +536,19 @@ int equalizer_delete(engine_processor_s * processor) {
 }
 
 char * equalizer_get_name(engine_context_s * engine) {
-    return "18-Band Equalizer";
+    return "10-Band Equalizer";
 }
 
 int equalizer_set_property(engine_processor_s * processor, int property, void *value) {
-    LOG_INFO(LOG_TAG, "property [%i] = %i", property, *((int *)value));
+    LOG_INFO(LOG_TAG, "property set [%i] = %i", property, *((int *)value));
     slider_positions[property] = *((int *)value);
 
     return ENGINE_OK;
 }
 
 int equalizer_get_property(engine_processor_s * processor, int property, void * value) {
+    LOG_INFO(LOG_TAG, "property get [%i] = %i", property, *((int *)value));
+
     *((int *) value) = slider_positions[property];
     return ENGINE_OK;
 }

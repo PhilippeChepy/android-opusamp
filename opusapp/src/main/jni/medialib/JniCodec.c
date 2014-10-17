@@ -273,6 +273,7 @@ JNIEXPORT jlong JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_engineEqua
 	engine_context_s * engine = id_to_ptr(engineJ);
 
     if (engine != NULL) {
+        engine_dsp_clear(engine, 0);
 		engine_dsp_set_enabled(engine, 0, enabled ? 1 : 0);
 	}
 

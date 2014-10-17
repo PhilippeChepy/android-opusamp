@@ -30,14 +30,11 @@ import net.opusapp.player.utils.LogUtils;
 
 public class SoundEffectsActivity extends ActionBarActivity {
 
-    private BandView bandList[] = new BandView[19];
+    private BandView bandList[] = new BandView[11];
 
     private String frequencies[] = new String[] {
             "PREAMP",
-            "55 Hz", "77 Hz", "110 Hz",
-            "156 Hz", "220 Hz", "311 Hz", "440 Hz", "622 Hz", "880 Hz", "1.2 kHz",
-            "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
-            "20 kHz"
+            "31.5 Hz", "63 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz"
     };
 
     private CheckBox equalizerEnabledCheckbox;
@@ -47,11 +44,16 @@ public class SoundEffectsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.view_equalizer);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         equalizerEnabledCheckbox = (CheckBox) findViewById(R.id.equalizer_enabled);
 
         final LinearLayout bandContainerLayout = (LinearLayout) findViewById(R.id.equalizer_bands);
-        for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
+        for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
             final View bandView = LayoutInflater.from(this).inflate(R.layout.view_equalizer_band, bandContainerLayout, false);
 
             bandList[bandIndex] = new BandView();
@@ -72,16 +74,16 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         doUpdateBandState();
 
+        for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
+            bandList[bandIndex].seekBar.setOnSeekBarChangeListener(new BandListener(bandIndex));
+        }
+
         equalizerEnabledCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 applyBandState();
             }
         });
-
-        for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
-            bandList[bandIndex].seekBar.setOnSeekBarChangeListener(new BandListener(bandIndex));
-        }
     }
 
     protected void doUpdateBandState() {
@@ -89,7 +91,7 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         equalizerEnabledCheckbox.setChecked(player.equalizerIsEnabled());
 
-        for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
+        for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
             bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
             bandList[bandIndex].seekBar.setProgress((int) player.equalizerBandGetGain(bandIndex));
         }
@@ -99,7 +101,7 @@ public class SoundEffectsActivity extends ActionBarActivity {
         final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
         player.equalizerSetEnabled(equalizerEnabledCheckbox.isChecked());
 
-        for (int bandIndex = 0 ; bandIndex < 19 ; bandIndex++) {
+        for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
             bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
         }
     }
@@ -116,16 +118,15 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         int bandIndex;
 
-        int newValue;
-
         public BandListener(int bandIndex) {
             this.bandIndex = bandIndex;
-            this.newValue = 0;
         }
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            newValue = progress;
+            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+            player.equalizerBandSetGain(bandIndex, progress);
+            player.equalizerBandSetGain(bandIndex + 11, progress);
         }
 
         @Override
@@ -135,12 +136,9 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            LogUtils.LOGW("SoundEffectActivity", "Applying gain[" + bandIndex + "] = " + newValue);
+            LogUtils.LOGW("SoundEffectActivity", "Applying gain");
 
             final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
-
-            player.equalizerBandSetGain(bandIndex, newValue);
-            player.equalizerBandSetGain(bandIndex + 19, newValue);
             player.equalizerApplyProperties();
         }
     }
