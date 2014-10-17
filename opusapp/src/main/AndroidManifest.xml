@@ -47,6 +47,7 @@
             android:name=".ui.activities.SetupActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
         </activity>
+
         <activity
             android:name=".ui.activities.LibraryMainActivity"
             android:launchMode="singleTop"
@@ -132,10 +133,6 @@
         </activity>
         <activity
             android:name=".core.service.providers.local.ui.activities.SettingsActivity"
-            android:label="@string/activity_label_files_to_scan" >
-        </activity>
-        <activity
-            android:name=".core.service.providers.deezer.ui.activities.ConnectionActivity"
             android:label="@string/activity_label_files_to_scan" >
         </activity>
         <activity

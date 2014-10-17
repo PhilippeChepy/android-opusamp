@@ -14,7 +14,6 @@ package net.opusapp.player.core.service.providers;
 
 import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.deezer.DeezerMediaManager;
 import net.opusapp.player.core.service.providers.local.LocalMediaManager;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
@@ -70,8 +69,8 @@ public class MediaManagerFactory {
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:
                 return new DlnaMediaManager(providerId);
             */
-            case AbstractMediaManager.DEEZER_MEDIA_MANAGER:
-                return new DeezerMediaManager(providerId);
+            //case AbstractMediaManager.DEEZER_MEDIA_MANAGER:
+            //    return new DeezerMediaManager(providerId);
             /*
             case AbstractMediaManager.GROOVESHARK_MEDIA_MANAGER:
                 return new GroovesharkMediaManager(providerId);
