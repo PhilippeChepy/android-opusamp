@@ -311,6 +311,14 @@ JNIEXPORT jboolean JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_engineE
 	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
 	engine_context_s * engine = id_to_ptr(engineJ);
 
+    engine_dsp_clear(engine, 0);
     return engine_dsp_is_enabled(engine, 0) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jboolean JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_engineEqualizerApplyProperties(JNIEnv * env, jobject object) {
+    jclass cls = (*env)->GetObjectClass(env, object);
+	jlong engineJ = (*env)->GetLongField(env, object, (*env)->GetFieldID(env, cls, "engineContext", "J"));
+	engine_context_s * engine = id_to_ptr(engineJ);
+
+    return engine_dsp_apply_properties(engine, 0) ? JNI_TRUE : JNI_FALSE;
+}

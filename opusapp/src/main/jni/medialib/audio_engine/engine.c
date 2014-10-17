@@ -14,7 +14,7 @@
 #include <audio_engine/engine.h>
 #include <audio_engine/outputs/safetrack.h>
 #include <audio_engine/inputs/ffinput.h>
-#include <audio_engine/effects/equalizer.h>
+#include <audio_engine/processor/equalizer.h>
 #include <audio_engine/utils/memory.h>
 #include <audio_engine/utils/log.h>
 
@@ -26,16 +26,6 @@
 
 long input_data_callback(engine_stream_context_s * stream, void * data_buffer, size_t data_length) {
 	size_t total_write_length = 0;
-
-	size_t processor_index;
-
-	/* processing raw samples*/
-	for (processor_index = 0 ; processor_index < stream->engine->processor_count ; processor_index++) {
-	    engine_processor_s * processor = stream->engine->processor_list[processor_index];
-	    if (processor->enabled) {
-	        processor->process(processor, data_buffer, data_length);
-	    }
-	}
 
     /* writing data to audio buffer */
 	do {
@@ -93,6 +83,8 @@ long output_data_callback(engine_stream_context_s * stream, void * data_buffer, 
 	size_t total_read_length = 0;
 	size_t data_length = nb_samples * stream->engine->channel_count;
 
+	size_t processor_index;
+
 	do {
 		/* sync */ pthread_mutex_lock(&stream->buffer_lock);
 
@@ -113,6 +105,14 @@ long output_data_callback(engine_stream_context_s * stream, void * data_buffer, 
 			break;
 		}
 	} while (total_read_length < data_length);
+
+	/* processing raw samples*/
+	for (processor_index = 0 ; processor_index < stream->engine->processor_count ; processor_index++) {
+	    engine_processor_s * processor = stream->engine->processor_list[processor_index];
+	    if (processor->enabled) {
+	        processor->process(processor, data_buffer, total_read_length);
+	    }
+	}
 
 	return (total_read_length / sizeof(int16_t)) / stream->engine->channel_count;
 }
@@ -238,6 +238,14 @@ int engine_dsp_set_property(engine_context_s * engine, int dsp_id, int property,
 
 int engine_dsp_get_property(engine_context_s * engine, int dsp_id, int property, void * value) {
     return engine->processor_list[dsp_id]->get_property(engine->processor_list[dsp_id], property, value);
+}
+
+int engine_dsp_clear(engine_context_s * engine, int dsp_id) {
+    return engine->processor_list[dsp_id]->clear(engine->processor_list[dsp_id]);
+}
+
+int engine_dsp_apply_properties(engine_context_s * engine, int dsp_id) {
+    return engine->processor_list[dsp_id]->apply_properties(engine->processor_list[dsp_id]);
 }
 
 int engine_set_completion_callback(engine_context_s * engine, engine_completion_callback callback) {
@@ -410,6 +418,8 @@ int engine_stream_get_position(engine_stream_context_s * stream, int64_t * posit
 }
 
 int engine_stream_set_position(engine_stream_context_s * stream, int64_t position) {
+    size_t processor_index;
+
     LOG_INFO(LOG_TAG, "engine_stream_set_position()");
 
 	/* sync */ pthread_mutex_lock(&stream->buffer_lock);
@@ -421,6 +431,15 @@ int engine_stream_set_position(engine_stream_context_s * stream, int64_t positio
 	/* sync */ pthread_mutex_unlock(&stream->buffer_lock);
 
 	/* TODO: add buffer reconstruction */
+
+
+	/* processing raw samples*/
+	for (processor_index = 0 ; processor_index < stream->engine->processor_count ; processor_index++) {
+	    engine_processor_s * processor = stream->engine->processor_list[processor_index];
+	    if (processor->enabled) {
+	        processor->clear(processor);
+	    }
+	}
 
 	return ENGINE_OK; /* TODO: add error checking */
 }

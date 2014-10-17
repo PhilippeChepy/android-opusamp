@@ -79,6 +79,11 @@ public class DeezerPlayer implements AbstractMediaManager.Player {
     }
 
     @Override
+    public boolean equalizerApplyProperties() {
+        return false;
+    }
+
+    @Override
     public void addCompletionListener(OnProviderCompletionListener listener) {
 
     }

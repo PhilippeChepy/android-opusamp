@@ -5,8 +5,8 @@
 #include <audio_engine/utils/log.h>
 #include <audio_engine/utils/real.h>
 
-#include <audio_engine/effects/equalizer.h>
-#include <audio_engine/effects/utils/fft.h>
+#include <audio_engine/processor/equalizer.h>
+#include <audio_engine/processor/utils/fft.h>
 
 #define LOG_TAG "(jni)audio_processor:equalizer.c"
 
@@ -494,15 +494,15 @@ int equalizer_impl_apply_properties(engine_processor_s * processor) {
 
 	for (ch = 0 ; ch < 2 ; ch++) {
         float preamp = pow(10, (GAIN_HALF - slider_positions[ch * 19]) / -20.0);
-        LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : preamp = %e", ch * 19, preamp);
+        //LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : preamp = %e", ch * 19, preamp);
 
         for(i = 0 ; i < 18 ; i++) {
             band_values[i + ch * 18] = preamp * pow(10, (GAIN_HALF - slider_positions[1 + i + ch * 19]) / -20.0);
-            LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : band[%i] = %e (10^((14 - %i)/-20)",
-                    1 + i + ch * 19,
-                    i + ch * 18,
-                    band_values[i + ch * 18],
-                    slider_positions[1 + i + ch * 19]);
+            //LOG_INFO(LOG_TAG, "equalizer_impl_apply_properties: sl[%i] : band[%i] = %e (10^((14 - %i)/-20)",
+            //        1 + i + ch * 19,
+            //        i + ch * 18,
+            //        band_values[i + ch * 18],
+            //        slider_positions[1 + i + ch * 19]);
         }
 	}
 
@@ -542,14 +542,8 @@ char * equalizer_get_name(engine_context_s * engine) {
 }
 
 int equalizer_set_property(engine_processor_s * processor, int property, void *value) {
-    equalizer_state_s * equalizer_state = (equalizer_state_s *)processor->context;
-
     LOG_INFO(LOG_TAG, "property [%i] = %i", property, *((int *)value));
-    pthread_mutex_lock(&equalizer_state->table_lock);
-        slider_positions[property] = *((int *)value);
-        equalizer_impl_apply_properties(processor);
-        equalizer_state->needs_table_update = 1;
-    pthread_mutex_unlock(&equalizer_state->table_lock);
+    slider_positions[property] = *((int *)value);
 
     return ENGINE_OK;
 }
@@ -563,17 +557,28 @@ int equalizer_process(engine_processor_s * processor, void * data_buffer, size_t
     equalizer_state_s * equalizer_state = (equalizer_state_s *)processor->context;
 
     pthread_mutex_lock(&equalizer_state->table_lock);
-        if (equalizer_state->needs_table_update) {
-            equalizer_impl_prepare_table(processor->context, band_values, processor->engine->sampling_rate);
-            equalizer_state->needs_table_update = 0;
-        }
+        equalizer_impl_process(processor->context, (char *)data_buffer, data_length/4, processor->engine->channel_count, 16);
     pthread_mutex_unlock(&equalizer_state->table_lock);
-
-	equalizer_impl_process(processor->context, (char *)data_buffer, data_length/4, processor->engine->channel_count, 16);
 
     return ENGINE_OK;
 }
 
+int equalizer_apply_properties(engine_processor_s * processor) {
+    equalizer_state_s * equalizer_state = (equalizer_state_s *)processor->context;
+
+    pthread_mutex_lock(&equalizer_state->table_lock);
+        equalizer_impl_apply_properties(processor);
+        equalizer_impl_prepare_table(processor->context, band_values, processor->engine->sampling_rate);
+    pthread_mutex_unlock(&equalizer_state->table_lock);
+
+    return ENGINE_OK;
+}
+
+int equalizer_clear(engine_processor_s * processor) {
+    LOG_INFO(LOG_TAG, "equalizer_clear()");
+    equalizer_impl_clear_buffer(processor->context);
+    return ENGINE_OK;
+}
 
 static engine_processor_s equalizer_processor = {
 	.create = equalizer_new,
@@ -582,8 +587,10 @@ static engine_processor_s equalizer_processor = {
 
     .set_property = equalizer_set_property,
     .get_property = equalizer_get_property,
-    .apply_properties = NULL, //equalizer_apply_properties,
-    .process = equalizer_process
+    .apply_properties = equalizer_apply_properties,
+
+    .process = equalizer_process,
+    .clear = equalizer_clear
 };
 
 engine_processor_s * get_equalizer_processor() {

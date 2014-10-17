@@ -67,6 +67,8 @@ public abstract class JniMediaLib {
 
     protected native int engineEqualizerBandGetValue(int bandId);
 
+    protected native boolean engineEqualizerApplyProperties();
+
 
     protected native long streamInitialize(String mediaPath);
 

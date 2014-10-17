@@ -176,8 +176,15 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         database.update(Entities.Media.TABLE_NAME, values, where, whereArgs);
     }
 
-    @Override
-    public void erase() {
+    protected void doEraseProviderData() {
+        int playerIndex = PlayerApplication.getLibraryPlayerIndex();
+        int currentIndex = PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId());
+
+        if (playerIndex == currentIndex) {
+            PlayerApplication.mediaManagers[playerIndex].getPlayer().playerStop();
+            PlayerApplication.playerManagerIndex = 0;
+        }
+
         openHelper.deleteDatabaseFile();
 
         File filePath = PlayerApplication.context.getFilesDir();
@@ -186,6 +193,32 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             if (!providerPrefs.delete()) {
                 LogUtils.LOGE(TAG, "deleting provider-" + mediaManager.getMediaManagerId() + " preferences failed");
             }
+        }
+    }
+
+    @Override
+    public void erase() {
+
+        addLibraryChangeListener(new OnLibraryChangeListener() {
+            @Override
+            public void libraryChanged() {
+            }
+
+            @Override
+            public void libraryScanStarted() {
+            }
+
+            @Override
+            public void libraryScanFinished() {
+                doEraseProviderData();
+            }
+        });
+
+        if (scanIsRunning()) {
+            scanCancel();
+        }
+        else {
+            doEraseProviderData();
         }
     }
 
@@ -2818,7 +2851,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             mediaTags.remove(Entities.Media.COLUMN_FIELD_ART);
                             mediaTags.remove(Entities.Media.COLUMN_FIELD_ORIGINAL_ART);
                         }
-
 
                         mediaTags.put(Entities.Media.COLUMN_FIELD_ARTIST_ID, getArtistId(mediaTags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST), scanContext));
                         mediaTags.put(Entities.Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(mediaTags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM), scanContext));

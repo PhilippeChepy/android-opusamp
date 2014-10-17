@@ -204,6 +204,11 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
         return engineEqualizerBandGetValue(band);
     }
 
+    @Override
+    public boolean equalizerApplyProperties() {
+        return engineEqualizerApplyProperties();
+    }
+
     private ArrayList<OnProviderCompletionListener> listenerList = new ArrayList<OnProviderCompletionListener>();
 
 	@Override

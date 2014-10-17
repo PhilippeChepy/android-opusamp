@@ -309,6 +309,7 @@ int safetrack_stream_new(engine_context_s * engine, engine_stream_context_s * st
     stream->stream_output_specific = audiotrack_stream;
 	stream->last_timestamp = 0;
 	stream->last_timestamp_update = 0;
+	audiotrack_stream->written_samples = 0;
 
 	return ENGINE_OK;
 }

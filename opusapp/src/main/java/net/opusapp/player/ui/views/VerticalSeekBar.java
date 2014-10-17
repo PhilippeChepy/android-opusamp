@@ -9,33 +9,34 @@
  * You shall not disclose such Confidential Information.
  *
  * http://www.chepy.eu
- */package net.opusapp.player.ui.views;
+ */
+package net.opusapp.player.ui.views;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.SeekBar;
 
 public class VerticalSeekBar extends SeekBar {
 
+    private OnSeekBarChangeListener mListener;
+
     public VerticalSeekBar(Context context) {
         super(context);
     }
 
-    public VerticalSeekBar(Context context, AttributeSet attributeSet) {
-        super(context, attributeSet);
+    public VerticalSeekBar(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
     }
 
-    public VerticalSeekBar(Context context, AttributeSet attributeSet, int defStyle) {
-        super(context, attributeSet, defStyle);
+    public VerticalSeekBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
-    @Override
-    protected synchronized void onDraw(Canvas canvas) {
-        canvas.rotate(-90.0f);
-        canvas.translate(-getHeight(), 0.0f);
-        super.onDraw(canvas);
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(h, w, oldh, oldw);
     }
 
     @Override
@@ -45,22 +46,35 @@ public class VerticalSeekBar extends SeekBar {
     }
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(h, w, oldh, oldw);
+    public void setOnSeekBarChangeListener(OnSeekBarChangeListener mListener) {
+        this.mListener = mListener;
+    }
+
+    protected void onDraw(@NonNull Canvas c) {
+        c.rotate(-90);
+        c.translate(-getHeight(), 0);
+
+        super.onDraw(c);
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
         if (!isEnabled()) {
             return false;
         }
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if (mListener != null)
+                    mListener.onStartTrackingTouch(this);
+                break;
             case MotionEvent.ACTION_MOVE:
-            case MotionEvent.ACTION_UP:
                 setProgress(getMax() - (int) (getMax() * event.getY() / getHeight()));
                 onSizeChanged(getWidth(), getHeight(), 0, 0);
+                mListener.onProgressChanged(this, getMax() - (int) (getMax() * event.getY() / getHeight()), true);
+                break;
+            case MotionEvent.ACTION_UP:
+                mListener.onStopTrackingTouch(this);
                 break;
 
             case MotionEvent.ACTION_CANCEL:

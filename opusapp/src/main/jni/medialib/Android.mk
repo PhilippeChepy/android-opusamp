@@ -21,15 +21,16 @@ SRCS :=  audio_engine/outputs/safetrack.c \
 	audio_engine/inputs/ffinput.c \
 	audio_engine/utils/memory.c \
 	audio_engine/utils/circular_buffer.c \
-	audio_engine/effects/equalizer.c \
-	audio_engine/effects/utils/fft.c \
-	audio_engine/effects/utils/nsfft/simd/SIMDBase.c \
-	audio_engine/effects/utils/nsfft/simd/SIMDBaseUndiff.c \
-	audio_engine/effects/utils/nsfft/dft/DFT.c \
-	audio_engine/effects/utils/nsfft/dft/DFTUndiff.c \
+	audio_engine/processor/equalizer.c \
+	audio_engine/processor/utils/fft.c \
 	audio_engine/engine.c \
 	JniCodec.c \
 	TagProvider.cpp
+
+#	audio_engine/effects/utils/nsfft/dft/DFT.c \
+#	audio_engine/effects/utils/nsfft/dft/DFTUndiff.c \
+#	audio_engine/processor/utils/nsfft/simd/SIMDBase.c \
+#	audio_engine/effects/utils/nsfft/simd/SIMDBaseUndiff.c \
 
 LOCAL_SRC_FILES := $(SRCS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)

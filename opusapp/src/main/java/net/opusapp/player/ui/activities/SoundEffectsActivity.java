@@ -26,6 +26,7 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.VerticalSeekBar;
+import net.opusapp.player.utils.LogUtils;
 
 public class SoundEffectsActivity extends ActionBarActivity {
 
@@ -115,15 +116,16 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         int bandIndex;
 
+        int newValue;
+
         public BandListener(int bandIndex) {
             this.bandIndex = bandIndex;
+            this.newValue = 0;
         }
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
-            player.equalizerBandSetGain(bandIndex, progress);
-            player.equalizerBandSetGain(bandIndex + 19, progress);
+            newValue = progress;
         }
 
         @Override
@@ -133,7 +135,13 @@ public class SoundEffectsActivity extends ActionBarActivity {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
+            LogUtils.LOGW("SoundEffectActivity", "Applying gain[" + bandIndex + "] = " + newValue);
 
+            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+
+            player.equalizerBandSetGain(bandIndex, newValue);
+            player.equalizerBandSetGain(bandIndex + 19, newValue);
+            player.equalizerApplyProperties();
         }
     }
 }
