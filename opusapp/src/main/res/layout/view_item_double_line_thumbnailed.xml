@@ -10,6 +10,8 @@
 
     <net.opusapp.player.ui.views.SquareImageView
         android:id="@+id/image"
+        android:layout_marginLeft="@dimen/item_normal_image_margin"
+        android:layout_marginStart="@dimen/item_normal_image_margin"
         android:layout_width="@dimen/item_normal_image_width"
         android:layout_height="@dimen/item_normal_image_width"
         android:scaleType="centerCrop" />
