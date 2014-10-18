@@ -3279,8 +3279,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public class LocationAction implements AbstractMediaManager.ProviderAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.preference_title_settings_location);
+        public int getDescription() {
+            return R.string.preference_title_settings_location;
         }
 
         @Override
@@ -3300,8 +3300,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public class SettingsAction implements AbstractMediaManager.ProviderAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.drawer_item_label_library_settings);
+        public int getDescription() {
+            return R.string.drawer_item_label_library_settings;
         }
 
         @Override
@@ -3321,65 +3321,65 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public class AlbumArtistEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.ni_artists);
+        public int getDescription() {
+            return R.string.ni_artists;
         }
 
         @Override
-        public String getActionDescription() {
-            return PlayerApplication.context.getString(R.string.ni_artists_hint);
+        public int getActionDescription() {
+            return R.string.ni_artists_hint;
         }
     }
 
     public class AlbumEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.ni_albums);
+        public int getDescription() {
+            return R.string.ni_albums;
         }
 
         @Override
-        public String getActionDescription() {
-            return PlayerApplication.context.getString(R.string.ni_albums_hint);
+        public int getActionDescription() {
+            return R.string.ni_albums_hint;
         }
     }
 
     public class ArtistEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.ni_artists);
+        public int getDescription() {
+            return R.string.ni_artists;
         }
 
         @Override
-        public String getActionDescription() {
-            return PlayerApplication.context.getString(R.string.ni_artists_hint);
+        public int getActionDescription() {
+            return R.string.ni_artists_hint;
         }
     }
 
     public class GenreEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.ni_genres);
+        public int getDescription() {
+            return R.string.ni_genres;
         }
 
         @Override
-        public String getActionDescription() {
-            return PlayerApplication.context.getString(R.string.ni_genres_hint);
+        public int getActionDescription() {
+            return R.string.ni_genres_hint;
         }
     }
 
     public class SongEmptyAction extends LocationAction implements AbstractMediaManager.AbstractEmptyContentAction {
 
         @Override
-        public String getDescription() {
-            return PlayerApplication.context.getString(R.string.ni_songs);
+        public int getDescription() {
+            return R.string.ni_songs;
         }
 
         @Override
-        public String getActionDescription() {
-            return PlayerApplication.context.getString(R.string.ni_songs_hint);
+        public int getActionDescription() {
+            return R.string.ni_songs_hint;
         }
     }
 }

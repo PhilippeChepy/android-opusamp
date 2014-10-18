@@ -23,24 +23,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.internal.view.SupportMenuItem;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
+import android.view.SubMenu;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
@@ -48,11 +43,7 @@ import com.astuetz.PagerSlidingTabStrip;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.index.database.Entities;
-import net.opusapp.player.ui.adapter.ux.NavigationDrawerAdapter;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
-import net.opusapp.player.ui.drawer.AbstractNavigationDrawerItem;
-import net.opusapp.player.ui.drawer.NavigationMenuItem;
-import net.opusapp.player.ui.drawer.NavigationMenuSection;
 import net.opusapp.player.ui.fragments.AlbumArtistFragment;
 import net.opusapp.player.ui.fragments.AlbumFragment;
 import net.opusapp.player.ui.fragments.ArtistFragment;
@@ -65,7 +56,6 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class LibraryMainActivity extends AbstractPlayerActivity {
 
@@ -99,28 +89,21 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
 
 
-    /*
-        Actionbar search system
-     */
+    // Actionbar search system
     private SearchView searchView;
 
 
 
-    /*
-        Actionbar items
-     */
+    // Actionbar items
     private MenuItem sortMenuItem;
 
     private MenuItem searchMenuItem;
 
     private MenuItem reloadMenuItem;
-    //private MenuItem recentMenuItem = null;
 
 
 
-    /*
-        Main content
-     */
+    // Main content
     private ViewPager libraryPager;
 
     private PagerAdapter libraryAdapter;
@@ -129,29 +112,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
 
 
-    /*
-        Navigation
-     */
+    // Navigation
     private ArrayAdapter<CollectionDescriptor> navigationAdapter;
 
     private static final int ID_LIBRARY_MANAGEMENT = -1;
 
 
 
-    /*
-        Drawer
-     */
-    private DrawerLayout drawerLayout;
-
-    private ListView drawerList;
-
-    private ActionBarDrawerToggle drawerToggle;
-
-
-
-    /*
-        UI/UX vars
-     */
     private boolean doubleBackToExitPressedOnce = false;
 
 
@@ -192,6 +159,54 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         updateReloadMenuItem();
 
+        final MenuItem audioEffectsMenuItem = menu.add(Menu.NONE, DRAWERITEM_AUDIO_FX_ID, 8, R.string.drawer_item_label_library_soundfx);
+        audioEffectsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
+                return true;
+            }
+        });
+
+        final SubMenu options = menu.addSubMenu(Menu.NONE, 0, 9, R.string.menuitem_label_other_options);
+
+        int menuIndex = 1;
+
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getAbstractProviderActionList();
+
+        if (providerActionList != null) {
+            for (int index = 0; index < providerActionList.length; index++) {
+                final AbstractMediaManager.ProviderAction providerAction = providerActionList[index];
+
+                if (providerAction.isVisible()) {
+                    final MenuItem menuItem = options.add(Menu.NONE, 200 + index, menuIndex++, providerAction.getDescription());
+                    menuItem.setIcon(R.drawable.ic_action_tiles_large);
+                    menuItem.setOnMenuItemClickListener(new ActionMenuItemClickListener(index));
+                }
+            }
+        }
+
+        final MenuItem libraryManagementMenuItem = options.add(Menu.NONE, DRAWERITEM_LIBRARY_SETTINGS_ID, menuIndex++, R.string.drawer_item_label_manage_libraries);
+        libraryManagementMenuItem.setIcon(R.drawable.ic_action_database);
+        libraryManagementMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                doLibraryManagement();
+                return true;
+            }
+        });
+
+        final MenuItem settingsMenuItem = options.add(Menu.NONE, DRAWERITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_application_settings);
+        settingsMenuItem.setIcon(R.drawable.ic_action_settings);
+        settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
+                return true;
+            }
+        });
+
         return true;
     }
 
@@ -211,33 +226,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         scrollingTabs.setOnPageChangeListener(scrollingTabsOnPageChangeListener);
         scrollingTabs.setIndicatorColorResource(R.color.view_scrollingtabs_color);
 
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        drawerList = (ListView) findViewById(R.id.list_drawer);
-        drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //        getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
-            public void onDrawerClosed(View view) {
-                getSupportActionBar().setDisplayShowTitleEnabled(false);
-                getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-                super.onDrawerClosed(view);
-            }
-
-            public void onDrawerOpened(View drawerView) {
-                getSupportActionBar().setDisplayShowTitleEnabled(true);
-                getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-                super.onDrawerOpened(drawerView);
-            }
-        };
-        drawerLayout.setDrawerListener(drawerToggle);
 
         getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         doInitLibrary();
@@ -298,13 +293,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        drawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        drawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -316,21 +309,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
 
         super.onDestroy();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                if (drawerLayout.isDrawerOpen(drawerList)) {
-                    drawerLayout.closeDrawer(drawerList);
-                } else {
-                    drawerLayout.openDrawer(drawerList);
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
@@ -398,15 +376,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     }
 
-    public void setSwipeMenuEnabled(boolean enabled) {
-        if (enabled) {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        }
-        else {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        }
-    }
-
     // SearchView listener
     private final SearchView.OnQueryTextListener searchViewOnQueryTextListener = new SearchView.OnQueryTextListener() {
 
@@ -434,44 +403,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             return false;
         }
     };
-
-    private class DrawerItemClickListener implements ListView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            selectItem(position);
-        }
-    }
-
-    public void selectItem(int position) {
-        drawerLayout.closeDrawers();
-
-        final AbstractNavigationDrawerItem abstractNavigationDrawerItem = (AbstractNavigationDrawerItem)drawerList.getItemAtPosition(position);
-        if (abstractNavigationDrawerItem != null) {
-            int menuItemId = abstractNavigationDrawerItem.getId();
-            switch (menuItemId) {
-                case DRAWERITEM_LIBRARY_SETTINGS_ID:
-                    doLibraryManagement();
-                    break;
-                case DRAWERITEM_APPLICATION_SETTINGS_ID:
-                    startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
-                    break;
-                case DRAWERITEM_AUDIO_FX_ID:
-                    startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
-                    break;
-                default:
-                    final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-                    final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(menuItemId - 200);
-                    if (providerAction != null) {
-                        providerAction.launch(this);
-                    }
-            }
-
-        }
-
-        if (drawerLayout.isDrawerOpen(drawerList)) {
-            drawerLayout.closeDrawer(drawerList);
-        }
-    }
 
     //    ScrollingTabs listener
     private final ViewPager.OnPageChangeListener scrollingTabsOnPageChangeListener = new ViewPager.SimpleOnPageChangeListener() {
@@ -871,31 +802,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     protected void doInitLibraryContent() {
         initLibraryView();
-
-        ArrayList<AbstractNavigationDrawerItem> objects = new ArrayList<AbstractNavigationDrawerItem>();
-        objects.add(NavigationMenuSection.create(DRAWERITEM_SEPARATOR_ID, getString(R.string.drawer_section_label_media_management)));
-
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getAbstractProviderActionList();
-
-        if (providerActionList != null) {
-            for (int index = 0; index < providerActionList.length; index++) {
-                final AbstractMediaManager.ProviderAction providerAction = providerActionList[index];
-
-                if (providerAction.isVisible()) {
-                    objects.add(NavigationMenuItem.create(200 + index, providerAction.getDescription(), R.drawable.ic_action_tiles_large, false));
-                }
-            }
-        }
-
-        objects.add(NavigationMenuSection.create(DRAWERITEM_SEPARATOR_ID, getString(R.string.drawer_section_label_label_settings)));
-
-        objects.add(NavigationMenuItem.create(DRAWERITEM_AUDIO_FX_ID, getString(R.string.drawer_item_label_library_soundfx), R.drawable.ic_action_database, false));
-        objects.add(NavigationMenuItem.create(DRAWERITEM_LIBRARY_SETTINGS_ID, getString(R.string.drawer_item_label_manage_libraries), R.drawable.ic_action_database, false));
-        objects.add(NavigationMenuItem.create(DRAWERITEM_APPLICATION_SETTINGS_ID, getString(R.string.drawer_item_label_application_settings), R.drawable.ic_action_settings, false));
-
-        final NavigationDrawerAdapter navigationDrawerAdapter = new NavigationDrawerAdapter(this, R.layout.view_drawer_item_single_line, objects);
-        drawerList.setAdapter(navigationDrawerAdapter);
 
         //    Launching scan.
         for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
@@ -919,35 +826,27 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         if (itemClass.equals(PlaylistFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(ArtistFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(AlbumArtistFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(AlbumFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(SongFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(GenreFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else if (itemClass.equals(StorageFragment.class)) {
             sortMenuItem.setVisible(true);
-//            recentMenuItem.setVisible(false);
         }
         else {
             sortMenuItem.setVisible(false);
-//            recentMenuItem.setVisible(false);
         }
     }
 
@@ -967,6 +866,26 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public String toString() {
             return description;
+        }
+    }
+
+    class ActionMenuItemClickListener implements MenuItem.OnMenuItemClickListener {
+
+        private final int index;
+
+        public ActionMenuItemClickListener(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+            final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(index);
+            if (providerAction != null) {
+                providerAction.launch(LibraryMainActivity.this);
+            }
+
+            return true;
         }
     }
 

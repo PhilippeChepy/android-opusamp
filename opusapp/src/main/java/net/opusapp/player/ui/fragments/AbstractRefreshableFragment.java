@@ -44,7 +44,7 @@ public abstract class AbstractRefreshableFragment extends Fragment {
         if (emptyContentAction != null) {
             descriptionView.setText(emptyContentAction.getDescription());
 
-            SpannableString content = new SpannableString(emptyContentAction.getActionDescription());
+            SpannableString content = new SpannableString(getString(emptyContentAction.getActionDescription()));
             content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
 
             actionView.setText(content);

@@ -279,13 +279,13 @@ public interface AbstractMediaManager {
     }
 
     public interface ProviderAction {
-        public String getDescription();
+        public int getDescription();
         public boolean isVisible();
         public void launch(Activity source);
     }
 
     public interface AbstractEmptyContentAction extends ProviderAction {
-        public String getDescription();
-        public String getActionDescription();
+        public int getDescription();
+        public int getActionDescription();
     }
 }

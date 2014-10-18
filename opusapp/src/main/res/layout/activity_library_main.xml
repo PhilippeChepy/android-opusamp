@@ -32,15 +32,4 @@
 
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
-    <ListView
-        android:id="@+id/list_drawer"
-        android:layout_width="280dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:background="@color/holo_light"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0.1dp" />
-
 </android.support.v4.widget.DrawerLayout>
