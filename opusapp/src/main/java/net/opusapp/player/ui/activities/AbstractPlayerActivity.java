@@ -496,17 +496,17 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, getSupportActionBar().isShowing());
+//        outState.putBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, getSupportActionBar().isShowing());
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState.getBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, true)) {
-            getSupportActionBar().show();
+//            getSupportActionBar().show();
         }
         else {
-            getSupportActionBar().hide();
+//            getSupportActionBar().hide();
         }
     }
 
@@ -781,6 +781,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         @Override
         public void onPanelSlide(View view, float v) {
+/*
             if (v >= 0.8) {
                 if (getSupportActionBar().isShowing()) {
                     getSupportActionBar().hide();
@@ -798,6 +799,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                     }
                 }
             }
+*/
         }
 
         @Override

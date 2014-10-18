@@ -14,9 +14,7 @@
     </style>
 
     <style name="AudioKit.NavigationDrawer" parent="AudioKit">
-        <item name="homeAsUpIndicator">@drawable/ic_drawer</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="windowActionBarOverlay">true</item>
+        <!--<item name="homeAsUpIndicator">@drawable/ic_drawer</item>-->
     </style>
 
     <style name="PlayerButton">

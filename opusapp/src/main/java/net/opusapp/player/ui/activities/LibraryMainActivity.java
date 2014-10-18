@@ -31,6 +31,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -167,17 +168,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         searchView.setOnCloseListener(searchViewOnCloseListener);
 
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
+        sortMenuItem.setIcon(R.drawable.ic_action_sort_2);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
         searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
-        searchMenuItem.setIcon(R.drawable.ic_action_search_dark);
+        searchMenuItem.setIcon(R.drawable.ic_action_search);
         MenuItemCompat.setActionView(searchMenuItem, searchView);
         MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
         final MenuItem hiddenMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 4, R.string.menuitem_label_show_hidden);
-        hiddenMenuItem.setIcon(R.drawable.ic_action_show_dark);
+        hiddenMenuItem.setIcon(R.drawable.ic_action_show);
         hiddenMenuItem.setCheckable(true);
         MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
@@ -216,8 +217,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         drawerList = (ListView) findViewById(R.id.list_drawer);
         drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolbar);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
@@ -286,7 +290,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                             position);
 
                     getSlidingPanel().expandPanel();
-                    getSupportActionBar().hide();
                 }
             }
         }
@@ -387,7 +390,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         if (reloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
                 reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                reloadMenuItem.setIcon(R.drawable.ic_action_cancel_dark);
+                reloadMenuItem.setIcon(R.drawable.ic_action_cancel);
             } else {
                 reloadMenuItem.setTitle(R.string.menuitem_label_reload);
                 reloadMenuItem.setIcon(R.drawable.ic_action_reload);

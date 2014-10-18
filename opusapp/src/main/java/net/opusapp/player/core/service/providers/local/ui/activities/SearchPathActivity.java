@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -51,10 +52,11 @@ public class SearchPathActivity extends ActionBarActivity {
 		super.onCreate(bundle);
 
         providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
-		
-		getSupportActionBar().show();
-		
+
 		setContentView(R.layout.activity_library_path);
+
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolbar);
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
@@ -82,7 +84,7 @@ public class SearchPathActivity extends ActionBarActivity {
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add_directory);
-		addMenuItem.setIcon(R.drawable.ic_action_add_dark);
+		addMenuItem.setIcon(R.drawable.ic_action_add);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
 

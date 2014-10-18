@@ -5,7 +5,8 @@
 
   <style name="AudioKit" parent="@style/_AudioKit"/>
 
-  <style name="_AudioKit" parent="Theme.AppCompat.Light.DarkActionBar">
+  <style name="_AudioKit" parent="Theme.AppCompat.Light">
+    <item name="windowActionBar">false</item>
 
     <item name="android:editTextStyle">@style/EditTextAudioKit</item>
 

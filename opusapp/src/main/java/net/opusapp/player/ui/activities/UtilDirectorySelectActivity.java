@@ -12,15 +12,16 @@
  */
 package net.opusapp.player.ui.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.v7.app.ActionBar;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
-import android.view.LayoutInflater;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -53,14 +54,26 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
 	public static boolean isAtRootLevel;
 
     private boolean doubleBackToExitPressedOnce = false;
-	
-	@Override
+
+
+
+    private static final int OPTION_MENUITEM_OK = 1;
+
+    private static final int OPTION_MENUITEM_CANCEL = 2;
+
+
+
+    @Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		
-		setContentView(R.layout.fragment_storage);
-		gridView = (GridView) findViewById(R.id.grid_view_base);
+		setContentView(R.layout.activity_directory_select);
 
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolbar);
+
+
+		gridView = (GridView) findViewById(R.id.grid_view_base);
         pathTextView = (TextView) findViewById(R.id.path);
 
         gridView.setEmptyView(findViewById(R.id.grid_view_empty));
@@ -71,44 +84,47 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
         
         gridView.setOnCreateContextMenuListener(this);
         gridView.setNumColumns(PlayerApplication.getListColumns() / 2);
-        
-     // BEGIN_INCLUDE (inflate_set_custom_view)
-     // Inflate a "Done/Cancel" custom action bar view.
-		final LayoutInflater inflater = (LayoutInflater) getSupportActionBar()
-				.getThemedContext().getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-		
-		final View customActionBarView = inflater.inflate(R.layout.actionbar_confirmation, null);
 
-        if (customActionBarView != null) {
-            customActionBarView.findViewById(R.id.actionbar_done)
-                    .setOnClickListener(new View.OnClickListener() {
-
-                        @Override
-                        public void onClick(View v) {
-                            Intent returnIntent = new Intent();
-                            returnIntent.putExtra(KEY_RESULT, currentFolder.getAbsolutePath());
-                            setResult(RESULT_OK, returnIntent);
-                            finish();
-                        }
-                    });
-
-            customActionBarView.findViewById(R.id.actionbar_discard)
-                    .setOnClickListener(new View.OnClickListener() {
-
-                        @Override
-                        public void onClick(View v) {
-                            Intent returnIntent = new Intent();
-                            setResult(RESULT_CANCELED, returnIntent);
-                            finish();
-                        }
-                    });
-        }
-
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
-        getSupportActionBar().setCustomView(customActionBarView, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        
         setFolder(Environment.getExternalStorageDirectory());
 	}
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        final MenuItem okMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_OK, 1, R.string.menuitem_label_add_library);
+        okMenuItem.setIcon(R.drawable.ic_action_tick);
+        MenuItemCompat.setShowAsAction(okMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+        okMenuItem.setOnMenuItemClickListener(onOKOptionMenuItemListener);
+
+        final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.menuitem_label_add_library);
+        cancelMenuItem.setIcon(R.drawable.ic_action_cancel);
+        MenuItemCompat.setShowAsAction(cancelMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+        cancelMenuItem.setOnMenuItemClickListener(onCancelOptionMenuItemListener);
+
+        return true;
+    }
+
+    final MenuItem.OnMenuItemClickListener onOKOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra(KEY_RESULT, currentFolder.getAbsolutePath());
+            setResult(RESULT_OK, returnIntent);
+            finish();
+            return true;
+        }
+    };
+
+    final MenuItem.OnMenuItemClickListener onCancelOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            Intent returnIntent = new Intent();
+            setResult(RESULT_CANCELED, returnIntent);
+            finish();
+            return true;
+        }
+    };
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {

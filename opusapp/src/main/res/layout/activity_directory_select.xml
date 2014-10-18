@@ -14,6 +14,6 @@
         app:theme="@style/Theme.AppCompat.Light.DarkActionBar"
         app:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar" />
 
-	<include layout="@layout/view_tabbed_pager"/>
+    <include layout="@layout/fragment_storage"/>
 
 </LinearLayout>
