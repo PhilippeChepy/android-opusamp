@@ -111,6 +111,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     private MenuItem sortMenuItem;
 
     private MenuItem searchMenuItem;
+
+    private MenuItem reloadMenuItem;
     //private MenuItem recentMenuItem = null;
 
 
@@ -182,10 +184,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
-        final MenuItem reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
+        reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
         reloadMenuItem.setIcon(R.drawable.ic_action_reload);
         MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
+
+        updateReloadMenuItem();
 
         return true;
     }
@@ -379,6 +383,18 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     }
 
+    protected void updateReloadMenuItem() {
+        if (reloadMenuItem != null) {
+            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
+                reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
+                reloadMenuItem.setIcon(R.drawable.ic_action_cancel_dark);
+            } else {
+                reloadMenuItem.setTitle(R.string.menuitem_label_reload);
+                reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+            }
+        }
+    }
+
     public void setSwipeMenuEnabled(boolean enabled) {
         if (enabled) {
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
@@ -493,7 +509,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     private final MenuItem.OnMenuItemClickListener reloadOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
-            PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanStart();
+            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
+                PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanCancel();
+            }
+            else {
+                PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanStart();
+            }
             return true;
         }
     };
@@ -739,7 +760,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    //setSupportProgressBarIndeterminateVisibility(true);
+                    updateReloadMenuItem();
                 }
             });
         }
@@ -749,8 +770,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    // TODO: support v7 regression.
-                    //setSupportProgressBarIndeterminateVisibility(false);
+                    updateReloadMenuItem();
                 }
             });
         }

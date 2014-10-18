@@ -84,6 +84,7 @@
     <string name="menuitem_label_sort">Sort order</string>
     <string name="menuitem_label_filter">Filter</string>
     <string name="menuitem_label_reload">Reload</string>
+    <string name="menuitem_label_cancel_reload">Cancel Reloading</string>
     <string name="menuitem_label_show_hidden">Show hidden items</string>
     <string name="menuitem_label_share">Share</string>
     <string name="menuitem_label_toggle_car_mode">Car mode</string>

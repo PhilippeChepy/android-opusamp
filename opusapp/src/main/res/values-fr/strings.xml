@@ -86,6 +86,7 @@
     <string name="menuitem_label_sort">Tri</string>
     <string name="menuitem_label_filter">Filtrer</string>
     <string name="menuitem_label_reload">Recharger</string>
+    <string name="menuitem_label_cancel_reload">Annuler le rechargement</string>
     <string name="menuitem_label_show_hidden">Afficher les objets cachés</string>
     <string name="menuitem_label_share">Partager</string>
     <string name="menuitem_label_toggle_car_mode">Mode voiture</string>
