@@ -256,6 +256,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             doManageCommandIntent(intent);
         }
 
+        doUpdateWidgets();
+
         return Service.START_STICKY;
     }
 

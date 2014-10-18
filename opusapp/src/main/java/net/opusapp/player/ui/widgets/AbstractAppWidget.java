@@ -64,10 +64,12 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
     }
 
     public void applyUpdate(Context context) {
-        pushUpdate(context, null);
+        doUpdate(context);
     }
 
     protected abstract void pushUpdate(Context context, final int[] appWidgetIds);
+
+    protected abstract void doUpdate(Context context);
 
     protected void notifyUpdate(final Context context, final int[] appWidgetIds, final RemoteViews views) {
         final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);

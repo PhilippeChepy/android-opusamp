@@ -2,26 +2,18 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/appwidget_4x2_height"
+    android:layout_height="match_parent"
     android:padding="@dimen/widget_margin"
     android:background="@color/transparent_black"
     tools:ignore="ContentDescription" >
 
-    <ImageView
-        android:id="@+id/four_by_two_albumart"
-        android:layout_width="@dimen/appwidget_4x2_artwork_size"
-        android:layout_height="@dimen/appwidget_4x2_artwork_size"
-        android:layout_alignParentLeft="true"
-        android:background="@drawable/no_art_small"
-        android:scaleType="fitXY" />
-
     <LinearLayout
         android:id="@+id/four_by_two_controls"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_toRightOf="@+id/four_by_two_albumart"
+        android:layout_alignParentEnd="true"
         android:divider="?android:listDivider"
         android:gravity="center_vertical"
         android:orientation="horizontal" >
@@ -34,7 +26,6 @@
         <ImageView
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_toRightOf="@id/four_by_two_albumart"
             android:background="@color/gray" />
 
         <ImageButton
@@ -45,7 +36,6 @@
         <ImageView
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_toRightOf="@id/four_by_two_albumart"
             android:background="@color/gray" />
 
         <ImageButton
@@ -55,42 +45,57 @@
     </LinearLayout>
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:layout_above="@+id/four_by_two_controls"
         android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:background="@color/gray"
-        android:layout_toRightOf="@+id/four_by_two_albumart" />
+        android:id="@+id/separator" />
 
     <LinearLayout
-        android:id="@+id/four_by_two_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_gravity="center_vertical"
-        android:layout_toRightOf="@id/four_by_two_albumart"
-        android:orientation="vertical"
-        android:paddingLeft="@dimen/notification_info_container_padding_left"
-        android:paddingTop="@dimen/notification_expanded_content_padding_top" >
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/separator">
 
-        <TextView
-            android:id="@+id/four_by_two_trackname"
-            style="@style/NotificationText"
-            android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_medium"
-            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/four_by_two_albumart"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true"
+            android:background="@drawable/no_art_small" />
 
-        <TextView
-            android:id="@+id/four_by_two_albumname"
-            style="@style/NotificationText"
-            android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_small" />
+        <LinearLayout
+            android:id="@+id/four_by_two_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/notification_info_container_padding_left"
+            android:paddingStart="@dimen/notification_info_container_padding_left"
+            android:paddingTop="@dimen/notification_expanded_content_padding_top"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/four_by_two_artistname"
-            style="@style/NotificationText"
-            android:textColor="@color/transparent_white"
-            android:textSize="@dimen/text_size_small" />
+            <TextView
+                android:id="@+id/four_by_two_trackname"
+                style="@style/NotificationText"
+                android:textColor="@color/transparent_white"
+                android:textSize="@dimen/text_size_medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/four_by_two_albumname"
+                style="@style/NotificationText"
+                android:textColor="@color/transparent_white"
+                android:textSize="@dimen/text_size_small" />
+
+            <TextView
+                android:id="@+id/four_by_two_artistname"
+                style="@style/NotificationText"
+                android:textColor="@color/transparent_white"
+                android:textSize="@dimen/text_size_small" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

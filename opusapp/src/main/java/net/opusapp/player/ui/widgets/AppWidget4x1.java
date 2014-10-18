@@ -27,8 +27,15 @@ public class AppWidget4x1 extends AbstractAppWidget {
     }
 
     @Override
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
     protected void pushUpdate(Context context, int[] appWidgetIds) {
+        final ComponentName serviceName = new ComponentName(context, PlayerService.class);
+        final Intent action = new Intent(PlayerService.ACTION_APPWIDGET_COMMAND);
+        action.setComponent(serviceName);
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+    public void doUpdate(Context context) {
         final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, LibraryMainActivity.class), 0);
 
         if (hasPlaylist) {
@@ -68,13 +75,13 @@ public class AppWidget4x1 extends AbstractAppWidget {
             }
 
             // push update
-            notifyUpdate(context, appWidgetIds, view);
+            notifyUpdate(context, null, view);
         }
         else {
             final RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.app_widget_no_playlist);
             view.setOnClickPendingIntent(R.id.unavailable, pendingIntent);
 
-            notifyUpdate(context, appWidgetIds, view);
+            notifyUpdate(context, null, view);
         }
     }
 }

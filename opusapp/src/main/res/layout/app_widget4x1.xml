@@ -3,26 +3,21 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/app_widget_small_buttons"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/appwidget_4x1_height"
+    android:layout_height="match_parent"
     android:baselineAligned="false"
     android:background="@color/transparent_black"
     android:focusable="true"
     android:padding="@dimen/widget_margin"
     android:orientation="horizontal">
 
-    <FrameLayout
-        android:layout_width="@dimen/appwidget_4x1_artwork_size"
-        android:layout_height="@dimen/appwidget_4x1_artwork_size"
-        android:focusable="true" >
-
-        <ImageView
-            android:id="@+id/four_by_one_albumart"
-            android:layout_width="@dimen/appwidget_4x1_artwork_size"
-            android:layout_height="@dimen/appwidget_4x1_artwork_size"
-            android:background="@drawable/no_art_normal"
-            android:contentDescription="@null"
-            android:scaleType="centerInside" />
-    </FrameLayout>
+    <ImageView
+        android:id="@+id/four_by_one_albumart"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:scaleType="fitXY"
+        android:adjustViewBounds="true"
+        android:background="@drawable/no_art_normal"/>
 
     <LinearLayout
         android:layout_width="fill_parent"
