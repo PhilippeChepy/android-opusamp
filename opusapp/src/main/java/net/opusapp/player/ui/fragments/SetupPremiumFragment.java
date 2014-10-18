@@ -82,7 +82,7 @@ public class SetupPremiumFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 final ContentValues contentValues = new ContentValues();
-                final OpenHelper localOpenHelper = new OpenHelper(PlayerApplication.context, 1);
+                final OpenHelper localOpenHelper = new OpenHelper(1);
                 final SQLiteDatabase localDatabase = localOpenHelper.getWritableDatabase();
                 final String[] directories = StorageOptions.getStorageDirectories();
 

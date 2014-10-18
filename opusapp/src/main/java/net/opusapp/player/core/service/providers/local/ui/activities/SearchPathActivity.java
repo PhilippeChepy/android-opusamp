@@ -98,7 +98,7 @@ public class SearchPathActivity extends ActionBarActivity {
 		switch(requestCode) {
 		case REQUEST_CODE_SEARCH_PATH:
 			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(this, providerId);
+                OpenHelper openHelper = new OpenHelper(providerId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
@@ -121,7 +121,7 @@ public class SearchPathActivity extends ActionBarActivity {
 			break;
 		case REQUEST_CODE_EXCLUDE_PATH:
 			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(this, providerId);
+                OpenHelper openHelper = new OpenHelper(providerId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {

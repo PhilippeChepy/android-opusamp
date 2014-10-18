@@ -126,7 +126,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public LocalProvider(LocalMediaManager mediaManager) {
         this.mediaManager = mediaManager;
 
-        openHelper = new OpenHelper(PlayerApplication.context, mediaManager.getMediaManagerId());
+        openHelper = new OpenHelper(mediaManager.getMediaManagerId());
         scanListeners = new ArrayList<OnLibraryChangeListener>();
 
         currentFolder = new File(Environment.getExternalStorageDirectory().getAbsolutePath());

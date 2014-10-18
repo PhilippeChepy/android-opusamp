@@ -13,11 +13,11 @@
 package net.opusapp.player.core.service.providers.local.database;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.opusapp.player.R;
+import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
@@ -29,18 +29,15 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     private final static int DATABASE_VERSION = 1;
 
-    private Context context = null;
-
     private int providerId;
 
-    public OpenHelper(Context context, int providerId) {
-        super(context, "provider-" + providerId + ".db", null, DATABASE_VERSION);
-        this.context = context;
+    public OpenHelper(int providerId) {
+        super(PlayerApplication.context, "provider-" + providerId + ".db", null, DATABASE_VERSION);
         this.providerId = providerId;
     }
 
     public void deleteDatabaseFile() {
-        File databaseFile = context.getDatabasePath("provDb" + providerId + ".db");
+        File databaseFile = PlayerApplication.context.getDatabasePath("provDb" + providerId + ".db");
         if (databaseFile != null) {
             boolean deleted = databaseFile.delete();
             LogUtils.LOGI(TAG, "deleting provider data (" + providerId + ") : " + deleted);
@@ -72,7 +69,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 		/* Favorite playlist */
         contentValues.clear();
         //contentValues.put(Playlist._ID, 1);
-        contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, context.getString(R.string.label_favorites));
+        contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, PlayerApplication.context.getString(R.string.label_favorites));
         contentValues.put(Entities.Playlist.COLUMN_FIELD_VISIBLE, true);
         contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
         database.insert(Entities.Playlist.TABLE_NAME, null, contentValues);

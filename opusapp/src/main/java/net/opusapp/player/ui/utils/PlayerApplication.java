@@ -126,7 +126,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         context = getApplicationContext();
         instance = this;
 
-        databaseHelper = new OpenHelper(this);
+        databaseHelper = new OpenHelper();
         allocateMediaManagers();
         playerManagerIndex = getLibraryPlayerIndex();
         libraryManagerIndex = getLibraryLibraryIndex();
