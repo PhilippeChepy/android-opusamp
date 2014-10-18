@@ -90,12 +90,12 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        final MenuItem okMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_OK, 1, R.string.menuitem_label_add_library);
+        final MenuItem okMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_OK, 1, R.string.actionbar_confirmation_text_done);
         okMenuItem.setIcon(R.drawable.ic_action_tick);
         MenuItemCompat.setShowAsAction(okMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         okMenuItem.setOnMenuItemClickListener(onOKOptionMenuItemListener);
 
-        final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.menuitem_label_add_library);
+        final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.actionbar_confirmation_text_cancel);
         cancelMenuItem.setIcon(R.drawable.ic_action_cancel);
         MenuItemCompat.setShowAsAction(cancelMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         cancelMenuItem.setOnMenuItemClickListener(onCancelOptionMenuItemListener);
