@@ -22,6 +22,6 @@ public class CarModeActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_car_mode, 0);
+        super.onCreate(savedInstanceState, R.layout.activity_car_mode, null);
     }
 }

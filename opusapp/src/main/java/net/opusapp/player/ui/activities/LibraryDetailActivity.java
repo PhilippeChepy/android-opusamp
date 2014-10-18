@@ -115,7 +115,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_detail, 0);
+        super.onCreate(savedInstanceState, R.layout.activity_library_detail, null);
 
         getSupportActionBar().show();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

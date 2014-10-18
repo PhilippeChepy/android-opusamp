@@ -169,7 +169,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, 0);
+        super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, null);
 
         getSupportActionBar().show();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

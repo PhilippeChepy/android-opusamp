@@ -174,7 +174,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
      */
     private InterstitialAd interstitial = null;
 
-    protected void onCreate(Bundle savedInstanceState, int layout, int windowFeature) {
+    protected void onCreate(Bundle savedInstanceState, int layout, int windowFeatures[]) {
         super.onCreate(savedInstanceState);
 
         if (PlayerApplication.isFirstRun()) {
@@ -184,8 +184,10 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             finish();
         }
 
-        if (windowFeature != 0) {
-            supportRequestWindowFeature(windowFeature);
+        if (windowFeatures != null) {
+            for (int feature : windowFeatures) {
+                supportRequestWindowFeature(feature);
+            }
         }
 
         if (AbstractPlayerActivity.this instanceof CarModeActivity) {
@@ -695,7 +697,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                         bluredImageView.setImageResource(R.drawable.no_art_normal);
                     }
                 }
-LogUtils.LOGE(TAG, "position = " + position);
+
                 seekbarRunnable.position = (int) position;
                 runOnUiThread(seekbarRunnable);
             }

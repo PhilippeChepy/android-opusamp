@@ -197,7 +197,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_main, Window.FEATURE_INDETERMINATE_PROGRESS);
+        super.onCreate(savedInstanceState, R.layout.activity_library_main, new int[] { Window.FEATURE_INDETERMINATE_PROGRESS });
 
         libraryPager = (ViewPager) findViewById(R.id.pager_viewpager);
         libraryPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
@@ -739,7 +739,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    setSupportProgressBarIndeterminateVisibility(true);
+                    //setSupportProgressBarIndeterminateVisibility(true);
                 }
             });
         }
@@ -749,7 +749,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    setSupportProgressBarIndeterminateVisibility(false);
+                    // TODO: support v7 regression.
+                    //setSupportProgressBarIndeterminateVisibility(false);
                 }
             });
         }
