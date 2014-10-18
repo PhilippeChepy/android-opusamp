@@ -2181,7 +2181,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         if (localArts) {
             final String[] columns = new String[]{Entities.Album.COLUMN_FIELD_ALBUM_ART};
             final String selection = Entities.Album._ID + " = ? ";
-            final String[] selectionArgs = new String[]{albumId};
+            final String[] selectionArgs = new String[]{ albumId };
 
             String albumArtUri = null;
             Cursor cursor = database.query(Entities.Album.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
@@ -2204,7 +2204,25 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             }
         }
         else {
-            // TODO: add support for embedded arts from media.
+            final String[] columns = new String[] {Entities.Media.COLUMN_FIELD_URI};
+            final String selection = "(" + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ?) AND (" + Entities.Media.COLUMN_FIELD_HAS_EMBEDDED_ART + " = 1) LIMIT 1";
+            final String[] selectionArgs = new String[] { albumId };
+
+            String albumArtUri = null;
+
+            Cursor cursor = database.query(Entities.Media.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                albumArtUri = cursor.getString(0);
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            if (!TextUtils.isEmpty(albumArtUri)) {
+                return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(albumArtUri));
+            }
         }
 
         return null;
