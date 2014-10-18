@@ -1,13 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/upper_panel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:padding="0dp"
+            android:layout_weight="50"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="0dp"
+                android:orientation="horizontal" >
+
+                <LinearLayout
+                    android:id="@+id/audio_player_header"
+                    android:layout_height="68.0dp"
+                    android:layout_weight="25.0"
+                    android:layout_width="fill_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="vertical" >
+
+                    <net.opusapp.player.ui.views.CustomTextView
+                        android:id="@+id/audio_player_track_name"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:paddingBottom="2.0dip"
+                        android:paddingLeft="10.0dip"
+                        android:paddingStart="10.0dip"
+                        android:paddingRight="10.0dip"
+                        android:paddingEnd="10.0dip"
+                        android:singleLine="true"
+                        android:textColor="#ff000000"
+                        android:textIsSelectable="false"
+                        android:textSize="16.0dip" />
+
+                    <net.opusapp.player.ui.views.CustomTextView
+                        android:id="@+id/audio_player_artist_name"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:paddingLeft="10.0dip"
+                        android:paddingStart="10.0dip"
+                        android:paddingRight="10.0dip"
+                        android:paddingEnd="10.0dip"
+                        android:singleLine="true"
+                        android:textColor="#ff000000"
+                        android:textIsSelectable="false"
+                        android:textSize="16.0dip" />
+                </LinearLayout>
+
+                <net.opusapp.player.ui.views.CustomTextView
+                    android:id="@+id/audio_player_time"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="75.0"
+                    android:gravity="center"
+                    android:textColor="#ff33b5e5"
+                    android:textIsSelectable="false"
+                    android:textSize="23.0dip" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_margin="0dp"
+            android:padding="0dp"
+            android:gravity="center_vertical"
+            android:layout_weight="50"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
+
+                <net.opusapp.player.ui.views.CustomTextView
+                    android:id="@+id/playlist_track_count"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:paddingBottom="2.0dip"
+                    android:paddingLeft="10.0dip"
+                    android:paddingStart="10.0dip"
+                    android:paddingRight="10.0dip"
+                    android:paddingEnd="10.0dip"
+                    android:singleLine="true"
+                    android:gravity="start"
+                    android:textColor="#ff000000"
+                    android:textIsSelectable="false"
+                    android:textSize="16.0dip" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_alignParentBottom="true"
         android:baselineAligned="false"
         android:orientation="horizontal" >
 
@@ -88,8 +195,7 @@
                 android:layout_height="fill_parent"
                 android:id="@+id/playlist_container"
                 android:padding="5dp"
-                android:layout_marginTop="68dp"
-                android:layout_marginBottom="@dimen/audio_controls_controls_height" >
+                android:layout_marginBottom="@dimen/audio_controls_controls_height">
 
                 <include layout="@layout/view_list_dragable_listview"/>
 
@@ -98,17 +204,15 @@
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="@dimen/audio_controls_controls_height"
-                android:layout_alignParentBottom="true">
+                android:layout_alignParentBottom="true"
+                android:baselineAligned="false">
 
-                <LinearLayout
+                <View
                     android:layout_height="match_parent"
                     android:layout_width="fill_parent"
                     android:layout_weight="40.0"
                     android:layout_gravity="center"
-                    android:gravity="center"
-                    android:orientation="vertical" >
-
-                </LinearLayout>
+                    android:gravity="center" />
 
                 <LinearLayout
                     android:layout_height="match_parent"
@@ -135,103 +239,4 @@
             </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/upper_panel"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
-
-
-        <LinearLayout
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_margin="0dp"
-            android:padding="0dp"
-            android:layout_weight="50"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="0dp"
-                android:background="@color/transparent_white"
-                android:orientation="horizontal" >
-
-                <LinearLayout
-                    android:id="@+id/audio_player_header"
-                    android:layout_height="68.0dp"
-                    android:layout_weight="25.0"
-                    android:layout_width="fill_parent"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:orientation="vertical" >
-
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_track_name"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:paddingBottom="2.0dip"
-                        android:paddingLeft="10.0dip"
-                        android:singleLine="true"
-                        android:textColor="#ff000000"
-                        android:textIsSelectable="false"
-                        android:textSize="16.0dip" />
-
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_artist_name"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:paddingLeft="10.0dip"
-                        android:singleLine="true"
-                        android:textColor="#ff000000"
-                        android:textIsSelectable="false"
-                        android:textSize="16.0dip" />
-                </LinearLayout>
-
-                <net.opusapp.player.ui.views.CustomTextView
-                    android:id="@+id/audio_player_time"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="75.0"
-                    android:gravity="center"
-                    android:textColor="#ff33b5e5"
-                    android:textIsSelectable="false"
-                    android:textSize="23.0dip" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dip"
-            android:layout_height="fill_parent"
-            android:layout_margin="0dp"
-            android:padding="0dp"
-            android:gravity="center_vertical"
-            android:layout_weight="50"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp">
-
-                <net.opusapp.player.ui.views.CustomTextView
-                    android:id="@+id/playlist_track_count"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:paddingBottom="2.0dip"
-                    android:paddingLeft="10.0dip"
-                    android:singleLine="true"
-                    android:gravity="left"
-                    android:textColor="#ff000000"
-                    android:textIsSelectable="false"
-                    android:textSize="16.0dip" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-    </LinearLayout>
-</RelativeLayout>
+</LinearLayout>
