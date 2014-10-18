@@ -78,13 +78,14 @@ public class SearchPathActivity extends ActionBarActivity {
         
         PagerSlidingTabStrip scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
 		scrollingTabs.setViewPager(viewPager);
-		scrollingTabs.setIndicatorColorResource(R.color.view_scrollingtabs_color);
+		scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
+        scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
 	}
 
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add_directory);
-		addMenuItem.setIcon(R.drawable.ic_action_add);
+		addMenuItem.setIcon(R.drawable.ic_action_add_dark);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
 

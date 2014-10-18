@@ -87,7 +87,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2);
+        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 

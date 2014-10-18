@@ -135,12 +135,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         searchView.setOnCloseListener(searchViewOnCloseListener);
 
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2);
+        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
         searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
-        searchMenuItem.setIcon(R.drawable.ic_action_search);
+        searchMenuItem.setIcon(R.drawable.ic_action_search_dark);
         MenuItemCompat.setActionView(searchMenuItem, searchView);
         MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
@@ -153,7 +153,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
         reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+        reloadMenuItem.setIcon(R.drawable.ic_action_reload_dark);
         MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
@@ -224,7 +224,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
         scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
         scrollingTabs.setOnPageChangeListener(scrollingTabsOnPageChangeListener);
-        scrollingTabs.setIndicatorColorResource(R.color.view_scrollingtabs_color);
+        scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
+        scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
 
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);

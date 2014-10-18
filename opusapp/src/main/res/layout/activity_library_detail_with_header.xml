@@ -35,8 +35,9 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:minHeight="?attr/actionBarSize"
-                app:theme="@style/AudioKit.TransparentActionBar"
-                app:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar" />
+                app:theme="@style/ThemeOverlay.AppCompat.Dark"
+                app:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar"
+                android:background="@color/materialPrimaryColor" />
         </FrameLayout>
     </LinearLayout>
 

@@ -20,7 +20,6 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -129,7 +128,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2);
+        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
@@ -171,7 +170,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, new int[] { Window.FEATURE_ACTION_BAR_OVERLAY });
+        super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, null);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolbar);
@@ -268,7 +267,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
 
-        actionbarBackground = getResources().getDrawable(R.drawable.holo_background);
+        actionbarBackground = getResources().getDrawable(R.drawable.actionbar_background);
 
         contentList.addHeaderView(placeHolderView);
         contentList.setOnScrollListener(contentListOnScrollListener);
