@@ -43,7 +43,7 @@ public class SoundEffectsActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.view_equalizer);
+        setContentView(R.layout.activity_sound_effects);
     }
 
     @Override
