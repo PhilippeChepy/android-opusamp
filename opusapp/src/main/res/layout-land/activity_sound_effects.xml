@@ -6,71 +6,110 @@
     android:orientation="vertical"
     android:padding="10.0dip">
 
-    <CheckBox
-        android:id="@+id/equalizer_enabled"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/label_enable_equalizer" />
-
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="45.0sp"
-            android:layout_height="fill_parent"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="30.0dip"
-                android:layout_weight="1.0"
-                android:gravity="top"
-                android:text="@string/unit_p28dB" />
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.0"
-                android:gravity="center"
-                android:text="@string/unit_0dB" />
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="50.0dip"
-                android:layout_weight="1.0"
-                android:gravity="bottom"
-                android:text="@string/unit_m28dB" />
-        </LinearLayout>
-
-        <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:weightSum="1">
 
-            <HorizontalScrollView
+            <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:layout_weight="0.5">
+                android:layout_weight="0.5"
+                android:orientation="vertical">
+
+                <CheckBox
+                    android:id="@+id/equalizer_enabled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_enable_equalizer"/>
 
                 <LinearLayout
-                    android:id="@+id/equalizer_bands"
                     android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_marginBottom="20.0dip"
-                    android:orientation="horizontal">
+                    android:layout_height="fill_parent">
+
+                    <LinearLayout
+                        android:layout_width="45.0sp"
+                        android:layout_height="fill_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="30.0dip"
+                            android:layout_weight="1.0"
+                            android:gravity="top"
+                            android:text="@string/unit_p20dB" />
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.0"
+                            android:gravity="center"
+                            android:text="@string/unit_0dB" />
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="50.0dip"
+                            android:layout_weight="1.0"
+                            android:gravity="bottom"
+                            android:text="@string/unit_m20dB" />
+                    </LinearLayout>
+
+                    <HorizontalScrollView
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent">
+
+                        <LinearLayout
+                            android:id="@+id/equalizer_bands"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_marginBottom="20.0dip"
+                            android:orientation="horizontal">
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
 
                 </LinearLayout>
-            </HorizontalScrollView>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:layout_weight="0.5">
+                android:layout_weight="0.5"
+                android:orientation="vertical">
 
+                <net.opusapp.player.ui.views.CustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_equalizer_presets"
+                    android:textSize="@dimen/text_size_large"
+                    android:paddingTop="10.0dip"
+                    android:paddingBottom="10.0dip" />
+
+
+                <ListView
+                    android:id="@+id/list_view_base"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:cacheColorHint="@color/transparent"
+                    android:clipToPadding="false"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="2.0dip"
+                    android:drawSelectorOnTop="true"
+                    android:fadingEdge="vertical"
+                    android:fastScrollEnabled="true"
+                    android:horizontalSpacing="@dimen/grid_item_spacing"
+                    android:verticalSpacing="@dimen/grid_item_spacing"
+                    android:paddingTop="10.0dip"
+                    android:paddingBottom="10.0dip"
+                    android:scrollbarStyle="outsideOverlay"
+                    android:scrollbars="vertical" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

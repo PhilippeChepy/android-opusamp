@@ -36,6 +36,7 @@
     <dimen name="grid_item_spacing">4.0dip</dimen>
     <dimen name="grid_item_padding_left">8.0dip</dimen>
     <dimen name="item_normal_height">60.0dip</dimen>
+    <dimen name="item_reduced_height">48.0dip</dimen>
     <dimen name="item_normal_image_margin">3.0dip</dimen>
     <dimen name="item_normal_image_width">54.0dip</dimen>
     <dimen name="notification_action_width">48.0dip</dimen>

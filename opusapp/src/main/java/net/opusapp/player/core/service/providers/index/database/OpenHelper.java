@@ -26,24 +26,24 @@ public class OpenHelper extends SQLiteOpenHelper {
     private final static int DATABASE_VERSION = 1;
 
     private static EqualizerPreset defaultPresets[] = new EqualizerPreset[] {
-            new EqualizerPreset("Flat", 12.0f, new float[] {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}),
-            new EqualizerPreset("Classical", 12.0f, new float[] { -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -7.2f, -7.2f, -7.2f, -9.6f }),
-            new EqualizerPreset("Club", 6.0f, new float[] { -1.11022e-15f, -1.11022e-15f, 8.0f, 5.6f, 5.6f, 5.6f, 3.2f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f }),
-            new EqualizerPreset("Dance", 5.0f, new float[] { 9.6f, 7.2f, 2.4f, -1.11022e-15f, -1.11022e-15f, -5.6f, -7.2f, -7.2f, -1.11022e-15f, -1.11022e-15f }),
-            new EqualizerPreset("Full bass", 5.0f, new float[] { -8.0f, 9.6f, 9.6f, 5.6f, 1.6f, -4.0f, -8.0f, -10.4f, -11.2f, -11.2f }),
-            new EqualizerPreset("Full bass and treble", 4.0f, new float[] { 7.2f, 5.6f, -1.11022e-15f, -7.2f, -4.8f, 1.6f, 8.0f, 11.2f, 12.0f, 12.0f }),
-            new EqualizerPreset("Full treble", 3.0f, new float[] { -9.6f, -9.6f, -9.6f, -4.0f, 2.4f, 11.2f, 16.0f, 16.0f, 16.0f, 16.8f }),
-            new EqualizerPreset("Headphones", 4.0f, new float[] { 4.8f, 11.2f, 5.6f, -3.2f, -2.4f, 1.6f, 4.8f, 9.6f, 12.8f, 14.4f }),
-            new EqualizerPreset("Large Hall", 5.0f,new float[] { 10.4f, 10.4f, 5.6f, 5.6f, -1.11022e-15f, -4.8f, -4.8f, -4.8f, -1.11022e-15f, -1.11022e-15f }),
-            new EqualizerPreset("Live", 7.0f,new float[] { -4.8f, -1.11022e-15f, 4.0f, 5.6f, 5.6f, 5.6f, 4.0f, 2.4f, 2.4f, 2.4f }),
-            new EqualizerPreset("Party", 6.0f,new float[] { 7.2f, 7.2f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, 7.2f, 7.2f }),
-            new EqualizerPreset("Pop", 6.0f,new float[] { -1.6f, 4.8f, 7.2f, 8.0f, 5.6f, -1.11022e-15f, -2.4f, -2.4f, -1.6f, -1.6f }),
-            new EqualizerPreset("Reggae", 8.0f,new float[] { -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -5.6f, -1.11022e-15f, 6.4f, 6.4f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f }),
-            new EqualizerPreset("Rock", 5.0f, new float[] { 8.0f, 4.8f, -5.6f, -8.0f, -3.2f, 4.0f, 8.8f, 11.2f, 11.2f, 11.2f }),
-            new EqualizerPreset("Ska", 6.0f,new float[] { -2.4f, -4.8f, -4.0f, -1.11022e-15f, 4.0f, 5.6f, 8.8f, 9.6f, 11.2f, 9.6f }),
-            new EqualizerPreset("Soft", 5.0f, new float[] { 4.8f, 1.6f, -1.11022e-15f, -2.4f, -1.11022e-15f, 4.0f, 8.0f, 9.6f, 11.2f, 12.0f }),
-            new EqualizerPreset("Soft rock", 7.0f, new float[] { 4.0f, 4.0f, 2.4f, -1.11022e-15f, -4.0f, -5.6f, -3.2f, -1.11022e-15f, 2.4f, 8.8f }),
-            new EqualizerPreset("Techno", 5.0f, new float[] { 8.0f, 5.6f, -1.11022e-15f, -5.6f, -4.8f, -1.11022e-15f, 8.0f, 9.6f, 9.6f, 8.8f })
+            new EqualizerPreset("Flat", 20, new float[] {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}),
+            new EqualizerPreset("Classical", 20, new float[] { -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -7.2f, -7.2f, -7.2f, -9.6f }),
+            new EqualizerPreset("Club", 14.0f, new float[] { -1.11022e-15f, -1.11022e-15f, 8.0f, 5.6f, 5.6f, 5.6f, 3.2f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f }),
+            new EqualizerPreset("Dance", 13.0f, new float[] { 9.6f, 7.2f, 2.4f, -1.11022e-15f, -1.11022e-15f, -5.6f, -7.2f, -7.2f, -1.11022e-15f, -1.11022e-15f }),
+            new EqualizerPreset("Full bass", 13.0f, new float[] { -8.0f, 9.6f, 9.6f, 5.6f, 1.6f, -4.0f, -8.0f, -10.4f, -11.2f, -11.2f }),
+            new EqualizerPreset("Full bass and treble", 12.0f, new float[] { 7.2f, 5.6f, -1.11022e-15f, -7.2f, -4.8f, 1.6f, 8.0f, 11.2f, 12.0f, 12.0f }),
+            new EqualizerPreset("Full treble", 11.0f, new float[] { -9.6f, -9.6f, -9.6f, -4.0f, 2.4f, 11.2f, 16.0f, 16.0f, 16.0f, 16.8f }),
+            new EqualizerPreset("Headphones", 12.0f, new float[] { 4.8f, 11.2f, 5.6f, -3.2f, -2.4f, 1.6f, 4.8f, 9.6f, 12.8f, 14.4f }),
+            new EqualizerPreset("Large Hall", 13.0f,new float[] { 10.4f, 10.4f, 5.6f, 5.6f, -1.11022e-15f, -4.8f, -4.8f, -4.8f, -1.11022e-15f, -1.11022e-15f }),
+            new EqualizerPreset("Live", 15.0f,new float[] { -4.8f, -1.11022e-15f, 4.0f, 5.6f, 5.6f, 5.6f, 4.0f, 2.4f, 2.4f, 2.4f }),
+            new EqualizerPreset("Party", 14.0f,new float[] { 7.2f, 7.2f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, 7.2f, 7.2f }),
+            new EqualizerPreset("Pop", 14.0f,new float[] { -1.6f, 4.8f, 7.2f, 8.0f, 5.6f, -1.11022e-15f, -2.4f, -2.4f, -1.6f, -1.6f }),
+            new EqualizerPreset("Reggae", 16.0f,new float[] { -1.11022e-15f, -1.11022e-15f, -1.11022e-15f, -5.6f, -1.11022e-15f, 6.4f, 6.4f, -1.11022e-15f, -1.11022e-15f, -1.11022e-15f }),
+            new EqualizerPreset("Rock", 13.0f, new float[] { 8.0f, 4.8f, -5.6f, -8.0f, -3.2f, 4.0f, 8.8f, 11.2f, 11.2f, 11.2f }),
+            new EqualizerPreset("Ska", 14.0f,new float[] { -2.4f, -4.8f, -4.0f, -1.11022e-15f, 4.0f, 5.6f, 8.8f, 9.6f, 11.2f, 9.6f }),
+            new EqualizerPreset("Soft", 13.0f, new float[] { 4.8f, 1.6f, -1.11022e-15f, -2.4f, -1.11022e-15f, 4.0f, 8.0f, 9.6f, 11.2f, 12.0f }),
+            new EqualizerPreset("Soft rock", 15.0f, new float[] { 4.0f, 4.0f, 2.4f, -1.11022e-15f, -4.0f, -5.6f, -3.2f, -1.11022e-15f, 2.4f, 8.8f }),
+            new EqualizerPreset("Techno", 13.0f, new float[] { 8.0f, 5.6f, -1.11022e-15f, -5.6f, -4.8f, -1.11022e-15f, 8.0f, 9.6f, 9.6f, 8.8f })
     };
 
 

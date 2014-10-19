@@ -215,9 +215,9 @@
 
     <!-- Units -->
     <string name="unit_MB">%s Mo</string>
-    <string name="unit_p28dB">+28 dB</string>
+    <string name="unit_p20dB">+20 dB</string>
     <string name="unit_0dB">0 dB</string>
-    <string name="unit_m28dB">-28 dB</string>
+    <string name="unit_m20dB">-20 dB</string>
 
 
     <!-- Other UI -->
@@ -272,5 +272,6 @@
     <string name="label_default_library">Bibliothèque musicale</string>
 
     <!-- Equalizer view -->
-    <string name="label_enable_equalizer">Activer l\'equaliseur (experimental)</string>
+    <string name="label_enable_equalizer">"Activer l'égaliseur"</string>
+    <string name="label_equalizer_presets">Préréglages</string>
 </resources>

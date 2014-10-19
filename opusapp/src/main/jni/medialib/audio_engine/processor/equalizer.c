@@ -61,8 +61,8 @@ static real_t bands[] = {
     44.0, 88.0, 177.0, 355.0, 710.0, 1420.0, 2840.0, 5680.0, 11360.0
 };
 
-#define GAIN_HALF 14
-#define GAIN_RANGE 28
+#define GAIN_HALF 20
+#define GAIN_RANGE 40
 
 float band_values[20] = {
     1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // left
@@ -71,10 +71,10 @@ float band_values[20] = {
 
 //   0   = -14dB | 14 =   0dB | 28 = +14dB
 int slider_positions[22] = {
-    /* L-preamp */ 14,
-    /* L-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
-    /* R-preamp */ 14,
-    /* R-bands  */ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+    /* L-preamp */ 20,
+    /* L-bands  */ 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+    /* R-preamp */ 20,
+    /* R-bands  */ 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
 };
 
 #define RINT(x) ((x) >= 0 ? ((int)((x) + 0.5)) : ((int)((x) - 0.5)))
