@@ -125,8 +125,7 @@ static void * ffinput_decoding_thread(void * thread_arg) {
                     /* push the audio data from decoded frame into the filtergraph */
                     av_error_code = av_buffersrc_add_frame_flags(ffinput_stream->buffer_source_context, context->frame, 0);
                     if (av_error_code < 0) {
-                        LOG_ERROR(LOG_TAG, "error while feeding the audio filtergraph, stopping");
-                        // TODO: maybe necessary? goto media_player_decode_frame_done;
+                        LOG_WARNING(LOG_TAG, "error while feeding the audio filtergraph.");
                     }
                     else {
                         /* pull filtered audio from the filtergraph */

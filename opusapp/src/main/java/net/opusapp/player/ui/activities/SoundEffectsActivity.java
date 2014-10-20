@@ -131,6 +131,22 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+        PlayerApplication.saveEqualizerSettings(player);
+
+        for (int managerIndex = 0 ; managerIndex < PlayerApplication.mediaManagers.length ; managerIndex++) {
+            if (managerIndex != PlayerApplication.playerManagerIndex) {
+                final AbstractMediaManager.Player otherPlayer = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+                PlayerApplication.restoreEqualizerSettings(otherPlayer);
+                otherPlayer.equalizerApplyProperties();
+            }
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 

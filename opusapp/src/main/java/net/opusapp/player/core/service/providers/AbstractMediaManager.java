@@ -264,7 +264,7 @@ public interface AbstractMediaManager {
 
         public boolean equalizerIsEnabled();
         public long equalizerSetEnabled(boolean enabled);
-        public long equalizerBandSetGain(int band, int gain);
+        public long equalizerBandSetGain(int band, long gain);
         public long equalizerBandGetGain(int band);
         public boolean equalizerApplyProperties();
 

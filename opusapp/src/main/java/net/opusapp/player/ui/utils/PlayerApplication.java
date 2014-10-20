@@ -199,7 +199,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
         }
 
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
         if (database != null) {
             final String[] columns = new String[]{
                     Entities.Provider._ID,
@@ -232,6 +232,12 @@ public class PlayerApplication extends Application implements ServiceConnection 
                     }
                     else {
                         mediaManagers[index] = MediaManagerFactory.buildMediaManager(providerType, providerId);
+
+                        // load equalizer settings
+                        AbstractMediaManager.Player player = mediaManagers[index].getPlayer();
+
+                        restoreEqualizerSettings(player);
+                        player.equalizerApplyProperties();
                     }
                 }
 
@@ -241,6 +247,11 @@ public class PlayerApplication extends Application implements ServiceConnection 
             if (currentProvider != null) {
                 if (currentProvider.getPlayer().playerIsPlaying()) {
                     currentProvider.getPlayer().playerStop();
+                }
+
+                // TODO: check if working...
+                if (currentProvider.getProvider().scanIsRunning()) {
+                    currentProvider.getProvider().scanCancel();
                 }
                 currentProvider.getProvider().erase();
             }
@@ -750,8 +761,75 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
+    /*
+        Audio effects
+     */
+    public final static String CONFIG_EQUALIZER_ENABLED = "equalizer_enabled";
 
-	/*
+    public final static String CONFIG_EQUALIZER_PREAMP = "equalizer_preamp";
+
+    public final static String CONFIG_EQUALIZER_BAND0 = "equalizer_band0";
+
+    public final static String CONFIG_EQUALIZER_BAND1 = "equalizer_band1";
+
+    public final static String CONFIG_EQUALIZER_BAND2 = "equalizer_band2";
+
+    public final static String CONFIG_EQUALIZER_BAND3 = "equalizer_band3";
+
+    public final static String CONFIG_EQUALIZER_BAND4 = "equalizer_band4";
+
+    public final static String CONFIG_EQUALIZER_BAND5 = "equalizer_band5";
+
+    public final static String CONFIG_EQUALIZER_BAND6 = "equalizer_band6";
+
+    public final static String CONFIG_EQUALIZER_BAND7 = "equalizer_band7";
+
+    public final static String CONFIG_EQUALIZER_BAND8 = "equalizer_band8";
+
+    public final static String CONFIG_EQUALIZER_BAND9 = "equalizer_band9";
+
+
+
+    public static void saveEqualizerSettings(AbstractMediaManager.Player player) {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CONFIG_EQUALIZER_ENABLED, player.equalizerIsEnabled());
+        editor.putLong(CONFIG_EQUALIZER_PREAMP, player.equalizerBandGetGain(0));
+        editor.putLong(CONFIG_EQUALIZER_BAND0, player.equalizerBandGetGain(1));
+        editor.putLong(CONFIG_EQUALIZER_BAND1, player.equalizerBandGetGain(2));
+        editor.putLong(CONFIG_EQUALIZER_BAND2, player.equalizerBandGetGain(3));
+        editor.putLong(CONFIG_EQUALIZER_BAND3, player.equalizerBandGetGain(4));
+        editor.putLong(CONFIG_EQUALIZER_BAND4, player.equalizerBandGetGain(5));
+        editor.putLong(CONFIG_EQUALIZER_BAND5, player.equalizerBandGetGain(6));
+        editor.putLong(CONFIG_EQUALIZER_BAND6, player.equalizerBandGetGain(7));
+        editor.putLong(CONFIG_EQUALIZER_BAND7, player.equalizerBandGetGain(8));
+        editor.putLong(CONFIG_EQUALIZER_BAND8, player.equalizerBandGetGain(9));
+        editor.putLong(CONFIG_EQUALIZER_BAND9, player.equalizerBandGetGain(10));
+        editor.apply();
+    }
+
+    public static void restoreEqualizerSettings(AbstractMediaManager.Player player) {
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+
+        player.equalizerSetEnabled(sharedPreferences.getBoolean(CONFIG_EQUALIZER_ENABLED, false));
+        player.equalizerBandSetGain(0, sharedPreferences.getLong(CONFIG_EQUALIZER_PREAMP, 20));
+        player.equalizerBandSetGain(1, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND0, 20));
+        player.equalizerBandSetGain(2, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND1, 20));
+        player.equalizerBandSetGain(3, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND2, 20));
+        player.equalizerBandSetGain(4, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND3, 20));
+        player.equalizerBandSetGain(5, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND4, 20));
+        player.equalizerBandSetGain(6, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND5, 20));
+        player.equalizerBandSetGain(7, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND6, 20));
+        player.equalizerBandSetGain(8, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND7, 20));
+        player.equalizerBandSetGain(9, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND8, 20));
+        player.equalizerBandSetGain(10, sharedPreferences.getLong(CONFIG_EQUALIZER_BAND9, 20));
+    }
+
+
+
+
+
+    /*
 	 * PlayerActivity Preferences
 	 */
     public final static String PREFERENCE_LIBRARY_PLAYER_INDEX = "playlist_index";

@@ -195,8 +195,8 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
     }
 
     @Override
-    public long equalizerBandSetGain(int band, int gain) {
-        return engineEqualizerBandSetValue(band, gain);
+    public long equalizerBandSetGain(int band, long gain) {
+        return engineEqualizerBandSetValue(band, (int) gain);
     }
 
     @Override
