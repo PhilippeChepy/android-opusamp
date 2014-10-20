@@ -63,22 +63,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
 
 
-    /*
-
-     */
-    private static final int DRAWERITEM_SEPARATOR_ID = 0;
-
     private static final int DRAWERITEM_LIBRARY_SETTINGS_ID = 100;
 
     private static final int DRAWERITEM_APPLICATION_SETTINGS_ID = 101;
 
-    private static final int DRAWERITEM_AUDIO_FX_ID = 102;
 
 
-
-    /*
-        Actionbar
-     */
+    // Actionbar
     private static final int OPTION_MENUITEM_SORT = 1;
 
     private static final int OPTION_MENUITEM_FILTER = 2;
@@ -158,15 +149,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
         updateReloadMenuItem();
-
-        final MenuItem audioEffectsMenuItem = menu.add(Menu.NONE, DRAWERITEM_AUDIO_FX_ID, 8, R.string.drawer_item_label_library_soundfx);
-        audioEffectsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
-                return true;
-            }
-        });
 
         final SubMenu options = menu.addSubMenu(Menu.NONE, 0, 9, R.string.menuitem_label_other_options);
 

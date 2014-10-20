@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
@@ -82,8 +81,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     /*
         Ui state
      */
-    private static final String SAVED_STATE_ACTION_BAR_IS_VISIBLE = "saved_state_action_bar_visibility";
-
     private static boolean saved_state_playlist_is_visible = false;
 
 
@@ -490,26 +487,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         return playlistCursor.getString(COLUMN_SONG_ARTIST);
     }
 
-
-
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-//        outState.putBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, getSupportActionBar().isShowing());
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState.getBoolean(SAVED_STATE_ACTION_BAR_IS_VISIBLE, true)) {
-//            getSupportActionBar().show();
-        }
-        else {
-//            getSupportActionBar().hide();
-        }
-    }
-
     @Override
     public void onBackPressed() {
         if (getSlidingPanel() != null && getSlidingPanel().isPanelExpanded()) {
@@ -882,6 +859,18 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                 return true;
             }
         });
+
+
+
+        final MenuItem audioEffectsMenuItem = popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.drawer_item_label_library_soundfx);
+        audioEffectsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
+                return true;
+            }
+        });
+
 
         final MenuItem carMode = popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menuitem_label_toggle_car_mode);
         carMode.setIcon(R.drawable.ic_action_car);
