@@ -1,7 +1,3 @@
-#include <stdlib.h>
-
-typedef float REAL;
-
 /*
 Fast Fourier/Cosine/Sine Transform
     dimension   :one
@@ -18,12 +14,19 @@ functions
     dfct: Cosine Transform of RDFT (Real Symmetric DFT)
     dfst: Sine Transform of RDFT (Real Anti-symmetric DFT)
 function prototypes
-    void cdft(int, int, REAL *, int *, REAL *);
-    void rdft(int, int, REAL *, int *, REAL *);
-    void ddct(int, int, REAL *, int *, REAL *);
-    void ddst(int, int, REAL *, int *, REAL *);
-    void dfct(int, REAL *, REAL *, int *, REAL *);
-    void dfst(int, REAL *, REAL *, int *, REAL *);
+    void cdft(int, int, double *, int *, double *);
+    void rdft(int, int, double *, int *, double *);
+    void ddct(int, int, double *, int *, double *);
+    void ddst(int, int, double *, int *, double *);
+    void dfct(int, double *, double *, int *, double *);
+    void dfst(int, double *, double *, int *, double *);
+macro definitions
+    USE_CDFT_PTHREADS : default=not defined
+        CDFT_THREADS_BEGIN_N  : must be >= 512, default=8192
+        CDFT_4THREADS_BEGIN_N : must be >= 512, default=65536
+    USE_CDFT_WINTHREADS : default=not defined
+        CDFT_THREADS_BEGIN_N  : must be >= 512, default=32768
+        CDFT_4THREADS_BEGIN_N : must be >= 512, default=524288
 
 
 -------- Complex DFT (Discrete Fourier Transform) --------
@@ -43,7 +46,7 @@ function prototypes
     [parameters]
         2*n            :data length (int)
                         n >= 1, n = power of 2
-        a[0...2*n-1]   :input/output data (REAL *)
+        a[0...2*n-1]   :input/output data (double *)
                         input data
                             a[2*j] = Re(x[j]), 
                             a[2*j+1] = Im(x[j]), 0<=j<n
@@ -56,7 +59,7 @@ function prototypes
                         length of ip >= 
                             2+(1<<(int)(log(n+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n/2-1]   :cos/sin table (REAL *)
+        w[0...n/2-1]   :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -88,7 +91,7 @@ function prototypes
     [parameters]
         n              :data length (int)
                         n >= 2, n = power of 2
-        a[0...n-1]     :input/output data (REAL *)
+        a[0...n-1]     :input/output data (double *)
                         <case1>
                             output data
                                 a[2*k] = R[k], 0<=k<n/2
@@ -105,7 +108,7 @@ function prototypes
                         length of ip >= 
                             2+(1<<(int)(log(n/2+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n/2-1]   :cos/sin table (REAL *)
+        w[0...n/2-1]   :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -134,7 +137,7 @@ function prototypes
     [parameters]
         n              :data length (int)
                         n >= 2, n = power of 2
-        a[0...n-1]     :input/output data (REAL *)
+        a[0...n-1]     :input/output data (double *)
                         output data
                             a[k] = C[k], 0<=k<n
         ip[0...*]      :work area for bit reversal (int *)
@@ -143,7 +146,7 @@ function prototypes
                         length of ip >= 
                             2+(1<<(int)(log(n/2+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n*5/4-1] :cos/sin table (REAL *)
+        w[0...n*5/4-1] :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -173,7 +176,7 @@ function prototypes
     [parameters]
         n              :data length (int)
                         n >= 2, n = power of 2
-        a[0...n-1]     :input/output data (REAL *)
+        a[0...n-1]     :input/output data (double *)
                         <case1>
                             input data
                                 a[j] = A[j], 0<j<n
@@ -190,7 +193,7 @@ function prototypes
                         length of ip >= 
                             2+(1<<(int)(log(n/2+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n*5/4-1] :cos/sin table (REAL *)
+        w[0...n*5/4-1] :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -213,17 +216,17 @@ function prototypes
     [parameters]
         n              :data length - 1 (int)
                         n >= 2, n = power of 2
-        a[0...n]       :input/output data (REAL *)
+        a[0...n]       :input/output data (double *)
                         output data
                             a[k] = C[k], 0<=k<=n
-        t[0...n/2]     :work area (REAL *)
+        t[0...n/2]     :work area (double *)
         ip[0...*]      :work area for bit reversal (int *)
                         length of ip >= 2+sqrt(n/4)
                         strictly, 
                         length of ip >= 
                             2+(1<<(int)(log(n/4+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n*5/8-1] :cos/sin table (REAL *)
+        w[0...n*5/8-1] :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -249,18 +252,18 @@ function prototypes
     [parameters]
         n              :data length + 1 (int)
                         n >= 2, n = power of 2
-        a[0...n-1]     :input/output data (REAL *)
+        a[0...n-1]     :input/output data (double *)
                         output data
                             a[k] = S[k], 0<k<n
                         (a[0] is used for work area)
-        t[0...n/2-1]   :work area (REAL *)
+        t[0...n/2-1]   :work area (double *)
         ip[0...*]      :work area for bit reversal (int *)
                         length of ip >= 2+sqrt(n/4)
                         strictly, 
                         length of ip >= 
                             2+(1<<(int)(log(n/4+0.5)/log(2))/2).
                         ip[0],ip[1] are pointers of the cos/sin table.
-        w[0...n*5/8-1] :cos/sin table (REAL *)
+        w[0...n*5/8-1] :cos/sin table (double *)
                         w[],ip[] are initialized if ip[0] == 0.
     [remark]
         Inverse of 
@@ -279,11 +282,11 @@ Appendix :
 */
 
 
-void cdft(int n, int isgn, REAL *a, int *ip, REAL *w)
+void cdft(int n, int isgn, double *a, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w);
+    void makewt(int nw, int *ip, double *w);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void cftbsub(int n, double *a, int *ip, int nw, double *w);
     int nw;
     
     nw = ip[0];
@@ -292,23 +295,23 @@ void cdft(int n, int isgn, REAL *a, int *ip, REAL *w)
         makewt(nw, ip, w);
     }
     if (isgn >= 0) {
-        cftfsub(n, a, ip + 2, nw, w);
+        cftfsub(n, a, ip, nw, w);
     } else {
-        cftbsub(n, a, ip + 2, nw, w);
+        cftbsub(n, a, ip, nw, w);
     }
 }
 
 
-void rdft(int n, int isgn, REAL *a, int *ip, REAL *w)
+void rdft(int n, int isgn, double *a, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void makect(int nc, int *ip, REAL *c);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void rftfsub(int n, REAL *a, int nc, REAL *c);
-    void rftbsub(int n, REAL *a, int nc, REAL *c);
+    void makewt(int nw, int *ip, double *w);
+    void makect(int nc, int *ip, double *c);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void cftbsub(int n, double *a, int *ip, int nw, double *w);
+    void rftfsub(int n, double *a, int nc, double *c);
+    void rftbsub(int n, double *a, int nc, double *c);
     int nw, nc;
-    REAL xi;
+    double xi;
     
     nw = ip[0];
     if (n > (nw << 2)) {
@@ -322,10 +325,10 @@ void rdft(int n, int isgn, REAL *a, int *ip, REAL *w)
     }
     if (isgn >= 0) {
         if (n > 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
             rftfsub(n, a, nc, w + nw);
         } else if (n == 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
         }
         xi = a[0] - a[1];
         a[0] += a[1];
@@ -335,25 +338,25 @@ void rdft(int n, int isgn, REAL *a, int *ip, REAL *w)
         a[0] -= a[1];
         if (n > 4) {
             rftbsub(n, a, nc, w + nw);
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         } else if (n == 4) {
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         }
     }
 }
 
 
-void ddct(int n, int isgn, REAL *a, int *ip, REAL *w)
+void ddct(int n, int isgn, double *a, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void makect(int nc, int *ip, REAL *c);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void rftfsub(int n, REAL *a, int nc, REAL *c);
-    void rftbsub(int n, REAL *a, int nc, REAL *c);
-    void dctsub(int n, REAL *a, int nc, REAL *c);
+    void makewt(int nw, int *ip, double *w);
+    void makect(int nc, int *ip, double *c);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void cftbsub(int n, double *a, int *ip, int nw, double *w);
+    void rftfsub(int n, double *a, int nc, double *c);
+    void rftbsub(int n, double *a, int nc, double *c);
+    void dctsub(int n, double *a, int nc, double *c);
     int j, nw, nc;
-    REAL xr;
+    double xr;
     
     nw = ip[0];
     if (n > (nw << 2)) {
@@ -375,18 +378,18 @@ void ddct(int n, int isgn, REAL *a, int *ip, REAL *w)
         a[0] += xr;
         if (n > 4) {
             rftbsub(n, a, nc, w + nw);
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         } else if (n == 4) {
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         }
     }
     dctsub(n, a, nc, w + nw);
     if (isgn >= 0) {
         if (n > 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
             rftfsub(n, a, nc, w + nw);
         } else if (n == 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
         }
         xr = a[0] - a[1];
         a[0] += a[1];
@@ -399,17 +402,17 @@ void ddct(int n, int isgn, REAL *a, int *ip, REAL *w)
 }
 
 
-void ddst(int n, int isgn, REAL *a, int *ip, REAL *w)
+void ddst(int n, int isgn, double *a, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void makect(int nc, int *ip, REAL *c);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void rftfsub(int n, REAL *a, int nc, REAL *c);
-    void rftbsub(int n, REAL *a, int nc, REAL *c);
-    void dstsub(int n, REAL *a, int nc, REAL *c);
+    void makewt(int nw, int *ip, double *w);
+    void makect(int nc, int *ip, double *c);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void cftbsub(int n, double *a, int *ip, int nw, double *w);
+    void rftfsub(int n, double *a, int nc, double *c);
+    void rftbsub(int n, double *a, int nc, double *c);
+    void dstsub(int n, double *a, int nc, double *c);
     int j, nw, nc;
-    REAL xr;
+    double xr;
     
     nw = ip[0];
     if (n > (nw << 2)) {
@@ -431,18 +434,18 @@ void ddst(int n, int isgn, REAL *a, int *ip, REAL *w)
         a[0] -= xr;
         if (n > 4) {
             rftbsub(n, a, nc, w + nw);
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         } else if (n == 4) {
-            cftbsub(n, a, ip + 2, nw, w);
+            cftbsub(n, a, ip, nw, w);
         }
     }
     dstsub(n, a, nc, w + nw);
     if (isgn >= 0) {
         if (n > 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
             rftfsub(n, a, nc, w + nw);
         } else if (n == 4) {
-            cftfsub(n, a, ip + 2, nw, w);
+            cftfsub(n, a, ip, nw, w);
         }
         xr = a[0] - a[1];
         a[0] += a[1];
@@ -455,15 +458,15 @@ void ddst(int n, int isgn, REAL *a, int *ip, REAL *w)
 }
 
 
-void dfct(int n, REAL *a, REAL *t, int *ip, REAL *w)
+void dfct(int n, double *a, double *t, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void makect(int nc, int *ip, REAL *c);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void rftfsub(int n, REAL *a, int nc, REAL *c);
-    void dctsub(int n, REAL *a, int nc, REAL *c);
+    void makewt(int nw, int *ip, double *w);
+    void makect(int nc, int *ip, double *c);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void rftfsub(int n, double *a, int nc, double *c);
+    void dctsub(int n, double *a, int nc, double *c);
     int j, k, l, m, mh, nw, nc;
-    REAL xr, xi, yr, yi;
+    double xr, xi, yr, yi;
     
     nw = ip[0];
     if (n > (nw << 3)) {
@@ -498,10 +501,10 @@ void dfct(int n, REAL *a, REAL *t, int *ip, REAL *w)
         a[mh] -= a[n - mh];
         dctsub(m, a, nc, w + nw);
         if (m > 4) {
-            cftfsub(m, a, ip + 2, nw, w);
+            cftfsub(m, a, ip, nw, w);
             rftfsub(m, a, nc, w + nw);
         } else if (m == 4) {
-            cftfsub(m, a, ip + 2, nw, w);
+            cftfsub(m, a, ip, nw, w);
         }
         a[n - 1] = a[0] - a[1];
         a[1] = a[0] + a[1];
@@ -514,10 +517,10 @@ void dfct(int n, REAL *a, REAL *t, int *ip, REAL *w)
         while (m >= 2) {
             dctsub(m, t, nc, w + nw);
             if (m > 4) {
-                cftfsub(m, t, ip + 2, nw, w);
+                cftfsub(m, t, ip, nw, w);
                 rftfsub(m, t, nc, w + nw);
             } else if (m == 4) {
-                cftfsub(m, t, ip + 2, nw, w);
+                cftfsub(m, t, ip, nw, w);
             }
             a[n - l] = t[0] - t[1];
             a[l] = t[0] + t[1];
@@ -548,15 +551,15 @@ void dfct(int n, REAL *a, REAL *t, int *ip, REAL *w)
 }
 
 
-void dfst(int n, REAL *a, REAL *t, int *ip, REAL *w)
+void dfst(int n, double *a, double *t, int *ip, double *w)
 {
-    void makewt(int nw, int *ip, REAL *w);
-    void makect(int nc, int *ip, REAL *c);
-    void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w);
-    void rftfsub(int n, REAL *a, int nc, REAL *c);
-    void dstsub(int n, REAL *a, int nc, REAL *c);
+    void makewt(int nw, int *ip, double *w);
+    void makect(int nc, int *ip, double *c);
+    void cftfsub(int n, double *a, int *ip, int nw, double *w);
+    void rftfsub(int n, double *a, int nc, double *c);
+    void dstsub(int n, double *a, int nc, double *c);
     int j, k, l, m, mh, nw, nc;
-    REAL xr, xi, yr, yi;
+    double xr, xi, yr, yi;
     
     nw = ip[0];
     if (n > (nw << 3)) {
@@ -587,10 +590,10 @@ void dfst(int n, REAL *a, REAL *t, int *ip, REAL *w)
         a[0] = a[m];
         dstsub(m, a, nc, w + nw);
         if (m > 4) {
-            cftfsub(m, a, ip + 2, nw, w);
+            cftfsub(m, a, ip, nw, w);
             rftfsub(m, a, nc, w + nw);
         } else if (m == 4) {
-            cftfsub(m, a, ip + 2, nw, w);
+            cftfsub(m, a, ip, nw, w);
         }
         a[n - 1] = a[1] - a[0];
         a[1] = a[0] + a[1];
@@ -603,10 +606,10 @@ void dfst(int n, REAL *a, REAL *t, int *ip, REAL *w)
         while (m >= 2) {
             dstsub(m, t, nc, w + nw);
             if (m > 4) {
-                cftfsub(m, t, ip + 2, nw, w);
+                cftfsub(m, t, ip, nw, w);
                 rftfsub(m, t, nc, w + nw);
             } else if (m == 4) {
-                cftfsub(m, t, ip + 2, nw, w);
+                cftfsub(m, t, ip, nw, w);
             }
             a[n - l] = t[1] - t[0];
             a[l] = t[0] + t[1];
@@ -637,10 +640,11 @@ void dfst(int n, REAL *a, REAL *t, int *ip, REAL *w)
 
 #include <math.h>
 
-void makewt(int nw, int *ip, REAL *w)
+void makewt(int nw, int *ip, double *w)
 {
+    void makeipt(int nw, int *ip);
     int j, nwh, nw0, nw1;
-    REAL delta, wn4r, wk1r, wk1i, wk3r, wk3i;
+    double delta, wn4r, wk1r, wk1i, wk3r, wk3i;
     
     ip[0] = nw;
     ip[1] = 1;
@@ -650,15 +654,19 @@ void makewt(int nw, int *ip, REAL *w)
         wn4r = cos(delta * nwh);
         w[0] = 1;
         w[1] = wn4r;
-        if (nwh >= 4) {
+        if (nwh == 4) {
+            w[2] = cos(delta * 2);
+            w[3] = sin(delta * 2);
+        } else if (nwh > 4) {
+            makeipt(nw, ip);
             w[2] = 0.5 / cos(delta * 2);
             w[3] = 0.5 / cos(delta * 6);
-        }
-        for (j = 4; j < nwh; j += 4) {
-            w[j] = cos(delta * j);
-            w[j + 1] = sin(delta * j);
-            w[j + 2] = cos(3 * delta * j);
-            w[j + 3] = sin(3 * delta * j);
+            for (j = 4; j < nwh; j += 4) {
+                w[j] = cos(delta * j);
+                w[j + 1] = sin(delta * j);
+                w[j + 2] = cos(3 * delta * j);
+                w[j + 3] = -sin(3 * delta * j);
+            }
         }
         nw0 = 0;
         while (nwh > 2) {
@@ -666,21 +674,26 @@ void makewt(int nw, int *ip, REAL *w)
             nwh >>= 1;
             w[nw1] = 1;
             w[nw1 + 1] = wn4r;
-            if (nwh >= 4) {
+            if (nwh == 4) {
+                wk1r = w[nw0 + 4];
+                wk1i = w[nw0 + 5];
+                w[nw1 + 2] = wk1r;
+                w[nw1 + 3] = wk1i;
+            } else if (nwh > 4) {
                 wk1r = w[nw0 + 4];
                 wk3r = w[nw0 + 6];
                 w[nw1 + 2] = 0.5 / wk1r;
                 w[nw1 + 3] = 0.5 / wk3r;
-            }
-            for (j = 4; j < nwh; j += 4) {
-                wk1r = w[nw0 + 2 * j];
-                wk1i = w[nw0 + 2 * j + 1];
-                wk3r = w[nw0 + 2 * j + 2];
-                wk3i = w[nw0 + 2 * j + 3];
-                w[nw1 + j] = wk1r;
-                w[nw1 + j + 1] = wk1i;
-                w[nw1 + j + 2] = wk3r;
-                w[nw1 + j + 3] = wk3i;
+                for (j = 4; j < nwh; j += 4) {
+                    wk1r = w[nw0 + 2 * j];
+                    wk1i = w[nw0 + 2 * j + 1];
+                    wk3r = w[nw0 + 2 * j + 2];
+                    wk3i = w[nw0 + 2 * j + 3];
+                    w[nw1 + j] = wk1r;
+                    w[nw1 + j + 1] = wk1i;
+                    w[nw1 + j + 2] = wk3r;
+                    w[nw1 + j + 3] = wk3i;
+                }
             }
             nw0 = nw1;
         }
@@ -688,10 +701,30 @@ void makewt(int nw, int *ip, REAL *w)
 }
 
 
-void makect(int nc, int *ip, REAL *c)
+void makeipt(int nw, int *ip)
+{
+    int j, l, m, m2, p, q;
+    
+    ip[2] = 0;
+    ip[3] = 16;
+    m = 2;
+    for (l = nw; l > 32; l >>= 2) {
+        m2 = m << 1;
+        q = m2 << 3;
+        for (j = m; j < m2; j++) {
+            p = ip[j] << 2;
+            ip[m + j] = p;
+            ip[m2 + j] = p + q;
+        }
+        m = m2;
+    }
+}
+
+
+void makect(int nc, int *ip, double *c)
 {
     int j, nch;
-    REAL delta;
+    double delta;
     
     ip[1] = nc;
     if (nc > 1) {
@@ -710,43 +743,94 @@ void makect(int nc, int *ip, REAL *c)
 /* -------- child routines -------- */
 
 
-#ifndef CDFT_RECURSIVE_N  /* length of the recursive FFT mode */
-#define CDFT_RECURSIVE_N 512  /* <= (L1 cache size) / 16 */
+#ifdef USE_CDFT_PTHREADS
+#define USE_CDFT_THREADS
+#ifndef CDFT_THREADS_BEGIN_N
+#define CDFT_THREADS_BEGIN_N 8192
 #endif
+#ifndef CDFT_4THREADS_BEGIN_N
+#define CDFT_4THREADS_BEGIN_N 65536
+#endif
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define cdft_thread_t pthread_t
+#define cdft_thread_create(thp,func,argp) { \
+    if (pthread_create(thp, NULL, func, (void *) argp) != 0) { \
+        fprintf(stderr, "cdft thread error\n"); \
+        exit(1); \
+    } \
+}
+#define cdft_thread_wait(th) { \
+    if (pthread_join(th, NULL) != 0) { \
+        fprintf(stderr, "cdft thread error\n"); \
+        exit(1); \
+    } \
+}
+#endif /* USE_CDFT_PTHREADS */
 
 
-void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w)
+#ifdef USE_CDFT_WINTHREADS
+#define USE_CDFT_THREADS
+#ifndef CDFT_THREADS_BEGIN_N
+#define CDFT_THREADS_BEGIN_N 32768
+#endif
+#ifndef CDFT_4THREADS_BEGIN_N
+#define CDFT_4THREADS_BEGIN_N 524288
+#endif
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define cdft_thread_t HANDLE
+#define cdft_thread_create(thp,func,argp) { \
+    DWORD thid; \
+    *(thp) = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, (LPVOID) argp, 0, &thid); \
+    if (*(thp) == 0) { \
+        fprintf(stderr, "cdft thread error\n"); \
+        exit(1); \
+    } \
+}
+#define cdft_thread_wait(th) { \
+    WaitForSingleObject(th, INFINITE); \
+    CloseHandle(th); \
+}
+#endif /* USE_CDFT_WINTHREADS */
+
+
+void cftfsub(int n, double *a, int *ip, int nw, double *w)
 {
-    void bitrv2(int n, int *ip, REAL *a);
-    void bitrv216(REAL *a);
-    void bitrv208(REAL *a);
-    void cftf1st(int n, REAL *a, REAL *w);
-    void cftrec1(int n, REAL *a, int nw, REAL *w);
-    void cftrec2(int n, REAL *a, int nw, REAL *w);
-    void cftexp1(int n, REAL *a, int nw, REAL *w);
-    void cftfx41(int n, REAL *a, int nw, REAL *w);
-    void cftf161(REAL *a, REAL *w);
-    void cftf081(REAL *a, REAL *w);
-    void cftf040(REAL *a);
-    void cftx020(REAL *a);
-    int m;
+    void bitrv2(int n, int *ip, double *a);
+    void bitrv216(double *a);
+    void bitrv208(double *a);
+    void cftf1st(int n, double *a, double *w);
+    void cftrec4(int n, double *a, int nw, double *w);
+    void cftleaf(int n, int isplt, double *a, int nw, double *w);
+    void cftfx41(int n, double *a, int nw, double *w);
+    void cftf161(double *a, double *w);
+    void cftf081(double *a, double *w);
+    void cftf040(double *a);
+    void cftx020(double *a);
+#ifdef USE_CDFT_THREADS
+    void cftrec4_th(int n, double *a, int nw, double *w);
+#endif /* USE_CDFT_THREADS */
     
-    if (n > 32) {
-        m = n >> 2;
-        cftf1st(n, a, &w[nw - m]);
-        if (n > CDFT_RECURSIVE_N) {
-            cftrec1(m, a, nw, w);
-            cftrec2(m, &a[m], nw, w);
-            cftrec1(m, &a[2 * m], nw, w);
-            cftrec1(m, &a[3 * m], nw, w);
-        } else if (m > 32) {
-            cftexp1(n, a, nw, w);
-        } else {
-            cftfx41(n, a, nw, w);
-        }
-        bitrv2(n, ip, a);
-    } else if (n > 8) {
-        if (n == 32) {
+    if (n > 8) {
+        if (n > 32) {
+            cftf1st(n, a, &w[nw - (n >> 2)]);
+#ifdef USE_CDFT_THREADS
+            if (n > CDFT_THREADS_BEGIN_N) {
+                cftrec4_th(n, a, nw, w);
+            } else 
+#endif /* USE_CDFT_THREADS */
+            if (n > 512) {
+                cftrec4(n, a, nw, w);
+            } else if (n > 128) {
+                cftleaf(n, 1, a, nw, w);
+            } else {
+                cftfx41(n, a, nw, w);
+            }
+            bitrv2(n, ip, a);
+        } else if (n == 32) {
             cftf161(a, &w[nw - 8]);
             bitrv216(a);
         } else {
@@ -761,38 +845,40 @@ void cftfsub(int n, REAL *a, int *ip, int nw, REAL *w)
 }
 
 
-void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w)
+void cftbsub(int n, double *a, int *ip, int nw, double *w)
 {
-    void bitrv2conj(int n, int *ip, REAL *a);
-    void bitrv216neg(REAL *a);
-    void bitrv208neg(REAL *a);
-    void cftb1st(int n, REAL *a, REAL *w);
-    void cftrec1(int n, REAL *a, int nw, REAL *w);
-    void cftrec2(int n, REAL *a, int nw, REAL *w);
-    void cftexp1(int n, REAL *a, int nw, REAL *w);
-    void cftfx41(int n, REAL *a, int nw, REAL *w);
-    void cftf161(REAL *a, REAL *w);
-    void cftf081(REAL *a, REAL *w);
-    void cftb040(REAL *a);
-    void cftx020(REAL *a);
-    int m;
+    void bitrv2conj(int n, int *ip, double *a);
+    void bitrv216neg(double *a);
+    void bitrv208neg(double *a);
+    void cftb1st(int n, double *a, double *w);
+    void cftrec4(int n, double *a, int nw, double *w);
+    void cftleaf(int n, int isplt, double *a, int nw, double *w);
+    void cftfx41(int n, double *a, int nw, double *w);
+    void cftf161(double *a, double *w);
+    void cftf081(double *a, double *w);
+    void cftb040(double *a);
+    void cftx020(double *a);
+#ifdef USE_CDFT_THREADS
+    void cftrec4_th(int n, double *a, int nw, double *w);
+#endif /* USE_CDFT_THREADS */
     
-    if (n > 32) {
-        m = n >> 2;
-        cftb1st(n, a, &w[nw - m]);
-        if (n > CDFT_RECURSIVE_N) {
-            cftrec1(m, a, nw, w);
-            cftrec2(m, &a[m], nw, w);
-            cftrec1(m, &a[2 * m], nw, w);
-            cftrec1(m, &a[3 * m], nw, w);
-        } else if (m > 32) {
-            cftexp1(n, a, nw, w);
-        } else {
-            cftfx41(n, a, nw, w);
-        }
-        bitrv2conj(n, ip, a);
-    } else if (n > 8) {
-        if (n == 32) {
+    if (n > 8) {
+        if (n > 32) {
+            cftb1st(n, a, &w[nw - (n >> 2)]);
+#ifdef USE_CDFT_THREADS
+            if (n > CDFT_THREADS_BEGIN_N) {
+                cftrec4_th(n, a, nw, w);
+            } else 
+#endif /* USE_CDFT_THREADS */
+            if (n > 512) {
+                cftrec4(n, a, nw, w);
+            } else if (n > 128) {
+                cftleaf(n, 1, a, nw, w);
+            } else {
+                cftfx41(n, a, nw, w);
+            }
+            bitrv2conj(n, ip, a);
+        } else if (n == 32) {
             cftf161(a, &w[nw - 8]);
             bitrv216neg(a);
         } else {
@@ -807,27 +893,22 @@ void cftbsub(int n, REAL *a, int *ip, int nw, REAL *w)
 }
 
 
-void bitrv2(int n, int *ip, REAL *a)
+void bitrv2(int n, int *ip, double *a)
 {
-    int j, j1, k, k1, l, m, m2;
-    REAL xr, xi, yr, yi;
+    int j, j1, k, k1, l, m, nh, nm;
+    double xr, xi, yr, yi;
     
-    ip[0] = 0;
-    l = n;
     m = 1;
-    while ((m << 3) < l) {
-        l >>= 1;
-        for (j = 0; j < m; j++) {
-            ip[m + j] = ip[j] + l;
-        }
+    for (l = n >> 2; l > 8; l >>= 2) {
         m <<= 1;
     }
-    m2 = 2 * m;
-    if ((m << 3) == l) {
+    nh = n >> 1;
+    nm = 4 * m;
+    if (l == 8) {
         for (k = 0; k < m; k++) {
             for (j = 0; j < k; j++) {
-                j1 = 2 * j + ip[k];
-                k1 = 2 * k + ip[j];
+                j1 = 4 * j + 2 * ip[m + k];
+                k1 = 4 * k + 2 * ip[m + j];
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -836,8 +917,8 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += 2 * m2;
+                j1 += nm;
+                k1 += 2 * nm;
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -846,8 +927,8 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 -= m2;
+                j1 += nm;
+                k1 -= nm;
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -856,8 +937,128 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += 2 * m2;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nh;
+                k1 += 2;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += 2;
+                k1 += nh;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 -= nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nh;
+                k1 -= 2;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -867,8 +1068,59 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[k1] = xr;
                 a[k1 + 1] = xi;
             }
-            j1 = 2 * k + m2 + ip[k];
-            k1 = j1 + m2;
+            k1 = 4 * k + 2 * ip[m + k];
+            j1 = k1 + 2;
+            k1 += nh;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nm;
+            k1 += 2 * nm;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nm;
+            k1 -= nm;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 -= 2;
+            k1 -= nh;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nh + 2;
+            k1 += nh + 2;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 -= nh - nm;
+            k1 += 2 * nm - 2;
             xr = a[j1];
             xi = a[j1 + 1];
             yr = a[k1];
@@ -879,10 +1131,10 @@ void bitrv2(int n, int *ip, REAL *a)
             a[k1 + 1] = xi;
         }
     } else {
-        for (k = 1; k < m; k++) {
+        for (k = 0; k < m; k++) {
             for (j = 0; j < k; j++) {
-                j1 = 2 * j + ip[k];
-                k1 = 2 * k + ip[j];
+                j1 = 4 * j + ip[m + k];
+                k1 = 4 * k + ip[m + j];
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -891,8 +1143,68 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += m2;
+                j1 += nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nh;
+                k1 += 2;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += 2;
+                k1 += nh;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nh;
+                k1 -= 2;
+                xr = a[j1];
+                xi = a[j1 + 1];
+                yr = a[k1];
+                yi = a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= nm;
                 xr = a[j1];
                 xi = a[j1 + 1];
                 yr = a[k1];
@@ -902,32 +1214,48 @@ void bitrv2(int n, int *ip, REAL *a)
                 a[k1] = xr;
                 a[k1 + 1] = xi;
             }
+            k1 = 4 * k + ip[m + k];
+            j1 = k1 + 2;
+            k1 += nh;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nm;
+            k1 += nm;
+            xr = a[j1];
+            xi = a[j1 + 1];
+            yr = a[k1];
+            yi = a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
         }
     }
 }
 
 
-void bitrv2conj(int n, int *ip, REAL *a)
+void bitrv2conj(int n, int *ip, double *a)
 {
-    int j, j1, k, k1, l, m, m2;
-    REAL xr, xi, yr, yi;
+    int j, j1, k, k1, l, m, nh, nm;
+    double xr, xi, yr, yi;
     
-    ip[0] = 0;
-    l = n;
     m = 1;
-    while ((m << 3) < l) {
-        l >>= 1;
-        for (j = 0; j < m; j++) {
-            ip[m + j] = ip[j] + l;
-        }
+    for (l = n >> 2; l > 8; l >>= 2) {
         m <<= 1;
     }
-    m2 = 2 * m;
-    if ((m << 3) == l) {
+    nh = n >> 1;
+    nm = 4 * m;
+    if (l == 8) {
         for (k = 0; k < m; k++) {
             for (j = 0; j < k; j++) {
-                j1 = 2 * j + ip[k];
-                k1 = 2 * k + ip[j];
+                j1 = 4 * j + 2 * ip[m + k];
+                k1 = 4 * k + 2 * ip[m + j];
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -936,8 +1264,8 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += 2 * m2;
+                j1 += nm;
+                k1 += 2 * nm;
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -946,8 +1274,8 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 -= m2;
+                j1 += nm;
+                k1 -= nm;
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -956,8 +1284,128 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += 2 * m2;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nh;
+                k1 += 2;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += 2;
+                k1 += nh;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 -= nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nh;
+                k1 -= 2;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= 2 * nm;
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -967,10 +1415,10 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[k1] = xr;
                 a[k1 + 1] = xi;
             }
-            k1 = 2 * k + ip[k];
-            a[k1 + 1] = -a[k1 + 1];
-            j1 = k1 + m2;
-            k1 = j1 + m2;
+            k1 = 4 * k + 2 * ip[m + k];
+            j1 = k1 + 2;
+            k1 += nh;
+            a[j1 - 1] = -a[j1 - 1];
             xr = a[j1];
             xi = -a[j1 + 1];
             yr = a[k1];
@@ -979,16 +1427,65 @@ void bitrv2conj(int n, int *ip, REAL *a)
             a[j1 + 1] = yi;
             a[k1] = xr;
             a[k1 + 1] = xi;
-            k1 += m2;
-            a[k1 + 1] = -a[k1 + 1];
+            a[k1 + 3] = -a[k1 + 3];
+            j1 += nm;
+            k1 += 2 * nm;
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nm;
+            k1 -= nm;
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 -= 2;
+            k1 -= nh;
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 += nh + 2;
+            k1 += nh + 2;
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            j1 -= nh - nm;
+            k1 += 2 * nm - 2;
+            a[j1 - 1] = -a[j1 - 1];
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            a[k1 + 3] = -a[k1 + 3];
         }
     } else {
-        a[1] = -a[1];
-        a[m2 + 1] = -a[m2 + 1];
-        for (k = 1; k < m; k++) {
+        for (k = 0; k < m; k++) {
             for (j = 0; j < k; j++) {
-                j1 = 2 * j + ip[k];
-                k1 = 2 * k + ip[j];
+                j1 = 4 * j + ip[m + k];
+                k1 = 4 * k + ip[m + j];
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -997,8 +1494,68 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[j1 + 1] = yi;
                 a[k1] = xr;
                 a[k1 + 1] = xi;
-                j1 += m2;
-                k1 += m2;
+                j1 += nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nh;
+                k1 += 2;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += 2;
+                k1 += nh;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 += nm;
+                k1 += nm;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nh;
+                k1 -= 2;
+                xr = a[j1];
+                xi = -a[j1 + 1];
+                yr = a[k1];
+                yi = -a[k1 + 1];
+                a[j1] = yr;
+                a[j1 + 1] = yi;
+                a[k1] = xr;
+                a[k1 + 1] = xi;
+                j1 -= nm;
+                k1 -= nm;
                 xr = a[j1];
                 xi = -a[j1 + 1];
                 yr = a[k1];
@@ -1008,17 +1565,39 @@ void bitrv2conj(int n, int *ip, REAL *a)
                 a[k1] = xr;
                 a[k1 + 1] = xi;
             }
-            k1 = 2 * k + ip[k];
-            a[k1 + 1] = -a[k1 + 1];
-            a[k1 + m2 + 1] = -a[k1 + m2 + 1];
+            k1 = 4 * k + ip[m + k];
+            j1 = k1 + 2;
+            k1 += nh;
+            a[j1 - 1] = -a[j1 - 1];
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            a[k1 + 3] = -a[k1 + 3];
+            j1 += nm;
+            k1 += nm;
+            a[j1 - 1] = -a[j1 - 1];
+            xr = a[j1];
+            xi = -a[j1 + 1];
+            yr = a[k1];
+            yi = -a[k1 + 1];
+            a[j1] = yr;
+            a[j1 + 1] = yi;
+            a[k1] = xr;
+            a[k1 + 1] = xi;
+            a[k1 + 3] = -a[k1 + 3];
         }
     }
 }
 
 
-void bitrv216(REAL *a)
+void bitrv216(double *a)
 {
-    REAL x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
+    double x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
         x5r, x5i, x7r, x7i, x8r, x8i, x10r, x10i, 
         x11r, x11i, x12r, x12i, x13r, x13i, x14r, x14i;
     
@@ -1073,9 +1652,9 @@ void bitrv216(REAL *a)
 }
 
 
-void bitrv216neg(REAL *a)
+void bitrv216neg(double *a)
 {
-    REAL x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
+    double x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
         x5r, x5i, x6r, x6i, x7r, x7i, x8r, x8i, 
         x9r, x9i, x10r, x10i, x11r, x11i, x12r, x12i, 
         x13r, x13i, x14r, x14i, x15r, x15i;
@@ -1143,9 +1722,9 @@ void bitrv216neg(REAL *a)
 }
 
 
-void bitrv208(REAL *a)
+void bitrv208(double *a)
 {
-    REAL x1r, x1i, x3r, x3i, x4r, x4i, x6r, x6i;
+    double x1r, x1i, x3r, x3i, x4r, x4i, x6r, x6i;
     
     x1r = a[2];
     x1i = a[3];
@@ -1166,9 +1745,9 @@ void bitrv208(REAL *a)
 }
 
 
-void bitrv208neg(REAL *a)
+void bitrv208neg(double *a)
 {
-    REAL x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
+    double x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, 
         x5r, x5i, x6r, x6i, x7r, x7i;
     
     x1r = a[2];
@@ -1202,12 +1781,12 @@ void bitrv208neg(REAL *a)
 }
 
 
-void cftf1st(int n, REAL *a, REAL *w)
+void cftf1st(int n, double *a, double *w)
 {
     int j, j0, j1, j2, j3, k, m, mh;
-    REAL wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, 
+    double wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, 
         wd1r, wd1i, wd3r, wd3i;
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i;
     
     mh = n >> 3;
@@ -1244,11 +1823,11 @@ void cftf1st(int n, REAL *a, REAL *w)
         wk1r = csc1 * (wd1r + w[k]);
         wk1i = csc1 * (wd1i + w[k + 1]);
         wk3r = csc3 * (wd3r + w[k + 2]);
-        wk3i = csc3 * (wd3i - w[k + 3]);
+        wk3i = csc3 * (wd3i + w[k + 3]);
         wd1r = w[k];
         wd1i = w[k + 1];
         wd3r = w[k + 2];
-        wd3i = -w[k + 3];
+        wd3i = w[k + 3];
         j1 = j + m;
         j2 = j1 + m;
         j3 = j2 + m;
@@ -1408,12 +1987,12 @@ void cftf1st(int n, REAL *a, REAL *w)
 }
 
 
-void cftb1st(int n, REAL *a, REAL *w)
+void cftb1st(int n, double *a, double *w)
 {
     int j, j0, j1, j2, j3, k, m, mh;
-    REAL wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, 
+    double wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, 
         wd1r, wd1i, wd3r, wd3i;
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i;
     
     mh = n >> 3;
@@ -1450,11 +2029,11 @@ void cftb1st(int n, REAL *a, REAL *w)
         wk1r = csc1 * (wd1r + w[k]);
         wk1i = csc1 * (wd1i + w[k + 1]);
         wk3r = csc3 * (wd3r + w[k + 2]);
-        wk3i = csc3 * (wd3i - w[k + 3]);
+        wk3i = csc3 * (wd3i + w[k + 3]);
         wd1r = w[k];
         wd1i = w[k + 1];
         wd3r = w[k + 2];
-        wd3i = -w[k + 3];
+        wd3i = w[k + 3];
         j1 = j + m;
         j2 = j1 + m;
         j3 = j2 + m;
@@ -1614,128 +2193,239 @@ void cftb1st(int n, REAL *a, REAL *w)
 }
 
 
-void cftrec1(int n, REAL *a, int nw, REAL *w)
+#ifdef USE_CDFT_THREADS
+struct cdft_arg_st {
+    int n0;
+    int n;
+    double *a;
+    int nw;
+    double *w;
+};
+typedef struct cdft_arg_st cdft_arg_t;
+
+
+void cftrec4_th(int n, double *a, int nw, double *w)
 {
-    void cftrec1(int n, REAL *a, int nw, REAL *w);
-    void cftrec2(int n, REAL *a, int nw, REAL *w);
-    void cftmdl1(int n, REAL *a, REAL *w);
-    void cftexp1(int n, REAL *a, int nw, REAL *w);
-    int m;
+    void *cftrec1_th(void *p);
+    void *cftrec2_th(void *p);
+    int i, idiv4, m, nthread;
+    cdft_thread_t th[4];
+    cdft_arg_t ag[4];
     
-    m = n >> 2;
-    cftmdl1(n, a, &w[nw - 2 * m]);
-    if (n > CDFT_RECURSIVE_N) {
-        cftrec1(m, a, nw, w);
-        cftrec2(m, &a[m], nw, w);
-        cftrec1(m, &a[2 * m], nw, w);
-        cftrec1(m, &a[3 * m], nw, w);
-    } else {
-        cftexp1(n, a, nw, w);
-    }
-}
-
-
-void cftrec2(int n, REAL *a, int nw, REAL *w)
-{
-    void cftrec1(int n, REAL *a, int nw, REAL *w);
-    void cftrec2(int n, REAL *a, int nw, REAL *w);
-    void cftmdl2(int n, REAL *a, REAL *w);
-    void cftexp2(int n, REAL *a, int nw, REAL *w);
-    int m;
-    
-    m = n >> 2;
-    cftmdl2(n, a, &w[nw - n]);
-    if (n > CDFT_RECURSIVE_N) {
-        cftrec1(m, a, nw, w);
-        cftrec2(m, &a[m], nw, w);
-        cftrec1(m, &a[2 * m], nw, w);
-        cftrec2(m, &a[3 * m], nw, w);
-    } else {
-        cftexp2(n, a, nw, w);
-    }
-}
-
-
-void cftexp1(int n, REAL *a, int nw, REAL *w)
-{
-    void cftmdl1(int n, REAL *a, REAL *w);
-    void cftmdl2(int n, REAL *a, REAL *w);
-    void cftfx41(int n, REAL *a, int nw, REAL *w);
-    void cftfx42(int n, REAL *a, int nw, REAL *w);
-    int j, k, l;
-    
-    l = n >> 2;
-    while (l > 128) {
-        for (k = l; k < n; k <<= 2) {
-            for (j = k - l; j < n; j += 4 * k) {
-                cftmdl1(l, &a[j], &w[nw - (l >> 1)]);
-                cftmdl2(l, &a[k + j], &w[nw - l]);
-                cftmdl1(l, &a[2 * k + j], &w[nw - (l >> 1)]);
-            }
-        }
-        cftmdl1(l, &a[n - l], &w[nw - (l >> 1)]);
-        l >>= 2;
-    }
-    for (k = l; k < n; k <<= 2) {
-        for (j = k - l; j < n; j += 4 * k) {
-            cftmdl1(l, &a[j], &w[nw - (l >> 1)]);
-            cftfx41(l, &a[j], nw, w);
-            cftmdl2(l, &a[k + j], &w[nw - l]);
-            cftfx42(l, &a[k + j], nw, w);
-            cftmdl1(l, &a[2 * k + j], &w[nw - (l >> 1)]);
-            cftfx41(l, &a[2 * k + j], nw, w);
-        }
-    }
-    cftmdl1(l, &a[n - l], &w[nw - (l >> 1)]);
-    cftfx41(l, &a[n - l], nw, w);
-}
-
-
-void cftexp2(int n, REAL *a, int nw, REAL *w)
-{
-    void cftmdl1(int n, REAL *a, REAL *w);
-    void cftmdl2(int n, REAL *a, REAL *w);
-    void cftfx41(int n, REAL *a, int nw, REAL *w);
-    void cftfx42(int n, REAL *a, int nw, REAL *w);
-    int j, k, l, m;
-    
+    nthread = 2;
+    idiv4 = 0;
     m = n >> 1;
-    l = n >> 2;
-    while (l > 128) {
-        for (k = l; k < m; k <<= 2) {
-            for (j = k - l; j < m; j += 2 * k) {
-                cftmdl1(l, &a[j], &w[nw - (l >> 1)]);
-                cftmdl1(l, &a[m + j], &w[nw - (l >> 1)]);
-            }
-            for (j = 2 * k - l; j < m; j += 4 * k) {
-                cftmdl2(l, &a[j], &w[nw - l]);
-                cftmdl2(l, &a[m + j], &w[nw - l]);
-            }
-        }
-        l >>= 2;
+    if (n > CDFT_4THREADS_BEGIN_N) {
+        nthread = 4;
+        idiv4 = 1;
+        m >>= 1;
     }
-    for (k = l; k < m; k <<= 2) {
-        for (j = k - l; j < m; j += 2 * k) {
-            cftmdl1(l, &a[j], &w[nw - (l >> 1)]);
-            cftfx41(l, &a[j], nw, w);
-            cftmdl1(l, &a[m + j], &w[nw - (l >> 1)]);
-            cftfx41(l, &a[m + j], nw, w);
+    for (i = 0; i < nthread; i++) {
+        ag[i].n0 = n;
+        ag[i].n = m;
+        ag[i].a = &a[i * m];
+        ag[i].nw = nw;
+        ag[i].w = w;
+        if (i != idiv4) {
+            cdft_thread_create(&th[i], cftrec1_th, &ag[i]);
+        } else {
+            cdft_thread_create(&th[i], cftrec2_th, &ag[i]);
         }
-        for (j = 2 * k - l; j < m; j += 4 * k) {
-            cftmdl2(l, &a[j], &w[nw - l]);
-            cftfx42(l, &a[j], nw, w);
-            cftmdl2(l, &a[m + j], &w[nw - l]);
-            cftfx42(l, &a[m + j], nw, w);
-        }
+    }
+    for (i = 0; i < nthread; i++) {
+        cdft_thread_wait(th[i]);
     }
 }
 
 
-void cftmdl1(int n, REAL *a, REAL *w)
+void *cftrec1_th(void *p)
+{
+    int cfttree(int n, int j, int k, double *a, int nw, double *w);
+    void cftleaf(int n, int isplt, double *a, int nw, double *w);
+    void cftmdl1(int n, double *a, double *w);
+    int isplt, j, k, m, n, n0, nw;
+    double *a, *w;
+    
+    n0 = ((cdft_arg_t *) p)->n0;
+    n = ((cdft_arg_t *) p)->n;
+    a = ((cdft_arg_t *) p)->a;
+    nw = ((cdft_arg_t *) p)->nw;
+    w = ((cdft_arg_t *) p)->w;
+    m = n0;
+    while (m > 512) {
+        m >>= 2;
+        cftmdl1(m, &a[n - m], &w[nw - (m >> 1)]);
+    }
+    cftleaf(m, 1, &a[n - m], nw, w);
+    k = 0;
+    for (j = n - m; j > 0; j -= m) {
+        k++;
+        isplt = cfttree(m, j, k, a, nw, w);
+        cftleaf(m, isplt, &a[j - m], nw, w);
+    }
+    return (void *) 0;
+}
+
+
+void *cftrec2_th(void *p)
+{
+    int cfttree(int n, int j, int k, double *a, int nw, double *w);
+    void cftleaf(int n, int isplt, double *a, int nw, double *w);
+    void cftmdl2(int n, double *a, double *w);
+    int isplt, j, k, m, n, n0, nw;
+    double *a, *w;
+    
+    n0 = ((cdft_arg_t *) p)->n0;
+    n = ((cdft_arg_t *) p)->n;
+    a = ((cdft_arg_t *) p)->a;
+    nw = ((cdft_arg_t *) p)->nw;
+    w = ((cdft_arg_t *) p)->w;
+    k = 1;
+    m = n0;
+    while (m > 512) {
+        m >>= 2;
+        k <<= 2;
+        cftmdl2(m, &a[n - m], &w[nw - m]);
+    }
+    cftleaf(m, 0, &a[n - m], nw, w);
+    k >>= 1;
+    for (j = n - m; j > 0; j -= m) {
+        k++;
+        isplt = cfttree(m, j, k, a, nw, w);
+        cftleaf(m, isplt, &a[j - m], nw, w);
+    }
+    return (void *) 0;
+}
+#endif /* USE_CDFT_THREADS */
+
+
+void cftrec4(int n, double *a, int nw, double *w)
+{
+    int cfttree(int n, int j, int k, double *a, int nw, double *w);
+    void cftleaf(int n, int isplt, double *a, int nw, double *w);
+    void cftmdl1(int n, double *a, double *w);
+    int isplt, j, k, m;
+    
+    m = n;
+    while (m > 512) {
+        m >>= 2;
+        cftmdl1(m, &a[n - m], &w[nw - (m >> 1)]);
+    }
+    cftleaf(m, 1, &a[n - m], nw, w);
+    k = 0;
+    for (j = n - m; j > 0; j -= m) {
+        k++;
+        isplt = cfttree(m, j, k, a, nw, w);
+        cftleaf(m, isplt, &a[j - m], nw, w);
+    }
+}
+
+
+int cfttree(int n, int j, int k, double *a, int nw, double *w)
+{
+    void cftmdl1(int n, double *a, double *w);
+    void cftmdl2(int n, double *a, double *w);
+    int i, isplt, m;
+    
+    if ((k & 3) != 0) {
+        isplt = k & 1;
+        if (isplt != 0) {
+            cftmdl1(n, &a[j - n], &w[nw - (n >> 1)]);
+        } else {
+            cftmdl2(n, &a[j - n], &w[nw - n]);
+        }
+    } else {
+        m = n;
+        for (i = k; (i & 3) == 0; i >>= 2) {
+            m <<= 2;
+        }
+        isplt = i & 1;
+        if (isplt != 0) {
+            while (m > 128) {
+                cftmdl1(m, &a[j - m], &w[nw - (m >> 1)]);
+                m >>= 2;
+            }
+        } else {
+            while (m > 128) {
+                cftmdl2(m, &a[j - m], &w[nw - m]);
+                m >>= 2;
+            }
+        }
+    }
+    return isplt;
+}
+
+
+void cftleaf(int n, int isplt, double *a, int nw, double *w)
+{
+    void cftmdl1(int n, double *a, double *w);
+    void cftmdl2(int n, double *a, double *w);
+    void cftf161(double *a, double *w);
+    void cftf162(double *a, double *w);
+    void cftf081(double *a, double *w);
+    void cftf082(double *a, double *w);
+    
+    if (n == 512) {
+        cftmdl1(128, a, &w[nw - 64]);
+        cftf161(a, &w[nw - 8]);
+        cftf162(&a[32], &w[nw - 32]);
+        cftf161(&a[64], &w[nw - 8]);
+        cftf161(&a[96], &w[nw - 8]);
+        cftmdl2(128, &a[128], &w[nw - 128]);
+        cftf161(&a[128], &w[nw - 8]);
+        cftf162(&a[160], &w[nw - 32]);
+        cftf161(&a[192], &w[nw - 8]);
+        cftf162(&a[224], &w[nw - 32]);
+        cftmdl1(128, &a[256], &w[nw - 64]);
+        cftf161(&a[256], &w[nw - 8]);
+        cftf162(&a[288], &w[nw - 32]);
+        cftf161(&a[320], &w[nw - 8]);
+        cftf161(&a[352], &w[nw - 8]);
+        if (isplt != 0) {
+            cftmdl1(128, &a[384], &w[nw - 64]);
+            cftf161(&a[480], &w[nw - 8]);
+        } else {
+            cftmdl2(128, &a[384], &w[nw - 128]);
+            cftf162(&a[480], &w[nw - 32]);
+        }
+        cftf161(&a[384], &w[nw - 8]);
+        cftf162(&a[416], &w[nw - 32]);
+        cftf161(&a[448], &w[nw - 8]);
+    } else {
+        cftmdl1(64, a, &w[nw - 32]);
+        cftf081(a, &w[nw - 8]);
+        cftf082(&a[16], &w[nw - 8]);
+        cftf081(&a[32], &w[nw - 8]);
+        cftf081(&a[48], &w[nw - 8]);
+        cftmdl2(64, &a[64], &w[nw - 64]);
+        cftf081(&a[64], &w[nw - 8]);
+        cftf082(&a[80], &w[nw - 8]);
+        cftf081(&a[96], &w[nw - 8]);
+        cftf082(&a[112], &w[nw - 8]);
+        cftmdl1(64, &a[128], &w[nw - 32]);
+        cftf081(&a[128], &w[nw - 8]);
+        cftf082(&a[144], &w[nw - 8]);
+        cftf081(&a[160], &w[nw - 8]);
+        cftf081(&a[176], &w[nw - 8]);
+        if (isplt != 0) {
+            cftmdl1(64, &a[192], &w[nw - 32]);
+            cftf081(&a[240], &w[nw - 8]);
+        } else {
+            cftmdl2(64, &a[192], &w[nw - 64]);
+            cftf082(&a[240], &w[nw - 8]);
+        }
+        cftf081(&a[192], &w[nw - 8]);
+        cftf082(&a[208], &w[nw - 8]);
+        cftf081(&a[224], &w[nw - 8]);
+    }
+}
+
+
+void cftmdl1(int n, double *a, double *w)
 {
     int j, j0, j1, j2, j3, k, m, mh;
-    REAL wn4r, wk1r, wk1i, wk3r, wk3i;
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+    double wn4r, wk1r, wk1i, wk3r, wk3i;
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
     
     mh = n >> 3;
     m = 2 * mh;
@@ -1765,7 +2455,7 @@ void cftmdl1(int n, REAL *a, REAL *w)
         wk1r = w[k];
         wk1i = w[k + 1];
         wk3r = w[k + 2];
-        wk3i = -w[k + 3];
+        wk3i = w[k + 3];
         j1 = j + m;
         j2 = j1 + m;
         j3 = j2 + m;
@@ -1841,11 +2531,11 @@ void cftmdl1(int n, REAL *a, REAL *w)
 }
 
 
-void cftmdl2(int n, REAL *a, REAL *w)
+void cftmdl2(int n, double *a, double *w)
 {
     int j, j0, j1, j2, j3, k, kr, m, mh;
-    REAL wn4r, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y2r, y2i;
+    double wn4r, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y2r, y2i;
     
     mh = n >> 3;
     m = 2 * mh;
@@ -1880,12 +2570,12 @@ void cftmdl2(int n, REAL *a, REAL *w)
         wk1r = w[k];
         wk1i = w[k + 1];
         wk3r = w[k + 2];
-        wk3i = -w[k + 3];
+        wk3i = w[k + 3];
         kr -= 4;
         wd1i = w[kr];
         wd1r = w[kr + 1];
         wd3i = w[kr + 2];
-        wd3r = -w[kr + 3];
+        wd3r = w[kr + 3];
         j1 = j + m;
         j2 = j1 + m;
         j3 = j2 + m;
@@ -1975,12 +2665,12 @@ void cftmdl2(int n, REAL *a, REAL *w)
 }
 
 
-void cftfx41(int n, REAL *a, int nw, REAL *w)
+void cftfx41(int n, double *a, int nw, double *w)
 {
-    void cftf161(REAL *a, REAL *w);
-    void cftf162(REAL *a, REAL *w);
-    void cftf081(REAL *a, REAL *w);
-    void cftf082(REAL *a, REAL *w);
+    void cftf161(double *a, double *w);
+    void cftf162(double *a, double *w);
+    void cftf081(double *a, double *w);
+    void cftf082(double *a, double *w);
     
     if (n == 128) {
         cftf161(a, &w[nw - 8]);
@@ -1988,38 +2678,17 @@ void cftfx41(int n, REAL *a, int nw, REAL *w)
         cftf161(&a[64], &w[nw - 8]);
         cftf161(&a[96], &w[nw - 8]);
     } else {
-        cftf081(a, &w[nw - 16]);
-        cftf082(&a[16], &w[nw - 16]);
-        cftf081(&a[32], &w[nw - 16]);
-        cftf081(&a[48], &w[nw - 16]);
+        cftf081(a, &w[nw - 8]);
+        cftf082(&a[16], &w[nw - 8]);
+        cftf081(&a[32], &w[nw - 8]);
+        cftf081(&a[48], &w[nw - 8]);
     }
 }
 
 
-void cftfx42(int n, REAL *a, int nw, REAL *w)
+void cftf161(double *a, double *w)
 {
-    void cftf161(REAL *a, REAL *w);
-    void cftf162(REAL *a, REAL *w);
-    void cftf081(REAL *a, REAL *w);
-    void cftf082(REAL *a, REAL *w);
-    
-    if (n == 128) {
-        cftf161(a, &w[nw - 8]);
-        cftf162(&a[32], &w[nw - 32]);
-        cftf161(&a[64], &w[nw - 8]);
-        cftf162(&a[96], &w[nw - 32]);
-    } else {
-        cftf081(a, &w[nw - 16]);
-        cftf082(&a[16], &w[nw - 16]);
-        cftf081(&a[32], &w[nw - 16]);
-        cftf082(&a[48], &w[nw - 16]);
-    }
-}
-
-
-void cftf161(REAL *a, REAL *w)
-{
-    REAL wn4r, wk1r, wk1i, 
+    double wn4r, wk1r, wk1i, 
         x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, 
         y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i, 
@@ -2027,8 +2696,8 @@ void cftf161(REAL *a, REAL *w)
         y12r, y12i, y13r, y13i, y14r, y14i, y15r, y15i;
     
     wn4r = w[1];
-    wk1i = wn4r * w[2];
-    wk1r = wk1i + w[2];
+    wk1r = w[2];
+    wk1i = w[3];
     x0r = a[0] + a[16];
     x0i = a[1] + a[17];
     x1r = a[0] - a[16];
@@ -2176,9 +2845,9 @@ void cftf161(REAL *a, REAL *w)
 }
 
 
-void cftf162(REAL *a, REAL *w)
+void cftf162(double *a, double *w)
 {
-    REAL wn4r, wk1r, wk1i, wk2r, wk2i, wk3r, wk3i, 
+    double wn4r, wk1r, wk1i, wk2r, wk2i, wk3r, wk3i, 
         x0r, x0i, x1r, x1i, x2r, x2i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, 
         y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i, 
@@ -2189,7 +2858,7 @@ void cftf162(REAL *a, REAL *w)
     wk1r = w[4];
     wk1i = w[5];
     wk3r = w[6];
-    wk3i = w[7];
+    wk3i = -w[7];
     wk2r = w[8];
     wk2i = w[9];
     x1r = a[0] - a[17];
@@ -2359,9 +3028,9 @@ void cftf162(REAL *a, REAL *w)
 }
 
 
-void cftf081(REAL *a, REAL *w)
+void cftf081(double *a, double *w)
 {
-    REAL wn4r, x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
+    double wn4r, x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, 
         y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i;
     
@@ -2421,15 +3090,15 @@ void cftf081(REAL *a, REAL *w)
 }
 
 
-void cftf082(REAL *a, REAL *w)
+void cftf082(double *a, double *w)
 {
-    REAL wn4r, wk1r, wk1i, x0r, x0i, x1r, x1i, 
+    double wn4r, wk1r, wk1i, x0r, x0i, x1r, x1i, 
         y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, 
         y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i;
     
     wn4r = w[1];
-    wk1r = w[4];
-    wk1i = w[5];
+    wk1r = w[2];
+    wk1i = w[3];
     y0r = a[0] - a[9];
     y0i = a[1] + a[8];
     y1r = a[0] + a[9];
@@ -2493,9 +3162,9 @@ void cftf082(REAL *a, REAL *w)
 }
 
 
-void cftf040(REAL *a)
+void cftf040(double *a)
 {
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
     
     x0r = a[0] + a[4];
     x0i = a[1] + a[5];
@@ -2507,18 +3176,18 @@ void cftf040(REAL *a)
     x3i = a[3] - a[7];
     a[0] = x0r + x2r;
     a[1] = x0i + x2i;
-    a[4] = x0r - x2r;
-    a[5] = x0i - x2i;
     a[2] = x1r - x3i;
     a[3] = x1i + x3r;
+    a[4] = x0r - x2r;
+    a[5] = x0i - x2i;
     a[6] = x1r + x3i;
     a[7] = x1i - x3r;
 }
 
 
-void cftb040(REAL *a)
+void cftb040(double *a)
 {
-    REAL x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+    double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
     
     x0r = a[0] + a[4];
     x0i = a[1] + a[5];
@@ -2530,18 +3199,18 @@ void cftb040(REAL *a)
     x3i = a[3] - a[7];
     a[0] = x0r + x2r;
     a[1] = x0i + x2i;
-    a[4] = x0r - x2r;
-    a[5] = x0i - x2i;
     a[2] = x1r + x3i;
     a[3] = x1i - x3r;
+    a[4] = x0r - x2r;
+    a[5] = x0i - x2i;
     a[6] = x1r - x3i;
     a[7] = x1i + x3r;
 }
 
 
-void cftx020(REAL *a)
+void cftx020(double *a)
 {
-    REAL x0r, x0i;
+    double x0r, x0i;
     
     x0r = a[0] - a[2];
     x0i = a[1] - a[3];
@@ -2552,10 +3221,10 @@ void cftx020(REAL *a)
 }
 
 
-void rftfsub(int n, REAL *a, int nc, REAL *c)
+void rftfsub(int n, double *a, int nc, double *c)
 {
     int j, k, kk, ks, m;
-    REAL wkr, wki, xr, xi, yr, yi;
+    double wkr, wki, xr, xi, yr, yi;
     
     m = n >> 1;
     ks = 2 * nc / m;
@@ -2577,10 +3246,10 @@ void rftfsub(int n, REAL *a, int nc, REAL *c)
 }
 
 
-void rftbsub(int n, REAL *a, int nc, REAL *c)
+void rftbsub(int n, double *a, int nc, double *c)
 {
     int j, k, kk, ks, m;
-    REAL wkr, wki, xr, xi, yr, yi;
+    double wkr, wki, xr, xi, yr, yi;
     
     m = n >> 1;
     ks = 2 * nc / m;
@@ -2602,10 +3271,10 @@ void rftbsub(int n, REAL *a, int nc, REAL *c)
 }
 
 
-void dctsub(int n, REAL *a, int nc, REAL *c)
+void dctsub(int n, double *a, int nc, double *c)
 {
     int j, k, kk, ks, m;
-    REAL wkr, wki, xr;
+    double wkr, wki, xr;
     
     m = n >> 1;
     ks = nc / n;
@@ -2623,10 +3292,10 @@ void dctsub(int n, REAL *a, int nc, REAL *c)
 }
 
 
-void dstsub(int n, REAL *a, int nc, REAL *c)
+void dstsub(int n, double *a, int nc, double *c)
 {
     int j, k, kk, ks, m;
-    REAL wkr, wki, xr;
+    double wkr, wki, xr;
     
     m = n >> 1;
     ks = nc / n;
@@ -2643,31 +3312,3 @@ void dstsub(int n, REAL *a, int nc, REAL *c)
     a[m] *= c[0];
 }
 
-void rfft(int n,int isign,REAL x[])
-{
-  static int ipsize = 0,wsize=0;
-  static int *ip = NULL;
-  static REAL *w = NULL;
-  int newipsize,newwsize;
-
-  if (n == 0) {
-    free(ip); ip = NULL; ipsize = 0;
-    free(w);  w  = NULL; wsize  = 0;
-    return;
-  }
-
-  newipsize = 2+sqrt(n/2);
-  if (newipsize > ipsize) {
-    ipsize = newipsize;
-    ip = (int *)realloc(ip,sizeof(int)*ipsize);
-    ip[0] = 0;
-  }
-
-  newwsize = n/2;
-  if (newwsize > wsize) {
-    wsize = newwsize;
-    w = (REAL *)realloc(w,sizeof(REAL)*wsize);
-  }
-
-  rdft(n,isign,x,ip,w);
-}

@@ -6,10 +6,9 @@
 #include <audio_engine/utils/real.h>
 
 #include <audio_engine/processor/equalizer.h>
-#include <audio_engine/processor/utils/fft.h>
+#include <audio_engine/processor/fft/rfft.h>
 
 #define LOG_TAG "(jni)audio_processor:equalizer.c"
-
 
 #define PI 3.1415926535897932384626433832795
 
@@ -317,7 +316,9 @@ void equalizer_impl_process_param(real_t *bc, equalizer_param_s * band_list, equ
                 p = p->next->next;
                 continue;
             }
-            abort();
+
+            //abort();
+            break; // should never happen.
         }
     }
 }
@@ -380,7 +381,7 @@ void equalizer_impl_clear_buffer(equalizer_state_s * equalizer_state) {
 }
 
 int equalizer_impl_process(equalizer_state_s * equalizer_state, char *buf,int nsamples,int nch,int bps) {
-//    LOG_INFO(LOG_TAG, "equ_process: equalizer_state = 0x%8.8x, nsamples=%i,nch=%i,bps=%i", (int) equalizer_state, nsamples, nch, bps);
+/*    LOG_INFO(LOG_TAG, "equ_process: equalizer_state = 0x%8.8x, nsamples=%i,nch=%i,bps=%i", (int) equalizer_state, nsamples, nch, bps); */
     int i,p,ch;
     real_t *ires;
     int amax = (1 << (bps - 1)) - 1;
