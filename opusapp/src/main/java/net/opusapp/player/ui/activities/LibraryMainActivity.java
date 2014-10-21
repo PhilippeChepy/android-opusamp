@@ -1,15 +1,3 @@
-/*
- * LibraryMainActivity.java
- *
- * Copyright (c) 2014, Philippe Chepy
- * All rights reserved.
- *
- * This software is the confidential and proprietary information
- * of Philippe Chepy.
- * You shall not disclose such Confidential Information.
- *
- * http://www.chepy.eu
- */
 package net.opusapp.player.ui.activities;
 
 import android.app.AlertDialog;
@@ -23,26 +11,31 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.v4.internal.view.SupportMenuItem;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.view.Window;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
+import net.opusapp.player.ui.adapter.ProviderAdapter;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
 import net.opusapp.player.ui.fragments.AlbumArtistFragment;
 import net.opusapp.player.ui.fragments.AlbumFragment;
@@ -104,13 +97,25 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
 
     // Navigation
-    private ArrayAdapter<CollectionDescriptor> navigationAdapter;
+    private DrawerLayout drawerLayout;
 
-    private static final int ID_LIBRARY_MANAGEMENT = -1;
+    private Cursor navigationCursor;
+
+    private ProviderAdapter navigationAdapter;
+
+
+
+    // Drawer
+    private static final String SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN = "player_panel_is_hidden";
+
+    private boolean hiddenPanel;
+
+    private ActionBarDrawerToggle drawerToggle;
 
 
 
     private boolean doubleBackToExitPressedOnce = false;
+
 
 
 
@@ -199,8 +204,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_main, new int[] { Window.FEATURE_INDETERMINATE_PROGRESS });
+        super.onCreate(savedInstanceState, R.layout.activity_library_main, null);
 
+        // Pager & Tabs
         libraryPager = (ViewPager) findViewById(R.id.pager_viewpager);
         libraryPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
 
@@ -209,18 +215,33 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
         scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
 
-
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        // Actionbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolbar);
 
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
 
-        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                doPlayerPanelPlayManagement(slideOffset);
+            }
+        };
+
+        navigationAdapter = new ProviderAdapter(this, R.layout.view_item_double_line_no_anchor, null);
+
+        final ListView drawerList = (ListView) findViewById(R.id.list_drawer);
+        drawerList.setAdapter(navigationAdapter);
+        drawerList.setOnItemClickListener(navigationDrawerListOnItemClickListener);
+
+        drawerLayout.setDrawerListener(drawerToggle);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
         doInitLibrary();
         doInitLibraryContent();
-
         final Intent intent = getIntent();
         final String action = intent.getAction();
 
@@ -274,13 +295,75 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN, getSlidingPanel().isPanelHidden());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        hiddenPanel = savedInstanceState.getBoolean(SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN, false);
+    }
+
+    @Override
+    protected boolean canShowPanel() {
+        return !hiddenPanel;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        drawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        drawerToggle.onConfigurationChanged(newConfig);
+    }
+
+
+
+    class ActionMenuItemClickListener implements MenuItem.OnMenuItemClickListener {
+
+        private final int index;
+
+        public ActionMenuItemClickListener(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+            final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(index);
+            if (providerAction != null) {
+                providerAction.launch(LibraryMainActivity.this);
+            }
+
+            return true;
+        }
+    }
+
+
+
+
+
+    protected void updateReloadMenuItem() {
+        if (reloadMenuItem != null) {
+            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
+                reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
+                reloadMenuItem.setIcon(R.drawable.ic_action_cancel);
+            } else {
+                reloadMenuItem.setTitle(R.string.menuitem_label_reload);
+                reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+            }
+        }
     }
 
     @Override
@@ -347,15 +430,136 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     }
 
-    protected void updateReloadMenuItem() {
-        if (reloadMenuItem != null) {
-            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
-                reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                reloadMenuItem.setIcon(R.drawable.ic_action_cancel);
-            } else {
-                reloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+
+    protected void initLibraryView() {
+        libraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
+
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+        // Only show tabs that were set in preferences
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
+            libraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
+            libraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
+            libraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
+            libraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
+            libraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
+            libraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
+        }
+
+        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
+            libraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
+        }
+
+        libraryPager.setAdapter(libraryAdapter);
+        // libraryPager.setOffscreenPageLimit(libraryAdapter.getCount());
+        scrollingTabs.setViewPager(libraryPager);
+    }
+
+
+    protected void doInitLibrary() {
+        SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
+
+        if (database != null) {
+            Cursor cursor = database.query(
+                    Entities.Provider.TABLE_NAME,
+                    new String[]{
+                            Entities.Provider._ID,
+                            Entities.Provider.COLUMN_FIELD_PROVIDER_NAME,
+                            Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE
+                    },
+                    null, null, null, null, Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION);
+
+            navigationCursor = cursor;
+            if (cursor != null) {
+                navigationAdapter.changeCursor(cursor);
             }
+        }
+    }
+
+    protected void doInitLibraryContent() {
+        initLibraryView();
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+
+        //    Launching scan.
+        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
+            mediaManager.getProvider().addLibraryChangeListener(libraryChangeListener);
+        }
+
+        if (provider.scanIsRunning()) {
+            libraryChangeListener.libraryScanStarted();
+        }
+        else {
+            provider.scanStart();
+        }
+
+        if (navigationCursor != null) {
+            try {
+                navigationCursor.moveToPosition(PlayerApplication.libraryManagerIndex);
+
+                getSupportActionBar().setTitle(navigationCursor.getString(1));
+                getSupportActionBar().setSubtitle(MediaManagerFactory.getDescriptionFromType(navigationCursor.getInt(2)));
+            } catch (final Exception exception) {
+                LogUtils.LOGException(TAG, "doInitLibraryContent", 0, exception);
+            }
+        }
+    }
+
+    protected  void doLibraryManagement() {
+        startActivityForResult(new Intent(PlayerApplication.context, SettingsLibrariesActivity.class), DRAWERITEM_LIBRARY_SETTINGS_ID);
+    }
+
+    protected void doManageMenuitemVisibility(PagerAdapter pagerAdapter, int position) {
+        final Class<?> itemClass = ((Object)pagerAdapter.getItem(position)).getClass();
+
+        if (itemClass.equals(PlaylistFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(ArtistFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(AlbumArtistFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(AlbumFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(SongFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(GenreFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else if (itemClass.equals(StorageFragment.class)) {
+            sortMenuItem.setVisible(true);
+        }
+        else {
+            sortMenuItem.setVisible(false);
+        }
+    }
+
+    protected void doPlayerPanelPlayManagement(float slideOffset) {
+
+        if (slideOffset >= 0.1 && !getSlidingPanel().isPanelHidden()) {
+            getSlidingPanel().hidePanel();
+        }
+        else if (slideOffset < 0.1 && hasPlaylist() && getSlidingPanel().isPanelHidden()) {
+            getSlidingPanel().showPanel();
         }
     }
 
@@ -631,34 +835,28 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     };
 
-    private ActionBar.OnNavigationListener collectionOnNavigationListener = new ActionBar.OnNavigationListener() {
+    private AdapterView.OnItemClickListener navigationDrawerListOnItemClickListener = new AdapterView.OnItemClickListener() {
 
         @Override
-        public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-            itemId = navigationAdapter.getItem(itemPosition).id;
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            if (itemId == ID_LIBRARY_MANAGEMENT) {
-                doLibraryManagement();
-                getSupportActionBar().setSelectedNavigationItem(0);
-            }
-            else {
-                for (int searchIndex = 0 ; searchIndex < PlayerApplication.mediaManagers.length ; searchIndex++) {
-                    int currentId = PlayerApplication.mediaManagers[searchIndex].getMediaManagerId();
+            for (int searchIndex = 0 ; searchIndex < PlayerApplication.mediaManagers.length ; searchIndex++) {
+                int currentId = PlayerApplication.mediaManagers[searchIndex].getMediaManagerId();
 
-                    if (currentId == itemId) {
-                        itemId = searchIndex;
-                        break;
-                    }
+                if (currentId == id) {
+                    id = searchIndex;
+                    break;
                 }
-
-                PlayerApplication.libraryManagerIndex = (int) itemId;
-                doInitLibraryContent();
-                PlayerApplication.saveLibraryIndexes();
             }
 
-            return false;
+            PlayerApplication.libraryManagerIndex = (int) id;
+            doInitLibraryContent();
+            PlayerApplication.saveLibraryIndexes();
+
+            drawerLayout.closeDrawers();
         }
     };
+
 
     private AbstractMediaManager.Provider.OnLibraryChangeListener libraryChangeListener = new AbstractMediaManager.Provider.OnLibraryChangeListener() {
 
@@ -692,184 +890,4 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             });
         }
     };
-
-
-    protected void initLibraryView() {
-        libraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
-
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        // Only show tabs that were set in preferences
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
-            libraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
-            libraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
-            libraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
-            libraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
-            libraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
-            libraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
-        }
-
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
-            libraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
-        }
-
-        libraryPager.setAdapter(libraryAdapter);
-        // libraryPager.setOffscreenPageLimit(libraryAdapter.getCount());
-        scrollingTabs.setViewPager(libraryPager);
-    }
-
-
-    protected void doInitLibrary() {
-        CollectionDescriptor collections[];
-
-        SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
-
-        if (database != null) {
-            Cursor cursor = database.query(
-                    Entities.Provider.TABLE_NAME,
-                    new String[]{
-                            Entities.Provider._ID,
-                            Entities.Provider.COLUMN_FIELD_PROVIDER_NAME
-                    },
-                    null, null, null, null, Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION);
-
-            final int COLUMN_PROVIDER_ID = 0;
-
-            final int COLUMN_PROVIDER_NAME = 1;
-
-            if (cursor != null && cursor.getCount() > 0) {
-                collections = new CollectionDescriptor[cursor.getCount() + 1];
-
-                int collectionIndex = 0;
-                while (cursor.moveToNext()) {
-                    collections[collectionIndex] = new CollectionDescriptor(
-                            cursor.getInt(COLUMN_PROVIDER_ID),
-                            cursor.getString(COLUMN_PROVIDER_NAME)
-                    );
-                    collectionIndex++;
-                }
-
-                cursor.close();
-            } else {
-                collections = new CollectionDescriptor[1];
-            }
-        }
-        else {
-            collections = new CollectionDescriptor[1];
-        }
-        collections[collections.length - 1] = new CollectionDescriptor(ID_LIBRARY_MANAGEMENT, getString(R.string.drawer_item_label_manage_libraries));
-
-        navigationAdapter = new ArrayAdapter<CollectionDescriptor>(getSupportActionBar().getThemedContext(), R.layout.support_simple_spinner_dropdown_item, collections);
-        navigationAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-
-        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        getSupportActionBar().setListNavigationCallbacks(navigationAdapter, collectionOnNavigationListener);
-        getSupportActionBar().setSelectedNavigationItem(PlayerApplication.libraryManagerIndex);
-    }
-
-    protected void doInitLibraryContent() {
-        initLibraryView();
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-
-        //    Launching scan.
-        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
-            mediaManager.getProvider().addLibraryChangeListener(libraryChangeListener);
-        }
-
-        if (provider.scanIsRunning()) {
-            libraryChangeListener.libraryScanStarted();
-        }
-        else {
-            provider.scanStart();
-        }
-    }
-
-    protected  void doLibraryManagement() {
-        startActivityForResult(new Intent(PlayerApplication.context, SettingsLibrariesActivity.class), DRAWERITEM_LIBRARY_SETTINGS_ID);
-    }
-
-    protected void doManageMenuitemVisibility(PagerAdapter pagerAdapter, int position) {
-        final Class<?> itemClass = ((Object)pagerAdapter.getItem(position)).getClass();
-
-        if (itemClass.equals(PlaylistFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(ArtistFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(AlbumArtistFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(AlbumFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(SongFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(GenreFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else if (itemClass.equals(StorageFragment.class)) {
-            sortMenuItem.setVisible(true);
-        }
-        else {
-            sortMenuItem.setVisible(false);
-        }
-    }
-
-
-
-    class CollectionDescriptor {
-
-        public int id;
-
-        public String description;
-
-        CollectionDescriptor(int collectionId, String collectionDescription) {
-            id = collectionId;
-            description = collectionDescription;
-        }
-
-        @Override
-        public String toString() {
-            return description;
-        }
-    }
-
-    class ActionMenuItemClickListener implements MenuItem.OnMenuItemClickListener {
-
-        private final int index;
-
-        public ActionMenuItemClickListener(int index) {
-            this.index = index;
-        }
-
-        @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-            final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(index);
-            if (providerAction != null) {
-                providerAction.launch(LibraryMainActivity.this);
-            }
-
-            return true;
-        }
-    }
-
 }

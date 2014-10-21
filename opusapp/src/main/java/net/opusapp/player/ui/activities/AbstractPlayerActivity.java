@@ -171,6 +171,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
      */
     private InterstitialAd interstitial = null;
 
+
+
     protected void onCreate(Bundle savedInstanceState, int layout, int windowFeatures[]) {
         super.onCreate(savedInstanceState);
 
@@ -392,6 +394,10 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                 null);
     }
 
+    protected boolean canShowPanel() {
+        return true;
+    }
+
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         if (cursor == null) {
@@ -402,7 +408,8 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             if (cursor.getCount() <= 0) {
                 slidingUpPanelLayout.collapsePanel();
                 slidingUpPanelLayout.hidePanel();
-            } else {
+            }
+            else if (canShowPanel()) {
                 slidingUpPanelLayout.showPanel();
             }
         }
@@ -497,9 +504,13 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         }
     }
 
-    /*
-            Player service listener
-         */
+    public boolean hasPlaylist() {
+        return playlistCursor != null && playlistCursor.getCount() > 0;
+    }
+
+
+
+    // Player service listener
     private PlayerServiceListenerImpl playerServiceListener = new PlayerServiceListenerImpl();
 
     public final class PlayerServiceListenerImpl extends IPlayerServiceListener.Stub {

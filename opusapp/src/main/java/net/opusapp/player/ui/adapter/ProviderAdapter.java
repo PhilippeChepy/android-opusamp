@@ -23,7 +23,6 @@ import android.widget.TextView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
-import net.opusapp.player.ui.activities.SettingsLibrariesActivity;
 
 public class ProviderAdapter extends SimpleCursorAdapter {
 
@@ -33,13 +32,24 @@ public class ProviderAdapter extends SimpleCursorAdapter {
 
     private Context context;
 
-    private static final int ITEM_VIEW = R.layout.view_item_double_line_dragable;
+    private int itemView = R.layout.view_item_double_line_dragable;
+
+    private int columnProviderName = 1;
+
+    private int columnProviderType = 2;
 
 
     @SuppressWarnings("deprecation")
-    public ProviderAdapter(Context context) {
-        super(context, ITEM_VIEW, null, new String[] {}, new int[] {});
+    public ProviderAdapter(Context context, int itemView, int columns[]) {
+        super(context, itemView, null, new String[] {}, new int[] {});
         this.context = context;
+
+        this.itemView = itemView;
+
+        if (columns != null) {
+            columnProviderName = columns[0];
+            columnProviderType = columns[1];
+        }
     }
 
     @Override
@@ -53,7 +63,7 @@ public class ProviderAdapter extends SimpleCursorAdapter {
 
         if (convertView == null) {
             final LayoutInflater layoutInflater = ((Activity) context).getLayoutInflater();
-            convertView = layoutInflater.inflate(ITEM_VIEW, parent, false);
+            convertView = layoutInflater.inflate(itemView, parent, false);
             viewHolder = new LibraryHolder();
 
             if (convertView != null) {
@@ -65,9 +75,8 @@ public class ProviderAdapter extends SimpleCursorAdapter {
             viewHolder = (LibraryHolder) convertView.getTag();
         }
 
-        viewHolder.textViews1.setText(cursor.getString(SettingsLibrariesActivity.COLUMN_PROVIDER_NAME));
-        viewHolder.textViews2.setText(MediaManagerFactory.getDescriptionFromType(cursor.getInt(SettingsLibrariesActivity.COLUMN_PROVIDER_TYPE)));
-
+        viewHolder.textViews1.setText(cursor.getString(columnProviderName));
+        viewHolder.textViews2.setText(MediaManagerFactory.getDescriptionFromType(cursor.getInt(columnProviderType)));
         return convertView;
     }
 

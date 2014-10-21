@@ -97,7 +97,7 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
                 R.id.line_one
         };
 
-        adapter = new SimpleCursorAdapter(this, R.layout.view_item_single_line_half, null, from, to);
+        adapter = new SimpleCursorAdapter(this, R.layout.view_item_single_line_no_anchor, null, from, to);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

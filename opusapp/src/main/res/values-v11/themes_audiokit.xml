@@ -8,6 +8,7 @@
   <style name="_AudioKit" parent="Theme.AppCompat.Light">
     <item name="android:windowActionBar">false</item>
     <item name="windowActionBar">false</item>
+    <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
 
     <item name="android:editTextBackground">@drawable/audiokit_edit_text_holo_light</item>
 

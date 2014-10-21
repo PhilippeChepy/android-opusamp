@@ -129,8 +129,7 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
         emptyView.setText(R.string.ni_providers);
         listView.setEmptyView(emptyView);
 
-
-        adapter = new ProviderAdapter(this);
+        adapter = new ProviderAdapter(this, R.layout.view_item_double_line_dragable, new int[] { COLUMN_PROVIDER_NAME, COLUMN_PROVIDER_TYPE });
 
         listView.setOnCreateContextMenuListener(this);
         listView.setOnItemClickListener(this);
