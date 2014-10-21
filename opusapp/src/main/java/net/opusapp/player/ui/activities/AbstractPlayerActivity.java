@@ -29,6 +29,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
@@ -191,6 +192,11 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         if (AbstractPlayerActivity.this instanceof CarModeActivity) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            final ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.hide();
+            }
         }
         setContentView(layout);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -306,9 +312,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         if (slidingUpPanelLayout != null) {
-            //slidingUpPanelLayout.setShadowDrawable(hostActivity.getResources().getDrawable(R.drawable.above_shadow));
             slidingUpPanelLayout.setDragView(findViewById(R.id.upper_panel));
-            slidingUpPanelLayout.setPanelSlideListener(panelSlideListener);
         }
 
         final ImageButton songOptionsButton = (ImageButton) findViewById(R.id.song_options);
@@ -762,48 +766,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        }
-    };
-
-    final SlidingUpPanelLayout.PanelSlideListener panelSlideListener = new SlidingUpPanelLayout.PanelSlideListener() {
-
-        @Override
-        public void onPanelSlide(View view, float v) {
-/*
-            if (v >= 0.8) {
-                if (getSupportActionBar().isShowing()) {
-                    getSupportActionBar().hide();
-
-                    if (AbstractPlayerActivity.this instanceof LibraryMainActivity) {
-                        ((LibraryMainActivity)AbstractPlayerActivity.this).setSwipeMenuEnabled(false);
-                    }
-                }
-            } else {
-                if (!getSupportActionBar().isShowing()) {
-                    getSupportActionBar().show();
-
-                    if (AbstractPlayerActivity.this instanceof LibraryMainActivity) {
-                        ((LibraryMainActivity)AbstractPlayerActivity.this).setSwipeMenuEnabled(true);
-                    }
-                }
-            }
-*/
-        }
-
-        @Override
-        public void onPanelCollapsed(View view) {
-        }
-
-        @Override
-        public void onPanelExpanded(View view) {
-        }
-
-        @Override
-        public void onPanelAnchored(View view) {
-        }
-
-        @Override
-        public void onPanelHidden(View view) {
         }
     };
 
