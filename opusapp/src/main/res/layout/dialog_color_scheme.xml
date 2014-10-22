@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/color_scheme_dialog_row_padding"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset1"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset2"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset3"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset4"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset5"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset6"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset7"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset8"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset9"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset10"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset11"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset12"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset13"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset14"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset15"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset16"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset17"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset18"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset19"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"/>
+
+        <Button
+            android:id="@+id/color_scheme_dialog_preset20"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.2"
+            android:visibility="invisible" />
+    </LinearLayout>
+
+</LinearLayout>

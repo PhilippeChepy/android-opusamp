@@ -14,12 +14,14 @@ package net.opusapp.player.ui.activities;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
@@ -28,6 +30,8 @@ import net.opusapp.player.R;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
+import net.opusapp.player.ui.views.ColorSchemeDialog;
+import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
@@ -67,6 +71,32 @@ public class SettingsActivity extends PreferenceActivity {
         editor.putBoolean(getString(R.string.preference_key_plug_auto_play), autoPlay);
         editor.putBoolean(getString(R.string.preference_key_pause_call), autoPause);
         editor.apply();
+
+
+        final ColorPickerPreference primaryColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_primary_color));
+
+        final ColorPickerPreference accentColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_accent_color));
+
+        final ColorPickerPreference foregroundColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_foreground_color));
+
+        final CheckBoxPreference useDarkIconsPreference = (CheckBoxPreference) findPreference(getString(R.string.preference_key_toolbar_dark_icons));
+
+        final Preference themePresetsPref = findPreference(getString(R.string.preference_key_color_presets));
+        themePresetsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                final ColorSchemeDialog colorSchemeDialog = new ColorSchemeDialog(SettingsActivity.this);
+                colorSchemeDialog.setPreferences(primaryColorPreference, accentColorPreference, foregroundColorPreference, useDarkIconsPreference);
+                colorSchemeDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        ((ColorSchemeDialog) dialog).setPreferences(null, null, null, null);
+                    }
+                });
+                colorSchemeDialog.show();
+                return true;
+            }
+        });
 
         final Preference cacheSizePref = findPreference(getString(R.string.preference_key_cache_size));
         cacheSizePref.setSummary(String.format(getString(R.string.unit_MB), cacheSize));

@@ -1042,6 +1042,28 @@ public class PlayerApplication extends Application implements ServiceConnection 
         }
     };
 
+
+    // Color settings
+    public static int getBackgroundColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_primary_color), 0xff03a9f4);
+    }
+
+    public static int getAccentColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_accent_color), 0xff01579b);
+    }
+
+    public static int getForegroundColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_foreground_color), 0xffffffff);
+    }
+
+    public static boolean getIconType() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getBoolean(context.getString(R.string.preference_key_foreground_color), false);
+    }
+
     /*
     private static IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
 

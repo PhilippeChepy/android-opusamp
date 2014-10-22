@@ -1,7 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen 
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="@string/preference_screen_key_global">
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_ui"
+        android:icon="@drawable/ic_action_tiles_large" >
+
+        <Preference
+            android:key="@string/preference_key_color_presets"
+            android:title="@string/preference_title_preset" />
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_primary_color"
+            android:summary="@string/preference_summary_primary_color"
+            android:title="@string/preference_title_primary_color"
+            hexValue="true"/>
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_accent_color"
+            android:summary="@string/preference_summary_accent_color"
+            android:title="@string/preference_title_accent_color"
+            hexValue="true"/>
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_foreground_color"
+            android:summary="@string/preference_summary_foreground_color"
+            android:title="@string/preference_title_foreground_color"
+            hexValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_toolbar_dark_icons"
+            android:summary="@string/preference_summary_toolbar_dark_icons"
+            android:title="@string/preference_title_toolbar_dark_icons" />
+    </PreferenceScreen>
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_storage"
@@ -26,7 +57,7 @@
         </PreferenceCategory>
 
         <PreferenceCategory
-            android:title="@string/preference_category_title_maintainance">
+            android:title="@string/preference_category_title_maintenance">
 
             <Preference
                 android:key="@string/preference_key_clear_cache"

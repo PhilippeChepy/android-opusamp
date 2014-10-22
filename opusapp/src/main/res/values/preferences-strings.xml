@@ -6,6 +6,12 @@
     <!-- Global Preferences keys -->
     <string name="preference_screen_key_global">screen_key_global</string>
 
+    <string name="preference_key_color_presets">color_preset</string>
+    <string name="preference_key_primary_color">primary_color</string>
+    <string name="preference_key_accent_color">accent_color</string>
+    <string name="preference_key_foreground_color">foreground_color</string>
+    <string name="preference_key_toolbar_dark_icons">dark_icons</string>
+
     <string name="preference_key_cache_size">cache_size</string>
     <string name="preference_key_thumbnail_cache_size">thumbnail_cache_size</string>
     <string name="preference_key_optimize_database">optimize_database</string>

@@ -58,6 +58,8 @@
     <dimen name="bottom_action_bar_info_padding_left">5.0dip</dimen>
     <dimen name="bottom_action_bar_button_container_width">165.0dip</dimen>
 
+    <dimen name="color_scheme_dialog_row_padding">8.0dp</dimen>
+
     <!-- Colorstrip -->
     <dimen name="colorstrip_height">2.0dip</dimen>
 

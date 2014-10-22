@@ -40,11 +40,22 @@
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
 
     <!-- Global preferences -->
+    <string name="preference_screen_title_ui">Interface</string>
+    <string name="preference_title_preset">Préréglages</string>
+    <string name="preference_title_primary_color">Couleur principale</string>
+    <string name="preference_summary_primary_color">"Arrière plan des barres d'outils."</string>
+    <string name="preference_title_accent_color">"Couleur d'accentuation"</string>
+    <string name="preference_summary_accent_color">"Couleur d'accentuation pour l'onglet en cours ou d'autres éléments."</string>
+    <string name="preference_title_foreground_color">Couleur du texte</string>
+    <string name="preference_summary_foreground_color">"Couleur du texte sur les onglets et les barres d'outils."</string>
+    <string name="preference_title_toolbar_dark_icons">Utiliser des icones sombres</string>
+    <string name="preference_summary_toolbar_dark_icons">"Utiliser des icones sombres sur les barres d'outils."</string>
+
     <string name="preference_screen_title_storage">Stockage</string>
     <string name="preference_category_title_cache_size">Taille du cache</string>
     <string name="preference_title_cache_size">Pochettes</string>
     <string name="preference_title_thumbnail_cache_size">Mignatures de pochettes</string>
-    <string name="preference_category_title_maintainance">Opérations de maintenance</string>
+    <string name="preference_category_title_maintenance">Opérations de maintenance</string>
     <string name="preference_title_optimize_database">Optimiser la base de données</string>
     <string name="preference_title_clear_cache">Nettoyer la mémoire temporaire des image</string>
     <string name="preference_default_various_artists">Artistes divers</string>
@@ -274,4 +285,7 @@
     <!-- Equalizer view -->
     <string name="label_enable_equalizer">"Activer l'égaliseur"</string>
     <string name="label_equalizer_presets">Préréglages</string>
+
+    <!-- ColorPicker -->
+    <string name="dialog_color_picker">"Sélection d'une couleur"</string>
 </resources>

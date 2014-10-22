@@ -40,11 +40,22 @@
     <string name="alert_dialog_title_type_of_library">Type of library</string>
 
     <!-- Global preferences -->
+    <string name="preference_screen_title_ui">Interface</string>
+    <string name="preference_title_preset">Presets</string>
+    <string name="preference_title_primary_color">Primary color</string>
+    <string name="preference_summary_primary_color">"Toolbars background color"</string>
+    <string name="preference_title_accent_color">"Accent color"</string>
+    <string name="preference_summary_accent_color">"Accent color for current tab and other graphical elements."</string>
+    <string name="preference_title_foreground_color">Text color</string>
+    <string name="preference_summary_foreground_color">Text color on Tabs and toolbars.</string>
+    <string name="preference_title_toolbar_dark_icons">Use dark icons</string>
+    <string name="preference_summary_toolbar_dark_icons">"Use dark icons on toolbars."</string>
+
     <string name="preference_screen_title_storage">Storage</string>
     <string name="preference_category_title_cache_size">Cache size</string>
     <string name="preference_title_cache_size">Covers</string>
     <string name="preference_title_thumbnail_cache_size">Cover thumbnails</string>
-    <string name="preference_category_title_maintainance">Maintenance operations</string>
+    <string name="preference_category_title_maintenance">Maintenance operations</string>
     <string name="preference_title_optimize_database">Optimize database</string>
     <string name="preference_title_clear_cache">Clear cache memory</string>
     <string name="preference_default_various_artists">Various artists</string>
@@ -272,4 +283,7 @@
     <!-- Equalizer view -->
     <string name="label_enable_equalizer">Enable Equalizer</string>
     <string name="label_equalizer_presets">Presets</string>
+
+    <!-- ColorPicker -->
+    <string name="dialog_color_picker">Color Picker</string>
 </resources>
