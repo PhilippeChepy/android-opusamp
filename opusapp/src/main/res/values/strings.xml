@@ -97,7 +97,6 @@
     <string name="menuitem_label_reload">Reload</string>
     <string name="menuitem_label_cancel_reload">Cancel Reloading</string>
     <string name="menuitem_label_show_hidden">Show hidden items</string>
-    <string name="menuitem_label_other_options">"More options&#8230;"</string>
     <string name="menuitem_label_share">Share</string>
     <string name="menuitem_label_toggle_car_mode">Car mode</string>
     <string name="menuitem_label_delayed_pause">Auto pause</string>

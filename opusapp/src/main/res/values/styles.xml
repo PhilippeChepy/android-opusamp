@@ -123,5 +123,4 @@
         <item name="android:background">@drawable/holo_selector</item>
         <item name="android:scaleType">center</item>
     </style>
-
 </resources>

@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -34,7 +33,6 @@ import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
-
 
 
 public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -77,7 +75,8 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     /*
         Action bar fadin effect
      */
-    private Drawable actionbarBackground;
+    //private Drawable actionbarBackground;
+    private Toolbar toolbar;
 
     private int actionbarHeight;
 
@@ -128,10 +127,9 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
+        sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_sort_2 : R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
-
         return true;
     }
 
@@ -172,9 +170,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState, R.layout.activity_library_detail_with_header, null);
 
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
-
+        toolbar = PlayerApplication.applyActionBar(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Bundle parameters = getIntent().getExtras();
@@ -266,8 +262,6 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                         contentSourceId;
 
         PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
-
-        actionbarBackground = getResources().getDrawable(R.drawable.actionbar_background);
 
         contentList.addHeaderView(placeHolderView);
         contentList.setOnScrollListener(contentListOnScrollListener);
@@ -614,8 +608,11 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
             ViewHelper.setTranslationY(header, Math.max(-scrollY, minHeaderTranslation));
             float ratio = clamp(ViewHelper.getTranslationY(header) / minHeaderTranslation, 0.0f, 1.0f);
 
-            actionbarBackground.setAlpha((int) (ratio * 255));
-            getSupportActionBar().setBackgroundDrawable(actionbarBackground);
+            int backgroundColor = PlayerApplication.getBackgroundColor();
+            backgroundColor = backgroundColor & 0x00ffffff;
+            backgroundColor = backgroundColor | (((int)(ratio * 255.0f)) << 24);
+
+            toolbar.setBackgroundColor(backgroundColor);
         }
     };
 

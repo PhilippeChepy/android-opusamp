@@ -201,6 +201,10 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         setContentView(layout);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
+
+        // Actionbar
+        PlayerApplication.applyActionBar(this);
+
         if (PlayerApplication.isFreemium() && !PlayerApplication.isTrial()) {
             int noDisplayCounter = PlayerApplication.adDisplayGetCounter();
 

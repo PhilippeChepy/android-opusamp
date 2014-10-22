@@ -64,22 +64,50 @@ public class SettingsActivity extends PreferenceActivity {
 
         boolean autoPlay = sharedPrefs.getBoolean(getString(R.string.preference_key_plug_auto_play), true);
         boolean autoPause = sharedPrefs.getBoolean(getString(R.string.preference_key_pause_call), true);
-
+/*
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putInt(getString(R.string.preference_key_cache_size), cacheSize);
         editor.putInt(getString(R.string.preference_key_thumbnail_cache_size), thumbnailCacheSize);
         editor.putBoolean(getString(R.string.preference_key_plug_auto_play), autoPlay);
         editor.putBoolean(getString(R.string.preference_key_pause_call), autoPause);
         editor.apply();
-
+*/
 
         final ColorPickerPreference primaryColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_primary_color));
+        primaryColorPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PlayerApplication.uiColorsChanged = true;
+                return false;
+            }
+        });
 
         final ColorPickerPreference accentColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_accent_color));
+        accentColorPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PlayerApplication.uiColorsChanged = true;
+                return false;
+            }
+        });
 
         final ColorPickerPreference foregroundColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_foreground_color));
+        foregroundColorPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PlayerApplication.uiColorsChanged = true;
+                return false;
+            }
+        });
 
         final CheckBoxPreference useDarkIconsPreference = (CheckBoxPreference) findPreference(getString(R.string.preference_key_toolbar_dark_icons));
+        useDarkIconsPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PlayerApplication.uiColorsChanged = true;
+                return false;
+            }
+        });
 
         final Preference themePresetsPref = findPreference(getString(R.string.preference_key_color_presets));
         themePresetsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

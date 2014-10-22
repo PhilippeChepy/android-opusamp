@@ -14,18 +14,21 @@
             android:key="@string/preference_key_primary_color"
             android:summary="@string/preference_summary_primary_color"
             android:title="@string/preference_title_primary_color"
+            android:defaultValue="0xff03a9f4"
             hexValue="true"/>
 
         <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
             android:key="@string/preference_key_accent_color"
             android:summary="@string/preference_summary_accent_color"
             android:title="@string/preference_title_accent_color"
+            android:defaultValue="0xff01579b"
             hexValue="true"/>
 
         <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
             android:key="@string/preference_key_foreground_color"
             android:summary="@string/preference_summary_foreground_color"
             android:title="@string/preference_title_foreground_color"
+            android:defaultValue="0xffffffff"
             hexValue="true"/>
 
         <CheckBoxPreference

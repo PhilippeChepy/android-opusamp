@@ -32,9 +32,13 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.View;
 import android.webkit.WebView;
 
+import com.astuetz.PagerSlidingTabStrip;
 import com.google.android.vending.licensing.AESObfuscator;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
@@ -860,6 +864,47 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
+    // Color settings
+    public static boolean uiColorsChanged = false;
+
+    public static int getBackgroundColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_primary_color), 0xff03a9f4);
+    }
+
+    public static int getAccentColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_accent_color), 0xff01579b);
+    }
+
+    public static int getForegroundColor() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getInt(context.getString(R.string.preference_key_foreground_color), 0xffffffff);
+    }
+
+    public static boolean iconsAreDark() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getBoolean(context.getString(R.string.preference_key_toolbar_dark_icons), false);
+    }
+
+    public static Toolbar applyActionBar(ActionBarActivity activity) {
+        Toolbar toolbar = (Toolbar) activity.findViewById(iconsAreDark() ? R.id.main_toolbar_light : R.id.main_toolbar_dark);
+        if (toolbar != null) {
+            toolbar.setVisibility(View.VISIBLE);
+            toolbar.setBackgroundColor(getBackgroundColor());
+            activity.setSupportActionBar(toolbar);
+        }
+
+        return toolbar;
+    }
+
+    public static void applyThemeOnPagerTabs(PagerSlidingTabStrip scrollingTabs) {
+        scrollingTabs.setBackgroundColor(getBackgroundColor());
+        scrollingTabs.setIndicatorColor(getAccentColor());
+        scrollingTabs.setTextColor(getForegroundColor());
+    }
+
+
 
     private static final String CONFIG_FILE_FREEMIUM = "freemium";
 
@@ -1041,28 +1086,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
         }
     };
-
-
-    // Color settings
-    public static int getBackgroundColor() {
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPrefs.getInt(context.getString(R.string.preference_key_primary_color), 0xff03a9f4);
-    }
-
-    public static int getAccentColor() {
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPrefs.getInt(context.getString(R.string.preference_key_accent_color), 0xff01579b);
-    }
-
-    public static int getForegroundColor() {
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPrefs.getInt(context.getString(R.string.preference_key_foreground_color), 0xffffffff);
-    }
-
-    public static boolean getIconType() {
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPrefs.getBoolean(context.getString(R.string.preference_key_foreground_color), false);
-    }
 
     /*
     private static IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {

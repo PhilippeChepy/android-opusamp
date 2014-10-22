@@ -18,11 +18,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -56,9 +54,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
 
 
-    private static final int DRAWERITEM_LIBRARY_SETTINGS_ID = 100;
+    private static final int OPTION_MENUITEM_LIBRARY_SETTINGS_ID = 100;
 
-    private static final int DRAWERITEM_APPLICATION_SETTINGS_ID = 101;
+    private static final int OPTION_MENUITEM_APPLICATION_SETTINGS_ID = 101;
 
 
 
@@ -131,17 +129,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         searchView.setOnCloseListener(searchViewOnCloseListener);
 
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(R.drawable.ic_action_sort_2_dark);
+        sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_sort_2 : R.drawable.ic_action_sort_2_dark);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
         searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
-        searchMenuItem.setIcon(R.drawable.ic_action_search_dark);
+        searchMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_search : R.drawable.ic_action_search_dark);
         MenuItemCompat.setActionView(searchMenuItem, searchView);
         MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
         final MenuItem hiddenMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 4, R.string.menuitem_label_show_hidden);
-        hiddenMenuItem.setIcon(R.drawable.ic_action_show);
+        hiddenMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_show : R.drawable.ic_action_show_dark);
         hiddenMenuItem.setCheckable(true);
         MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
@@ -149,13 +147,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
         reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        reloadMenuItem.setIcon(R.drawable.ic_action_reload_dark);
+        reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_reload : R.drawable.ic_action_reload_dark);
         MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
         updateReloadMenuItem();
-
-        final SubMenu options = menu.addSubMenu(Menu.NONE, 0, 9, R.string.menuitem_label_other_options);
 
         int menuIndex = 1;
 
@@ -167,14 +163,14 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 final AbstractMediaManager.ProviderAction providerAction = providerActionList[index];
 
                 if (providerAction.isVisible()) {
-                    final MenuItem menuItem = options.add(Menu.NONE, 200 + index, menuIndex++, providerAction.getDescription());
+                    final MenuItem menuItem = menu.add(Menu.NONE, 200 + index, menuIndex++, providerAction.getDescription());
                     menuItem.setIcon(R.drawable.ic_action_tiles_large);
                     menuItem.setOnMenuItemClickListener(new ActionMenuItemClickListener(index));
                 }
             }
         }
 
-        final MenuItem libraryManagementMenuItem = options.add(Menu.NONE, DRAWERITEM_LIBRARY_SETTINGS_ID, menuIndex++, R.string.drawer_item_label_manage_libraries);
+        final MenuItem libraryManagementMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_LIBRARY_SETTINGS_ID, menuIndex++, R.string.drawer_item_label_manage_libraries);
         libraryManagementMenuItem.setIcon(R.drawable.ic_action_database);
         libraryManagementMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -184,16 +180,15 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             }
         });
 
-        final MenuItem settingsMenuItem = options.add(Menu.NONE, DRAWERITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_application_settings);
+        final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_application_settings);
         settingsMenuItem.setIcon(R.drawable.ic_action_settings);
         settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
+                startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), OPTION_MENUITEM_APPLICATION_SETTINGS_ID);
                 return true;
             }
         });
-
         return true;
     }
 
@@ -214,10 +209,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         scrollingTabs.setOnPageChangeListener(scrollingTabsOnPageChangeListener);
         scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
         scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
-
-        // Actionbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
+        PlayerApplication.applyThemeOnPagerTabs(scrollingTabs);
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
@@ -417,9 +409,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case DRAWERITEM_LIBRARY_SETTINGS_ID:
+            case OPTION_MENUITEM_LIBRARY_SETTINGS_ID:
             case AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH:
                 doInitLibrary();
+                break;
+            case OPTION_MENUITEM_APPLICATION_SETTINGS_ID:
+                if (PlayerApplication.uiColorsChanged) {
+                    PlayerApplication.uiColorsChanged = false;
+                    Intent intent = getIntent();
+                    finish();
+                    startActivity(intent);
+                }
                 break;
         }
     }
@@ -521,7 +521,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
     }
 
     protected  void doLibraryManagement() {
-        startActivityForResult(new Intent(PlayerApplication.context, SettingsLibrariesActivity.class), DRAWERITEM_LIBRARY_SETTINGS_ID);
+        startActivityForResult(new Intent(PlayerApplication.context, SettingsLibrariesActivity.class), OPTION_MENUITEM_LIBRARY_SETTINGS_ID);
     }
 
     protected void doManageMenuitemVisibility(PagerAdapter pagerAdapter, int position) {

@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -34,6 +33,7 @@ import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.fragments.SearchPathFragment;
 import net.opusapp.player.ui.activities.UtilDirectorySelectActivity;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
+import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class SearchPathActivity extends ActionBarActivity {
 
@@ -55,8 +55,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
 		setContentView(R.layout.activity_library_path);
 
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
+        PlayerApplication.applyActionBar(this);
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
@@ -74,25 +73,23 @@ public class SearchPathActivity extends ActionBarActivity {
         viewPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
         viewPager.setOffscreenPageLimit(pagerAdapter.getCount());
         viewPager.setAdapter(pagerAdapter);
-        
-        
-        PagerSlidingTabStrip scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
+
+
+        final PagerSlidingTabStrip scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
 		scrollingTabs.setViewPager(viewPager);
-		scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
-        scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
+        PlayerApplication.applyThemeOnPagerTabs(scrollingTabs);
 	}
 
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add_directory);
-		addMenuItem.setIcon(R.drawable.ic_action_add_dark);
+		addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_add : R.drawable.ic_action_add_dark);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
-
 		return true;
 	}
-	
-	@Override
+
+    @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (providerId < 0) {
             return;

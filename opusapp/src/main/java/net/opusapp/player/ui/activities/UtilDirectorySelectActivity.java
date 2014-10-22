@@ -19,7 +19,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -69,8 +68,7 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
 		
 		setContentView(R.layout.activity_directory_select);
 
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
+        PlayerApplication.applyActionBar(this);
 
 
 		gridView = (GridView) findViewById(R.id.grid_view_base);
@@ -91,15 +89,14 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem okMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_OK, 1, R.string.actionbar_confirmation_text_done);
-        okMenuItem.setIcon(R.drawable.ic_action_tick_dark);
+        okMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_tick : R.drawable.ic_action_tick_dark);
         MenuItemCompat.setShowAsAction(okMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         okMenuItem.setOnMenuItemClickListener(onOKOptionMenuItemListener);
 
         final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.actionbar_confirmation_text_cancel);
-        cancelMenuItem.setIcon(R.drawable.ic_action_cancel_dark);
+        cancelMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_cancel : R.drawable.ic_action_cancel_dark);
         MenuItemCompat.setShowAsAction(cancelMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         cancelMenuItem.setOnMenuItemClickListener(onCancelOptionMenuItemListener);
-
         return true;
     }
 
