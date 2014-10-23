@@ -1001,6 +1001,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             try {
                 PlayerApplication.playerService.stop();
                 PlayerApplication.playerService.queueClear();
+                PlayerApplication.playerService.queueReload();
                 return true;
             } catch (final RemoteException remoteException) {
                 LogUtils.LOGException(TAG, "doClearAction", 0, remoteException);

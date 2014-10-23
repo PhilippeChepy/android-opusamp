@@ -422,8 +422,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             playlist[i].artUri =
                     ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
                             PlayerApplication.playerManagerIndex + "/" + cursor.getInt(COLUMN_SONG_ID);
-
-            //playlist[i].load();
         }
         cursor.close();
 

@@ -593,7 +593,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void queueSetPosition(int position) throws RemoteException {
-
             if (playlist != null && playlist.length > 0) {
                 LogUtils.LOGD(TAG, "moving to position " + position);
 
@@ -621,6 +620,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 player.playerSetContent(playlist[playlistIndex]);
 
                 notifySetQueuePosition();
+            }
+            else if (position == 0) {
+                playlistIndex = 0;
             }
         }
 
@@ -1006,7 +1008,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void reloadPlaylist() {
-
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
@@ -1168,8 +1169,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 LogUtils.LOGException(TAG, "refreshData", 0, interruptException);
             }
 
+            String currentArtUri = null;
             if (playlist != null) {
-                String currentArtUri = null;
                 if (playlistIndex < playlist.length) {
                     currentArtUri = playlist[playlistIndex].artUri;
                 }
