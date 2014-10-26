@@ -350,10 +350,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         if (reloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
                 reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                reloadMenuItem.setIcon(R.drawable.ic_action_cancel);
+                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_cancel : R.drawable.ic_action_cancel_dark);
             } else {
                 reloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                reloadMenuItem.setIcon(R.drawable.ic_action_reload);
+                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_reload : R.drawable.ic_action_reload_dark);
             }
         }
     }
