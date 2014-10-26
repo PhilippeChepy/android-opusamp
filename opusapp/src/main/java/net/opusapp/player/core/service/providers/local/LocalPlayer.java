@@ -103,6 +103,13 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 			currentContext = (LocalMedia) context;
             LogUtils.LOGD(TAG, "new context=" + currentContext.nativeContext);
 		}
+        else if (context == null) {
+            if (playing) {
+                playerStop();
+            }
+
+            currentContext = null;
+        }
 	}
 
 	@Override

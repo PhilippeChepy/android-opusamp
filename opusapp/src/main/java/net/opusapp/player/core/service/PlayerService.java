@@ -480,6 +480,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             notifyQueueChanged();
+            mediaManagementExecutor.submit(runnableRefreshSongData);
         }
 
         @Override
@@ -555,6 +556,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
             provider.playlistClear(null);
+            playlistIndex = 0;
             reloadPlaylist();
 
             notifyQueueChanged();
@@ -579,6 +581,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 playlistIndex = 0;
             }
 
+            if (playlist != null && playlistIndex < playlist.length) {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                player.playerSetContent(playlist[playlistIndex]);
+            }
+
             if (playlist.length > playlistIndex) {
                 if (playlist[playlistIndex].getUri().equals(uri)) {
                     if (wasPlaying) {
@@ -588,6 +596,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             notifyQueueChanged();
+            mediaManagementExecutor.submit(runnableRefreshSongData);
         }
 
 
