@@ -33,9 +33,9 @@ public class Entities {
 
         public static final String COLUMN_FIELD_ALBUM_ARTIST_ID = "album_artist_id";
 
-        public static final String COLUMN_FIELD_ALBUM_ART       = "album_art";
+        public static final String COLUMN_FIELD_ALBUM_ART_ID    = "album_art_id";
 
-        public static final String COLUMN_FIELD_ORIGINAL_ALBUM_ART = "original_album_art";
+        public static final String COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID = "original_album_art_id";
 
         public static final String COLUMN_FIELD_USER_HIDDEN     = "user_hidden";
 
@@ -47,8 +47,8 @@ public class Entities {
                     + COLUMN_FIELD_ALBUM_NAME + " TEXT UNIQUE ON CONFLICT IGNORE, "
                     + COLUMN_FIELD_ALBUM_ARTIST + " TEXT, "
                     + COLUMN_FIELD_ALBUM_ARTIST_ID + " INTEGER, "
-                    + COLUMN_FIELD_ALBUM_ART + " TEXT, "
-                    + COLUMN_FIELD_ORIGINAL_ALBUM_ART + " TEXT, "
+                    + COLUMN_FIELD_ALBUM_ART_ID + " INTEGER, "
+                    + COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " INTEGER, "
                     + COLUMN_FIELD_USER_HIDDEN + " BOOLEAN);");
         }
 
@@ -165,9 +165,9 @@ public class Entities {
 
         public static final String COLUMN_FIELD_URI             = "uri";
 
-        public static final String COLUMN_FIELD_ART             = "art";
+        public static final String COLUMN_FIELD_ART_ID          = "art_id";
 
-        public static final String COLUMN_FIELD_ORIGINAL_ART    = "original_art";
+        public static final String COLUMN_FIELD_ORIGINAL_ART_ID = "original_art_id";
 
         public static final String COLUMN_FIELD_DURATION        = "duration";
 
@@ -217,15 +217,11 @@ public class Entities {
 
         public static final String COLUMN_FIELD_VISIBLE         = "visible";
 
-        public static final String COLUMN_FIELD_HAS_EMBEDDED_ART = "has_embedded_art";
-
-        public static final String COLUMN_FIELD_USE_EMBEDDED_ART = "uses_embedded_art";
-
-        public static final String COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART = "originally_uses_embedded_art";
-
         public static final String COLUMN_FIELD_IS_QUEUE_FILE_ENTRY   = "queue_file_entry"; /* queue entry is file from StorageFragment */
 
         public static final String COLUMN_FIELD_USER_HIDDEN           = "user_hidden";
+
+        public static final String NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART = "has_embedded_art";
 
 
 
@@ -233,8 +229,8 @@ public class Entities {
             database.execSQL("CREATE TABLE " + TABLE_NAME + " ("
                     + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + COLUMN_FIELD_URI + " TEXT, "
-                    + COLUMN_FIELD_ART + " TEXT, "
-                    + COLUMN_FIELD_ORIGINAL_ART + " TEXT, "
+                    + COLUMN_FIELD_ART_ID + " INTEGER, "
+                    + COLUMN_FIELD_ORIGINAL_ART_ID + " INTEGER, "
                     + COLUMN_FIELD_DURATION + " INTEGER, "
                     + COLUMN_FIELD_BITRATE + " TEXT, "
                     + COLUMN_FIELD_SAMPLE_RATE + " INTEGER, "
@@ -259,11 +255,36 @@ public class Entities {
                     + COLUMN_FIELD_COMMENT + " TEXT, "
                     + COLUMN_FIELD_LYRICS + " TEXT, "
                     + COLUMN_FIELD_VISIBLE + " BOOLEAN, "
-                    + COLUMN_FIELD_HAS_EMBEDDED_ART + " BOOLEAN, "
-                    + COLUMN_FIELD_USE_EMBEDDED_ART + " BOOLEAN, "
-                    + COLUMN_FIELD_ORIGINALLY_USE_EMBEDDED_ART + " BOOLEAN, "
                     + COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " BOOLEAN, "
                     + COLUMN_FIELD_USER_HIDDEN + " BOOLEAN);");
+        }
+
+        public static void destroyTable(SQLiteDatabase database) {
+            database.execSQL("DROP TABLE " + TABLE_NAME + ";");
+        }
+    }
+
+    public static abstract class Art implements BaseColumns {
+
+        public static final String TAG = Art.class.getSimpleName();
+
+
+
+        public static final String TABLE_NAME = "library_art";
+
+
+
+        public static final String COLUMN_FIELD_URI = "art_uri";
+
+        public static final String COLUMN_FIELD_URI_IS_EMBEDDED = "art_is_embedded";
+
+
+
+        public static void createTable(SQLiteDatabase database) {
+            database.execSQL("CREATE TABLE " + TABLE_NAME + "("
+                + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_FIELD_URI + " TEXT UNIQUE ON CONFLICT FAIL, "
+                + COLUMN_FIELD_URI_IS_EMBEDDED + " BOOLEAN);");
         }
 
         public static void destroyTable(SQLiteDatabase database) {

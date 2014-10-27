@@ -120,7 +120,7 @@ public interface AbstractMediaManager {
 
         public static final int SONG_ID = 501;
         public static final int SONG_URI = 502;
-        public static final int SONG_ART = 503;
+        public static final int SONG_ART_URI = 503;
         public static final int SONG_DURATION = 504;
         public static final int SONG_BITRATE = 505;
         public static final int SONG_SAMPLE_RATE = 506;

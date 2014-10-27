@@ -63,7 +63,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
             AbstractMediaManager.Provider.STORAGE_ID,
             AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME,
             AbstractMediaManager.Provider.STORAGE_DISPLAY_DETAIL,
-            AbstractMediaManager.Provider.SONG_ART,
+            AbstractMediaManager.Provider.SONG_ART_URI,
             AbstractMediaManager.Provider.SONG_VISIBLE
     };
 

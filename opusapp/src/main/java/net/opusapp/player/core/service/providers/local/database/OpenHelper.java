@@ -53,6 +53,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.AlbumArtist.createTable(database);
         Entities.Artist.createTable(database);
         Entities.Genre.createTable(database);
+        Entities.Art.createTable(database);
         Entities.Playlist.createTable(database);
         Entities.PlaylistEntry.createTable(database);
         Entities.Media.createTable(database);
@@ -84,6 +85,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.AlbumArtist.destroyTable(database);
         Entities.Artist.destroyTable(database);
         Entities.Genre.destroyTable(database);
+        Entities.Art.destroyTable(database);
         Entities.Playlist.destroyTable(database);
         Entities.PlaylistEntry.destroyTable(database);
         Entities.Media.destroyTable(database);
@@ -94,18 +96,6 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-		/*
-		 * Library tables
-		 */
-        Entities.Album.destroyTable(database);
-        Entities.AlbumArtist.destroyTable(database);
-        Entities.Artist.destroyTable(database);
-        Entities.Genre.destroyTable(database);
-        Entities.Playlist.destroyTable(database);
-        Entities.PlaylistEntry.destroyTable(database);
-        Entities.Media.destroyTable(database);
-        Entities.ScanDirectory.destroyTable(database);
-
-        onCreate(database);
+		onUpgrade(database, oldVersion, newVersion);
     }
 }
