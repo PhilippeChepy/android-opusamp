@@ -136,6 +136,10 @@
             android:label="@string/activity_label_files_to_scan" >
         </activity>
         <activity
+            android:name=".core.service.providers.local.ui.activities.ArtSelectActivity"
+            android:label="@string/activity_label_art_selection" >
+        </activity>
+        <activity
             android:name="com.google.android.gms.ads.AdActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
 

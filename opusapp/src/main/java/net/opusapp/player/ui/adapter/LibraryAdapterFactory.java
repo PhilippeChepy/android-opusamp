@@ -62,9 +62,10 @@ public class LibraryAdapterFactory {
                                 R.id.line_two
                         },
                         columnIndexes[0],
+                        columnIndexes[3],
                         R.drawable.no_art_small,
                         R.id.image,
-                        columnIndexes[3]);
+                        columnIndexes[4]);
             case ADAPTER_ALBUM_ARTIST:
             case ADAPTER_ARTIST:
             case ADAPTER_GENRE:
@@ -81,6 +82,7 @@ public class LibraryAdapterFactory {
                         new int[] {
                                 R.id.line_one
                         },
+                        -1,
                         -1,
                         -1,
                         -1,
@@ -102,6 +104,7 @@ public class LibraryAdapterFactory {
                         -1,
                         -1,
                         -1,
+                        -1,
                         columnIndexes[3]);
             case ADAPTER_SONG:
                 return new LibraryAdapter(
@@ -118,9 +121,10 @@ public class LibraryAdapterFactory {
                                 R.id.line_two
                         },
                         columnIndexes[0],
+                        columnIndexes[3],
                         R.drawable.no_art_small,
                         R.id.image,
-                        columnIndexes[3]);
+                        columnIndexes[4]);
             case ADAPTER_STORAGE:
                 return new LibraryAdapter(
                         viewContainer,
@@ -136,6 +140,7 @@ public class LibraryAdapterFactory {
                                 R.id.line_two
                         },
                         columnIndexes[3],
+                        -1,
                         R.drawable.no_art_small,
                         R.id.image,
                         columnIndexes[4]);
@@ -154,6 +159,7 @@ public class LibraryAdapterFactory {
                                 R.id.line_two
                         },
                         columnIndexes[0],
+                        columnIndexes[3],
                         R.drawable.no_art_small,
                         R.id.image,
                         -1,

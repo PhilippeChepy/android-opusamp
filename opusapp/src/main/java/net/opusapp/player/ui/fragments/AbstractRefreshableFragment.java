@@ -20,21 +20,21 @@ import android.view.View;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
+import net.opusapp.player.ui.views.RefreshableView;
 
-public abstract class AbstractRefreshableFragment extends Fragment {
+public abstract class AbstractRefreshableFragment extends Fragment implements RefreshableView {
 	
 	public static final String TAG = AbstractRefreshableFragment.class.getSimpleName();
 
 
 
-    /*
-        Empty actions
-     */
+    // Empty actions
     private AbstractMediaManager.AbstractEmptyContentAction emptyContentAction;
 
 
 
-    public abstract void doRefresh();
+    @Override
+    public abstract void refresh();
 
     protected void setEmptyContentAction(final AbstractMediaManager.AbstractEmptyContentAction emptyContentAction) {
         this.emptyContentAction = emptyContentAction;

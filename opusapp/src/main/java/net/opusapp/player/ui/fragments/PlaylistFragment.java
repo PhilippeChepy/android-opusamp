@@ -77,7 +77,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
 
 
     @Override
-    public void doRefresh() {
+    public void refresh() {
         getLoaderManager().restartLoader(0, null, this);
     }
 

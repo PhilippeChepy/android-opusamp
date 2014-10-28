@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical" >
+
+    <net.opusapp.player.ui.views.SquareView
+        android:id="@+id/square_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/gray">
+
+        <net.opusapp.player.ui.views.SquareImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:layout_margin="10dp"/>
+
+    </net.opusapp.player.ui.views.SquareView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/item_normal_height"
+        android:layout_alignParentBottom="true"
+        android:background="@color/transparent_black"
+        android:gravity="center_vertical"
+        android:paddingLeft="@dimen/grid_item_padding_left">
+
+        <net.opusapp.player.ui.views.CustomTextView
+            android:id="@+id/line_one"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            android:textColor="@color/gray"
+            android:textSize="@dimen/text_size_medium"
+            android:textStyle="bold" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

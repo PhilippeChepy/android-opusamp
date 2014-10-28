@@ -25,7 +25,6 @@ import android.widget.TextView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 
 public class LibraryAdapter extends SimpleCursorAdapter {
 
@@ -55,6 +54,8 @@ public class LibraryAdapter extends SimpleCursorAdapter {
      */
     protected int idColumn;
 
+    protected int artUriColumn;
+
     protected int imagePlaceHolder;
 
     protected int imageView;
@@ -79,12 +80,12 @@ public class LibraryAdapter extends SimpleCursorAdapter {
 
 
 
-    public LibraryAdapter(LibraryAdapterContainer adapterContainer, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn) {
-        this(adapterContainer, source, managerType, itemView, textColumns, textViews, idColumn, imagePlaceHolder, imageView, visibilityColumn, -1);
+    public LibraryAdapter(LibraryAdapterContainer adapterContainer, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int artUriColumn, int imagePlaceHolder, int imageView, int visibilityColumn) {
+        this(adapterContainer, source, managerType, itemView, textColumns, textViews, idColumn, artUriColumn, imagePlaceHolder, imageView, visibilityColumn, -1);
     }
 
     @SuppressWarnings("deprecation")
-    public LibraryAdapter(LibraryAdapterContainer container, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int imagePlaceHolder, int imageView, int visibilityColumn, int indicator) {
+    public LibraryAdapter(LibraryAdapterContainer container, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int artUriColumn, int imagePlaceHolder, int imageView, int visibilityColumn, int indicator) {
         super(PlayerApplication.context, itemView, null, new String[] {}, new int[] {});
 
         this.container = container;
@@ -96,6 +97,7 @@ public class LibraryAdapter extends SimpleCursorAdapter {
 
         this.textColumns = textColumns.clone();
         this.idColumn = idColumn;
+        this.artUriColumn = artUriColumn;
         this.imagePlaceHolder = imagePlaceHolder;
 
         this.textViews = textViews.clone();
@@ -161,22 +163,14 @@ public class LibraryAdapter extends SimpleCursorAdapter {
 
                 String imageUri = null;
 
-                int managerIndex = (managerType == LIBRARY_MANAGER) ? PlayerApplication.libraryManagerIndex : PlayerApplication.playerManagerIndex;
-
                 switch (source) {
                     case LibraryAdapterFactory.ADAPTER_SONG:
                     case LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS:
-                        imageUri =
-                                ProviderImageDownloader.SCHEME_URI_PREFIX +
-                                ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
-                                        managerIndex + "/" + cursor.getString(idColumn);
+                        imageUri = cursor.getString(artUriColumn);
                         break;
                     case LibraryAdapterFactory.ADAPTER_ALBUM:
                     case LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE:
-                        imageUri =
-                                ProviderImageDownloader.SCHEME_URI_PREFIX +
-                                ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
-                                        managerIndex + "/" + cursor.getString(idColumn);
+                        imageUri = cursor.getString(artUriColumn);
                         break;
                     case LibraryAdapterFactory.ADAPTER_STORAGE:
                         imageUri = cursor.getString(idColumn);

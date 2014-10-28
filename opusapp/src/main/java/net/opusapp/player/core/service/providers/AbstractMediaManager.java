@@ -15,6 +15,8 @@ package net.opusapp.player.core.service.providers;
 import android.app.Activity;
 import android.database.Cursor;
 
+import net.opusapp.player.ui.views.RefreshableView;
+
 public interface AbstractMediaManager {
 
     public static final int INVALID_MEDIA_MANAGER = -1;
@@ -65,6 +67,12 @@ public interface AbstractMediaManager {
 
         public static final String KEY_PROVIDER_ID = "providerId";
 
+        public static final String KEY_SOURCE_ID = "sourceId";
+
+        public static final String KEY_SELECTED_ART_URI = "selectedUri";
+
+        public static final String KEY_SELECTED_ART_ID = "selectedId";
+
         public static int ACTIVITY_NEED_UI_REFRESH = 200;
 
 
@@ -94,7 +102,8 @@ public interface AbstractMediaManager {
         public static final int ALBUM_ID = 101;
         public static final int ALBUM_NAME = 102;
         public static final int ALBUM_ARTIST = 103;
-        public static final int ALBUM_VISIBLE = 104;
+        public static final int ALBUM_ART_URI = 104;
+        public static final int ALBUM_VISIBLE = 105;
 
 
 
@@ -177,7 +186,7 @@ public interface AbstractMediaManager {
         public boolean hasFeature(Feature feature);
         public void setProperty(ContentType contentType, Object target, ContentProperty key, Object object, Object options);
         public Object getProperty(ContentType contentType, Object target, ContentProperty key);
-
+        public String getAlbumArtUri(String albumId);
 
         public boolean hasContentType(ContentType contentType);
 
@@ -185,6 +194,8 @@ public interface AbstractMediaManager {
         public ProviderAction getAbstractProviderAction(int index);
         public ProviderAction[] getAbstractProviderActionList();
 
+
+        public void changeAlbumArt(Activity sourceActivity, RefreshableView sourceRefreshable, String albumId, boolean restore);
 
         public void databaseMaintain();
 

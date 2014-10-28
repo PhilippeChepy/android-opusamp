@@ -17,6 +17,7 @@
     <string name="activity_title_library_path">Paramètres de recherche</string>
     <string name="activity_title_library_management">Bibliothèques</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
+    <string name="activity_label_art_selection">"Choix d'une pochette"</string>
     <string name="activity_label_deezer_signin">Connexion au service Deezer</string>
     <string name="activity_label_deezer_signout">Déconnexion du service</string>
 
@@ -103,8 +104,7 @@
     <string name="menuitem_label_toggle_car_mode">Mode voiture</string>
     <string name="menuitem_label_delayed_pause">Pause auto.</string>
     <string name="menuitem_label_delayed_pause_in">Pause auto. (%1$s)</string>
-    <string name="menuitem_label_add_directory">Ajouter un dossier</string>
-    <string name="menuitem_label_add_library">Ajouter une bibliothèque</string>
+    <string name="menuitem_label_add">Ajouter</string>
     <string name="menuitem_label_play">Lire</string>
     <string name="menuitem_label_play_next">Lire après</string>
     <string name="menuitem_label_add_to_queue">Ajouter à la file</string>
@@ -152,6 +152,11 @@
 
     <string name="tab_label_accept_path">Dossiers parcourus</string>
     <string name="tab_label_exclude_path">Dossiers exclus</string>
+
+    <string name="tab_label_from_embedded_tag">Médias</string>
+    <string name="tab_label_from_local_filesystem">Fichiers locaux</string>
+    <string name="tab_label_from_internet">Internet</string>
+
     <string name="tab_label_artists">Artistes</string>
     <string name="tab_label_album_artists">Artistes d\'albums</string>
     <string name="tab_label_albums">Albums</string>
@@ -251,6 +256,7 @@
     <string name="ni_files">Pas de fichiers</string>
     <string name="ni_providers">Pas de bibliothèques</string>
     <string name="ni_scan_directories">Pas de dossiers</string>
+    <string name="ni_cover_arts">Pas de pochettes</string>
     <string name="ni_artists_hint">Vérifier l\'emplacement des fichiers</string>
     <string name="ni_albums_hint">Vérifier l\'emplacement des fichiers</string>
     <string name="ni_songs_hint">Vérifier l\'emplacement des fichiers</string>

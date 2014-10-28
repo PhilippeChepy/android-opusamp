@@ -123,6 +123,14 @@ public class PlayerApplication extends Application implements ServiceConnection 
     private static boolean connecting;
 
 
+
+    // UI/UX communication
+    public static final String CONTENT_TYPE_KEY = "type_key";
+
+    public static final String CONTENT_SOURCE_ID_KEY = "id_key";
+
+
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -347,15 +355,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
         };
     }
-
-
-
-    /*
-        UI/UX communication
-     */
-    public static final String CONTENT_TYPE_KEY = "type_key";
-
-    public static final String CONTENT_SOURCE_ID_KEY = "id_key";
 
 
 

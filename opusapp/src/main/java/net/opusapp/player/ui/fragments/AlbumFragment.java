@@ -66,6 +66,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
             AbstractMediaManager.Provider.ALBUM_ID,
             AbstractMediaManager.Provider.ALBUM_NAME,
             AbstractMediaManager.Provider.ALBUM_ARTIST,
+            AbstractMediaManager.Provider.ALBUM_ART_URI,
             AbstractMediaManager.Provider.ALBUM_VISIBLE
     };
 
@@ -75,11 +76,13 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
 
     public static final int COLUMN_ALBUM_ARTIST = 2;
 
-    public static final int COLUMN_ALBUM_VISIBLE = 3;
+    public static final int COLUMN_ALBUM_ART_URI = 3;
+
+    public static final int COLUMN_ALBUM_VISIBLE = 4;
 
 
     @Override
-    public void doRefresh() {
+    public void refresh() {
         getLoaderManager().restartLoader(0, null, this);
     }
 
@@ -141,6 +144,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
                         COLUMN_ALBUM_ID,
                         COLUMN_ALBUM_NAME,
                         COLUMN_ALBUM_ARTIST,
+                        COLUMN_ALBUM_ART_URI,
                         COLUMN_ALBUM_VISIBLE
                 });
 		gridView.setOnCreateContextMenuListener(this);

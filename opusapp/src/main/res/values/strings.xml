@@ -17,6 +17,7 @@
     <string name="activity_title_library_path">Search settings</string>
     <string name="activity_title_library_management">Libraries</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
+    <string name="activity_label_art_selection">Art selection</string>
     <string name="activity_label_deezer_signin">Connection to Deezer service</string>
     <string name="activity_label_deezer_signout">Disconnect</string>
 
@@ -101,8 +102,7 @@
     <string name="menuitem_label_toggle_car_mode">Car mode</string>
     <string name="menuitem_label_delayed_pause">Auto pause</string>
     <string name="menuitem_label_delayed_pause_in">Auto pause (%1$s)</string>
-    <string name="menuitem_label_add_directory">Add directory</string>
-    <string name="menuitem_label_add_library">Add a library</string>
+    <string name="menuitem_label_add">Add</string>
     <string name="menuitem_label_play">Play</string>
     <string name="menuitem_label_play_next">Play next</string>
     <string name="menuitem_label_add_to_queue">Add to queue</string>
@@ -150,6 +150,11 @@
 
     <string name="tab_label_accept_path">Scanned</string>
     <string name="tab_label_exclude_path">Excluded</string>
+
+    <string name="tab_label_from_embedded_tag">Medias</string>
+    <string name="tab_label_from_local_filesystem">Local files</string>
+    <string name="tab_label_from_internet">Internet</string>
+
     <string name="tab_label_artists">Artists</string>
     <string name="tab_label_album_artists">Album Artists</string>
     <string name="tab_label_albums">Albums</string>
@@ -253,6 +258,7 @@
     <string name="ni_songs_hint">Check files location</string>
     <string name="ni_genres_hint">Check files location</string>
     <string name="ni_scan_directories">No directories</string>
+    <string name="ni_cover_arts">No cover arts</string>
 
     <string name="fs_parent_directory">Parent directory</string>
     <string name="fs_directory">Directory</string>

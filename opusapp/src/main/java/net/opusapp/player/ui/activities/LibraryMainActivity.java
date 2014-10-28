@@ -272,7 +272,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                             dataUri.getPath(),
                             AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
 
-                    libraryAdapter.doRefresh();
+                    libraryAdapter.refresh();
 
                     MusicConnector.doContextActionPlay(
                             AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
@@ -426,7 +426,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
     public void doRefresh() {
         if (libraryAdapter != null) {
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
         }
     }
 
@@ -569,7 +569,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public boolean onQueryTextChange(String searchText) {
             PlayerApplication.lastSearchFilter = searchText;
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             return true;
         }
 
@@ -586,7 +586,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         @Override
         public boolean onClose() {
             searchView.setQuery(null, true);
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             return false;
         }
     };
@@ -620,7 +620,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
 
             item.setChecked(show_hidden);
             MusicConnector.show_hidden = show_hidden;
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             return true;
         }
     };
@@ -736,7 +736,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 1:  MusicConnector.playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -750,7 +750,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 1:  MusicConnector.artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -764,7 +764,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 1:  MusicConnector.album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -780,7 +780,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 3:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -802,7 +802,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 9:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -816,7 +816,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 1:  MusicConnector.genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -830,7 +830,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
                 case 1:  MusicConnector.storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
             }
 
-            libraryAdapter.doRefresh();
+            libraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -865,7 +865,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    libraryAdapter.doRefresh();
+                    libraryAdapter.refresh();
                 }
             });
         }

@@ -58,12 +58,12 @@ public class SettingsActivity extends PreferenceActivity {
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
 
         boolean fileDetails = sharedPrefs.getBoolean(getString(R.string.preference_key_storage_display_details), false);
-        boolean localArts = sharedPrefs.getBoolean(getString(R.string.preference_key_display_local_art), false);
+        //boolean localArts = sharedPrefs.getBoolean(getString(R.string.preference_key_display_local_art), false);
         boolean emptyTags = sharedPrefs.getBoolean(getString(R.string.preference_key_display_source_if_no_tags), true);
 
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putBoolean(resources.getString(R.string.preference_key_storage_display_details), fileDetails);
-        editor.putBoolean(resources.getString(R.string.preference_key_display_local_art), localArts);
+        //editor.putBoolean(resources.getString(R.string.preference_key_display_local_art), localArts);
         editor.putBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), emptyTags);
         editor.apply();
 

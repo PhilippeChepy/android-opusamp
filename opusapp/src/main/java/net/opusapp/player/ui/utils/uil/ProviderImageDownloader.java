@@ -34,9 +34,7 @@ public class ProviderImageDownloader extends BaseImageDownloader {
 
     public static final String SCHEME_URI_PREFIX = SCHEME_STREAM + "://";
 
-    public static final String SUBTYPE_ALBUM = "album";
-
-    public static final String SUBTYPE_MEDIA = "media";
+    public static final String SUBTYPE_ART = "art";
 
     public static final String SUBTYPE_STORAGE = "storage";
 
@@ -64,14 +62,9 @@ public class ProviderImageDownloader extends BaseImageDownloader {
                     return super.getStreamFromOtherSource(imageUri, extra);
                 }
 
-                if (subType.equals(SUBTYPE_MEDIA)) {
+                if (subType.equals(SUBTYPE_ART)) {
                     inputStream = (InputStream) mediaManager.getProvider().getProperty(
                             AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
-                            objectId,
-                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
-                } else if (subType.equals(SUBTYPE_ALBUM)) {
-                    inputStream = (InputStream) mediaManager.getProvider().getProperty(
-                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
                             objectId,
                             AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
                 }

@@ -53,7 +53,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
         providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
 
-		setContentView(R.layout.activity_library_path);
+		setContentView(R.layout.activity_tabbed_grids);
 
         PlayerApplication.applyActionBar(this);
 		
@@ -82,7 +82,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add_directory);
+		MenuItem addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add);
 		addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_add : R.drawable.ic_action_add_dark);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
@@ -108,6 +108,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
                     try {
                         database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
+                        pagerAdapter.refresh();
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -131,6 +132,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
                     try {
                         database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
+                        pagerAdapter.refresh();
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -143,7 +145,7 @@ public class SearchPathActivity extends ActionBarActivity {
 			}
 			break;
 		}
-        pagerAdapter.doRefresh();
+        pagerAdapter.refresh();
 	}
 	
 	private final MenuItem.OnMenuItemClickListener onAddMenuItemListener = new MenuItem.OnMenuItemClickListener() {

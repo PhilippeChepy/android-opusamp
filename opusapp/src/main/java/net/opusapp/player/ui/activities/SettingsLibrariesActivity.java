@@ -250,7 +250,7 @@ public class SettingsLibrariesActivity extends ActionBarActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        final MenuItem addMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_ADD, 1, R.string.menuitem_label_add_library);
+        final MenuItem addMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_ADD, 1, R.string.menuitem_label_add);
         addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_add : R.drawable.ic_action_add_dark);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         addMenuItem.setOnMenuItemClickListener(onAddOptionMenuItemListener);

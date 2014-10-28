@@ -1,19 +1,18 @@
 package net.opusapp.player.ui.activities;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -32,10 +31,10 @@ import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
+import net.opusapp.player.ui.views.RefreshableView;
 
 
-public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements RefreshableView, LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final String TAG = LibraryDetailWithHeaderActivity.class.getSimpleName();
 
@@ -58,6 +57,8 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     private AbstractMediaManager.Provider.ContentType contentType;
 
     private String contentSourceId;
+
+    private String contentArtUri;
 
     private Cursor cursor;
 
@@ -96,32 +97,38 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
     private static final int COLUMN_SONG_ARTIST = 2;
 
+    private static final int COLUMN_SONG_ART_URI = 3;
+
     private static final int COLUMN_ALBUM_ID = 0;
 
     private static final int COLUMN_ALBUM_NAME = 1;
 
     private static final int COLUMN_ALBUM_ARTIST = 2;
 
+    private static final int COLUMN_ALBUM_ART_URI = 3;
+
 
     private static final int COLUMN_ID = 0;
 
-    private int COLUMN_VISIBLE = 0;
+    private static final int COLUMN_VISIBLE = 4;
 
 
 
-    private static final int SELECT_IMAGE_LEGACY = 0;
 
-    private static final int SELECT_IMAGE_KITKAT = 1;
-
-
-    private static final int CONTEXT_MENUITEM_USE_FILE_ART = 100;
+    private static final int CONTEXT_MENUITEM_CHANGE_ART = 100;
 
     private static final int CONTEXT_MENUITEM_RESTORE_ART = 101;
 
 
-
-    public void doRefresh() {
+    @Override
+    public void refresh() {
         getSupportLoaderManager().restartLoader(1, null, this);
+
+        final AbstractMediaManager manager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager.Provider provider = manager.getProvider();
+
+        contentArtUri = provider.getAlbumArtUri(contentSourceId);
+        PlayerApplication.normalImageLoader.displayImage(contentArtUri, placeHolderView);
     }
 
     @Override
@@ -175,24 +182,12 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         Bundle parameters = getIntent().getExtras();
         if (parameters != null) {
+            final AbstractMediaManager manager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+            final AbstractMediaManager.Provider provider = manager.getProvider();
+
             contentType = (AbstractMediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
             contentSourceId = parameters.getString(PlayerApplication.CONTENT_SOURCE_ID_KEY);
-
-            switch (contentType) {
-                case CONTENT_TYPE_ARTIST:
-                case CONTENT_TYPE_ALBUM:
-                    COLUMN_VISIBLE = 3;
-                    break;
-                case CONTENT_TYPE_PLAYLIST:
-                    COLUMN_VISIBLE = 3;
-                    break;
-                case CONTENT_TYPE_ALBUM_ARTIST:
-                case CONTENT_TYPE_GENRE:
-                    COLUMN_VISIBLE = 3;
-                    break;
-                default:
-                    throw new IllegalArgumentException();
-            }
+            contentArtUri = provider.getAlbumArtUri(contentSourceId);
 
             final Activity hostActivity = this;
             final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
@@ -230,6 +225,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                                     COLUMN_SONG_ID,
                                     COLUMN_SONG_TITLE,
                                     COLUMN_SONG_ARTIST,
+                                    COLUMN_SONG_ART_URI,
                                     COLUMN_VISIBLE
                             });
                     break;
@@ -240,6 +236,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                                     COLUMN_ALBUM_ID,
                                     COLUMN_ALBUM_NAME,
                                     COLUMN_ALBUM_ARTIST,
+                                    COLUMN_ALBUM_ART_URI,
                                     COLUMN_VISIBLE
                             });
                     break;
@@ -255,13 +252,9 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         placeHolderView = (ImageView) getLayoutInflater().inflate(R.layout.listview_header_details, contentList, false);
 
-        final String artUri =
-                ProviderImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
-                        PlayerApplication.libraryManagerIndex + "/" +
-                        contentSourceId;
-
-        PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
+        if (!TextUtils.isEmpty(contentArtUri)) {
+            PlayerApplication.normalImageLoader.displayImage(contentArtUri, placeHolderView);
+        }
 
         contentList.addHeaderView(placeHolderView);
         contentList.setOnScrollListener(contentListOnScrollListener);
@@ -314,6 +307,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
                 };
 
@@ -330,6 +324,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
 
                         AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
@@ -349,6 +344,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                         AbstractMediaManager.Provider.ALBUM_ID,
                         AbstractMediaManager.Provider.ALBUM_NAME,
                         AbstractMediaManager.Provider.ALBUM_ARTIST,
+                        AbstractMediaManager.Provider.ALBUM_ART_URI,
                         AbstractMediaManager.Provider.ALBUM_VISIBLE,
                 };
 
@@ -389,177 +385,23 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 if (adapter != null) {
                     this.cursor = cursor;
                     adapter.changeCursor(cursor);
-
-                    if (contentType == AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM) {
-                        final String songArtUri =
-                                ProviderImageDownloader.SCHEME_URI_PREFIX +
-                                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
-                                        PlayerApplication.libraryManagerIndex + "/" +
-                                        contentSourceId;
-                        PlayerApplication.normalImageLoader.displayImage(songArtUri, placeHolderView);
-                    }
                 }
                 break;
         }
     }
 
-    @TargetApi(19)
-    public void doImageChangeRequest() {
-        if (PlayerApplication.hasKitkat()) {
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("image/*");
-            startActivityForResult(intent, SELECT_IMAGE_KITKAT);
-        } else {
-            Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, getString(R.string.label_select_cover)), SELECT_IMAGE_LEGACY);
-        }
-    }
-
-    public void doImageRestorationRequest() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-            provider.setProperty(
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
-                contentSourceId,
-                AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
-                null,
-                true);
-
-            doArtUIRefresh();
-            }
-        };
-
-        final DialogInterface.OnClickListener artUpdateSongNegativeOnClickListener = new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-            provider.setProperty(
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
-                contentSourceId,
-                AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
-                null,
-                false);
-
-            doArtUIRefresh();
-            }
-        };
-
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.alert_dialog_title_art_change_tracks)
-                .setMessage(R.string.alert_dialog_message_restore_art_change_tracks)
-                .setPositiveButton(R.string.label_yes, artUpdateSongPositiveOnClickListener)
-                .setNegativeButton(R.string.label_no, artUpdateSongNegativeOnClickListener)
-                .show();
-    }
-
-    protected void doArtUIRefresh() {
-        String ids[] = new String[cursor.getCount()];
-        int position = cursor.getPosition();
-
-        int idIndex = -1;
-        cursor.moveToPosition(-1);
-        while (cursor.moveToNext()) {
-            idIndex++;
-
-            ids[idIndex] = cursor.getString(COLUMN_ID);
-        }
-        cursor.moveToPosition(position);
-
-        final String artUri =
-                ProviderImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderImageDownloader.SUBTYPE_ALBUM + "/" +
-                        PlayerApplication.libraryManagerIndex + "/" +
-                        contentSourceId;
-
-        PlayerApplication.normalImageLoader.getDiskCache().remove(artUri);
-        PlayerApplication.normalImageLoader.getMemoryCache().clear();
-
-        PlayerApplication.thumbnailImageLoader.getDiskCache().remove(artUri);
-        PlayerApplication.thumbnailImageLoader.getMemoryCache().clear();
-
-        for (String id : ids) {
-            final String mediaArtUri =
-                    ProviderImageDownloader.SCHEME_URI_PREFIX +
-                            ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
-                            PlayerApplication.libraryManagerIndex + "/" +
-                            id;
-
-            PlayerApplication.normalImageLoader.getDiskCache().remove(mediaArtUri);
-            PlayerApplication.thumbnailImageLoader.getDiskCache().remove(mediaArtUri);
-        }
-
-        PlayerApplication.normalImageLoader.displayImage(artUri, placeHolderView);
-
-        doRefresh();
-    }
-
-    @TargetApi(19)
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
-        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        switch(requestCode) {
-            case SELECT_IMAGE_KITKAT:
-            case SELECT_IMAGE_LEGACY:
-                if(resultCode == RESULT_OK){
-                    final Uri imageUriData = imageReturnedIntent.getData();
-
-                    if (requestCode == SELECT_IMAGE_KITKAT) {
-                        final int flags = imageReturnedIntent.getFlags()
-                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-                        getContentResolver().takePersistableUriPermission(imageUriData, flags);
-                    }
-
-
-                    if (imageUriData != null) {
-                        final String imageUri = imageUriData.toString();
-
-                        final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, true);
-                                doArtUIRefresh();
-                            }
-                        };
-
-                        final DialogInterface.OnClickListener artUpdateSongNegativeOnClickListener = new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, contentSourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, imageUri, false);
-                                doArtUIRefresh();
-                            }
-                        };
-
-                        new AlertDialog.Builder(this)
-                                .setTitle(R.string.alert_dialog_title_art_change_tracks)
-                                .setMessage(R.string.alert_dialog_message_art_change_tracks)
-                                .setPositiveButton(R.string.label_yes, artUpdateSongPositiveOnClickListener)
-                                .setNegativeButton(R.string.label_no, artUpdateSongNegativeOnClickListener)
-                                .show();
-                    }
-                }
+        if (requestCode == AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH) {
+            if (resultCode == Activity.RESULT_OK) {
+                refresh();
+            }
         }
     }
 
-
-    /*
-        ContentType listview item click listeners
-     */
+    // ContentType listview item click listeners
     final AdapterView.OnItemClickListener contentListOnItemClickListener = new AdapterView.OnItemClickListener() {
 
         @Override
@@ -684,7 +526,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 break;
             case CONTENT_TYPE_ALBUM:
                 if (position == -1) {
-                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_USE_FILE_ART, 2, R.string.menuitem_label_use_file_art);
+                    menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_CHANGE_ART, 2, R.string.menuitem_label_use_file_art);
                     menu.add(CONTEXT_ART_GROUP_ID, CONTEXT_MENUITEM_RESTORE_ART, 3, R.string.menuitem_label_restore_file_art);
                 }
                 else {
@@ -710,14 +552,10 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 return PlayerApplication.albumArtistDetailContextItemSelected(this, itemId, MusicConnector.details_albums_sort_order, cursor.getString(COLUMN_ALBUM_ID));
             case CONTENT_TYPE_ALBUM:
                 if (position == -1) {
-                    switch (itemId) {
-                        case CONTEXT_MENUITEM_USE_FILE_ART:
-                            doImageChangeRequest();
-                            break;
-                        case CONTEXT_MENUITEM_RESTORE_ART:
-                            doImageRestorationRequest();
-                            break;
-                    }
+                    final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+                    final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+                    provider.changeAlbumArt(this, this, contentSourceId, itemId == CONTEXT_MENUITEM_RESTORE_ART);
                     return true;
                 }
                 else {
@@ -806,7 +644,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 case 9:  MusicConnector.details_songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
-            doRefresh();
+            refresh();
             dialog.dismiss();
         }
     };
@@ -822,7 +660,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 case 3:  MusicConnector.details_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
             }
 
-            doRefresh();
+            refresh();
             dialog.dismiss();
         }
     };

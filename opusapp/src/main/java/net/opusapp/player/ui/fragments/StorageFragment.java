@@ -80,7 +80,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
 
     @Override
-    public void doRefresh() {
+    public void refresh() {
         doLocationUpdate();
         getLoaderManager().restartLoader(0, null, this);
     }
@@ -224,7 +224,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
                     null,
                     null
             );
-            doRefresh();
+            refresh();
         }
         else {
             PlayerApplication.storageContextItemSelected(PlayerApplication.CONTEXT_MENUITEM_PLAY, cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, position);
@@ -248,7 +248,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
                     null,
                     null
             );
-            doRefresh();
+            refresh();
         }
 
         return hasParent;

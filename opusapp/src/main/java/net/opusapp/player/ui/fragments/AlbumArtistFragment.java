@@ -77,7 +77,7 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
 
 	
 	@Override
-	public void doRefresh() {
+	public void refresh() {
         getLoaderManager().restartLoader(0, null, this);
 	}
 

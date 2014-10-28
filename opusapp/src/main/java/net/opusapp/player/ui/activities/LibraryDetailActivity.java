@@ -67,7 +67,9 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     private static final int COLUMN_SONG_ARTIST = 2;
 
-    private static final int COLUMN_SONG_VISIBLE = 3;
+    private static final int COLUMN_SONG_ART_URI = 3;
+
+    private static final int COLUMN_SONG_VISIBLE = 4;
 
     private static final int COLUMN_ALBUM_ID = 0;
 
@@ -75,7 +77,9 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     private static final int COLUMN_ALBUM_ARTIST = 2;
 
-    private static final int COLUMN_ALBUM_VISIBLE = 3;
+    private static final int COLUMN_ALBUM_ART_URI = 3;
+
+    private static final int COLUMN_ALBUM_VISIBLE = 4;
 
 
 
@@ -159,6 +163,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                     COLUMN_SONG_ID,
                                     COLUMN_SONG_TITLE,
                                     COLUMN_SONG_ARTIST,
+                                    COLUMN_SONG_ART_URI,
                                     COLUMN_SONG_VISIBLE
                             });
                     break;
@@ -169,6 +174,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                     COLUMN_ALBUM_ID,
                                     COLUMN_ALBUM_NAME,
                                     COLUMN_ALBUM_ARTIST,
+                                    COLUMN_ALBUM_ART_URI,
                                     COLUMN_ALBUM_VISIBLE
                             });
                     break;
@@ -225,6 +231,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
                 };
 
@@ -241,6 +248,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
 
                         AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
@@ -253,13 +261,13 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         null,
                         contentType,
                         contentSourceId);
-
             case CONTENT_TYPE_ALBUM_ARTIST:
             case CONTENT_TYPE_GENRE:
                 requestedFields = new int[] {
                         AbstractMediaManager.Provider.ALBUM_ID,
                         AbstractMediaManager.Provider.ALBUM_NAME,
                         AbstractMediaManager.Provider.ALBUM_ARTIST,
+                        AbstractMediaManager.Provider.ALBUM_ART_URI,
                         AbstractMediaManager.Provider.ALBUM_VISIBLE,
                 };
 

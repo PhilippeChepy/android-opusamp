@@ -65,7 +65,6 @@ import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 import net.opusapp.player.ui.views.RepeatingImageButton;
 import net.opusapp.player.utils.LogUtils;
 
@@ -98,6 +97,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
             AbstractMediaManager.Provider.SONG_TITLE,
             AbstractMediaManager.Provider.SONG_ARTIST,
             AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+            AbstractMediaManager.Provider.SONG_ART_URI,
             AbstractMediaManager.Provider.SONG_VISIBLE,
     };
 
@@ -113,7 +113,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
     private static final int COLUMN_ENTRY_POSITION = 3;
 
-    private static final int COLUMN_SONG_VISIBLE = 4;
+    private static final int COLUMN_SONG_ART_URI = 4;
+
+    private static final int COLUMN_SONG_VISIBLE = 5;
 
 
 
@@ -289,6 +291,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                         COLUMN_SONG_ID,
                         COLUMN_SONG_TITLE,
                         COLUMN_SONG_ARTIST,
+                        COLUMN_SONG_ART_URI,
                         COLUMN_SONG_VISIBLE
                 });
         adapter.setTransparentBackground(true);
@@ -676,11 +679,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                     artistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
                     timeTextView.setText(PlayerApplication.formatMSecs(position));
 
-                    final String songArtUri =
-                            ProviderImageDownloader.SCHEME_URI_PREFIX +
-                                    ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
-                                    PlayerApplication.playerManagerIndex + "/" +
-                                    playlistCursor.getString(COLUMN_SONG_ID);
+                    final String songArtUri = playlistCursor.getString(COLUMN_SONG_ART_URI);
 
                     PlayerApplication.normalImageLoader.displayImage(songArtUri, artImageView, loaderListener);
                 }

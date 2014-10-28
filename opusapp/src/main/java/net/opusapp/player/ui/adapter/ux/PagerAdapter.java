@@ -77,11 +77,11 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
         return fragment;
     }
 
-    public void doRefresh() {
+    public void refresh() {
         for (Fragment fragment : pagedFragments) {
             if (fragment instanceof AbstractRefreshableFragment) {
                 if (fragment.isAdded()) {
-                    ((AbstractRefreshableFragment) fragment).doRefresh();
+                    ((AbstractRefreshableFragment) fragment).refresh();
                 }
             }
         }

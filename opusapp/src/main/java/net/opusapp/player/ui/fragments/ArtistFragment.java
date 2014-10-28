@@ -75,7 +75,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
     public static final int COLUMN_ARTIST_VISIBLE = 2;
 
     @Override
-    public void doRefresh() {
+    public void refresh() {
         getLoaderManager().restartLoader(0, null, this);
     }
 

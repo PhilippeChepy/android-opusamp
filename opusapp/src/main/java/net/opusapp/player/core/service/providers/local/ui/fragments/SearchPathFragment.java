@@ -16,6 +16,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -36,15 +37,15 @@ import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
-import net.opusapp.player.ui.fragments.AbstractRefreshableFragment;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomTextView;
+import net.opusapp.player.ui.views.RefreshableView;
 
-public class SearchPathFragment extends AbstractRefreshableFragment implements LoaderCallbacks<Cursor>, OnItemClickListener {
+public class SearchPathFragment extends Fragment implements RefreshableView, LoaderCallbacks<Cursor>, OnItemClickListener {
 
 	private GridView gridView;
 	
-    private CollectionScannerPathAdapter songAdapter;
+    private CollectionScannerPathAdapter adapter;
     
     private Cursor cursor;
 
@@ -91,7 +92,7 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 
 	
 	@Override
-	public void doRefresh() {
+	public void refresh() {
         if( gridView != null ) {
             getLoaderManager().restartLoader(0, null, this);
         }
@@ -115,10 +116,10 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
 	public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        this.songAdapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
-        this.gridView.setOnCreateContextMenuListener(this);
-        this.gridView.setOnItemClickListener(this);
-        this.gridView.setAdapter(songAdapter);
+        adapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
+        gridView.setOnCreateContextMenuListener(this);
+        gridView.setOnItemClickListener(this);
+        gridView.setAdapter(adapter);
         gridView.setNumColumns(PlayerApplication.getListColumns());
 
         Bundle arguments = getArguments();
@@ -168,15 +169,15 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
             return;
         }
 
-        this.songAdapter.changeCursor(data);
+        this.adapter.changeCursor(data);
         this.gridView.invalidateViews();
         this.cursor = data;
 	}
 	
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-        if (this.songAdapter != null) {
-        	this.songAdapter.changeCursor(null);
+        if (this.adapter != null) {
+        	this.adapter.changeCursor(null);
         }
 	}
 	
@@ -225,8 +226,8 @@ public class SearchPathFragment extends AbstractRefreshableFragment implements L
         getActivity().openContextMenu(gridView);
 	}
 	
-	public class CollectionScannerPathAdapter extends SimpleCursorAdapter {
-		public static final String TAG = "CollectionScannerPathAdapter";
+	public static class CollectionScannerPathAdapter extends SimpleCursorAdapter {
+		public static final String TAG = CollectionScannerPathAdapter.class.getSimpleName();
 	    
 	    public CollectionScannerPathAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
 	        super(context, layout, c, from, to, flags);

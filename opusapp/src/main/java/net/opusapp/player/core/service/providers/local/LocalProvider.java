@@ -13,8 +13,10 @@
 package net.opusapp.player.core.service.providers.local;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -33,11 +35,13 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaMetadata;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
+import net.opusapp.player.core.service.providers.local.ui.activities.ArtSelectActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SearchPathActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SettingsActivity;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
+import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.Base64;
 import net.opusapp.player.utils.LogUtils;
 import net.opusapp.player.utils.backport.android.content.SharedPreferencesCompat;
@@ -373,29 +377,29 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public AbstractMediaManager.Media[] getCurrentPlaylist(AbstractMediaManager.Player player) {
 
         int[] requestedFields = new int[] {
-                AbstractMediaManager.Provider.SONG_ID,
                 AbstractMediaManager.Provider.SONG_URI,
                 AbstractMediaManager.Provider.SONG_TITLE,
                 AbstractMediaManager.Provider.SONG_ARTIST,
                 AbstractMediaManager.Provider.SONG_ALBUM,
-                AbstractMediaManager.Provider.SONG_DURATION
+                AbstractMediaManager.Provider.SONG_DURATION,
+                AbstractMediaManager.Provider.SONG_ART_URI
         };
 
         int[] sortOrder = new int[] {
                 AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
         };
 
-        final int COLUMN_SONG_ID = 0;
+        final int COLUMN_SONG_URI = 0;
 
-        final int COLUMN_SONG_URI = 1;
+        final int COLUMN_SONG_TITLE = 1;
 
-        final int COLUMN_SONG_TITLE = 2;
+        final int COLUMN_SONG_ARTIST = 2;
 
-        final int COLUMN_SONG_ARTIST = 3;
+        final int COLUMN_SONG_ALBUM = 3;
 
-        final int COLUMN_SONG_ALBUM = 4;
+        final int COLUMN_SONG_DURATION = 4;
 
-        final int COLUMN_SONG_DURATION = 5;
+        final int COLUMN_SONG_ART_URI = 5;
 
         Cursor cursor = buildCursor(
                 AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
@@ -419,9 +423,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             playlist[i].album = cursor.getString(COLUMN_SONG_ALBUM);
             playlist[i].artist = cursor.getString(COLUMN_SONG_ARTIST);
             playlist[i].duration = cursor.getLong(COLUMN_SONG_DURATION);
-            playlist[i].artUri =
-                    ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_MEDIA + "/" +
-                            PlayerApplication.playerManagerIndex + "/" + cursor.getInt(COLUMN_SONG_ID);
+            playlist[i].artUri = cursor.getString(COLUMN_SONG_ART_URI);
         }
         cursor.close();
 
@@ -975,7 +977,56 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return ACTION_LIST;
     }
 
+    @Override
+    public void changeAlbumArt(final Activity sourceActivity, final RefreshableView sourceRefreshable, final String albumId, boolean restore) {
+        if (restore) {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+            final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
+            final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    provider.setProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
+                            albumId,
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
+                            null,
+                            true);
+
+                    sourceRefreshable.refresh();
+                }
+            };
+
+            final DialogInterface.OnClickListener artUpdateSongNegativeOnClickListener = new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    provider.setProperty(
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM,
+                            albumId,
+                            AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_ORIGINAL_URI,
+                            null,
+                            false);
+
+                    sourceRefreshable.refresh();
+                }
+            };
+
+            new AlertDialog.Builder(sourceActivity)
+                    .setTitle(R.string.alert_dialog_title_art_change_tracks)
+                    .setMessage(R.string.alert_dialog_message_restore_art_change_tracks)
+                    .setPositiveButton(R.string.label_yes, artUpdateSongPositiveOnClickListener)
+                    .setNegativeButton(R.string.label_no, artUpdateSongNegativeOnClickListener)
+                    .show();
+        }
+        else {
+            final Intent intent = new Intent(sourceActivity, ArtSelectActivity.class);
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+            intent.putExtra(KEY_SOURCE_ID, albumId);
+            sourceActivity.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
+        }
+    }
 
     protected void doNotifyLibraryChanges() {
         for (OnLibraryChangeListener libraryChangeListener : scanListeners) {
@@ -1173,6 +1224,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     protected Cursor doBuildAlbumCursor(final int[] requestedFields, final int[] sortFields, String filter, final ContentType source, final String sourceId) {
         final ArrayList<String> columnsList = new ArrayList<String>();
 
+        boolean usesArtTable = false;
+
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaManager.Provider.ALBUM_ID:
@@ -1180,6 +1233,15 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.ALBUM_NAME:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_NAME);
+                    break;
+                case AbstractMediaManager.Provider.ALBUM_ART_URI:
+                    usesArtTable = true;
+
+                    final String uriBeginning = ProviderImageDownloader.SCHEME_URI_PREFIX +
+                            ProviderImageDownloader.SUBTYPE_ART + "/" +
+                            PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/";
+
+                    columnsList.add("'" + uriBeginning + "' || " + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " AS " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID);
                     break;
                 case AbstractMediaManager.Provider.ALBUM_ARTIST:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST);
@@ -1249,8 +1311,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 };
                 break;
             case CONTENT_TYPE_GENRE:
-                tableDescription =
-                        Entities.Album.TABLE_NAME + " JOIN " + Entities.Media.TABLE_NAME +
+                tableDescription = tableDescription + " JOIN " + Entities.Media.TABLE_NAME +
                                 " ON " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID;
 
                 if (!TextUtils.isEmpty(selection)) {
@@ -1263,12 +1324,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 };
                 groupBy = Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID;
                 break;
-            /*
-            case CONTENT_TYPE_ARTIST:
-            case CONTENT_TYPE_ALBUM:
-            case CONTENT_TYPE_PLAYLIST:
-                throw new IllegalArgumentException();
-            */
+        }
+
+        if (usesArtTable) {
+            tableDescription = tableDescription + " JOIN " + Entities.Art.TABLE_NAME +
+                                " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID;
         }
 
 
@@ -1481,12 +1541,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         final Resources resources = PlayerApplication.context.getResources();
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
 
-        boolean localArts = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_local_art), false);
         boolean manageMissingTags = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), true);
 
 
         boolean usesSongTable = false;
-        boolean usesArtTable = false;
         boolean usesPlaylistEntryTable = false;
 
         final ArrayList<String> columnsList = new ArrayList<String>();
@@ -1502,15 +1560,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI);
                     break;
                 case AbstractMediaManager.Provider.SONG_ART_URI:
-                    usesArtTable = true;
                     usesSongTable = true;
 
-                    if (localArts) {
-                        columnsList.add(Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI);
-                    }
-                    else {
-                        columnsList.add("NULL AS " + Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI);
-                    }
+                    final String uriBeginning = ProviderImageDownloader.SCHEME_URI_PREFIX +
+                        ProviderImageDownloader.SUBTYPE_ART + "/" +
+                        PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/";
+
+                    columnsList.add("'" + uriBeginning + "' || " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID + " AS " + Entities.Media.COLUMN_FIELD_ART_ID);
                     break;
                 case AbstractMediaManager.Provider.SONG_DURATION:
                     usesSongTable = true;
@@ -1874,14 +1930,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             }
         }
 
-        if (usesArtTable) {
-            tableDescription +=
-                    " JOIN " + Entities.Art.TABLE_NAME +
-                            " ON " +
-                            Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
-                            Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID;
-        }
-
         final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
             return database.query(tableDescription, columns, selection, selectionArgs, null, null, orderBy);
@@ -2214,6 +2262,43 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         } catch (final FileNotFoundException fileNotFoundException) {
             return null;
         }
+    }
+
+    @Override
+    public String getAlbumArtUri(String albumId) {
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
+        if (database == null) {
+            return null;
+        }
+
+        final String tableName =
+                Entities.Album.TABLE_NAME + " LEFT JOIN " + Entities.Art.TABLE_NAME + " ON " +
+                        Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
+                        Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID;
+
+
+        final String[] columns = new String[]{
+                Entities.Art.TABLE_NAME + "." + Entities.Art._ID,
+        };
+
+        final int COLUMN_ART_ID = 0;
+
+        String selection = Entities.Album.TABLE_NAME + "." + Entities.Album._ID + " = ? ";
+        final String[] selectionArgs = new String[]{ albumId };
+
+        String albumArtUri = null;
+
+        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            albumArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_ART + "/" + PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/" + cursor.getString(COLUMN_ART_ID);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return albumArtUri;
     }
 
     protected void doUpdateAlbumCover(String albumId, String uri, boolean updateTracks) {

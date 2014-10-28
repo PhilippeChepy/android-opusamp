@@ -77,7 +77,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
 
 
 	@Override
-	public void doRefresh() {
+	public void refresh() {
         getLoaderManager().restartLoader(0, null, this);
 	}
 
