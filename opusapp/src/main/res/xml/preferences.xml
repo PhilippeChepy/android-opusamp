@@ -34,7 +34,8 @@
         <CheckBoxPreference
             android:key="@string/preference_key_toolbar_dark_icons"
             android:summary="@string/preference_summary_toolbar_dark_icons"
-            android:title="@string/preference_title_toolbar_dark_icons" />
+            android:title="@string/preference_title_toolbar_dark_icons"
+            android:defaultValue="false" />
     </PreferenceScreen>
 
     <PreferenceScreen

@@ -78,7 +78,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 PlayerApplication.uiColorsChanged = true;
-                return false;
+                return true;
             }
         });
 
@@ -87,7 +87,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 PlayerApplication.uiColorsChanged = true;
-                return false;
+                return true;
             }
         });
 
@@ -96,7 +96,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 PlayerApplication.uiColorsChanged = true;
-                return false;
+                return true;
             }
         });
 
@@ -105,7 +105,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 PlayerApplication.uiColorsChanged = true;
-                return false;
+                return true;
             }
         });
 
