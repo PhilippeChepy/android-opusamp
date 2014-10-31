@@ -141,7 +141,6 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                         COLUMN_SONG_ID,
                         COLUMN_SONG_TITLE,
                         COLUMN_SONG_ARTIST,
-                        COLUMN_SONG_ART_URI,
                         COLUMN_SONG_VISIBLE
                 });
         gridView.setOnCreateContextMenuListener(this);
