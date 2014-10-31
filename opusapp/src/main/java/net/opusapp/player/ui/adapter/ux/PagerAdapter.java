@@ -19,7 +19,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.ViewGroup;
 
-import net.opusapp.player.ui.fragments.AbstractRefreshableFragment;
+import net.opusapp.player.ui.views.RefreshableView;
 
 import java.util.ArrayList;
 
@@ -79,9 +79,9 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
 
     public void refresh() {
         for (Fragment fragment : pagedFragments) {
-            if (fragment instanceof AbstractRefreshableFragment) {
+            if (fragment instanceof RefreshableView) {
                 if (fragment.isAdded()) {
-                    ((AbstractRefreshableFragment) fragment).refresh();
+                    ((RefreshableView) fragment).refresh();
                 }
             }
         }

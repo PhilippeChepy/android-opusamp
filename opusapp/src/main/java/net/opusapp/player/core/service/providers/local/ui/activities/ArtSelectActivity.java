@@ -19,7 +19,6 @@ import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.ui.fragments.ArtSelectionFragment;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
 
@@ -148,13 +147,12 @@ public class ArtSelectActivity extends ActionBarActivity {
                     artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID, sourceId);
                     database.insert(Entities.AlbumHasArts.TABLE_NAME, null, artData);
 
-                    LogUtils.LOGE(TAG, "result = " + selectedFile);
+                    pagerAdapter.refresh();
                 }
                 break;
             case REQUEST_CODE_INTERNET:
-                if (resultCode == RESULT_OK) {
-
-                }
+                //if (resultCode == RESULT_OK) {
+                //}
         }
         pagerAdapter.refresh();
     }
