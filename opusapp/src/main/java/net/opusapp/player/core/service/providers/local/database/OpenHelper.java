@@ -54,6 +54,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.Artist.createTable(database);
         Entities.Genre.createTable(database);
         Entities.Art.createTable(database);
+        Entities.AlbumHasArts.createTable(database);
         Entities.Playlist.createTable(database);
         Entities.PlaylistEntry.createTable(database);
         Entities.Media.createTable(database);
@@ -86,6 +87,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.Artist.destroyTable(database);
         Entities.Genre.destroyTable(database);
         Entities.Art.destroyTable(database);
+        Entities.AlbumHasArts.destroyTable(database);
         Entities.Playlist.destroyTable(database);
         Entities.PlaylistEntry.destroyTable(database);
         Entities.Media.destroyTable(database);

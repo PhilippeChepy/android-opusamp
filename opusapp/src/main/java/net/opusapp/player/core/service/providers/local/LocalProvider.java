@@ -727,6 +727,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         switch (key) {
             case CONTENT_ART_STREAM:
                 switch (contentType) {
+                    case CONTENT_TYPE_ART:
+                        return getArt((String) target);
                     case CONTENT_TYPE_ALBUM:
                         return getAlbumArt((String) target);
                     case CONTENT_TYPE_MEDIA:
@@ -1023,7 +1025,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         else {
             final Intent intent = new Intent(sourceActivity, ArtSelectActivity.class);
             intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
-            intent.putExtra(KEY_SOURCE_ID, albumId);
+            intent.putExtra(KEY_SOURCE_ID, Long.parseLong(albumId));
             sourceActivity.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }
     }
@@ -2212,6 +2214,54 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return null;
     }
 
+    protected InputStream getArt(String artId) {
+        final SQLiteDatabase database = openHelper.getReadableDatabase();
+        if (database == null) {
+            return null;
+        }
+
+        final String tableName = Entities.Art.TABLE_NAME;
+
+        final String[] columns = new String[]{
+                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI,
+                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED
+        };
+
+        final int COLUMN_ART_URI = 0;
+        final int COLUMN_ART_IS_EMBEDDED = 1;
+
+        String selection = Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = ? ";
+        final String[] selectionArgs = new String[]{ artId };
+
+        String artUri = null;
+        boolean isEmbedded = false;
+
+        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            artUri = cursor.getString(COLUMN_ART_URI);
+            isEmbedded = cursor.getInt(COLUMN_ART_IS_EMBEDDED) == 1;
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        try {
+            if (!TextUtils.isEmpty(artUri)) {
+                if (isEmbedded) {
+                    return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(artUri));
+                }
+                else {
+                    return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(artUri));
+                }
+            }
+            return null;
+        } catch (final FileNotFoundException fileNotFoundException) {
+            return null;
+        }
+    }
+
     protected InputStream getAlbumArt(String albumId) {
         final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database == null) {
@@ -2389,7 +2439,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
 
-    protected static boolean isArtFile(SyncScanContext scanContext, File file) {
+    public static boolean isArtFile(SyncScanContext scanContext, File file) {
         String filePath = file.getAbsolutePath();
 
         if (scanContext.albumArtExtensions == null) {
@@ -2417,7 +2467,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return false;
     }
 
-    protected static boolean isAudioFile(SyncScanContext scanContext, File file) {
+    public static boolean isAudioFile(SyncScanContext scanContext, File file) {
         if (file.isDirectory()) {
             return false;
         }

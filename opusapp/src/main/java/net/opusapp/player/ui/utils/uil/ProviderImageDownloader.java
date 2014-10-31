@@ -64,7 +64,7 @@ public class ProviderImageDownloader extends BaseImageDownloader {
 
                 if (subType.equals(SUBTYPE_ART)) {
                     inputStream = (InputStream) mediaManager.getProvider().getProperty(
-                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
+                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ART,
                             objectId,
                             AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_STREAM);
                 }

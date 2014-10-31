@@ -282,9 +282,36 @@ public class Entities {
 
         public static void createTable(SQLiteDatabase database) {
             database.execSQL("CREATE TABLE " + TABLE_NAME + "("
-                + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_FIELD_URI + " TEXT UNIQUE ON CONFLICT FAIL, "
-                + COLUMN_FIELD_URI_IS_EMBEDDED + " BOOLEAN);");
+                    + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COLUMN_FIELD_URI + " TEXT UNIQUE ON CONFLICT FAIL, "
+                    + COLUMN_FIELD_URI_IS_EMBEDDED + " BOOLEAN);");
+        }
+
+        public static void destroyTable(SQLiteDatabase database) {
+            database.execSQL("DROP TABLE " + TABLE_NAME + ";");
+        }
+    }
+
+    public static abstract class AlbumHasArts {
+
+        public static final String TAG = AlbumHasArts.class.getSimpleName();
+
+
+
+        public static final String TABLE_NAME = "library_album_has_arts";
+
+
+
+        public static final String COLUMN_FIELD_ART_ID = "art_id";
+
+        public static final String COLUMN_FIELD_ALBUM_ID = "album_id";
+
+
+
+        public static void createTable(SQLiteDatabase database) {
+            database.execSQL("CREATE TABLE " + TABLE_NAME + "("
+                    + COLUMN_FIELD_ART_ID + " INTEGER, "
+                    + COLUMN_FIELD_ALBUM_ID + " INTEGER);");
         }
 
         public static void destroyTable(SQLiteDatabase database) {

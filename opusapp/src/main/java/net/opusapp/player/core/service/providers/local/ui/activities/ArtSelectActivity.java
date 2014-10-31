@@ -1,6 +1,8 @@
 package net.opusapp.player.core.service.providers.local.ui.activities;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -12,12 +14,20 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.local.LocalProvider;
+import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.ui.fragments.ArtSelectionFragment;
-import net.opusapp.player.ui.activities.UtilDirectorySelectActivity;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
 import net.opusapp.player.ui.utils.PlayerApplication;
+import net.opusapp.player.utils.LogUtils;
+
+import java.io.File;
 
 public class ArtSelectActivity extends ActionBarActivity {
+
+    public static final String TAG = ArtSelectActivity.class.getSimpleName();
+
+
 
     private ViewPager viewPager;
 
@@ -31,31 +41,46 @@ public class ArtSelectActivity extends ActionBarActivity {
 
     private int providerId;
 
+    private long sourceId;
+
     private MenuItem addMenuItem;
+
+
+
+    protected SQLiteDatabase getWritableDatabase() {
+        int index = PlayerApplication.getManagerIndex(providerId);
+
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
+        if (provider instanceof LocalProvider) {
+            return ((LocalProvider) provider).getWritableDatabase();
+        }
+
+        return null;
+    }
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
         providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
-        final String sourceId = getIntent().getStringExtra(AbstractMediaManager.Provider.KEY_SOURCE_ID);
+        sourceId = getIntent().getLongExtra(AbstractMediaManager.Provider.KEY_SOURCE_ID, -1);
 
         setContentView(R.layout.activity_tabbed_grids);
         PlayerApplication.applyActionBar(this);
 
         Bundle fromEmbeddedTagsBundle = new Bundle();
         fromEmbeddedTagsBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_EMBEDDED_TAGS);
-        fromEmbeddedTagsBundle.putString(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
+        fromEmbeddedTagsBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
         fromEmbeddedTagsBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
 
         Bundle fromLocalFileSystemBundle = new Bundle();
         fromLocalFileSystemBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_LOCAL_FILESYSTEM);
-        fromLocalFileSystemBundle.putString(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
+        fromLocalFileSystemBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
         fromLocalFileSystemBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
 
         Bundle fromInternetBundle = new Bundle();
         fromInternetBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_INTERNET);
-        fromInternetBundle.putString(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
+        fromInternetBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
         fromInternetBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
 
         pagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
@@ -110,6 +135,20 @@ public class ArtSelectActivity extends ActionBarActivity {
         switch(requestCode) {
             case REQUEST_CODE_LOCAL_FILESYSTEM:
                 if (resultCode == RESULT_OK) {
+                    final String selectedFile = data.getStringExtra(UtilFileSelectActivity.KEY_RESULT);
+                    final SQLiteDatabase database = getWritableDatabase();
+
+                    ContentValues artData = new ContentValues();
+                    artData.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(new File(selectedFile)));
+                    artData.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, false);
+                    long artId = database.insert(Entities.Art.TABLE_NAME, null, artData);
+
+                    artData.clear();
+                    artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ART_ID, artId);
+                    artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID, sourceId);
+                    database.insert(Entities.AlbumHasArts.TABLE_NAME, null, artData);
+
+                    LogUtils.LOGE(TAG, "result = " + selectedFile);
                 }
                 break;
             case REQUEST_CODE_INTERNET:
@@ -124,7 +163,7 @@ public class ArtSelectActivity extends ActionBarActivity {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            Intent intent = new Intent(ArtSelectActivity.this, UtilDirectorySelectActivity.class);
+            Intent intent = new Intent(ArtSelectActivity.this, UtilFileSelectActivity.class);
             startActivityForResult(intent, viewPager.getCurrentItem() == 0 ? REQUEST_CODE_EMBEDDED_TAGS : REQUEST_CODE_LOCAL_FILESYSTEM);
             return false;
         }

@@ -239,6 +239,7 @@ public interface AbstractMediaManager {
             CONTENT_TYPE_MEDIA,
             CONTENT_TYPE_GENRE,
             CONTENT_TYPE_STORAGE,
+            CONTENT_TYPE_ART,
         }
 
 

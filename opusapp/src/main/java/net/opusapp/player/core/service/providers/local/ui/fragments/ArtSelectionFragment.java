@@ -28,6 +28,7 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 import net.opusapp.player.ui.views.CustomTextView;
 import net.opusapp.player.ui.views.RefreshableView;
+import net.opusapp.player.utils.LogUtils;
 
 public class ArtSelectionFragment extends Fragment implements RefreshableView, LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener {
 
@@ -41,7 +42,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
     private int providerId;
 
-    private String sourceId;
+    private long sourceId;
 
     private int contentType;
 
@@ -115,7 +116,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
         if (arguments != null) {
             providerId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
             contentType = arguments.getInt(CONTENT_TYPE_KEY);
-            sourceId = arguments.getString(AbstractMediaManager.Provider.KEY_SOURCE_ID);
+            sourceId = arguments.getLong(AbstractMediaManager.Provider.KEY_SOURCE_ID);
         }
 
         getLoaderManager().initLoader(0, null, this);
@@ -140,7 +141,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                             final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.Media.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID;
                             final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1) AND (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ?)";
                             final String selectionArgs[] = new String[] {
-                                    sourceId
+                                    String.valueOf(sourceId)
                             };
 
                             return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
@@ -154,8 +155,13 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                     public Cursor loadInBackground() {
                         SQLiteDatabase database = getReadableDatabase();
                         if (database != null) {
-                            final String selection = Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " <> 1";
-                            return database.query(Entities.Art.TABLE_NAME, projection, selection, null, null, null, sortOrder);
+                            final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.AlbumHasArts.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ART_ID;
+                            final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " <> 1) AND (" + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID + " = ?)";
+                            final String selectionArgs[] = new String[] {
+                                    String.valueOf(sourceId)
+                            };
+
+                            return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
                         }
                         return null;
                     }
@@ -198,6 +204,9 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
         final String selectedUri = cursor.getString(COLUMN_URI);
         final int selectedId = cursor.getInt(COLUMN_ID);
 
+        LogUtils.LOGE(TAG, "onItemClick selectedUri : " + selectedUri);
+        LogUtils.LOGE(TAG, "onItemClick selectedId  : " + selectedId);
+
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
@@ -211,7 +220,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, sourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, true);
+                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, true);
                 activity.setResult(Activity.RESULT_OK, resultIntent);
                 activity.finish();
             }
@@ -221,7 +230,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, sourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, false);
+                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, false);
                 activity.setResult(Activity.RESULT_OK, resultIntent);
                 activity.finish();
             }
