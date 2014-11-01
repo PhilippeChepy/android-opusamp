@@ -57,6 +57,7 @@ import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
+import net.opusapp.player.ui.utils.uil.ThumbnailUncachedImageLoader;
 import net.opusapp.player.utils.LogUtils;
 import net.opusapp.player.utils.iab.IabHelper;
 import net.opusapp.player.utils.iab.IabResult;
@@ -120,6 +121,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static ImageLoader thumbnailImageLoader;
 
+    public static ImageLoader thumbnailUncachedImageLoader;
+
     private static boolean connecting;
 
 
@@ -145,6 +148,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
         normalImageLoader = NormalImageLoader.getInstance();
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
+        thumbnailUncachedImageLoader = ThumbnailUncachedImageLoader.getInstance();
 
         if (isExpired()) {
             trialMode = false;

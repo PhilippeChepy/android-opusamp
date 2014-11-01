@@ -229,8 +229,11 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
                     viewHolder.image.setImageResource(R.drawable.ic_action_folder_closed);
                     viewHolder.lineTwo.setVisibility(View.VISIBLE);
                     viewHolder.lineTwo.setText(R.string.fs_directory);
-				} else { /* should never happen */
+				} else {
+                    PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewHolder.image);
                     viewHolder.image.setImageResource(R.drawable.ic_action_document);
+                    PlayerApplication.thumbnailImageLoader.displayImage(PlayerApplication.fileToUri(file), viewHolder.image);
+
                     viewHolder.lineTwo.setVisibility(View.GONE);
 				}
 			}

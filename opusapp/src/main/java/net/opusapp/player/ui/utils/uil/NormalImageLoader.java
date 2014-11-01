@@ -59,7 +59,7 @@ public class NormalImageLoader extends ImageLoader {
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
 
         ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
-                .threadPoolSize(2)
+                .threadPoolSize(1)
                 .threadPriority(Thread.MIN_PRIORITY)
                 .diskCacheExtraOptions(500, 500, null)
                 .diskCacheSize(Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_cache_size), "30")) * 1024 * 1024)
