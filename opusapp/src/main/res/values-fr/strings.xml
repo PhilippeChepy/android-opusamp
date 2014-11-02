@@ -14,7 +14,7 @@
 
     <!-- Activities -->
     <string name="activity_title_preferences">Préferences</string>
-    <string name="activity_title_library_path">Paramètres de recherche</string>
+    <string name="activity_title_library_path">"Paramètrage des emplacements"</string>
     <string name="activity_title_library_management">Bibliothèques</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
     <string name="activity_label_art_selection">"Choix d'une pochette"</string>
@@ -22,20 +22,20 @@
     <string name="activity_label_deezer_signout">Déconnexion du service</string>
 
     <!-- Dialogs -->
-    <string name="alert_dialog_title_album_properties">Propriétés de l\'album</string>
+    <string name="alert_dialog_title_album_properties">"Propriétés de l'album"</string>
     <string name="alert_dialog_title_media_properties">Propriétés du média</string>
     <string name="alert_dialog_title_playlist_is_empty">La liste de lecture est vide</string>
-    <string name="alert_dialog_message_playlist_is_empty">Il n\'y a pas de pistes à lire !\nAjoutez d\'abord quelque chose à lire dans la liste de lecture.</string>
+    <string name="alert_dialog_message_playlist_is_empty">"Il n'y a rien à lire !\nMerci d'ajouter d'abord quelque chose à lire à la liste de lecture."</string>
     <string name="alert_dialog_title_playlist_delete">Confirmation</string>
     <string name="alert_dialog_message_playlist_delete">Voulez vous vraiment supprimer cette liste de lecture ?</string>
     <string name="alert_dialog_title_art_change_tracks">Question</string>
-    <string name="alert_dialog_message_art_change_tracks">Mettre à jour les pistes avec cette image ?</string>
-    <string name="alert_dialog_message_restore_art_change_tracks">Restaurer les images des pistes ?</string>
+    <string name="alert_dialog_message_art_change_tracks">Mettre à jour les médias avec cette image ?</string>
+    <string name="alert_dialog_message_restore_art_change_tracks">Restaurer les images des médias ?</string>
     <string name="alert_dialog_title_search_path_exists">Chemin déjà inscrit</string>
     <string name="alert_dialog_message_search_path_exists">Ce dossier est déjà dans la liste des dossier à analyser ou à exclure.</string>
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
-    <string name="alert_dialog_title_premium_hint">Période d\'essai terminée.</string>
-    <string name="alert_dialog_message_premium_hint">Des publicités vont être affiché occasionnelement à moins que vous n\'achetiez le mode premium.</string>
+    <string name="alert_dialog_title_premium_hint">"Période d'essai terminée."</string>
+    <string name="alert_dialog_message_premium_hint">"Des publicités vont être affiché occasionnelement à moins que vous n'achetiez le mode premium."</string>
     <string name="alert_dialog_title_premium_positive_button">Acheter le mode premium</string>
     <string name="alert_dialog_title_premium_negative_button">Ignorer</string>
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
@@ -84,7 +84,7 @@
     <string name="preference_title_storage_display_details">Détails dans l\'explorateur de fichiers</string>
     <string name="preference_summary_storage_display_details">Afficher des détails sur les medias plutôt que les noms des fichiers (peut être lent quand il y a beaucoup de fichiers).</string>
     <string name="preference_title_display_local_art">Affichage des pochettes locales</string>
-    <string name="preference_summary_display_local_art">"Si les médias n'ont pas de pochettes embarquées, afficher un fichier image du même dossier à la place."</string>
+    <string name="preference_summary_display_local_art">"Si les médias n'ont pas de pochettes embarquées, afficher un fichier image du même dossier."</string>
     <string name="preference_title_display_source_if_no_meta">Remplacement des métadonnées manquantes</string>
     <string name="preference_summary_display_source_if_no_meta">"Si un média ne contient pas de métadonnées, afficher le nom du fichier à la place d'un titre vide"</string>
     <string name="preference_title_genre_display">Affichage du détail des genres</string>
@@ -116,7 +116,7 @@
     <string name="menuitem_label_hide">Cacher</string>
     <string name="menuitem_label_show">Rendre visible</string>
     <string name="menuitem_label_edit">Editer</string>
-    <string name="menuitem_label_use_file_art">Choisir une pochette (depuis un fichier)</string>
+    <string name="menuitem_label_use_file_art">Choisir une autre pochette</string>
     <string name="menuitem_label_restore_file_art">Restaurer la pochette originale</string>
 
     <string name="label_yes">Oui</string>
@@ -170,7 +170,7 @@
     <string name="imageview_content_description_previous">Precedente</string>
     <string name="imageview_content_description_play">Lecture et pause</string>
     <string name="imageview_content_description_next">Suivante</string>
-    <string name="imageview_content_description_shuffle">Mélanger les pistes</string>
+    <string name="imageview_content_description_shuffle">Mélanger les médias</string>
     <string name="imageview_content_description_currently_playing">Lecture en cours</string>
     <string name="imageview_content_description_playlist">Afficher/cacher la liste de lecture</string>
     <string name="imageview_content_description_option_menu">Afficher le menu des options</string>
@@ -280,8 +280,8 @@
     </plurals>
     <plurals name="label_track_position">
         <item quantity="zero">File vide</item>
-        <item quantity="one">%1$d piste dans la file</item>
-        <item quantity="other">%1$d pistes dans la file</item>
+        <item quantity="one">%1$d média dans la file</item>
+        <item quantity="other">%1$d médias dans la file</item>
     </plurals>
 
     <string name="label_select_cover">Choix de la pochette</string>

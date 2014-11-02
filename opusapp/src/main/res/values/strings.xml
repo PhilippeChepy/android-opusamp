@@ -14,7 +14,7 @@
 
     <!-- Activities -->
     <string name="activity_title_preferences">Preferences</string>
-    <string name="activity_title_library_path">Search settings</string>
+    <string name="activity_title_library_path">Location settings</string>
     <string name="activity_title_library_management">Libraries</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
     <string name="activity_label_art_selection">Art selection</string>
@@ -25,12 +25,12 @@
     <string name="alert_dialog_title_album_properties">Album properties</string>
     <string name="alert_dialog_title_media_properties">Media properties</string>
     <string name="alert_dialog_title_playlist_is_empty">Playlist is empty</string>
-    <string name="alert_dialog_message_playlist_is_empty">There is no tracks to play !\nFirst, add something in playlist.</string>
+    <string name="alert_dialog_message_playlist_is_empty">There is nothing to play !\nPlease add something to playlist.</string>
     <string name="alert_dialog_title_playlist_delete">Confirmation</string>
     <string name="alert_dialog_message_playlist_delete">Do you really want to delete this playlist ?</string>
     <string name="alert_dialog_title_art_change_tracks">Question</string>
-    <string name="alert_dialog_message_art_change_tracks">Update tracks with this art ?</string>
-    <string name="alert_dialog_message_restore_art_change_tracks">Restore tracks arts ?</string>
+    <string name="alert_dialog_message_art_change_tracks">Update medias with this art ?</string>
+    <string name="alert_dialog_message_restore_art_change_tracks">Restore medias arts ?</string>
     <string name="alert_dialog_title_search_path_exists">Path already registered</string>
     <string name="alert_dialog_message_search_path_exists">This folder is already to be analyzed or excluded.</string>
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
@@ -84,7 +84,7 @@
     <string name="preference_title_storage_display_details">Details in file explorer</string>
     <string name="preference_summary_storage_display_details">Display media details instead of file names (may be slow when visualizing lots of files at once).</string>
     <string name="preference_title_display_local_art">Display local arts</string>
-    <string name="preference_summary_display_local_art">"If medias doesn't have embedded arts, display an image from the same folder instead."</string>
+    <string name="preference_summary_display_local_art">"If medias doesn't have embedded arts, display an image from the same folder."</string>
     <string name="preference_title_display_source_if_no_meta">Missing tags replacement</string>
     <string name="preference_summary_display_source_if_no_meta">"If a media doesn't contains tags, display filename instead of an empty title"</string>
     <string name="preference_title_genre_display">Details of genres</string>
@@ -114,8 +114,8 @@
     <string name="menuitem_label_hide">Hide</string>
     <string name="menuitem_label_show">Unhide</string>
     <string name="menuitem_label_edit">Edit</string>
-    <string name="menuitem_label_use_file_art">Change this cover (from file)</string>
-    <string name="menuitem_label_restore_file_art">Restore original cover</string>
+    <string name="menuitem_label_use_file_art">Select another cover</string>
+    <string name="menuitem_label_restore_file_art">Restore to original cover</string>
 
     <string name="label_yes">Yes</string>
     <string name="label_no">No</string>
@@ -168,7 +168,7 @@
     <string name="imageview_content_description_previous">Skip backwards</string>
     <string name="imageview_content_description_play">Play and pause</string>
     <string name="imageview_content_description_next">Skip forwards</string>
-    <string name="imageview_content_description_shuffle">Shuffle tracks</string>
+    <string name="imageview_content_description_shuffle">Shuffle medias</string>
     <string name="imageview_content_description_currently_playing">Currently playing</string>
     <string name="imageview_content_description_playlist">Show/Hide playlist</string>
     <string name="imageview_content_description_option_menu">Show option menu</string>
@@ -278,8 +278,8 @@
     </plurals>
     <plurals name="label_track_position">
         <item quantity="zero">Empty playlist</item>
-        <item quantity="one">%1$d tracks in playlist</item>
-        <item quantity="other">%1$d tracks in playlist</item>
+        <item quantity="one">%1$d media in playlist</item>
+        <item quantity="other">%1$d medias in playlist</item>
     </plurals>
 
     <string name="label_select_cover">Select cover</string>
