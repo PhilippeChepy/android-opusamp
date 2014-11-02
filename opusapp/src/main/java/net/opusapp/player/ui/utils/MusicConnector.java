@@ -423,41 +423,6 @@ public class MusicConnector {
 
 
 
-    /*
-        Telephony manager
-     */
-    private static boolean pausedByCallManager = false;
-
-	private static void doCallPausePlayback() {
-		if ((!pausedByCallManager) && (PlayerApplication.playerService != null)) {
-			try {
-				if (PlayerApplication.playerService.isPlaying()) {
-					pausedByCallManager = true;
-                    PlayerApplication.playerService.pause(true);
-				}
-			} catch (final RemoteException remoteException) {
-				LogUtils.LOGException(TAG, "doCallPausePlayback", 0, remoteException);
-			}
-		}
-		else {
-			LogUtils.LOGService(TAG, "doCallPausePlayback", 0);
-		}
-	}
-	
-	private static void doCallResumePlayback() {
-		if (pausedByCallManager && (PlayerApplication.playerService != null)) {
-			try {
-				pausedByCallManager = false;
-                PlayerApplication.playerService.pause(true);
-			} catch (final RemoteException remoteException) {
-				LogUtils.LOGException(TAG, "doCallResumePlayback", 0, remoteException);
-			}
-		}
-		else {
-			LogUtils.LOGService(TAG, "doCallResumePlayback", 0);
-		}
-	}
-
     private static void doPrepareProviderSwitch() {
         if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
             doStopAction();
@@ -471,18 +436,6 @@ public class MusicConnector {
             }
         }
     }
-
-	public static void doCallManageIdle() {
-		doCallPausePlayback();
-	}
-
-	public static void doCallManageOffHook() {
-		doCallPausePlayback();
-	}
-
-	public static void doCallManageRinging() {
-		doCallResumePlayback();
-	}
 
 
 

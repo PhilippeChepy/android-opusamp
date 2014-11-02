@@ -26,7 +26,11 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class CallStateBroadcastReceiver extends BroadcastReceiver {
 
-	public static final String TAG = "CallStateBroadcastReceiver";
+	public static final String TAG = CallStateBroadcastReceiver.class.getSimpleName();
+
+
+
+    protected static boolean pausedByCallManager = false;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -35,13 +39,22 @@ public class CallStateBroadcastReceiver extends BroadcastReceiver {
 			public void onCallStateChanged(int state, String incomingNumber) {
 				switch (state) {
 				case TelephonyManager.CALL_STATE_IDLE:
-					MusicConnector.doCallManageIdle();
+					if (pausedByCallManager) {
+                        pausedByCallManager = false;
+                        MusicConnector.doPlayActionReceiverIntent();
+                    }
 					break;
 				case TelephonyManager.CALL_STATE_OFFHOOK:
-					MusicConnector.doCallManageOffHook();
+                    if (!pausedByCallManager) {
+                        pausedByCallManager = true;
+                        MusicConnector.doPauseActionReceiverIntent();
+                    }
 					break;
 				case TelephonyManager.CALL_STATE_RINGING:
-					MusicConnector.doCallManageRinging();
+                    if (!pausedByCallManager) {
+                        pausedByCallManager = true;
+                        MusicConnector.doPauseActionReceiverIntent();
+                    }
 					break;
 				}
 			}
