@@ -108,7 +108,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
                     try {
                         database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
-                        pagerAdapter.refresh();
+                        notifyLibraryChanges();
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -132,7 +132,7 @@ public class SearchPathActivity extends ActionBarActivity {
 
                     try {
                         database.insertOrThrow(Entities.ScanDirectory.TABLE_NAME, null, values);
-                        pagerAdapter.refresh();
+                        notifyLibraryChanges();
                     }
                     catch (final SQLiteConstraintException exception) {
                         new AlertDialog.Builder(this)
@@ -147,6 +147,14 @@ public class SearchPathActivity extends ActionBarActivity {
 		}
         pagerAdapter.refresh();
 	}
+
+    protected void notifyLibraryChanges() {
+        pagerAdapter.refresh();
+        AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)].getProvider();
+        if (localProvider != null) {
+            localProvider.scanStart();
+        }
+    }
 	
 	private final MenuItem.OnMenuItemClickListener onAddMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 

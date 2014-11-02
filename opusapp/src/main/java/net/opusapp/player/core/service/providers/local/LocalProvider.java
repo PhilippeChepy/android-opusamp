@@ -2541,39 +2541,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         try {
             if (scanContext.database != null) {
-                /*
-                    Firstly, checking for deleted files.
-                */
-                final String[] projection = new String[]{
-                        Entities.Media._ID,
-                        Entities.Media.COLUMN_FIELD_URI
-                };
-
-                Cursor cursor = scanContext.database.query(Entities.Media.TABLE_NAME, projection, null, null, null, null, null);
-
-                if (cursor != null) {
-                    int indexOfId = cursor.getColumnIndexOrThrow(Entities.Media._ID);
-                    int indexOfFilePath = cursor.getColumnIndexOrThrow(Entities.Media.COLUMN_FIELD_URI);
-
-                    while (cursor.moveToNext()) {
-                        // Checking for deleted files
-                        final File mediaFile = PlayerApplication.uriToFile(cursor.getString(indexOfFilePath));
-                        if (!mediaFile.exists()) {
-                            final String where = Entities.Media._ID + " = ? ";
-                            final String[] selectionArgs = new String[]{
-                                    String.valueOf(cursor.getInt(indexOfId))
-                            };
-
-                            LogUtils.LOGI(TAG, "!Media : " + cursor.getString(indexOfFilePath));
-                            scanContext.database.delete(Entities.Media.TABLE_NAME, where, selectionArgs);
-                        }
-                    }
-                    cursor.close();
-                }
-
-                /*
-                    Next, we make a list of forbidden paths.
-                */
+                // construction of a list of forbidden paths.
                 final String pathProjection[] = new String[]{
                         Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
                 };
@@ -2621,7 +2589,67 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             acceptList.add(new File(currentPath));
                         }
                     }
+                }
 
+                // checking accept/discard paths and deleted medias for already scanned medias.
+                final String mediaProjection[] = new String[]{
+                        Entities.Media._ID,
+                        Entities.Media.COLUMN_FIELD_URI
+                };
+
+                Cursor medias = scanContext.database.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
+                if (medias != null) {
+                    if (medias.getCount() > 0) {
+                        while (medias.moveToNext()) {
+                            final File currentMediaFile = PlayerApplication.uriToFile(medias.getString(1));
+                            final long currentMediaId = medias.getLong(0);
+
+                            if (currentMediaFile != null) {
+                                final String currentMediaPath = currentMediaFile.getAbsolutePath();
+
+                                boolean needDeletion = true;
+
+                                if (currentMediaFile.exists()) {
+                                    needDeletion = false;
+                                }
+
+                                // Test for accept paths
+                                if (!needDeletion) {
+                                    needDeletion = true;
+                                    for (File acceptPath : acceptList) {
+                                        if (currentMediaPath.startsWith(acceptPath.getAbsolutePath())) {
+                                            needDeletion = false;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Test for discard paths
+                                if (!needDeletion) {
+                                    for (Map.Entry<String, Boolean> discardPath : discardMap.entrySet()) {
+                                        if (currentMediaPath.startsWith(discardPath.getKey()) && discardPath.getValue()) {
+                                            needDeletion = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+
+                                if (needDeletion) {
+                                    LogUtils.LOGI(TAG, "!Media : " + currentMediaPath);
+                                    scanContext.database.delete(Entities.Media.TABLE_NAME, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
+                                    scanContext.database.delete(Entities.Art.TABLE_NAME, Entities.Art.COLUMN_FIELD_URI + " LIKE ?", new String[] { currentMediaPath + "%" });
+                                }
+                            }
+                        }
+                    }
+
+                    medias.close();
+                }
+
+
+                if (acceptCursor != null && acceptCursor.getCount() > 0) {
+                    // Updating from filesystem
                     doSyncDirectoryScan(acceptList, discardMap, scanContext);
                 }
 
@@ -2670,6 +2698,44 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 ")",
                         null
                 );
+
+                LogUtils.LOGI(TAG, "Updating Arts");
+                scanContext.database.rawQuery(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " " +
+                        "SET " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " NOT IN (" +
+                                "SELECT " + Entities.Art._ID + " FROM " + Entities.Art.TABLE_NAME +
+                        ")",
+                        null
+                );
+
+                scanContext.database.rawQuery(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " " +
+                        "SET " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " NOT IN (" +
+                                "SELECT " + Entities.Art._ID + " FROM " + Entities.Art.TABLE_NAME +
+                        ")",
+                        null
+                );
+
+                scanContext.database.rawQuery(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " " +
+                        "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " " +
+                        "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " NOT IN (" +
+                                "SELECT " + Entities.Art._ID + " FROM " + Entities.Art.TABLE_NAME +
+                        ")",
+                        null
+                );
+
+                scanContext.database.rawQuery(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " " +
+                        "SET " + Entities.Media.COLUMN_FIELD_ART_ID + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " " +
+                        "WHERE " + Entities.Media.COLUMN_FIELD_ART_ID + " NOT IN (" +
+                                "SELECT " + Entities.Art._ID + " FROM " + Entities.Art.TABLE_NAME +
+                        ")",
+                        null
+                );
+
                 LogUtils.LOGI(TAG, "updates done");
                 scanContext.database.setTransactionSuccessful();
                 scanContext.database.endTransaction();
@@ -2697,6 +2763,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         scanning = false;
 
         for (OnLibraryChangeListener libraryChangeListener : scanListeners) {
+            libraryChangeListener.libraryChanged();
             libraryChangeListener.libraryScanFinished();
         }
     }
@@ -2807,10 +2874,32 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         long coverId = 0;
 
         if (hasEmbeddedTag) {
-            mediaCover.clear();
-            mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(sourceFile));
-            mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
-            embeddedCoverId = scanContext.database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+            final String projection[] = new String[] {
+                    Entities.Art._ID
+            };
+
+            final String selection = Entities.Art.COLUMN_FIELD_URI + " = ? ";
+
+            final String selectionArgs[] = new String[] {
+                    PlayerApplication.fileToUri(sourceFile)
+            };
+
+            Cursor coverCursor = scanContext.database.query(Entities.Art.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+            if (coverCursor != null) {
+                if (coverCursor.getCount() > 0) {
+                    coverCursor.moveToFirst();
+
+                    embeddedCoverId = coverCursor.getLong(0);
+                }
+                coverCursor.close();
+            }
+
+            if (embeddedCoverId <= 0) {
+                mediaCover.clear();
+                mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(sourceFile));
+                mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
+                embeddedCoverId = scanContext.database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+            }
         }
 
         final Resources resources = PlayerApplication.context.getResources();
