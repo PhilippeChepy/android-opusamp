@@ -193,6 +193,30 @@ public class MusicConnector {
         }
     }
 
+    public static void doPlayActionReceiverIntent() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PLAY);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 5, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doPlayActionIntent", 0, exception);
+        }
+    }
+
+    public static void doPauseActionReceiverIntent() {
+        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PAUSE);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 6, action, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (final PendingIntent.CanceledException exception) {
+            LogUtils.LOGException(TAG, "doPlayActionIntent", 0, exception);
+        }
+    }
+
     public static void doRepeatAction() {
         if (PlayerApplication.playerService != null) {
             try {

@@ -33,9 +33,11 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
+import net.opusapp.player.R;
 import net.opusapp.player.core.NotificationHelper;
 import net.opusapp.player.core.RemoteControlClientHelper;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.widgets.AbstractAppWidget;
 import net.opusapp.player.ui.widgets.AppWidget4x1;
@@ -68,6 +70,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.service.CLIENT";
 
     public static final String ACTION_TOGGLEPAUSE = "net.opusapp.player.TOGGLE_PAUSE";
+
+    public static final String ACTION_PLAY = "net.opusapp.player.PLAY";
+
+    public static final String ACTION_PAUSE = "net.opusapp.player.PAUSE";
 
     public static final String ACTION_NEXT = "net.opusapp.player.NEXT";
 
@@ -248,6 +254,28 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         intentFilter.addAction(ACTION_CLIENT_COMMAND);
 
         registerReceiver(broadcastReceiver, intentFilter);
+
+
+
+        final BroadcastReceiver headsetBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+                if (sharedPreferences.getBoolean(PlayerApplication.context.getString(R.string.preference_key_plug_auto_play), true)) {
+                    switch (intent.getIntExtra("state", -1)) {
+                        case 0:
+                            MusicConnector.doPauseActionReceiverIntent();
+                            break;
+                        case 1:
+                            MusicConnector.doPlayActionReceiverIntent();
+                            break;
+                    }
+                }
+            }
+        };
+
+        final IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+        registerReceiver(headsetBroadcastReceiver, filter);
     }
 
     @Override
@@ -956,13 +984,25 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         playerServiceImpl.stop();
                     }
                     else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
-                        LogUtils.LOGD(TAG, "pause");
                         if (playerServiceImpl.isPlaying()) {
                             playerServiceImpl.pause(isNotificationControl);
                         } else {
                             if (playlist != null && playlist.length > 0) {
                                 playerServiceImpl.play();
                             }
+                        }
+                    }
+                    else if (action.equals(PlayerService.ACTION_PLAY)) {
+                        if (!playerServiceImpl.isPlaying()) {
+                            if (playlist != null && playlist.length > 0) {
+                                playerServiceImpl.play();
+                            }
+                        }
+                    }
+                    else if (action.equals(PlayerService.ACTION_PAUSE)) {
+                        LogUtils.LOGD(TAG, "pause");
+                        if (playerServiceImpl.isPlaying()) {
+                            playerServiceImpl.pause(isNotificationControl);
                         }
                     }
                 }
