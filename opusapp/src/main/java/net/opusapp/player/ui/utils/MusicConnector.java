@@ -372,7 +372,7 @@ public class MusicConnector {
             public void onClick(DialogInterface dialogInterface, int i) {
                 provider.playlistDelete(playlistId);
                 if (hostActivity instanceof LibraryMainActivity) {
-                    ((LibraryMainActivity)hostActivity).doRefresh();
+                    ((LibraryMainActivity)hostActivity).refresh();
                 }
             }
         };
@@ -521,7 +521,7 @@ public class MusicConnector {
                                 runnable.run(playlistId);
 
                                 if (hostActivity instanceof LibraryMainActivity) {
-                                    ((LibraryMainActivity)hostActivity).doRefresh();
+                                    ((LibraryMainActivity)hostActivity).refresh();
                                 }
                             }
                         }

@@ -54,7 +54,9 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 
 
 	public static final int MENUITEM_DELETE = 0;
-	
+
+
+
 	public static final int CONTENT_SEARCH_PATH = 0;
 	
 	public static final int CONTENT_EXCLUDE_PATH = 1;
@@ -193,9 +195,9 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		menu.add(Menu.NONE, MENUITEM_DELETE, 1, R.string.menuitem_label_delete);
-		
 		super.onCreateContextMenu(menu, v, menuInfo);
+
+        menu.add(Menu.NONE, MENUITEM_DELETE, 1, R.string.menuitem_label_delete);
 	}
 	
 	@Override

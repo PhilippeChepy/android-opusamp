@@ -146,8 +146,6 @@ public class ArtSelectActivity extends ActionBarActivity {
                     artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ART_ID, artId);
                     artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID, sourceId);
                     database.insert(Entities.AlbumHasArts.TABLE_NAME, null, artData);
-
-                    pagerAdapter.refresh();
                 }
                 break;
             case REQUEST_CODE_INTERNET:

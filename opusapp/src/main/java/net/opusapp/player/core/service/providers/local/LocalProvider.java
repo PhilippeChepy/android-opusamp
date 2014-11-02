@@ -1030,7 +1030,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
     }
 
-    protected void doNotifyLibraryChanges() {
+    public void notifyLibraryChanges() {
         for (OnLibraryChangeListener libraryChangeListener : scanListeners) {
             libraryChangeListener.libraryChanged();
         }
@@ -1046,7 +1046,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Album._ID + " = " + albumId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1063,7 +1063,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.AlbumArtist._ID + " = " + albumArtistId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1080,7 +1080,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Artist._ID + " = " + artistId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1098,7 +1098,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Genre._ID + " = " + genreId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1115,7 +1115,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Media._ID + " = " + mediaId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1132,7 +1132,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Playlist._ID + " = " + playlistId
             );
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
             return true;
         }
 
@@ -1313,7 +1313,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 };
                 break;
             case CONTENT_TYPE_GENRE:
-                tableDescription = tableDescription + " JOIN " + Entities.Media.TABLE_NAME +
+                tableDescription = tableDescription + " LEFT JOIN " + Entities.Media.TABLE_NAME +
                                 " ON " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID;
 
                 if (!TextUtils.isEmpty(selection)) {
@@ -1329,7 +1329,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         if (usesArtTable) {
-            tableDescription = tableDescription + " JOIN " + Entities.Art.TABLE_NAME +
+            tableDescription = tableDescription + " LEFT JOIN " + Entities.Art.TABLE_NAME +
                                 " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID;
         }
 
@@ -2400,7 +2400,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 database.update(Entities.Media.TABLE_NAME, contentValues, Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
             }
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
         }
     }
 
@@ -2425,7 +2425,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
             }
 
-            doNotifyLibraryChanges();
+            notifyLibraryChanges();
         }
     }
 
@@ -3053,7 +3053,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                         refreshThreshold++;
                         if (refreshThreshold >= 25) {
-                            doNotifyLibraryChanges();
+                            notifyLibraryChanges();
                             refreshThreshold = 0;
                         }
                     }
@@ -3079,7 +3079,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         scanContext.genreIdMap = null;
         System.gc();
 
-        doNotifyLibraryChanges();
+        notifyLibraryChanges();
     }
 
     protected boolean doPlaylistAddContent(String playlistId, int position, ContentType contentType, final String sourceId, int sortOrder, String filter) {

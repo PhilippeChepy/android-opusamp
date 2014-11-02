@@ -394,11 +394,11 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH) {
-            if (resultCode == Activity.RESULT_OK) {
+        //if (requestCode == AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH) {
+//            if (resultCode == Activity.RESULT_OK) {
                 refresh();
-            }
-        }
+//            }
+//        }
     }
 
     // ContentType listview item click listeners

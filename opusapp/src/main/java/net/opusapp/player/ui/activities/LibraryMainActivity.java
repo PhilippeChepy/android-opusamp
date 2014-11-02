@@ -44,11 +44,12 @@ import net.opusapp.player.ui.fragments.SongFragment;
 import net.opusapp.player.ui.fragments.StorageFragment;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
+import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
 
-public class LibraryMainActivity extends AbstractPlayerActivity {
+public class LibraryMainActivity extends AbstractPlayerActivity implements RefreshableView {
 
     public static final String TAG = LibraryMainActivity.class.getSimpleName();
 
@@ -424,7 +425,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity {
         }
     }
 
-    public void doRefresh() {
+    @Override
+    public void refresh() {
         if (libraryAdapter != null) {
             libraryAdapter.refresh();
         }

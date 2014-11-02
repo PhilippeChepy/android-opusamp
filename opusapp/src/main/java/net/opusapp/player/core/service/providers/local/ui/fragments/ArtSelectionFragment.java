@@ -12,7 +12,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -52,6 +55,10 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
 
 
+    public static final int MENUITEM_DELETE = 0;
+
+
+
     private static final int COLUMN_ID = 0;
 
     private static final int COLUMN_URI = 1;
@@ -79,6 +86,16 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
         return null;
     }
 
+    protected SQLiteDatabase getWritableDatabase() {
+        int index = PlayerApplication.getManagerIndex(providerId);
+
+        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
+        if (provider instanceof LocalProvider) {
+            return ((LocalProvider) provider).getWritableDatabase();
+        }
+
+        return null;
+    }
 
 
     @Override
@@ -199,22 +216,91 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
     }
 
     @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        menu.add(Menu.NONE, MENUITEM_DELETE, 1, R.string.menuitem_label_delete);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (!getUserVisibleHint()) {
+            return false;
+        }
+
+        if (item.getItemId() == MENUITEM_DELETE) {
+            final String selectionArgs[] = new String[] {
+                    cursor.getString(COLUMN_ID)
+            };
+
+            SQLiteDatabase database = getWritableDatabase();
+            database.beginTransaction();
+            try {
+                database.execSQL(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " SET " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = 0 " +
+                                "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = ?", selectionArgs);
+
+                database.execSQL(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " SET " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = 0 " +
+                                "WHERE " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = ?", selectionArgs);
+
+                database.execSQL(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " " +
+                                "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " " +
+                                "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = ?", selectionArgs);
+
+                database.execSQL(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " " +
+                                "SET " + Entities.Media.COLUMN_FIELD_ART_ID + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " " +
+                                "WHERE " + Entities.Media.COLUMN_FIELD_ART_ID + " = ?", selectionArgs);
+
+                database.delete(Entities.Art.TABLE_NAME, Entities.Art._ID + " = ? ", selectionArgs);
+                database.delete(Entities.AlbumHasArts.TABLE_NAME, Entities.AlbumHasArts.COLUMN_FIELD_ART_ID + " = ? ", selectionArgs);
+                database.setTransactionSuccessful();
+
+                AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)].getProvider();
+                if (localProvider instanceof LocalProvider) {
+                    ((LocalProvider) localProvider).notifyLibraryChanges();
+
+                    Cursor artCursor = database.rawQuery(
+                            "SELECT " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + ", " + Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI + " " +
+                            "FROM " + Entities.Album.TABLE_NAME + " " +
+                            "LEFT JOIN " + Entities.Art.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " " +
+                            "WHERE " + Entities.Album.TABLE_NAME + "." + Entities.Album._ID + " = ?",
+                            new String[] { String.valueOf(sourceId)}
+                    );
+
+                    if (artCursor != null && artCursor.getCount() > 1) {
+                        final Activity activity = getActivity();
+                        final Intent resultIntent = activity.getIntent();
+
+                        activity.setResult(Activity.RESULT_OK, resultIntent);
+                    }
+                }
+            }
+            catch (final Exception exception) {
+                LogUtils.LOGException(TAG, "onContextItemSelected", 0, exception);
+            }
+            finally {
+                database.endTransaction();
+            }
+
+            getLoaderManager().restartLoader(0, null, this);
+        }
+
+        return super.onContextItemSelected(item);
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         cursor.moveToPosition(position);
         final String selectedUri = cursor.getString(COLUMN_URI);
-        final int selectedId = cursor.getInt(COLUMN_ID);
-
-        LogUtils.LOGE(TAG, "onItemClick selectedUri : " + selectedUri);
-        LogUtils.LOGE(TAG, "onItemClick selectedId  : " + selectedId);
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         final Activity activity = getActivity();
         final Intent resultIntent = activity.getIntent();
-
-        resultIntent.putExtra(AbstractMediaManager.Provider.KEY_SELECTED_ART_URI, selectedUri);
-        resultIntent.putExtra(AbstractMediaManager.Provider.KEY_SELECTED_ART_ID, selectedId);
 
         final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {
 
