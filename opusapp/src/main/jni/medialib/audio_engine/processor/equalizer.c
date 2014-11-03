@@ -210,6 +210,7 @@ void equalizer_impl_init(equalizer_state_s * equalizer_state, int wb, int channe
     equalizer_state->winlen = (1 << (wb-1))-1;
     equalizer_state->winlenbit = wb;
     equalizer_state->tabsize  = 1 << wb;
+    equalizer_state->fft_bits = wb;
 
     equalizer_state->lires1 = (real_t *) memory_zero_alloc(sizeof(real_t) * equalizer_state->tabsize * equalizer_state->channel_count);
     equalizer_state->lires2 = (real_t *) memory_zero_alloc(sizeof(real_t) * equalizer_state->tabsize * equalizer_state->channel_count);
@@ -345,7 +346,7 @@ void equalizer_impl_prepare_table(equalizer_state_s * equalizer_state, real_t *l
             equalizer_state->irest[i] = 0;
         }
 
-        rfft(equalizer_state->tabsize, 1, equalizer_state->irest);
+        rfft(equalizer_state->fft_bits, 1, equalizer_state->irest);
 
         nires = cires == 1 ? equalizer_state->lires2 : equalizer_state->lires1;
         nires += ch * equalizer_state->tabsize;
@@ -434,7 +435,7 @@ int equalizer_impl_process(equalizer_state_s * equalizer_state, char *buf,int ns
             for(i=equalizer_state->winlen;i<equalizer_state->tabsize;i++)
                 equalizer_state->fsamples[i] = 0;
 
-            rfft(equalizer_state->tabsize, 1, equalizer_state->fsamples);
+            rfft(equalizer_state->fft_bits, 1, equalizer_state->fsamples);
 
             equalizer_state->fsamples[0] = ires[0]*equalizer_state->fsamples[0];
             equalizer_state->fsamples[1] = ires[1]*equalizer_state->fsamples[1];
@@ -449,7 +450,7 @@ int equalizer_impl_process(equalizer_state_s * equalizer_state, char *buf,int ns
                 equalizer_state->fsamples[i*2+1] = im;
             }
 
-            rfft(equalizer_state->tabsize,-1,equalizer_state->fsamples);
+            rfft(equalizer_state->fft_bits,-1,equalizer_state->fsamples);
 
             for(i=0;i<equalizer_state->winlen;i++) {
                 equalizer_state->outbuf[i*nch+ch] += equalizer_state->fsamples[i]/equalizer_state->tabsize*2;
@@ -518,7 +519,7 @@ int equalizer_new(engine_processor_s * processor) {
     if (processor->engine->sample_format == SAMPLE_FORMAT_S16_LE || processor->engine->sample_format == SAMPLE_FORMAT_S16_BE) {
         processor->context = memory_zero_alloc(sizeof(equalizer_state_s));
 
-        equalizer_impl_init(processor->context, 14, 2);
+        equalizer_impl_init(processor->context, 10, 2);
         equalizer_impl_prepare_table(processor->context, band_values, processor->engine->sampling_rate);
         equalizer_impl_clear_buffer(processor->context);
 

@@ -1,9 +1,15 @@
-#ifndef ENABLE_NEON_FLOAT
-#define ENABLE_NEON_FLOAT
-#endif
-
 #ifdef ENABLE_PUREC_FLOAT
 #undef ENABLE_PUREC_FLOAT
+#endif
+
+#ifdef ENABLE_AVX_FLOAT
+#undef ENABLE_AVX_FLOAT
+#endif
+
+
+
+#ifndef ENABLE_SSE_FLOAT
+#define ENABLE_SSE_FLOAT
 #endif
 
 #include <audio_engine/processor/fft/dft_undiff.c>

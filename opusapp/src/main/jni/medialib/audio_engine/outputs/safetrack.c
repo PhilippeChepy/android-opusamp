@@ -16,6 +16,7 @@
 #include <audio_engine/utils/log.h>
 #include <jni.h>
 
+#include <stdio.h>
 #include <inttypes.h>
 
 #define LOG_TAG "(jni).outputs.safetrack"
@@ -148,7 +149,7 @@ static void * output_thread(void * thread_arg) {
 			(*env)->CallVoidMethod(env, audiotrack_stream->audiotrack_object, playMethod);
 		}
 
-		int request_size = audiotrack_stream->buffer_size / 40;
+		int request_size = audiotrack_stream->buffer_size / 10;
 		int nb_samples = request_size / stream->engine->channel_count;
 		int got = stream->data_callback(stream, audiotrack_stream->buffer, nb_samples);
 

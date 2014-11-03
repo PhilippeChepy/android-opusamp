@@ -26,22 +26,25 @@ SRCS :=  audio_engine/outputs/safetrack.c \
 	JniCodec.c \
 	TagProvider.cpp
 
-### Legacy not-simd code
-SRCS += audio_engine/processor/fft-legacy/fft.c
-
 ### Future implementation using simd code.
-# SRCS +=	audio_engine/processor/fft/rfft.c
-# SRCS +=	audio_engine/processor/fft/dft.c
-# SRCS +=	audio_engine/processor/fft/simd_base.c
-# SRCS +=	audio_engine/processor/fft/fftsg.c
-# SRCS +=	audio_engine/processor/fft/impl_pure_c.c
+SRCS +=	audio_engine/processor/fft/rfft.c
+SRCS +=	audio_engine/processor/fft/dft.c
+SRCS +=	audio_engine/processor/fft/simd_base.c
+SRCS +=	audio_engine/processor/fft/impl_pure_c.c
 
-# LOCAL_CFLAGS += -DENABLE_NEON_FLOAT
-# SRCS += audio_engine/processor/fft/impl_neon.c
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+#    LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon
+#    LOCAL_CFLAGS += -DENABLE_NEON_FLOAT
+#    SRCS += audio_engine/processor/fft/impl_armv7.c
+endif # TARGET_ARCH_ABI == armeabi-v7a
 
-# -dENABLE_SSE_FLOAT -dENABLE_AVX_FLOAT
-# SRCS += audio_engine/processor/fft/impl_sse.c
-# SRCS += audio_engine/processor/fft/impl_avx.c
+ifeq ($(TARGET_ARCH_ABI),x86)
+#    LOCAL_CFLAGS += -DENABLE_SSE_FLOAT
+#    SRCS += audio_engine/processor/fft/impl_x86_sse.c
+
+#     -DENABLE_AVX_FLOAT
+#    SRCS += audio_engine/processor/fft/impl_x86_avx.c
+endif # TARGET_ARCH_ABI == x86
 
 
 LOCAL_SRC_FILES := $(SRCS)
@@ -55,7 +58,7 @@ LOCAL_STATIC_LIBRARIES = libffmpeg libtaglib
 
 LOCAL_ALLOW_UNDEFINED_SYMBOLS := false
 
-LOCAL_CFLAGS += -Wall -DHAVE_ZLIB -D__ANDROID__ -D__STDC_CONSTANT_MACROS -mfloat-abi=softfp -mfpu=neon
+LOCAL_CFLAGS += -Wall -DHAVE_ZLIB -D__ANDROID__ -D__STDC_CONSTANT_MACROS
 LOCAL_CFLAGS += -DTAGLIB_NO_CONFIG -DHAVE_ZLIB -DTAGLIB_WITH_MP4 -DWITH_MP4 -D__ANDROID__ -DTAGLIB_WITH_ASF -DWITH_ASF
 LOCAL_CFLAGS += -DENABLE_PUREC_FLOAT
 

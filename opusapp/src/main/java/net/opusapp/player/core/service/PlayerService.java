@@ -179,7 +179,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                             }
                             else { /* cannot play anymore */
                                 playerServiceImpl.stop();
-                                playerServiceImpl.notifyStop();
                                 playerServiceImpl.notifyTimestampUpdate(0);
                             }
 
@@ -374,7 +373,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             seekPreviousTrackRunnable.index = playlistIndex;
             mediaManagementExecutor.submit(seekPreviousTrackRunnable);
 
-            if (playlist != null && playlist.length > 1) {
+            if (playlist != null && playlist.length > 0) {
                 looped = doMoveToNextPosition();
                 notifySetQueuePosition();
             }
@@ -409,7 +408,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         public boolean prev() throws RemoteException {
             boolean looped = false;
 
-            if (playlist != null && playlist.length > 1) {
+            if (playlist != null && playlist.length > 0) {
                 looped = doMoveToPrevPosition();
                 notifySetQueuePosition();
             }
