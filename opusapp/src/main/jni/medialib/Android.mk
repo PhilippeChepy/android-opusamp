@@ -26,11 +26,13 @@ SRCS :=  audio_engine/outputs/safetrack.c \
 	JniCodec.c \
 	TagProvider.cpp
 
+SRCS +=	audio_engine/processor/fft-ooura/fft.c
+
 ### Future implementation using simd code.
-SRCS +=	audio_engine/processor/fft/rfft.c
-SRCS +=	audio_engine/processor/fft/dft.c
-SRCS +=	audio_engine/processor/fft/simd_base.c
-SRCS +=	audio_engine/processor/fft/impl_pure_c.c
+#SRCS +=	audio_engine/processor/fft/rfft.c
+#SRCS +=	audio_engine/processor/fft/dft.c
+#SRCS +=	audio_engine/processor/fft/simd_base.c
+#SRCS +=	audio_engine/processor/fft/impl_pure_c.c
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 #    LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon

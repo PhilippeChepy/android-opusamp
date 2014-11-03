@@ -19,6 +19,9 @@
 -keep class android.support.v4.app.** { *; }
 -keep interface android.support.v4.app.** { *; }
 
+-keep class android.support.v7.** { *; }
+-keep interface android.support.v7.** { *; }
+
 -keepattributes *Annotation*
 
 -keep class net.opusapp.player.utils.jni.** { *; }

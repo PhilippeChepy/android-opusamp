@@ -6,7 +6,9 @@
 #include <audio_engine/utils/real.h>
 
 #include <audio_engine/processor/equalizer.h>
-#include <audio_engine/processor/fft/rfft.h>
+//#include <audio_engine/processor/fft/rfft.h>
+
+#include <audio_engine/processor/fft-ooura/fft.h>
 
 #define LOG_TAG "(jni)audio_processor:equalizer.c"
 
@@ -519,7 +521,7 @@ int equalizer_new(engine_processor_s * processor) {
     if (processor->engine->sample_format == SAMPLE_FORMAT_S16_LE || processor->engine->sample_format == SAMPLE_FORMAT_S16_BE) {
         processor->context = memory_zero_alloc(sizeof(equalizer_state_s));
 
-        equalizer_impl_init(processor->context, 10, 2);
+        equalizer_impl_init(processor->context, 14, 2);
         equalizer_impl_prepare_table(processor->context, band_values, processor->engine->sampling_rate);
         equalizer_impl_clear_buffer(processor->context);
 
