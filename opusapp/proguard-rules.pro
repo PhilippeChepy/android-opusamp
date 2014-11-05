@@ -22,6 +22,9 @@
 -keep class android.support.v7.** { *; }
 -keep interface android.support.v7.** { *; }
 
+# -keep class com.google.android.vending.licensing.** { *; }
+# -keep interface com.google.android.vending.licensing.** { *; }
+
 -keepattributes *Annotation*
 
 -keep class net.opusapp.player.utils.jni.** { *; }

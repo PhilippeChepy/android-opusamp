@@ -95,6 +95,8 @@ public class IabHelper {
     // Context we were passed during initialization
     Context mContext;
 
+    boolean mIsBound;
+
     // Connection to the service
     IInAppBillingService mService;
     ServiceConnection mServiceConn;
@@ -269,9 +271,10 @@ public class IabHelper {
         List<ResolveInfo> queryIntentServices = mContext.getPackageManager().queryIntentServices(serviceIntent, 0);
         if (queryIntentServices != null && !queryIntentServices.isEmpty()) {
             // service available to handle that Intent
-            mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+            mIsBound = mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
         }
         else {
+            mIsBound = false;
             // no service available to handle that Intent
             if (listener != null) {
                 listener.onIabSetupFinished(
@@ -292,7 +295,7 @@ public class IabHelper {
         mSetupDone = false;
         if (mServiceConn != null) {
             logDebug("Unbinding from service.");
-            if (mContext != null) mContext.unbindService(mServiceConn);
+            if (mContext != null && mIsBound) mContext.unbindService(mServiceConn);
         }
         mDisposed = true;
         mContext = null;
