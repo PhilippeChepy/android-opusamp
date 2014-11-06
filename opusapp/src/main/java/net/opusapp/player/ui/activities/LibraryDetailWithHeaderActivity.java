@@ -189,6 +189,11 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
             contentSourceId = parameters.getString(PlayerApplication.CONTENT_SOURCE_ID_KEY);
             contentArtUri = provider.getAlbumArtUri(contentSourceId);
 
+            final String albumName = parameters.getString(PlayerApplication.CONTENT_SOURCE_DESCRIPTION_KEY);
+            if (!TextUtils.isEmpty(albumName)) {
+                setTitle(albumName);
+            }
+
             final Activity hostActivity = this;
             final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
                 @Override

@@ -209,6 +209,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
 
         intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ALBUM_ID));
+        intent.putExtra(PlayerApplication.CONTENT_SOURCE_DESCRIPTION_KEY, cursor.getString(COLUMN_ALBUM_NAME));
 		startActivity(intent);
 	}
 }

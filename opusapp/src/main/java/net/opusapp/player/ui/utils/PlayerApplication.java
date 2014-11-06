@@ -114,6 +114,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static final String CONTENT_SOURCE_ID_KEY = "id_key";
 
+    public static final String CONTENT_SOURCE_DESCRIPTION_KEY = "description_key";
+
 
 
     @Override
