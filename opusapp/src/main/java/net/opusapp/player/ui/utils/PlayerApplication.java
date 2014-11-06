@@ -24,7 +24,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -59,17 +59,12 @@ import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailUncachedImageLoader;
 import net.opusapp.player.utils.LogUtils;
-import net.opusapp.player.utils.iab.IabHelper;
-import net.opusapp.player.utils.iab.IabResult;
-import net.opusapp.player.utils.iab.Inventory;
-import net.opusapp.player.utils.iab.Purchase;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 public class PlayerApplication extends Application implements ServiceConnection {
 
@@ -88,22 +83,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static ArrayList<ServiceConnection> additionalCallbacks = new ArrayList<ServiceConnection>();
 
-    // Iab
-    private IabHelper iabHelper;
-
-    static final String ITEM_DEBUG_SKU = "android.test.purchased";
-
-    static final String ITEM_RELEASE_SKU = "net.opusapp.player.premium";
-
-    static String ITEM_SKU;
-
-    static final String PURCHASE_TOKEN = "purchase-token-noads";
 
 
-
-    /*
-
-     */
+    //
     private static SQLiteOpenHelper databaseHelper;
 
     public static int playerManagerIndex = 0;
@@ -911,8 +893,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     private static final String CONFIG_FILE_FREEMIUM = "freemium";
 
-    private static final String CONFIG_IS_FREEMIUM = "isFreemium";
-
     private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
 
     private static final String CONFIG_FIRST_RUN = "isFirstRun";
@@ -922,18 +902,16 @@ public class PlayerApplication extends Application implements ServiceConnection 
     private static final String CONFIG_PREMIUM_HINT = "premiumHintFlag";
 
 
-
-    public static boolean isFreemium() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(CONFIG_IS_FREEMIUM, true);
-        //return false;
+    public static void buyPremium(Context context) {
+        try {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=net.opusapp.player.premium")));
+        } catch (android.content.ActivityNotFoundException anfe) {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=net.opusapp.player.premium")));
+        }
     }
 
-    public static void setFreemium(boolean freemium) {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CONFIG_IS_FREEMIUM, freemium);
-        editor.apply();
+    public static boolean canShowInterstitial() {
+        return !BuildConfig.premium && !PlayerApplication.isTrial();
     }
 
     public static int adDisplayGetCounter() {
@@ -970,140 +948,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         editor.apply();
     }
 
-    private static Runnable iabStarted = null;
 
-    public static void iabStart(final Runnable onStarted) {
-        if (!isFreemium() || instance.iabHelper != null) {
-            return;
-        }
-
-        if (BuildConfig.DEBUG) {
-            ITEM_SKU = ITEM_DEBUG_SKU;
-        }
-        else {
-            ITEM_SKU = ITEM_RELEASE_SKU;
-        }
-
-        iabStarted = onStarted;
-
-        String base64EncodedPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj127PTqHlOpyDVEhSXTQuaEeCH74Rvb0k7NDW0uPj/DthoPX70eOqhLrJ/+jw6fTLmFMIxiBOdTfAvDO6TonIuVgMtooRoz7msrY3gNCT3MUnWWz6907zrfs7J6ocSHQeNzUViuOHHoEoCVvqNhAxtNEUlfvK54Jrkv6kOBg7Kp1WgEOb7O66C5KOiByzP/MReUA+647mUNfehSAi0xFnxfLPKPAKqForbIc3628vpRZ7uSC+nAcdSYVWoDaWcUTagwI7ljflCyKk6Ww6YkCpWP3NlttIao5Ay97TGP7aEAHm5CXlIEosojzYeqAd2gik0aTYXaSJB88jh0ajcaKhwIDAQAB";
-
-        instance.iabHelper = new IabHelper(context, base64EncodedPublicKey);
-
-        instance.iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-
-            public void onIabSetupFinished(IabResult result)
-            {
-                if (!result.isSuccess()) {
-                    LogUtils.LOGE(TAG, "In-app Billing setup failed: " + result);
-                }
-                else {
-                    LogUtils.LOGI(TAG, "In-app Billing is set up OK");
-                    iabCheck();
-                }
-            }
-        });
-    }
-
-    public static void iabStop() {
-        if (instance.iabHelper != null) {
-            instance.iabHelper.dispose();
-        }
-        instance.iabHelper = null;
-    }
-
-    public static void iabPurchase(Activity activity) {
-        instance.iabHelper.launchPurchaseFlow(activity, ITEM_SKU, 10001, purchaseFinishedListener, PURCHASE_TOKEN);
-    }
-
-    public static boolean iabHandleResult(int requestCode, int resultCode, Intent data) {
-        return instance.iabHelper.handleActivityResult(requestCode, resultCode, data);
-    }
-
-    private static void iabCheck() {
-        new AsyncTask<Void, Void, Void>() {
-            protected Inventory inventory;
-
-            @Override
-            protected Void doInBackground(Void... params) {
-                List<String> items = new ArrayList<String>();
-                items.add(ITEM_SKU);
-
-                try {
-                    LogUtils.LOGI(TAG, "querying inventory");
-                    inventory = instance.iabHelper.queryInventory(false, items);
-                }
-                catch (final Exception exception) {
-                    LogUtils.LOGW(TAG, "unable to query iab informations : " + exception);
-                    inventory = null;
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                if (inventory != null) {
-                    LogUtils.LOGW(TAG, "inventory got");
-                    if (inventory.hasPurchase(ITEM_SKU)) {
-                        LogUtils.LOGW(TAG, "inventory got : has purchase");
-                        setFreemium(false);
-                    }
-                    // instance.iabHelper.consumeAsync(inventory.getPurchase(ITEM_SKU), consumeFinishedListener);
-
-                    if (iabStarted != null) {
-                        iabStarted.run();
-                    }
-                }
-            }
-        }.execute();
-    }
-
-    private static IabHelper.OnIabPurchaseFinishedListener purchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
-        public void onIabPurchaseFinished(IabResult result, Purchase purchase)
-        {
-            if (result.isFailure()) {
-                LogUtils.LOGW(TAG, "purchaseFinished: failure");
-            }
-            else if (purchase.getSku().equals(ITEM_SKU)) {
-                LogUtils.LOGI(TAG, "purchaseFinished: success");
-                instance.iabHelper.queryInventoryAsync(receivedInventoryListener);
-            }
-        }
-    };
-
-    private static IabHelper.QueryInventoryFinishedListener receivedInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
-        public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
-
-            if (result.isFailure()) {
-                LogUtils.LOGW(TAG, "receivedInventory: failure");
-            }
-            else {
-                LogUtils.LOGI(TAG, "receivedInventory: success");
-                setFreemium(false);
-
-                if (iabStarted != null) {
-                    iabStarted.run();
-                }
-            }
-        }
-    };
-
-    /*
-    private static IabHelper.OnConsumeFinishedListener consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
-
-        public void onConsumeFinished(Purchase purchase, IabResult result) {
-
-            if (result.isSuccess()) {
-                setFreemium(false);
-            }
-            else {
-                LogUtils.LOGW(TAG, "consumeFinished: failure");
-            }
-        }
-    };
-    */
 
     private static final String BASE64_PUBLIC_KEY =
             "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/uBXD8ItJQg" +
@@ -1167,7 +1012,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         editor.apply();
     }
 
-    public static boolean hasPremiumDialogFlag() {
+    public static boolean hasPremiumHintDialogFlag() {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(CONFIG_PREMIUM_HINT, false);
     }

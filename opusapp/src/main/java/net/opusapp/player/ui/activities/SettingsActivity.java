@@ -26,13 +26,13 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.views.ColorSchemeDialog;
 import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
-import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -148,47 +148,22 @@ public class SettingsActivity extends PreferenceActivity {
             }
         });
 
-        if (PlayerApplication.isFreemium()) {
-            final Preference buyPremium = findPreference(getString(R.string.preference_key_premium));
-            buyPremium.setEnabled(false);
-            buyPremium.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        final Preference buyPremiumPreference = findPreference(getString(R.string.preference_key_premium));
+
+        if (BuildConfig.premium) {
+            PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference(getString(R.string.preference_screen_key_global));
+            preferenceScreen.removePreference(buyPremiumPreference);
+        }
+        else {
+            buyPremiumPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    PlayerApplication.iabPurchase(SettingsActivity.this);
+                    PlayerApplication.buyPremium(SettingsActivity.this);
                     return true;
                 }
             });
-
-            PlayerApplication.iabStart(new Runnable() {
-                @Override
-                public void run() {
-                    if (PlayerApplication.isFreemium()) {
-                        buyPremium.setEnabled(true);
-                    } else {
-                        disablePremiumIab();
-                    }
-                }
-            });
-        }
-        else {
-            disablePremiumIab();
         }
 	}
-
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        PlayerApplication.iabStop();
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (!PlayerApplication.iabHandleResult(requestCode, resultCode, data)) {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
 
     @SuppressWarnings("deprecation")
 	private void setCacheCleanupListener() {
@@ -313,13 +288,5 @@ public class SettingsActivity extends PreferenceActivity {
         decimalFormat.setMinimumFractionDigits(2);
 
         cacheCleanup.setSummary(String.format(getString(R.string.unit_MB), decimalFormat.format(allocated)));
-    }
-
-    @SuppressWarnings("deprecation")
-    private void disablePremiumIab() {
-        LogUtils.LOGI(TAG, "disabling iab access");
-        PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference(getString(R.string.preference_screen_key_global));
-        Preference preference = findPreference(getString(R.string.preference_key_premium));
-        preferenceScreen.removePreference(preference);
     }
 }

@@ -12,35 +12,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.ui.activities.SetupActivity;
-import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.StorageOptions;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomRadioButton;
 
 import java.io.File;
 
-public class SetupPremiumFragment extends Fragment {
+public class SetupPathsFragment extends Fragment {
 
-    public static final String TAG = SetupPremiumFragment.class.getSimpleName();
+    public static final String TAG = SetupPathsFragment.class.getSimpleName();
 
 
-
-    private ImageView premiumChecking;
-
-    private ImageView premiumValid;
-
-    private ImageView premiumInvalid;
-
-    private TextView premiumTitle;
-
-    private TextView premiumDescription;
 
     private TextView locationDescription;
 
@@ -51,13 +39,8 @@ public class SetupPremiumFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_premium, container, false);
+        final View view = inflater.inflate(R.layout.fragment_paths, container, false);
 
-        premiumChecking = (ImageView) view.findViewById(R.id.premium_checking);
-        premiumValid = (ImageView) view.findViewById(R.id.premium_ok);
-        premiumInvalid = (ImageView) view.findViewById(R.id.premium_failure);
-        premiumTitle = (TextView) view.findViewById(R.id.premium_title);
-        premiumDescription = (TextView) view.findViewById(R.id.premium_description);
         locationDescription = (TextView) view.findViewById(R.id.storage_locations);
 
         radioWhole = (CustomRadioButton) view.findViewById(R.id.storage_use_whole_sdcard);
@@ -108,35 +91,7 @@ public class SetupPremiumFragment extends Fragment {
                 }
             }
         });
-
-        if (PlayerApplication.isFreemium()) {
-            PlayerApplication.iabStart(new Runnable() {
-                @Override
-                public void run() {
-                    premiumChecking.setVisibility(View.GONE);
-                    doUpdateStatus();
-                    PlayerApplication.iabStop();
-                }
-            });
-        }
-        else {
-            doUpdateStatus();
-        }
-
         return view;
-    }
-
-    private void doUpdateStatus() {
-        if (PlayerApplication.isFreemium()) {
-            premiumInvalid.setVisibility(View.VISIBLE);
-            premiumTitle.setText(R.string.label_setup_invalid_premium_title);
-            premiumDescription.setText(R.string.label_setup_invalid_premium_description);
-        }
-        else {
-            premiumValid.setVisibility(View.VISIBLE);
-            premiumTitle.setText(R.string.label_setup_valid_premium_title);
-            premiumDescription.setText(R.string.label_setup_valid_premium_description);
-        }
     }
 
     private final CompoundButton.OnCheckedChangeListener onRadioCheckedListener= new CompoundButton.OnCheckedChangeListener() {

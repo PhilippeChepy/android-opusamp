@@ -13,31 +13,78 @@ android {
     }
 
     productFlavors {
-        x86 {
+        x86Premium {
             versionCode 4 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "x86"
             }
+            packageName 'net.opusapp.player.premium'
+            buildConfigField 'boolean', 'premium', 'true'
         }
-        mips {
+        mipsPremium {
             versionCode 3 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "mips"
             }
+            packageName 'net.opusapp.player.premium'
+            buildConfigField 'boolean', 'premium', 'true'
         }
-        armv7 {
+        armv7Premium {
             versionCode 2 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi-v7a"
             }
+            packageName 'net.opusapp.player.premium'
+            buildConfigField 'boolean', 'premium', 'true'
         }
-        arm {
+        armPremium {
             versionCode 1 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi"
             }
+            packageName 'net.opusapp.player.premium'
+            buildConfigField 'boolean', 'premium', 'true'
         }
-        fat
+        fatPremium {
+            packageName 'net.opusapp.player.premium'
+            buildConfigField 'boolean', 'premium', 'true'
+        }
+        x86Free {
+            versionCode 4 * 1000000 + defaultConfig.versionCode
+            ndk {
+                abiFilter "x86"
+            }
+            packageName 'net.opusapp.player'
+            buildConfigField 'boolean', 'premium', 'false'
+        }
+        mipsFree {
+            versionCode 3 * 1000000 + defaultConfig.versionCode
+            ndk {
+                abiFilter "mips"
+            }
+            packageName 'net.opusapp.player'
+            buildConfigField 'boolean', 'premium', 'false'
+        }
+        armv7Free {
+            versionCode 2 * 1000000 + defaultConfig.versionCode
+            ndk {
+                abiFilter "armeabi-v7a"
+            }
+            packageName 'net.opusapp.player'
+            buildConfigField 'boolean', 'premium', 'false'
+        }
+        armFree {
+            versionCode 1 * 1000000 + defaultConfig.versionCode
+            ndk {
+                abiFilter "armeabi"
+            }
+            packageName 'net.opusapp.player'
+            buildConfigField 'boolean', 'premium', 'false'
+        }
+        fatFree {
+            packageName 'net.opusapp.player'
+            buildConfigField 'boolean', 'premium', 'false'
+        }
     }
     sourceSets.main {
         jniLibs.srcDir 'src/main/libs'

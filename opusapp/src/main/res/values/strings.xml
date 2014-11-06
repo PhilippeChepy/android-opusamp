@@ -35,7 +35,7 @@
     <string name="alert_dialog_message_search_path_exists">This folder is already to be analyzed or excluded.</string>
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
     <string name="alert_dialog_title_premium_hint">Trial period has expired.</string>
-    <string name="alert_dialog_message_premium_hint">Ads will be displayed occasionally unless you buy premium mode.</string>
+    <string name="alert_dialog_message_premium_hint">Ads will be displayed occasionally unless you buy the premium version.</string>
     <string name="alert_dialog_title_premium_positive_button">Buy premium</string>
     <string name="alert_dialog_title_premium_negative_button">Ignore</string>
     <string name="alert_dialog_title_type_of_library">Type of library</string>
@@ -211,13 +211,7 @@
     <!-- Setup -->
     <string name="label_setup_step1_title">"Let's get you set up"</string>
     <string name="label_setup_step1_description">It should only take a few moments to set up the app.</string>
-    <string name="label_setup_verifying_premium_title">Preparing…</string>
-    <string name="label_setup_verifying_premium_description">OpusAmp is verifying if you are a premium user.</string>
     <string name="label_setup_privacy_policy_link">Privacy Policy</string>
-    <string name="label_setup_valid_premium_title">Premium mode</string>
-    <string name="label_setup_valid_premium_description">You already acquired premium mode.\n\nEnjoy your music without limitations!</string>
-    <string name="label_setup_invalid_premium_title">Premium mode</string>
-    <string name="label_setup_invalid_premium_description">You don\'t have acquired premium mode.\nYou can do it later in application settings.\n\nWithout premium mode, you can use OpusAMP without any limitations, but after a period of 15 days, ads will be displayed occasionally.</string>
     <string name="label_setup_storage_title">Storage</string>
     <string name="label_setup_storage_description">Define location of the default library on your Android™ device.\nYou can customize paths or add other libraries later.</string>
     <string name="label_setup_scan_whole_storage">Whole external memory</string>

@@ -84,52 +84,6 @@
                 android:layout_marginRight="38.0dip"
                 android:visibility="gone"/>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="38.0dip"
-                android:layout_marginTop="32.0dip"
-                android:layout_marginRight="38.0dip"
-                android:orientation="horizontal">
-
-                <net.opusapp.player.ui.views.SquareImageView
-                    android:id="@+id/premium_checking"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_mini_checking" />
-
-                <net.opusapp.player.ui.views.SquareImageView
-                    android:id="@+id/premium_ok"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_mini_green_tick"
-                    android:visibility="gone"/>
-
-                <net.opusapp.player.ui.views.SquareImageView
-                    android:id="@+id/premium_failure"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_mini_red_cross"
-                    android:visibility="gone" />
-
-                <net.opusapp.player.ui.views.CustomTextView
-                    android:id="@+id/premium_title"
-                    android:textSize="@dimen/text_size_x_large"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/label_setup_verifying_premium_title" />
-            </LinearLayout>
-
-            <net.opusapp.player.ui.views.CustomTextView
-                android:layout_marginTop="10.0dip"
-                android:layout_marginLeft="38.0dip"
-                android:layout_marginRight="38.0dip"
-                android:textSize="@dimen/text_size_small"
-                android:id="@+id/premium_description"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/label_setup_verifying_premium_description" />
-
             <View
                 android:layout_width="fill_parent"
                 android:layout_height="1.0dp"

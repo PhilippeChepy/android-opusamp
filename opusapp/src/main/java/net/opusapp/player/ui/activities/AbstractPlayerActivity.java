@@ -57,6 +57,7 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import net.opusapp.licensing.LicenseCheckerCallback;
+import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerServiceListener;
 import net.opusapp.player.core.service.PlayerService;
@@ -207,7 +208,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         // Actionbar
         PlayerApplication.applyActionBar(this);
 
-        if (PlayerApplication.isFreemium() && !PlayerApplication.isTrial()) {
+        if (PlayerApplication.canShowInterstitial()) {
             int noDisplayCounter = PlayerApplication.adDisplayGetCounter();
 
             if (noDisplayCounter >= 5) {
@@ -337,7 +338,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     protected void onDestroy() {
         super.onDestroy();
 
-        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.isFreemium() && !PlayerApplication.isTrial()) {
+        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.canShowInterstitial()) {
             interstitial.show();
         }
     }
@@ -1074,7 +1075,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
             PlayerApplication.setExpired();
 
-            if (PlayerApplication.isFreemium() && !PlayerApplication.hasPremiumDialogFlag()) {
+            if (!BuildConfig.premium && !PlayerApplication.hasPremiumHintDialogFlag()) {
                 PlayerApplication.setPremiumHintDialogFlag();
 
                 new AlertDialog.Builder(this)
@@ -1085,8 +1086,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
 
-                                final Intent intent = new Intent(AbstractPlayerActivity.this, SettingsActivity.class);
-                                startActivity(intent);
+                                PlayerApplication.buyPremium(AbstractPlayerActivity.this);
                             }
                         })
                         .setNegativeButton(R.string.alert_dialog_title_premium_negative_button, new DialogInterface.OnClickListener() {

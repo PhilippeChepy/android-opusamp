@@ -24,7 +24,7 @@ public class SetupWelcomeFragment extends Fragment {
                 final Activity activity = getActivity();
 
                 if (activity != null) {
-                    ((SetupActivity)activity).updateFragment(new SetupPremiumFragment());
+                    ((SetupActivity)activity).updateFragment(new SetupPathsFragment());
                 }
             }
         });
