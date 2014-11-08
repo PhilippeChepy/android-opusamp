@@ -1,18 +1,14 @@
 #!/bin/bash
 
-#export ANDROID_NDK="/opt/android-ndk-r10"
-#export ANDROID_PLATFORM=android-L
-#export ANDROID_NDK_TOOLCHAIN_VERSION=4.9
-
-export ANDROID_NDK="/opt/android-ndk-r9d"
+export ANDROID_NDK="/mnt/net/devel/tools/android-ndk"
 export ANDROID_NDK_TOOLCHAIN_VERSION=4.8
 
 export ANDROID_NDK_ARM_32_PLATFORM=android-8
 export ANDROID_NDK_X86_32_PLATFORM=android-9
 export ANDROID_NDK_MIPS_32_PLATFORM=android-9
-export ANDROID_NDK_ARM_64_PLATFORM=android-L
-export ANDROID_NDK_X86_64_PLATFORM=android-L
-export ANDROID_NDK_MIPS_64_PLATFORM=android-L
+export ANDROID_NDK_ARM_64_PLATFORM=android-21
+export ANDROID_NDK_X86_64_PLATFORM=android-21
+export ANDROID_NDK_MIPS_64_PLATFORM=android-21
 
 export HOST_SYSTEM=linux-x86_64
 

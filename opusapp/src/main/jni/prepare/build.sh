@@ -1,5 +1,5 @@
 #!/bin/sh
-PATH=/opt/android-ndk-r9d:$PATH
+PATH=/mnt/net/devel/tools/android-ndk:$PATH
 
 
 rm jni -rf > /dev/null
