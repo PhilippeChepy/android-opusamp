@@ -8,59 +8,59 @@ android {
         applicationId "net.opusapp.player"
         minSdkVersion 9
         targetSdkVersion 21
-        versionCode 4
-        versionName "1.0.0.4"
+        versionCode 5
+        versionName "1.0.0.5"
     }
 
-    flavorGroups "abi", "version"
+    flavorDimensions "abi", "version"
 
     productFlavors {
         premiumApp {
-            flavorGroup "version"
-            packageName 'net.opusapp.player.premium'
+            flavorDimension "version"
+            applicationId 'net.opusapp.player.premium'
 
             android.sourceSets.premiumApp.java.srcDirs = ['src/flavor-premium/java']
             android.sourceSets.premiumApp.res.srcDirs = ['src/flavor-premium/res']
         }
 
         freeApp {
-            flavorGroup "version"
-            packageName 'net.opusapp.player'
+            flavorDimension "version"
+            applicationId 'net.opusapp.player'
 
             android.sourceSets.freeApp.java.srcDirs = ['src/flavor-free/java']
             android.sourceSets.freeApp.res.srcDirs = ['src/flavor-free/res']
         }
 
         x86 {
-            flavorGroup "abi"
+            flavorDimension "abi"
             versionCode 4 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "x86"
             }
         }
         mips {
-            flavorGroup "abi"
+            flavorDimension "abi"
             versionCode 3 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "mips"
             }
         }
         armv7 {
-            flavorGroup "abi"
+            flavorDimension "abi"
             versionCode 2 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi-v7a"
             }
         }
         arm {
-            flavorGroup "abi"
+            flavorDimension "abi"
             versionCode 1 * 1000000 + defaultConfig.versionCode
             ndk {
                 abiFilter "armeabi"
             }
         }
         fat {
-            flavorGroup "abi"
+            flavorDimension "abi"
         }
     }
     sourceSets.main {

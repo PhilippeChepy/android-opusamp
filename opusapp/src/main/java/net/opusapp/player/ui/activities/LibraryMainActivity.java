@@ -154,7 +154,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         updateReloadMenuItem();
 
-        int menuIndex = 1;
+        int menuIndex = 7;
 
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
         final AbstractMediaManager.ProviderAction providerActionList[] = provider.getAbstractProviderActionList();
