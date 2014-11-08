@@ -24,12 +24,10 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
@@ -39,14 +37,8 @@ import android.view.View;
 import android.webkit.WebView;
 
 import com.astuetz.PagerSlidingTabStrip;
-import com.google.android.vending.licensing.AESObfuscator;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import net.opusapp.licensing.LicenseChecker;
-import net.opusapp.licensing.LicenseCheckerCallback;
-import net.opusapp.licensing.PlaystoreAccountType;
-import net.opusapp.licensing.ServerManagedPolicy;
-import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerService;
 import net.opusapp.player.core.service.PlayerService;
@@ -55,15 +47,13 @@ import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
+import net.opusapp.player.licensing.BuildSpecific;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailUncachedImageLoader;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class PlayerApplication extends Application implements ServiceConnection {
@@ -118,6 +108,10 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
+    private static final String CONFIG_FILE = "global-config";
+
+
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -134,9 +128,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         thumbnailImageLoader = ThumbnailImageLoader.getInstance();
         thumbnailUncachedImageLoader = ThumbnailUncachedImageLoader.getInstance();
 
-        if (isExpired()) {
-            trialMode = false;
-        }
+        BuildSpecific.initApp();
     }
 
     public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
@@ -782,7 +774,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     public static void saveEqualizerSettings(AbstractMediaManager.Player player) {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(CONFIG_EQUALIZER_ENABLED, player.equalizerIsEnabled());
         editor.putLong(CONFIG_EQUALIZER_PREAMP, player.equalizerBandGetGain(0));
@@ -800,7 +792,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     public static void restoreEqualizerSettings(AbstractMediaManager.Player player) {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
 
         player.equalizerSetEnabled(sharedPreferences.getBoolean(CONFIG_EQUALIZER_ENABLED, false));
         player.equalizerBandSetGain(0, sharedPreferences.getLong(CONFIG_EQUALIZER_PREAMP, 20));
@@ -893,131 +885,22 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
-    private static final String CONFIG_FILE_FREEMIUM = "freemium";
-
-    private static final String CONFIG_NO_DISPLAY = "noDisplayCounter";
-
     private static final String CONFIG_FIRST_RUN = "isFirstRun";
 
-    private static final String CONFIG_EXPIRED = "isTrialExpired";
 
-    private static final String CONFIG_PREMIUM_HINT = "premiumHintFlag";
-
-
-    public static void buyPremium(Context context) {
-        try {
-            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=net.opusapp.player.premium")));
-        } catch (android.content.ActivityNotFoundException anfe) {
-            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=net.opusapp.player.premium")));
-        }
-    }
-
-    public static boolean canShowInterstitial() {
-        return !BuildConfig.premium && !PlayerApplication.isTrial();
-    }
-
-    public static int adDisplayGetCounter() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        return sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
-    }
-
-    public static void adDisplayInc() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        int noDisplayCounter = sharedPreferences.getInt(CONFIG_NO_DISPLAY, 0) + 1;
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(CONFIG_NO_DISPLAY, noDisplayCounter);
-        editor.apply();
-    }
-
-    public static void adDisplayReset() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(CONFIG_NO_DISPLAY, 0);
-        editor.apply();
-    }
 
     public static boolean isFirstRun() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(CONFIG_FIRST_RUN, true);
     }
 
     public static void disableFirstRun() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(CONFIG_FIRST_RUN, false);
         editor.apply();
     }
 
-
-
-    private static final String BASE64_PUBLIC_KEY =
-            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/uBXD8ItJQg" +
-            "Y15Yqw4jcCdzUTJ3L+QG7RSuMjbAJOa8isY/hVyGjnPlTn+S9A" +
-            "/IsjtSx7s3oc86X0HOVEOV2O3a8S9MYKvrjNUVMUVDVyxYA3bg" +
-            "HZuaXU722pn6FewE1merjWbt0rtsMcJMI7uNpIh/3LjeQ65J2K" +
-            "XEWtuFBw1QIDAQAB";
-
-    private static final byte SALT[] = new byte[] {-101, -88, 61, 94, -112, -71, -4, 4, 39, 3, 27, 59, -30, -103, 123, 69, 115, 54, 84, -87};
-
-    private static final String TRIAL_SERVER_URL = "https://opusapp.net:3000/";
-
-    private static boolean trialMode = true;
-
-    public static void doTrialCheck(Activity context, LicenseCheckerCallback trialLicenseCheckerCallback) {
-        //Create an url object to the MobileTrial server
-        URL trialServerUrl = null;
-        try {
-            trialServerUrl = URI.create(TRIAL_SERVER_URL).toURL();
-        } catch (MalformedURLException exception) {
-            LogUtils.LOGException(TAG, "doPrepareTrialCheck", 0, exception);
-        }
-
-        final String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-
-        // Construct the LicenseChecker with a ServerManaged Policy
-        final LicenseChecker trialChecker = new LicenseChecker(
-                context, new ServerManagedPolicy(context,
-                new AESObfuscator(SALT, context.getPackageName(), deviceId)),
-                BASE64_PUBLIC_KEY,
-                trialServerUrl,
-                new PlaystoreAccountType());
-
-        trialChecker.checkAccess(trialLicenseCheckerCallback);
-    }
-
-    public static boolean isTrial() {
-        return trialMode;
-    }
-
-    public static void setTrial(boolean trial) {
-        trialMode = trial;
-    }
-
-    public static void setExpired() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CONFIG_EXPIRED, true);
-        editor.apply();
-    }
-
-    public static boolean isExpired() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(CONFIG_EXPIRED, false);
-    }
-
-    public static void setPremiumHintDialogFlag() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CONFIG_PREMIUM_HINT, true);
-        editor.apply();
-    }
-
-    public static boolean hasPremiumHintDialogFlag() {
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE_FREEMIUM, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(CONFIG_PREMIUM_HINT, false);
-    }
 
 
     public static boolean hasHoneycomb() {
@@ -1034,10 +917,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static boolean hasJellyBean() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
-    }
-
-    public static boolean hasKitkat() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }
 
 	public static float convertPixelsToDp(float width, Context context) {

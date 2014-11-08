@@ -13,10 +13,8 @@
 package net.opusapp.player.ui.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
@@ -30,7 +28,6 @@ import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
 import android.view.ContextMenu;
@@ -47,17 +44,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
-import com.google.android.vending.licensing.Policy;
 import com.mobeta.android.dslv.DragSortListView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
-import net.opusapp.licensing.LicenseCheckerCallback;
-import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.IPlayerServiceListener;
 import net.opusapp.player.core.service.PlayerService;
@@ -69,13 +60,12 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RepeatingImageButton;
 import net.opusapp.player.utils.LogUtils;
 
-public abstract class AbstractPlayerActivity extends ActionBarActivity implements
+public abstract class AbstractPlayerActivity extends OpusActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         DragSortListView.DropListener, DragSortListView.DragScrollProfile,
         AdapterView.OnItemClickListener,
         View.OnCreateContextMenuListener,
-        ServiceConnection,
-        LicenseCheckerCallback {
+        ServiceConnection {
 
     public static final String TAG = AbstractPlayerActivity.class.getSimpleName();
 
@@ -155,9 +145,7 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
     private SlidingUpPanelLayout slidingUpPanelLayout;
 
-    /*
-        Player Ui logic
-     */
+    // Player Ui logic
     private boolean updateSeekBar = true;
 
     private static int autostop;
@@ -167,13 +155,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     private static Runnable autostopTask;
 
     protected boolean isFirstRun = false;
-
-
-
-    /*
-        Ad mob & licensing
-     */
-    private InterstitialAd interstitial = null;
 
 
 
@@ -207,31 +188,6 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
 
         // Actionbar
         PlayerApplication.applyActionBar(this);
-
-        if (PlayerApplication.canShowInterstitial()) {
-            int noDisplayCounter = PlayerApplication.adDisplayGetCounter();
-
-            if (noDisplayCounter >= 5) {
-                interstitial = new InterstitialAd(this);
-                interstitial.setAdUnitId("ca-app-pub-3216044483473621/6665880790");
-
-                AdRequest adRequest = new AdRequest.Builder()
-                        .addTestDevice("2A8AFDBBC128894B872A1F3DAE11358D") // Nexus 5
-                        .addTestDevice("EA2776551264A5F012EAD8016CCAFD67") // LG GPad
-                        .build();
-
-                interstitial.loadAd(adRequest);
-                interstitial.setAdListener(new AdListener() {
-                    @Override
-                    public void onAdLoaded() {
-                        super.onAdLoaded();
-                        PlayerApplication.adDisplayReset();
-                    }
-                });
-            } else {
-                PlayerApplication.adDisplayInc();
-            }
-        }
 
         imageViewContainer = findViewById(R.id.square_view_container);
         playlistContainer = findViewById(R.id.playlist_container);
@@ -335,22 +291,9 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (interstitial != null && interstitial.isLoaded() && PlayerApplication.canShowInterstitial()) {
-            interstitial.show();
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         PlayerApplication.connectService(this);
-
-        if (!PlayerApplication.isExpired()) {
-            PlayerApplication.doTrialCheck(this, this);
-        }
     }
 
     @Override
@@ -1050,66 +993,5 @@ public abstract class AbstractPlayerActivity extends ActionBarActivity implement
         if (!playlistCursor.isClosed()) {
             playlistCursor.moveToPosition(position);
         }
-    }
-
-    @Override
-    public void allow(int reason) {
-        if (isFinishing()) {
-            return;
-        }
-
-        LogUtils.LOGI(TAG, "License checking - Licensed");
-        PlayerApplication.setTrial(true);
-    }
-
-    @Override
-    public void dontAllow(int policyReason) {
-        if (isFinishing()) {
-            return;
-        }
-
-        PlayerApplication.setTrial(false);
-
-        if (policyReason != Policy.RETRY) {
-            LogUtils.LOGI(TAG, "License checking - Not licensed (!RETRY) (reason=" + policyReason +")");
-
-            PlayerApplication.setExpired();
-
-            if (!BuildConfig.premium && !PlayerApplication.hasPremiumHintDialogFlag()) {
-                PlayerApplication.setPremiumHintDialogFlag();
-
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.alert_dialog_title_premium_hint)
-                        .setMessage(R.string.alert_dialog_message_premium_hint)
-                        .setPositiveButton(R.string.alert_dialog_title_premium_positive_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-
-                                PlayerApplication.buyPremium(AbstractPlayerActivity.this);
-                            }
-                        })
-                        .setNegativeButton(R.string.alert_dialog_title_premium_negative_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        })
-                        .show();
-            }
-        }
-        else {
-            LogUtils.LOGI(TAG, "License checking - Not licensed (RETRY)");
-        }
-    }
-
-    @Override
-    public void applicationError(int errorCode) {
-        if (isFinishing()) {
-            return;
-        }
-
-        LogUtils.LOGI(TAG, "License checking - applicationError : " + errorCode);
-        PlayerApplication.setTrial(true);
     }
 }

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="@string/preference_screen_key_global">
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_ui"
+        android:icon="@drawable/ic_action_tiles_large" >
+
+        <Preference
+            android:key="@string/preference_key_color_presets"
+            android:title="@string/preference_title_preset" />
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_primary_color"
+            android:summary="@string/preference_summary_primary_color"
+            android:title="@string/preference_title_primary_color"
+            android:defaultValue="0xff03a9f4"
+            hexValue="true"/>
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_accent_color"
+            android:summary="@string/preference_summary_accent_color"
+            android:title="@string/preference_title_accent_color"
+            android:defaultValue="0xff01579b"
+            hexValue="true"/>
+
+        <net.opusapp.player.ui.views.colorpicker.ColorPickerPreference
+            android:key="@string/preference_key_foreground_color"
+            android:summary="@string/preference_summary_foreground_color"
+            android:title="@string/preference_title_foreground_color"
+            android:defaultValue="0xffffffff"
+            hexValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_toolbar_dark_icons"
+            android:summary="@string/preference_summary_toolbar_dark_icons"
+            android:title="@string/preference_title_toolbar_dark_icons"
+            android:defaultValue="false" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_storage"
+        android:icon="@drawable/ic_action_database" >
+
+        <PreferenceCategory
+            android:title="@string/preference_category_title_cache_size">
+
+            <EditTextPreference
+                android:digits="1234567890"
+                android:inputType="number"
+                android:key="@string/preference_key_cache_size"
+                android:defaultValue="30"
+                android:title="@string/preference_title_cache_size" />
+
+            <EditTextPreference
+                android:digits="1234567890"
+                android:inputType="number"
+                android:key="@string/preference_key_thumbnail_cache_size"
+                android:defaultValue="20"
+                android:title="@string/preference_title_thumbnail_cache_size" />
+        </PreferenceCategory>
+
+        <PreferenceCategory
+            android:title="@string/preference_category_title_maintenance">
+
+            <Preference
+                android:key="@string/preference_key_clear_cache"
+                android:title="@string/preference_title_clear_cache" />
+
+            <Preference
+                android:key="@string/preference_key_optimize_database"
+                android:title="@string/preference_title_optimize_database" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_headphones"
+        android:icon="@drawable/ic_action_headphones">
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_plug_auto_play"
+            android:title="@string/preference_title_plug_auto_play"
+            android:summary="@string/preference_summary_plug_auto_play"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/preference_key_pause_call"
+            android:title="@string/preference_title_pause_call"
+            android:summary="@string/preference_summary_pause_call"
+            android:defaultValue="true" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/preference_screen_title_about"
+        android:icon="@drawable/ic_action_help">
+
+        <Preference
+            android:key="@string/preference_key_privacy_policy"
+            android:title="@string/preference_title_privacy_policy"
+            android:icon="@drawable/ic_action_info" />
+
+        <Preference
+            android:key="@string/preference_key_opensource"
+            android:title="@string/preference_title_opensource"
+            android:icon="@drawable/ic_action_info" />
+    </PreferenceScreen>
+
+</PreferenceScreen>

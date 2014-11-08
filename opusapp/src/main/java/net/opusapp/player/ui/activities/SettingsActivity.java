@@ -24,10 +24,9 @@ import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceScreen;
 
-import net.opusapp.player.BuildConfig;
 import net.opusapp.player.R;
+import net.opusapp.player.licensing.BuildSpecific;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
@@ -62,9 +61,10 @@ public class SettingsActivity extends PreferenceActivity {
         int cacheSize = sharedPrefs.getInt(getString(R.string.preference_key_cache_size), 30);
         int thumbnailCacheSize = sharedPrefs.getInt(getString(R.string.preference_key_thumbnail_cache_size), 20);
 
+/*
         boolean autoPlay = sharedPrefs.getBoolean(getString(R.string.preference_key_plug_auto_play), true);
         boolean autoPause = sharedPrefs.getBoolean(getString(R.string.preference_key_pause_call), true);
-/*
+
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putInt(getString(R.string.preference_key_cache_size), cacheSize);
         editor.putInt(getString(R.string.preference_key_thumbnail_cache_size), thumbnailCacheSize);
@@ -149,20 +149,7 @@ public class SettingsActivity extends PreferenceActivity {
         });
 
         final Preference buyPremiumPreference = findPreference(getString(R.string.preference_key_premium));
-
-        if (BuildConfig.premium) {
-            PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference(getString(R.string.preference_screen_key_global));
-            preferenceScreen.removePreference(buyPremiumPreference);
-        }
-        else {
-            buyPremiumPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    PlayerApplication.buyPremium(SettingsActivity.this);
-                    return true;
-                }
-            });
-        }
+        BuildSpecific.managePremiumPreference(this, buyPremiumPreference);
 	}
 
     @SuppressWarnings("deprecation")

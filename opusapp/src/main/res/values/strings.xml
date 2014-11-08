@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Application name -->
-    <string name="application_label" translatable="false">OpusAMP</string>
-
     <!-- Service -->
     <string name="service_label">Audio Media Player</string>
 
@@ -36,7 +33,7 @@
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
     <string name="alert_dialog_title_premium_hint">Trial period has expired.</string>
     <string name="alert_dialog_message_premium_hint">Ads will be displayed occasionally unless you buy the premium version.</string>
-    <string name="alert_dialog_title_premium_positive_button">Buy premium</string>
+    <string name="alert_dialog_title_premium_positive_button">Buy premium version</string>
     <string name="alert_dialog_title_premium_negative_button">Ignore</string>
     <string name="alert_dialog_title_type_of_library">Type of library</string>
 
@@ -70,7 +67,7 @@
     <string name="preference_title_pause_call">Auto pause</string>
     <string name="preference_summary_pause_call">Auto pause playback when receiving call</string>
     <string name="preference_screen_title_about">Informations</string>
-    <string name="preference_title_premium">Premium mode</string>
+    <string name="preference_title_premium">Version Premium</string>
     <string name="preference_title_privacy_policy">Privacy Policy</string>
     <string name="preference_title_opensource">Open source Licenses</string>
 

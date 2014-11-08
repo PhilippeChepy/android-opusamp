@@ -32,6 +32,7 @@ import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RefreshableView;
+import net.opusapp.player.utils.LogUtils;
 
 
 public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity implements RefreshableView, LoaderManager.LoaderCallbacks<Cursor> {
@@ -44,16 +45,12 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
 
 
-    /*
-        Actionbar
-     */
+    // Actionbar
     private static final int OPTION_MENUITEM_SORT = 1;
 
 
 
-    /*
-        ContentType management
-     */
+    // ContentType management
     private AbstractMediaManager.Provider.ContentType contentType;
 
     private String contentSourceId;
@@ -64,19 +61,14 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
 
 
-    /*
-
-     */
+    //
     private LibraryAdapter adapter;
 
     private ListView contentList;
 
 
 
-    /*
-        Action bar fadin effect
-     */
-    //private Drawable actionbarBackground;
+    // Action bar fadin effect
     private Toolbar toolbar;
 
     private int actionbarHeight;
@@ -191,7 +183,11 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
             final String albumName = parameters.getString(PlayerApplication.CONTENT_SOURCE_DESCRIPTION_KEY);
             if (!TextUtils.isEmpty(albumName)) {
-                setTitle(albumName);
+                LogUtils.LOGI(TAG, "title provided: " + albumName);
+                toolbar.setTitle(albumName);
+            }
+            else {
+                LogUtils.LOGW(TAG, "title provided: (none)");
             }
 
             final Activity hostActivity = this;
@@ -218,9 +214,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 }
             };
 
-            /*
-                Setting adapter
-             */
+            // Setting adapter
             switch (contentType) {
                 case CONTENT_TYPE_ARTIST:
                 case CONTENT_TYPE_ALBUM:

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Application name -->
-<!--    <string name="application_label" translatable="false">OpusAMP</string>-->
-
     <!-- Service -->
     <string name="service_label">Lecteur de médias audio</string>
 
@@ -36,7 +33,7 @@
     <string name="alert_dialog_title_add_to_playlist">@string/menuitem_label_add_to_playlist</string>
     <string name="alert_dialog_title_premium_hint">"Période d'essai terminée."</string>
     <string name="alert_dialog_message_premium_hint">"Des publicités vont être affiché occasionnelement à moins que vous n'achetiez la version premium."</string>
-    <string name="alert_dialog_title_premium_positive_button">Acheter le mode premium</string>
+    <string name="alert_dialog_title_premium_positive_button">Acheter la version premium</string>
     <string name="alert_dialog_title_premium_negative_button">Ignorer</string>
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
 
@@ -70,7 +67,7 @@
     <string name="preference_title_pause_call">Pause automatique de la lecture</string>
     <string name="preference_summary_pause_call">Pause automatique de la lecture lors des appels téléphoniques</string>
     <string name="preference_screen_title_about">Informations</string>
-    <string name="preference_title_premium">Mode premium</string>
+    <string name="preference_title_premium">Version premium</string>
     <string name="preference_title_privacy_policy">Politique de confidentialité</string>
     <string name="preference_title_opensource">Licences Open source</string>
 
