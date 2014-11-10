@@ -9,8 +9,6 @@
     <uses-permission android:name="android.permission.INTERNET" /> <!-- +deezer -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- +deezer -->
 
-    <uses-permission android:name="com.android.vending.BILLING" />
-
     <application
         android:name=".ui.utils.PlayerApplication"
         android:allowBackup="false"
@@ -38,7 +36,6 @@
         <receiver android:name=".core.service.ServiceBroadcastReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
         </receiver>
