@@ -6,13 +6,13 @@ rm jni -rf > /dev/null
 rm libs -rf > /dev/null
 rm obj -rf > /dev/null
 
-tar xf src/ffmpeg-2.3.3.tar.bz2
+tar xf src/ffmpeg-2.4.3.tar.bz2
 tar xf src/soxr-0.1.1-Source.tar.xz
 tar xf src/taglib-1.9.1.tar.gz
 
 mkdir jni
 
-mv ffmpeg-2.3.3 jni/ffmpeg
+mv ffmpeg-2.4.3 jni/ffmpeg
 mv soxr-0.1.1-Source jni/soxr
 mv taglib-1.9.1 jni/taglib
 

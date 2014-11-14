@@ -1,8 +1,0 @@
-<resources>
-    <!-- Key Store Password -->
-    <string name="mobiletrial_keystore_passwd">OpusAppLicensing</string>
-    
-    <!--  Choose Account Dialog -->
-    <string name="mobiletrial_chooseaccount_title">Choose your Account</string>
-
-</resources>

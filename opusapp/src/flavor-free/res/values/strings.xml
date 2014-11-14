@@ -2,4 +2,6 @@
 <resources>
     <!-- Application name -->
     <string name="application_label" translatable="false">OpusAMP Free</string>
+
+    <string name="mobiletrial_keystore_passwd" translatable="false">OpusAppLicensing</string>
 </resources>

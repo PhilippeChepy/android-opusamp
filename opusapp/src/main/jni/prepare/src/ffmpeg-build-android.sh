@@ -14,6 +14,8 @@ export HOST_SYSTEM=linux-x86_64
 
 platform="$1"
 
+echo ">>> Building ffmpeg. "
+
 SOURCE=`pwd`
 TARGET_DIR=$SOURCE/build/
 PREFIX="$TARGET_DIR$platform"
@@ -103,12 +105,12 @@ FFMPEG_FLAGS_COMMON="--disable-gpl \
 CFLAGS="-std=c99 -O3 -fomit-frame-pointer -w -pipe -fpic -fPIC -fasm -finline-limit=300 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wno-psabi -Wa,--noexecstack -fdiagnostics-color=always -DNDEBUG -I../soxr/src/"
 LDFLAGS="-lm -lz -Wl,--no-undefined -Wl,-z,noexecstack -L../../libs/$platform/ -lsoxr"
 
-echo -n "* Cleaning previous build. "
+echo -n "     * Cleaning previous build. "
 rm -rf $PREFIX
 mkdir -p $PREFIX
 echo "Done."
 
-echo -n "* Preparing environement for $platform arch. "
+echo -n "     * Preparing environement for $platform arch. "
 
 if [ "$platform" = "x86" ]; then
 	export CROSS_PREFIX=i686-linux-android-
@@ -186,20 +188,20 @@ cd $SOURCE
 
 FFMPEG_FLAGS="$FFMPEG_FLAGS --prefix=$PREFIX"
 
-echo -n "* Configuring build... "
+echo -n "     * Configuring build... "
 ./configure $FFMPEG_FLAGS --extra-cflags="$CFLAGS $EXTRA_CFLAGS" --extra-ldflags="$LDFLAGS $EXTRA_LDFLAGS" > $PREFIX/build-configure.log
 cp config.* $PREFIX
 echo "Done. "
 
 [ $PIPESTATUS == 0 ] || exit 1
 
-echo -n "* Building library components... "
+echo -n "     * Building library components... "
 make clean > /dev/null
 find . -name "*.o" -type f -delete
 make -j5 install > $PREFIX/build-make.log 2> $PREFIX/build-make-errors.log || exit 1
 echo "Done. "
 
-echo -n "* Linking library to make shared object... "
+echo -n "     * Linking library to make shared object... "
 case $CROSS_PREFIX in
   aarch64-*)
     $CC -o $PREFIX/libffmpeg.so -shared $LDFLAGS $EXTRA_LDFLAGS libavutil/*.o libavcodec/*.o libavformat/*.o libavfilter/*.o libswresample/*.o compat/*.o libavutil/aarch64/*.o >> $PREFIX/build-make.log
