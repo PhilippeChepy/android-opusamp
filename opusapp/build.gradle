@@ -19,7 +19,7 @@ android {
             flavorDimension "version"
             applicationId 'net.opusapp.player.premium'
 
-            android.sourceSets.premiumApp.manifest.srcFile 'src/flavor-premium/AndroidManifest.xml'
+//            android.sourceSets.premiumApp.manifest.srcFile 'src/flavor-premium/AndroidManifest.xml'
             android.sourceSets.premiumApp.java.srcDirs = ['src/flavor-premium/java']
             android.sourceSets.premiumApp.res.srcDirs = ['src/flavor-premium/res']
         }

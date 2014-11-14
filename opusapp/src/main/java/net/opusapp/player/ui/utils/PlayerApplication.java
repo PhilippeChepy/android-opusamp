@@ -12,6 +12,7 @@
  */
 package net.opusapp.player.ui.utils;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -866,12 +867,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return sharedPrefs.getBoolean(context.getString(R.string.preference_key_toolbar_dark_icons), false);
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Toolbar applyActionBar(ActionBarActivity activity) {
         Toolbar toolbar = (Toolbar) activity.findViewById(iconsAreDark() ? R.id.main_toolbar_light : R.id.main_toolbar_dark);
         if (toolbar != null) {
             toolbar.setVisibility(View.VISIBLE);
             toolbar.setBackgroundColor(getBackgroundColor());
             activity.setSupportActionBar(toolbar);
+        }
+
+        if (hasLollipop()) {
+            activity.getWindow().setStatusBarColor(getAccentColor());
         }
 
         return toolbar;
@@ -917,6 +923,10 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static boolean hasJellyBean() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
+    }
+
+    public static boolean hasLollipop() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
 	public static float convertPixelsToDp(float width, Context context) {
