@@ -232,10 +232,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         notifyProviderChanged();
-
-        doUpdateWidgets();
-        doUpdateRemoteClient();
-        doUpdateNotification();
+        updateExternalControlers();
 
         mCommandbroadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -277,8 +274,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             doManageCommandIntent(intent);
         }
 
-        doUpdateWidgets();
-
         return Service.START_STICKY;
     }
 
@@ -315,7 +310,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    protected void doUpdateWidgets() {
+    protected void updateWidgets() {
         try {
             boolean isPlaying = isPlaying();
 
@@ -344,7 +339,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    protected void doUpdateRemoteClient() {
+    protected void updateRemoteClient() {
         if (mPlaylist.length > 0) {
             final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
             mRemoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
@@ -354,8 +349,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    protected void doUpdateNotification() {
-
+    protected void updateNotification() {
         if (mPlaylist.length > 0) {
             final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
             mNotificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
@@ -363,16 +357,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         else {
             mNotificationHelper.buildNotification(null, null, null, null);
         }
-/*
-        try {
-            if (isPlaying()) {
-                LogUtils.LOGW(TAG, "doUpdateNotification() : showing notification");
-                startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
-            }
-        }
-        catch (final Exception exception) {
-            LogUtils.LOGException(TAG, "doUpdateNotification", 0, exception);
-        }*/
+    }
+
+    protected void updateExternalControlers() {
+        updateWidgets();
+        updateRemoteClient();
+        updateNotification();
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -496,7 +486,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         Collections.shuffle(mShuffledPlaylistIndexList);
         mShuffledPlaylistIndex = 0;
 
-        doUpdateWidgets();
+        updateExternalControlers();
     }
 
     private final ImageLoadingListener artImageLoaderListener = new ImageLoadingListener() {
@@ -508,9 +498,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
             currentArt = null;
-            doUpdateNotification();
-            doUpdateRemoteClient();
-            doUpdateWidgets();
+            applyUiUpdate();
         }
 
         @Override
@@ -526,9 +514,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 }
                 else {
                     currentArt = loadedImage;
-                    doUpdateNotification();
-                    doUpdateRemoteClient();
-                    doUpdateWidgets();
+                    applyUiUpdate();
                 }
             }
         }
@@ -536,9 +522,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void onLoadingCancelled(String imageUri, View view) {
             currentArt = null;
-            doUpdateNotification();
-            doUpdateRemoteClient();
-            doUpdateWidgets();
+            applyUiUpdate();
+        }
+
+        protected void applyUiUpdate() {
+            updateExternalControlers();
         }
     };
 
@@ -567,9 +555,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mRemoteControlClient.updateState(true);
             }
 
-            doUpdateWidgets();
-            doUpdateRemoteClient();
-            doUpdateNotification();
+            updateExternalControlers();
         }
     };
 
@@ -579,7 +565,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mRemoteControlClient.updateState(false);
             mNotificationHelper.goToIdleState(false);
 
-            doUpdateWidgets();
+            updateExternalControlers();
         }
     };
 
@@ -595,7 +581,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
             }
 
-            doUpdateWidgets();
+            updateExternalControlers();
         }
     };
 
@@ -608,7 +594,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mRemoteControlClient.stop();
             mRemoteControlClient.release();
 
-            doUpdateWidgets();
+            updateExternalControlers();
 
             if (PlayerApplication.hasICS()) {
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
@@ -1098,7 +1084,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyQueueChanged() {
-        doUpdateWidgets();
+        updateExternalControlers();
 
         for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onQueueChanged();
