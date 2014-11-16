@@ -27,14 +27,15 @@
         <TextView
             android:id="@+id/notification_base_line_one"
             style="@style/NotificationText"
-            android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent.Title" />
+            android:textAppearance="@android:style/TextAppearance.Material.Notification.Title" />
 
         <TextView
             android:id="@+id/notification_base_line_two"
             style="@style/NotificationText"
-            android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent" />
+            android:textAppearance="@android:style/TextAppearance.Material.Notification.Info" />
 
     </LinearLayout>
+
 
     <ImageButton
         android:id="@+id/notification_base_previous"
@@ -44,7 +45,7 @@
         android:scaleType="fitCenter"
         android:padding="@dimen/notification_action_padding"
         android:background="?android:selectableItemBackground"
-        android:src="@drawable/ic_action_playback_prev_dark"
+        android:src="@drawable/ic_action_playback_prev"
         android:visibility="gone"
         android:contentDescription="@string/imageview_content_description_previous" />
 
@@ -56,7 +57,7 @@
         android:scaleType="fitCenter"
         android:padding="@dimen/notification_action_padding"
         android:background="?android:selectableItemBackground"
-        android:src="@drawable/ic_action_playback_play_dark"
+        android:src="@drawable/ic_action_playback_play"
         android:contentDescription="@string/imageview_content_description_play" />
 
     <ImageButton
@@ -67,7 +68,7 @@
         android:scaleType="fitCenter"
         android:padding="@dimen/notification_action_padding"
         android:background="?android:selectableItemBackground"
-        android:src="@drawable/ic_action_playback_next_dark"
+        android:src="@drawable/ic_action_playback_next"
         android:contentDescription="@string/imageview_content_description_next" />
 
     <ImageButton
@@ -78,6 +79,6 @@
         android:scaleType="fitCenter"
         android:padding="@dimen/notification_action_padding"
         android:background="?android:selectableItemBackground"
-        android:src="@drawable/btn_notification_collapse" />
+        android:src="@drawable/btn_notification_collapse_dark" />
 
 </LinearLayout>

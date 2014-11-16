@@ -36,17 +36,17 @@
             <ImageButton
                 android:id="@+id/four_by_one_control_prev"
                 style="@style/AppWidgetMediaButton"
-                android:src="@drawable/btn_playback_previous_transparent" />
+                android:src="@drawable/ic_action_playback_prev_dark" />
 
             <ImageButton
                 android:id="@+id/four_by_one_control_play"
                 style="@style/AppWidgetMediaButton"
-                android:src="@drawable/btn_playback_play_transparent" />
+                android:src="@drawable/ic_action_playback_play_dark" />
 
             <ImageButton
                 android:id="@+id/four_by_one_control_next"
                 style="@style/AppWidgetMediaButton"
-                android:src="@drawable/btn_playback_next_transparent" />
+                android:src="@drawable/ic_action_playback_next_dark" />
         </LinearLayout>
 
 

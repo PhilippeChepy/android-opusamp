@@ -146,10 +146,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    /*
-     * Current song informations
-     */
-    private Bitmap currentArt = null;
+    // Current song informations
+    private String mMediaCoverUri = null;
+
+    private Bitmap mMediaCover = null;
 
 
 
@@ -225,14 +225,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mShuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
         int position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
 
-        reloadPlaylist();
+        loadPlaylist();
 
         if (mPlaylist != null && mPlaylist.length > 0) {
             queueSetPosition(position);
         }
 
         notifyProviderChanged();
-        updateExternalControlers();
 
         mCommandbroadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -310,59 +309,49 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    protected void updateWidgets() {
-        try {
-            boolean isPlaying = isPlaying();
+    protected void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
+        String mediaTitle = null;
+        String mediaAuthor = null;
+        String mediaGroup = null;
+        long mediaDuration = 0;
 
-            if (mPlaylist != null && mPlaylist.length > 0) {
-                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-
-                AbstractAppWidget.setHasPlaylist(true);
-                AbstractAppWidget.setPlaying(isPlaying);
-                AbstractAppWidget.setMetadata(media.name, media.artist, media.album, currentArt);
-
-                mWidgetLarge.applyUpdate(this);
-                mWidgetMedium.applyUpdate(this);
-
-            }
-            else {
-                AbstractAppWidget.setHasPlaylist(false);
-                AbstractAppWidget.setPlaying(isPlaying);
-                AbstractAppWidget.setMetadata(null, null, null, null);
-
-                mWidgetLarge.applyUpdate(this);
-                mWidgetMedium.applyUpdate(this);
-            }
-        }
-        catch (final Exception exception) {
-            LogUtils.LOGException(TAG, "doUpdateWidgets", 0, exception);
-        }
-    }
-
-    protected void updateRemoteClient() {
         if (mPlaylist.length > 0) {
             final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-            mRemoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
-        }
-        else {
-            mRemoteControlClient.updateMetadata(currentArt, null, null, null, 0);
-        }
-    }
+            mediaTitle = media.name;
+            mediaAuthor = media.artist;
+            mediaGroup = media.album;
+            mediaDuration = media.duration;
 
-    protected void updateNotification() {
-        if (mPlaylist.length > 0) {
-            final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-            mNotificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
-        }
-        else {
-            mNotificationHelper.buildNotification(null, null, null, null);
-        }
-    }
+            if (!onlyPlaystate) {
+                if (coverIsLoaded) {
+                    LogUtils.LOGD(TAG, "updateExternalControlers -> cover is loaded");
+                } else {
+                    LogUtils.LOGD(TAG, "updateExternalControlers -> querying for cover loading with mMediaCoverUri = " + mMediaCoverUri);
 
-    protected void updateExternalControlers() {
-        updateWidgets();
-        updateRemoteClient();
-        updateNotification();
+                    if (mMediaCoverUri != null) {
+                        LogUtils.LOGD(TAG, "updateExternalControlers: triggering cover loading");
+                        PlayerApplication.normalImageLoader.loadImage(mMediaCoverUri, (DisplayImageOptions) null, mImageLoaderListener);
+                    }
+                }
+            }
+        }
+
+        // Updating widget
+        boolean isPlaying = isPlaying();
+
+        AbstractAppWidget.setHasPlaylist(mPlaylist.length > 0);
+        AbstractAppWidget.setPlaying(isPlaying);
+
+        AbstractAppWidget.setMetadata(mediaTitle, mediaAuthor, mediaGroup, mMediaCover);
+
+        mWidgetLarge.applyUpdate(this);
+        mWidgetMedium.applyUpdate(this);
+
+        // Updating remote client
+        mRemoteControlClient.updateMetadata(mMediaCover, mediaTitle, mediaAuthor, mediaGroup, mediaDuration);
+
+        // Updating notification
+        mNotificationHelper.buildNotification(mediaGroup, mediaAuthor, mediaTitle, mMediaCover);
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -470,7 +459,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         return looped;
     }
 
-    protected void reloadPlaylist() {
+    protected void loadPlaylist() {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
@@ -486,10 +475,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         Collections.shuffle(mShuffledPlaylistIndexList);
         mShuffledPlaylistIndex = 0;
 
-        updateExternalControlers();
+        updateExternalControlers(false, false);
     }
 
-    private final ImageLoadingListener artImageLoaderListener = new ImageLoadingListener() {
+    private final ImageLoadingListener mImageLoaderListener = new ImageLoadingListener() {
 
         @Override
         public void onLoadingStarted(String imageUri, View view) {
@@ -497,23 +486,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            currentArt = null;
+            mMediaCover = null;
             applyUiUpdate();
         }
 
         @Override
         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            String currentArtUri = null;
-            if (mPlaylistIndex < mPlaylist.length) {
-                currentArtUri = mPlaylist[mPlaylistIndex].artUri;
-            }
-
-            if (imageUri.equals(currentArtUri)) {
+            if (imageUri.equals(mMediaCoverUri)) {
                 if (loadedImage != null && loadedImage.isRecycled()) {
-                    PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, artImageLoaderListener);
+                    PlayerApplication.normalImageLoader.loadImage(mMediaCoverUri, (DisplayImageOptions) null, mImageLoaderListener);
                 }
                 else {
-                    currentArt = loadedImage;
+                    mMediaCover = loadedImage;
                     applyUiUpdate();
                 }
             }
@@ -521,12 +505,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void onLoadingCancelled(String imageUri, View view) {
-            currentArt = null;
+            mMediaCover = null;
             applyUiUpdate();
         }
 
         protected void applyUiUpdate() {
-            updateExternalControlers();
+            updateExternalControlers(false, true);
         }
     };
 
@@ -555,7 +539,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mRemoteControlClient.updateState(true);
             }
 
-            updateExternalControlers();
+            updateExternalControlers(true, false);
         }
     };
 
@@ -565,7 +549,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mRemoteControlClient.updateState(false);
             mNotificationHelper.goToIdleState(false);
 
-            updateExternalControlers();
+            updateExternalControlers(true, false);
         }
     };
 
@@ -581,7 +565,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
             }
 
-            updateExternalControlers();
+            updateExternalControlers(true, false);
         }
     };
 
@@ -594,7 +578,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mRemoteControlClient.stop();
             mRemoteControlClient.release();
 
-            updateExternalControlers();
+            updateExternalControlers(true, false);
 
             if (PlayerApplication.hasICS()) {
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
@@ -613,13 +597,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 LogUtils.LOGException(TAG, "refreshData", 0, interruptException);
             }
 
-            String currentArtUri = null;
+            mMediaCoverUri = null;
             if (mPlaylist != null) {
                 if (mPlaylistIndex < mPlaylist.length) {
-                    currentArtUri = mPlaylist[mPlaylistIndex].artUri;
+                    mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
                 }
 
-                PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, artImageLoaderListener);
+                updateExternalControlers(false, false);
             }
         }
     };
@@ -854,7 +838,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistAdd(null, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
 
-        reloadPlaylist();
+        loadPlaylist();
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = mPlaylist.length - 1;
@@ -887,7 +871,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistMove(null, indexFrom, indexTo);
 
-        reloadPlaylist();
+        loadPlaylist();
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = mPlaylist.length - 1;
@@ -913,7 +897,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             pause(true);
         }
 
-        reloadPlaylist();
+        loadPlaylist();
 
         if (mPlaylist.length != 0) {
             if (mPlaylistIndex <= mPlaylist.length) {
@@ -939,7 +923,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         provider.playlistClear(null);
         mPlaylistIndex = 0;
-        reloadPlaylist();
+        loadPlaylist();
 
         notifyQueueChanged();
     }
@@ -956,7 +940,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             uri = mPlaylist[mPlaylistIndex].getUri();
         }
 
-        reloadPlaylist();
+        loadPlaylist();
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = 0;
@@ -1084,8 +1068,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyQueueChanged() {
-        updateExternalControlers();
-
         for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onQueueChanged();
         }

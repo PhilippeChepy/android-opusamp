@@ -40,22 +40,36 @@ public class NotificationHelper {
     private final NotificationManager notificationManager;
 
 
-    private final PlayerService service;
+    private final PlayerService mService;
+
+
+    private int mPlayDrawable;
+
+    private int mPauseDrawable;
 
 
 
     public NotificationHelper(final PlayerService service) {
-        this.service = service;
+        mService = service;
         notificationManager = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (PlayerApplication.hasLollipop()) {
+            mPlayDrawable = R.drawable.ic_action_playback_play;
+            mPauseDrawable = R.drawable.ic_action_playback_pause;
+        }
+        else {
+            mPlayDrawable = R.drawable.ic_action_playback_play_dark;
+            mPauseDrawable = R.drawable.ic_action_playback_pause_dark;
+        }
     }
 
     public void buildNotification(final String albumName, final String artistName, final String trackName, final Bitmap albumArt) {
-    	notificationTemplate = new RemoteViews(service.getPackageName(), R.layout.notification_template_base);
+    	notificationTemplate = new RemoteViews(mService.getPackageName(), R.layout.notification_template_base);
         
         initCollapsedLayout(trackName, artistName, albumArt);
 
         if (PlayerApplication.hasHoneycomb()) {
-            notification = new NotificationCompat.Builder(service)
+            notification = new NotificationCompat.Builder(mService)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentIntent(getPendingIntent())
                     .setContent(notificationTemplate)
@@ -63,7 +77,7 @@ public class NotificationHelper {
 
             initPlaybackActions();
             if (PlayerApplication.hasJellyBean()) {
-                expandedView = new RemoteViews(service.getPackageName(), R.layout.notification_template_expanded_base);
+                expandedView = new RemoteViews(mService.getPackageName(), R.layout.notification_template_expanded_base);
                 
                 notification.bigContentView = expandedView;
 
@@ -84,7 +98,7 @@ public class NotificationHelper {
     }
 
     private PendingIntent getPendingIntent() {
-        return PendingIntent.getActivity(service, 0, new Intent(service.getApplicationContext(), LibraryMainActivity.class), 0);
+        return PendingIntent.getActivity(mService, 0, new Intent(mService.getApplicationContext(), LibraryMainActivity.class), 0);
     }
 
     public void goToIdleState(final boolean isPlaying) {
@@ -94,12 +108,12 @@ public class NotificationHelper {
         
         if (notificationTemplate != null) {
             notificationTemplate.setImageViewResource(R.id.notification_base_play,
-                    isPlaying ? R.drawable.btn_playback_pause_transparent : R.drawable.btn_playback_play_transparent);
+                    isPlaying ? mPauseDrawable : mPlayDrawable);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && expandedView != null) {
             expandedView.setImageViewResource(R.id.notification_expanded_base_play,
-                    isPlaying ? R.drawable.btn_playback_pause_transparent : R.drawable.btn_playback_play_transparent);
+                    isPlaying ? mPauseDrawable : mPlayDrawable);
         }
         
         notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
@@ -130,7 +144,7 @@ public class NotificationHelper {
         expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
         expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
 
-        expandedView.setImageViewResource(R.id.notification_expanded_base_play, R.drawable.btn_playback_pause_transparent);
+        expandedView.setImageViewResource(R.id.notification_expanded_base_play, mPauseDrawable);
     }
 
     private void initPlaybackActions() {
@@ -139,7 +153,7 @@ public class NotificationHelper {
         notificationTemplate.setOnClickPendingIntent(R.id.notification_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
         notificationTemplate.setOnClickPendingIntent(R.id.notification_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
 
-        notificationTemplate.setImageViewResource(R.id.notification_base_play, R.drawable.btn_playback_pause_transparent);
+        notificationTemplate.setImageViewResource(R.id.notification_base_play, mPauseDrawable);
     }
 
 }

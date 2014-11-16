@@ -62,12 +62,12 @@ public class AppWidget4x1 extends AbstractAppWidget {
             }
 
             if (isPlaying) {
-                view.setImageViewResource(R.id.four_by_one_control_play, R.drawable.btn_playback_pause_transparent);
+                view.setImageViewResource(R.id.four_by_one_control_play, R.drawable.ic_action_playback_pause_dark);
                 if (PlayerApplication.hasICS_MR1()) {
                     view.setContentDescription(R.id.four_by_one_control_play, context.getString(R.string.imageview_content_description_play));
                 }
             } else {
-                view.setImageViewResource(R.id.four_by_one_control_play, R.drawable.btn_playback_play_transparent);
+                view.setImageViewResource(R.id.four_by_one_control_play, R.drawable.ic_action_playback_play_dark);
                 if (PlayerApplication.hasICS_MR1()) {
                     view.setContentDescription(R.id.four_by_one_control_play, context.getString(R.string.imageview_content_description_play));
                 }
