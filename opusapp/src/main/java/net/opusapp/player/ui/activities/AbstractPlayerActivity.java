@@ -24,7 +24,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
@@ -50,7 +49,6 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.IPlayerServiceListener;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
@@ -301,13 +299,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         super.onPause();
 
         PlayerApplication.additionalCallbacks.remove(this);
-        try {
-            if (PlayerApplication.playerService != null) { // Avoid NPE while killing process (in dev only).
-                PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
-            }
-        }
-        catch (final RemoteException exception) {
-            LogUtils.LOGException(TAG, "onServiceConnected", 0, exception);
+        if (PlayerApplication.playerService != null) { // Avoid NPE while killing process (in dev only).
+            PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
         }
     }
 
@@ -328,11 +321,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     @Override
     public void drop(int from, int to) {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.queueMove(from, to);
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "drop()", 0, remoteException);
-            }
+            PlayerApplication.playerService.queueMove(from, to);
         }
 
         getSupportLoaderManager().restartLoader(0, null, this);
@@ -408,17 +397,12 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     public void onServiceConnected(ComponentName name, IBinder service) {
         getSupportLoaderManager().restartLoader(0, null, this);
 
-        try {
-            PlayerApplication.playerService.registerPlayerCallback(playerServiceListener);
+        PlayerApplication.playerService.registerPlayerCallback(playerServiceListener);
 
-            playerServiceListener.playButtonUpdateRunnable.run();
-            playerServiceListener.repeatButtonUpdateRunnable.run();
-            playerServiceListener.shuffleButtonUpdateRunnable.run();
-            playlistButtonUpdateRunnable.run();
-        }
-        catch (final RemoteException exception) {
-            LogUtils.LOGException(TAG, "onServiceConnected", 0, exception);
-        }
+        playerServiceListener.playButtonUpdateRunnable.run();
+        playerServiceListener.repeatButtonUpdateRunnable.run();
+        playerServiceListener.shuffleButtonUpdateRunnable.run();
+        playlistButtonUpdateRunnable.run();
     }
 
     @Override
@@ -468,46 +452,46 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     // Player service listener
     private PlayerServiceListenerImpl playerServiceListener = new PlayerServiceListenerImpl();
 
-    public final class PlayerServiceListenerImpl extends IPlayerServiceListener.Stub {
+    public final class PlayerServiceListenerImpl implements PlayerService.IPlayerServiceListener {
 
         @Override
-        public void onShuffleModeChanged() throws RemoteException {
+        public void onShuffleModeChanged() {
             runOnUiThread(shuffleButtonUpdateRunnable);
         }
 
         @Override
-        public void onRepeatModeChanged() throws RemoteException {
+        public void onRepeatModeChanged() {
             runOnUiThread(repeatButtonUpdateRunnable);
         }
 
         @Override
-        public void onSeek(final long position) throws RemoteException {
+        public void onSeek(final long position) {
             seekbarRunnable.position = (int) position;
             runOnUiThread(seekbarRunnable);
         }
 
         @Override
-        public void onQueueChanged() throws RemoteException {
+        public void onQueueChanged() {
             getSupportLoaderManager().restartLoader(0, null, AbstractPlayerActivity.this);
         }
 
         @Override
-        public void onQueuePositionChanged() throws RemoteException {
+        public void onQueuePositionChanged() {
             runOnUiThread(songUpdateRunnable);
         }
 
         @Override
-        public void onPlay() throws RemoteException {
+        public void onPlay() {
             runOnUiThread(playButtonUpdateRunnable);
         }
 
         @Override
-        public void onPause() throws RemoteException {
+        public void onPause() {
             runOnUiThread(playButtonUpdateRunnable);
         }
 
         @Override
-        public void onStop() throws RemoteException {
+        public void onStop() {
             runOnUiThread(playButtonUpdateRunnable);
         }
 
@@ -516,32 +500,27 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             @Override
             public void run() {
                 if (PlayerApplication.playerService != null) {
-                    try {
-                        if (PlayerApplication.playerService.isPlaying()) {
-                            playButton.setImageResource(R.drawable.ic_action_playback_pause);
-                            timeTextView.clearAnimation();
-                        }
-                        else {
-                            playButton.setImageResource(R.drawable.ic_action_playback_play);
-                            Animation animation = new AlphaAnimation(0.0f, 1.0f);
-                            animation.setDuration(100);
-                            animation.setStartOffset(400);
-                            animation.setRepeatMode(Animation.REVERSE);
-                            animation.setRepeatCount(Animation.INFINITE);
-                            timeTextView.startAnimation(animation);
-                        }
-
-                        long currentPosition = PlayerApplication.playerService.getPosition();
-
-                        if (currentPosition == 0) {
-                            onSeek(0);
-                        }
-
-                        progressBar.setMax((int) PlayerApplication.playerService.getDuration());
+                    if (PlayerApplication.playerService.isPlaying()) {
+                        playButton.setImageResource(R.drawable.ic_action_playback_pause);
+                        timeTextView.clearAnimation();
                     }
-                    catch (final RemoteException remoteException) {
-                        LogUtils.LOGException(TAG, "doPlayButtonUpdate()", 0, remoteException);
+                    else {
+                        playButton.setImageResource(R.drawable.ic_action_playback_play);
+                        Animation animation = new AlphaAnimation(0.0f, 1.0f);
+                        animation.setDuration(100);
+                        animation.setStartOffset(400);
+                        animation.setRepeatMode(Animation.REVERSE);
+                        animation.setRepeatCount(Animation.INFINITE);
+                        timeTextView.startAnimation(animation);
                     }
+
+                    long currentPosition = PlayerApplication.playerService.getPosition();
+
+                    if (currentPosition == 0) {
+                        onSeek(0);
+                    }
+
+                    progressBar.setMax((int) PlayerApplication.playerService.getDuration());
                 }
                 else {
                     LogUtils.LOGService(TAG, "doPlayButtonUpdate()", 0);
@@ -554,17 +533,13 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             @Override
             public void run() {
                 if (PlayerApplication.playerService != null) {
-                    try {
-                        switch (PlayerApplication.playerService.getShuffleMode()) {
-                            case PlayerService.SHUFFLE_AUTO:
-                                shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle);
-                                break;
-                            case PlayerService.SHUFFLE_NONE:
-                                shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle_off);
-                                break;
-                        }
-                    } catch (final RemoteException remoteException) {
-                        LogUtils.LOGException(TAG, "doShuffleButtonUpdate", 0, remoteException);
+                    switch (PlayerApplication.playerService.getShuffleMode()) {
+                        case PlayerService.SHUFFLE_AUTO:
+                            shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle);
+                            break;
+                        case PlayerService.SHUFFLE_NONE:
+                            shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle_off);
+                            break;
                     }
                 }
                 else {
@@ -578,20 +553,16 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             @Override
             public void run() {
                 if (PlayerApplication.playerService != null) {
-                    try {
-                        switch (PlayerApplication.playerService.getRepeatMode()) {
-                            case PlayerService.REPEAT_ALL:
-                                repeatButton.setImageResource(R.drawable.ic_action_playback_repeat);
-                                break;
-                            case PlayerService.REPEAT_CURRENT:
-                                repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_1);
-                                break;
-                            case PlayerService.REPEAT_NONE:
-                                repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_off);
-                                break;
-                        }
-                    } catch (final RemoteException remoteException) {
-                        LogUtils.LOGException(TAG, "doRepeatButtonUpdate", 0, remoteException);
+                    switch (PlayerApplication.playerService.getRepeatMode()) {
+                        case PlayerService.REPEAT_ALL:
+                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat);
+                            break;
+                        case PlayerService.REPEAT_CURRENT:
+                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_1);
+                            break;
+                        case PlayerService.REPEAT_NONE:
+                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_off);
+                            break;
                     }
                 }
                 else {
@@ -609,12 +580,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
                 if (playlistCursor != null && queuePosition < playlistCursor.getCount()) {
                     if (PlayerApplication.playerService != null) {
-                        try {
-                            position = PlayerApplication.playerService.getPosition();
-                        }
-                        catch (final RemoteException remoteException) {
-                            LogUtils.LOGException(TAG, "songUpdateRunnable", 0, remoteException);
-                        }
+                        position = PlayerApplication.playerService.getPosition();
                     }
 
                     doSetPlaylistPosition(queuePosition);
@@ -690,18 +656,13 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            try {
-                if (PlayerApplication.playerService.isPlaying()) {
-                    PlayerApplication.playerService.pause(true);
-                    PlayerApplication.playerService.setPosition(seekBar.getProgress());
-                    PlayerApplication.playerService.play();
-                }
-                else {
-                    PlayerApplication.playerService.setPosition(seekBar.getProgress());
-                }
+            if (PlayerApplication.playerService.isPlaying()) {
+                PlayerApplication.playerService.pause(true);
+                PlayerApplication.playerService.setPosition(seekBar.getProgress());
+                PlayerApplication.playerService.play();
             }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "progressBarOnChangeListener.onStopTrackingTouch()", 0, remoteException);
+            else {
+                PlayerApplication.playerService.setPosition(seekBar.getProgress());
             }
             updateSeekBar = true;
         }
@@ -887,14 +848,10 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean doPlayAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.stop();
-                PlayerApplication.playerService.queueSetPosition(playlistCursor.getPosition());
-                PlayerApplication.playerService.play();
-                return true;
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "onContextItemSelected()", 0, remoteException);
-            }
+            PlayerApplication.playerService.stop();
+            PlayerApplication.playerService.queueSetPosition(playlistCursor.getPosition());
+            PlayerApplication.playerService.play();
+            return true;
         }
         else {
             LogUtils.LOGService(TAG, "onContextItemSelected()", 0);
@@ -905,16 +862,12 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean doPlayNextAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                final int queueSize = PlayerApplication.playerService.queueGetSize();
-                final int queuePosition = PlayerApplication.playerService.queueGetPosition();
+            final int queueSize = PlayerApplication.playerService.queueGetSize();
+            final int queuePosition = PlayerApplication.playerService.queueGetPosition();
 
-                PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
-                PlayerApplication.playerService.queueMove(queueSize, queuePosition + 1);
-                return true;
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doPlayNextAction", 0, remoteException);
-            }
+            PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
+            PlayerApplication.playerService.queueMove(queueSize, queuePosition + 1);
+            return true;
         }
 
         return false;
@@ -922,12 +875,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean doAddToQueueAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
-                return true;
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doAddToQueueAction", 0, remoteException);
-            }
+            PlayerApplication.playerService.queueAdd(playlistCursor.getString(COLUMN_SONG_ID));
+            return true;
         }
         else {
             LogUtils.LOGService(TAG, "doAddToQueueAction", 0);
@@ -941,14 +890,10 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean doClearAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.stop();
-                PlayerApplication.playerService.queueClear();
-                PlayerApplication.playerService.queueReload();
-                return true;
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doClearAction", 0, remoteException);
-            }
+            PlayerApplication.playerService.stop();
+            PlayerApplication.playerService.queueClear();
+            PlayerApplication.playerService.queueReload();
+            return true;
         }
         else {
             LogUtils.LOGService(TAG, "doClearAction", 0);
@@ -958,12 +903,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean doDeleteAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
-                return true;
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doDeleteAction", 0, remoteException);
-            }
+            PlayerApplication.playerService.queueRemove(playlistCursor.getInt(COLUMN_ENTRY_POSITION));
+            return true;
         }
         else {
             LogUtils.LOGService(TAG, "doDeleteAction", 0);

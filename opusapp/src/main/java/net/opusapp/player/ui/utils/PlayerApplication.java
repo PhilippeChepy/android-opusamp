@@ -27,7 +27,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.Loader;
@@ -41,7 +40,6 @@ import com.astuetz.PagerSlidingTabStrip;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.IPlayerService;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
@@ -52,7 +50,6 @@ import net.opusapp.player.licensing.BuildSpecific;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailUncachedImageLoader;
-import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -70,7 +67,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static PlayerApplication instance;
 
     // Global service reference.
-    public static IPlayerService playerService = null;
+    public static PlayerService.PlayerBinder playerBinder = null;
+
+    public static PlayerService playerService = null;
 
     public static ArrayList<ServiceConnection> additionalCallbacks = new ArrayList<ServiceConnection>();
 
@@ -151,7 +150,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
             connecting = false;
         }
         else if (additionalConnectionCallback != null) {
-            additionalConnectionCallback.onServiceConnected(null, (IBinder)playerService);
+            additionalConnectionCallback.onServiceConnected(null, playerBinder);
         }
     }
 
@@ -161,7 +160,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     @Override
     public synchronized void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        playerService = IPlayerService.Stub.asInterface(iBinder);
+        playerBinder = (PlayerService.PlayerBinder)iBinder;
+        playerService = playerBinder.getService();
 
         for (ServiceConnection callback : additionalCallbacks) {
             callback.onServiceConnected(componentName, iBinder);
@@ -265,12 +265,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         }
 
         if (playerService != null) {
-            try {
-                playerService.notifyProviderChanged();
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "allocateMediaManagers", 0, remoteException);
-            }
+            playerService.notifyProviderChanged();
         }
     }
 

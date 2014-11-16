@@ -26,7 +26,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
@@ -299,35 +298,30 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         if (database != null) {
             if (PlayerApplication.playerService != null) {
-                try {
-                    database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
-                    if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                        if (currentFolder.getParentFile() != null) {
-                            position--; // bypass position[0] (parent file).
-                        }
-
-                        if (!doPlaylistAddContent(null, 0, fileList, true)) {
-                            return false;
-                        }
+                database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
+                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                    if (currentFolder.getParentFile() != null) {
+                        position--; // bypass position[0] (parent file).
                     }
-                    else if (!doPlaylistAddContent(null, 0, contentType, sourceId, sortOrder, filter)) {
+
+                    if (!doPlaylistAddContent(null, 0, fileList, true)) {
                         return false;
                     }
+                }
+                else if (!doPlaylistAddContent(null, 0, contentType, sourceId, sortOrder, filter)) {
+                    return false;
+                }
 
-                    PlayerApplication.playerService.queueReload();
+                PlayerApplication.playerService.queueReload();
 
-                    if (PlayerApplication.playerService.queueGetSize() > position) {
-                        PlayerApplication.playerService.queueSetPosition(position);
+                if (PlayerApplication.playerService.queueGetSize() > position) {
+                    PlayerApplication.playerService.queueSetPosition(position);
 
-                        if (!PlayerApplication.playerService.isPlaying()) {
-                            PlayerApplication.playerService.play();
-                        }
+                    if (!PlayerApplication.playerService.isPlaying()) {
+                        PlayerApplication.playerService.play();
                     }
-                    return true;
                 }
-                catch (final RemoteException remoteException) {
-                    LogUtils.LOGException(TAG, "play", 0, remoteException);
-                }
+                return true;
             }
         }
 
@@ -340,33 +334,28 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         if (database != null) {
             if (PlayerApplication.playerService != null) {
-                try {
-                    int position = PlayerApplication.playerService.queueGetPosition();
+                int position = PlayerApplication.playerService.queueGetPosition();
 
-                    if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                        try {
-                            final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                            final List<File> filePlaylist = new ArrayList<File>();
-                            filePlaylist.add(selection);
+                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                    try {
+                        final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                        final List<File> filePlaylist = new ArrayList<File>();
+                        filePlaylist.add(selection);
 
-                            if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
-                                return false;
-                            }
-                        }
-                        catch (final IOException exception) {
-                            LogUtils.LOGException(TAG, "playNext", 0, exception);
+                        if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
+                            return false;
                         }
                     }
-                    if (!doPlaylistAddContent(null, position + 1, contentType, sourceId, sortOrder, filter)) {
-                        return false;
+                    catch (final IOException exception) {
+                        LogUtils.LOGException(TAG, "playNext", 0, exception);
                     }
+                }
+                if (!doPlaylistAddContent(null, position + 1, contentType, sourceId, sortOrder, filter)) {
+                    return false;
+                }
 
-                    PlayerApplication.playerService.queueReload();
-                    return true;
-                }
-                catch (final RemoteException remoteException) {
-                    LogUtils.LOGException(TAG, "play", 0, remoteException);
-                }
+                PlayerApplication.playerService.queueReload();
+                return true;
             }
         }
 
@@ -469,51 +458,46 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         if (database != null) {
             if (PlayerApplication.playerService != null) {
-                try {
-                    int position = 0;
+                int position = 0;
 
-                    Cursor cursor = database.query(
-                            Entities.PlaylistEntry.TABLE_NAME,
-                            new String[] { "COUNT(*) AS CNT" },
-                            Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
-                            new String[] {playlistId},
-                            null,
-                            null,
-                            null);
+                Cursor cursor = database.query(
+                        Entities.PlaylistEntry.TABLE_NAME,
+                        new String[] { "COUNT(*) AS CNT" },
+                        Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
+                        new String[] {playlistId},
+                        null,
+                        null,
+                        null);
 
-                    if (cursor != null && cursor.getCount() == 1) {
-                        cursor.moveToFirst();
-                        position = cursor.getInt(0);
-                    }
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                    LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
+                if (cursor != null && cursor.getCount() == 1) {
+                    cursor.moveToFirst();
+                    position = cursor.getInt(0);
+                }
+                if (cursor != null) {
+                    cursor.close();
+                }
+                LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
 
-                    if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                        try {
-                            final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                            final List<File> filePlaylist = new ArrayList<File>();
-                            filePlaylist.add(selection);
+                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                    try {
+                        final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                        final List<File> filePlaylist = new ArrayList<File>();
+                        filePlaylist.add(selection);
 
-                            if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
-                                return false;
-                            }
-                        }
-                        catch (final IOException exception) {
-                            LogUtils.LOGException(TAG, "playlistAdd", 0, exception);
+                        if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
+                            return false;
                         }
                     }
-                    else if (!doPlaylistAddContent(playlistId, position, contentType, sourceId, sortOrder, filter)) {
-                        return false;
+                    catch (final IOException exception) {
+                        LogUtils.LOGException(TAG, "playlistAdd", 0, exception);
                     }
+                }
+                else if (!doPlaylistAddContent(playlistId, position, contentType, sourceId, sortOrder, filter)) {
+                    return false;
+                }
 
-                    PlayerApplication.playerService.queueReload();
-                    return true;
-                }
-                catch (final RemoteException remoteException) {
-                    LogUtils.LOGException(TAG, "play", 0, remoteException);
-                }
+                PlayerApplication.playerService.queueReload();
+                return true;
             }
         }
 

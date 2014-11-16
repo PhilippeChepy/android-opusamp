@@ -18,7 +18,6 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.RemoteException;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
@@ -73,11 +72,7 @@ public class MusicConnector {
      */
     public static boolean isPlaying() {
         if (PlayerApplication.playerService != null) {
-            try {
-                return PlayerApplication.playerService.isPlaying();
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "isPlaying", 0, remoteException);
-            }
+            return PlayerApplication.playerService.isPlaying();
         }
         else {
             LogUtils.LOGService(TAG, "isPlaying", 0);
@@ -88,13 +83,8 @@ public class MusicConnector {
 
     public static boolean doStopAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                PlayerApplication.playerService.stop();
-                return true;
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doStopAction", 0, remoteException);
-            }
+            PlayerApplication.playerService.stop();
+            return true;
         }
         else {
             LogUtils.LOGService(TAG, "doStopAction", 0);
@@ -111,19 +101,14 @@ public class MusicConnector {
         LogUtils.LOGD(TAG, "play with notif=" + keepNotification);
 
         if (PlayerApplication.playerService != null) {
-            try {
-                if (PlayerApplication.playerService.queueGetSize() != 0) {
-                    if (isPlaying) {
-                        PlayerApplication.playerService.pause(keepNotification);
-                    }
-                    else {
-                        PlayerApplication.playerService.play();
-                    }
-                    return true;
+            if (PlayerApplication.playerService.queueGetSize() != 0) {
+                if (isPlaying) {
+                    PlayerApplication.playerService.pause(keepNotification);
                 }
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doPlayAction", 0, remoteException);
+                else {
+                    PlayerApplication.playerService.play();
+                }
+                return true;
             }
         }
         else {
@@ -219,23 +204,18 @@ public class MusicConnector {
 
     public static void doRepeatAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                int repeatMode = PlayerApplication.playerService.getRepeatMode();
+            int repeatMode = PlayerApplication.playerService.getRepeatMode();
 
-                switch (repeatMode) {
-                    case PlayerService.REPEAT_NONE:
-                        PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_CURRENT);
-                        break;
-                    case PlayerService.REPEAT_CURRENT:
-                        PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_ALL);
-                        break;
-                    case PlayerService.REPEAT_ALL:
-                        PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_NONE);
-                        break;
-                }
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doRepeatAction", 0, remoteException);
+            switch (repeatMode) {
+                case PlayerService.REPEAT_NONE:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_CURRENT);
+                    break;
+                case PlayerService.REPEAT_CURRENT:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_ALL);
+                    break;
+                case PlayerService.REPEAT_ALL:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_NONE);
+                    break;
             }
         }
         else {
@@ -245,20 +225,15 @@ public class MusicConnector {
 
     public static void doShuffleAction() {
         if (PlayerApplication.playerService != null) {
-            try {
-                int shuffleMode = PlayerApplication.playerService.getShuffleMode();
+            int shuffleMode = PlayerApplication.playerService.getShuffleMode();
 
-                switch (shuffleMode) {
-                    case PlayerService.SHUFFLE_AUTO:
-                        PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_NONE);
-                        break;
-                    case PlayerService.SHUFFLE_NONE:
-                        PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_AUTO);
-                        break;
-                }
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doShuffleAction", 0, remoteException);
+            switch (shuffleMode) {
+                case PlayerService.SHUFFLE_AUTO:
+                    PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_NONE);
+                    break;
+                case PlayerService.SHUFFLE_NONE:
+                    PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_AUTO);
+                    break;
             }
         }
         else {
@@ -268,12 +243,7 @@ public class MusicConnector {
 
     public static int getCurrentPlaylistPosition() {
         if (PlayerApplication.playerService != null) {
-            try {
-                return PlayerApplication.playerService.queueGetPosition();
-            }
-            catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "getCurrentPlaylistPosition", 0, remoteException);
-            }
+            return PlayerApplication.playerService.queueGetPosition();
         }
         else {
             LogUtils.LOGService(TAG, "getCurrentPlaylistPosition", 0);
@@ -429,11 +399,7 @@ public class MusicConnector {
             PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
             PlayerApplication.saveLibraryIndexes();
 
-            try {
-                PlayerApplication.playerService.queueReload();
-            } catch (final RemoteException remoteException) {
-                LogUtils.LOGException(TAG, "doReloadServiceState", 0, remoteException);
-            }
+            PlayerApplication.playerService.queueReload();
         }
     }
 

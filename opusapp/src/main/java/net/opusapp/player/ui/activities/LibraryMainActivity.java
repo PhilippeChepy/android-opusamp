@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.internal.view.SupportMenuItem;
 import android.support.v4.view.MenuItemCompat;
@@ -248,11 +247,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                         PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
                         PlayerApplication.saveLibraryIndexes();
 
-                        try {
-                            PlayerApplication.playerService.queueReload();
-                        } catch (final RemoteException remoteException) {
-                            LogUtils.LOGException(TAG, "doReloadServiceState", 0, remoteException);
-                        }
+                        PlayerApplication.playerService.queueReload();
                     }
 
                     final Uri dataUri = intent.getData();
