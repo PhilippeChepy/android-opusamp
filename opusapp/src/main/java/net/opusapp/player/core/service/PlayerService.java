@@ -46,6 +46,7 @@ import net.opusapp.player.utils.LogUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
@@ -54,47 +55,41 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class PlayerService extends Service implements AbstractMediaManager.Player.OnProviderCompletionListener {
 
-	private final static String TAG = "PlayerService";
+	private final static String TAG = PlayerService.class.getSimpleName();
 
 
 
-    /*
-        Command
-     */
-    public static final String COMMAND_KEY = "command";
+    // Command
+    public static final String COMMAND_KEY = "net.opusapp.player.core.service.COMMAND_KEY";
 
-    public static final String ACTION_APPWIDGET_COMMAND = "net.opusapp.player.service.APPWIDGET";
+    public static final String ACTION_APPWIDGET_COMMAND = "net.opusapp.player.core.service.ACTION_APPWIDGET_COMMAND";
 
-    public static final String ACTION_NOTIFICATION_COMMAND = "net.opusapp.player.service.NOTIFICATION";
+    public static final String ACTION_NOTIFICATION_COMMAND = "net.opusapp.player.core.service.ACTION_NOTIFICATION_COMMAND";
 
-    public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.service.CLIENT";
+    public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.core.service.ACTION_CLIENT_COMMAND";
 
-    public static final String ACTION_TOGGLEPAUSE = "net.opusapp.player.TOGGLE_PAUSE";
+    public static final String ACTION_TOGGLEPAUSE = "net.opusapp.player.core.service.ACTION_TOGGLEPAUSE";
 
-    public static final String ACTION_PLAY = "net.opusapp.player.PLAY";
+    public static final String ACTION_PLAY = "net.opusapp.player.core.service.ACTION_PLAY";
 
-    public static final String ACTION_PAUSE = "net.opusapp.player.PAUSE";
+    public static final String ACTION_PAUSE = "net.opusapp.player.core.service.ACTION_PAUSE";
 
-    public static final String ACTION_NEXT = "net.opusapp.player.NEXT";
+    public static final String ACTION_NEXT = "net.opusapp.player.core.service.ACTION_NEXT";
 
-    public static final String ACTION_PREVIOUS = "net.opusapp.player.PREVIOUS";
+    public static final String ACTION_PREVIOUS = "net.opusapp.player.core.service.ACTION_PREVIOUS";
 
-    public static final String ACTION_STOP = "net.opusapp.player.STOP";
+    public static final String ACTION_STOP = "net.opusapp.player.core.service.ACTION_STOP";
 
 
 
-    /*
-        Shuffle modes
-     */
+    // Shuffle modes
     public static final int SHUFFLE_NONE = 0;
 
     public static final int SHUFFLE_AUTO = 1;
 
 
 
-    /*
-        Repeat modes
-     */
+    // Repeat modes
     public static final int REPEAT_NONE = 0;
 
     public static final int REPEAT_CURRENT = 1;
@@ -106,45 +101,47 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     /*
 
      */
-    private WakeLock wakelock;
+    private WakeLock mPlaybackWakeLock;
 
-    private ExecutorService uiUpdateExecutor;
+    private ExecutorService mUiUpdateExecutor;
 
-    private ExecutorService mediaManagementExecutor;
+    private ExecutorService mMediaManagementExecutor;
 
-    private NotificationHelper notificationHelper;
+    private NotificationHelper mNotificationHelper;
 
-    private RemoteControlClientHelper remoteControlClient;
+    private RemoteControlClientHelper mRemoteControlClient;
 
-    private AudioManager audioManager;
+    private AudioManager mAudioManager;
 
     private final PlayerServiceImpl playerServiceImpl = new PlayerServiceImpl();
 
-    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
+    private AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener;
 
-    private BroadcastReceiver broadcastReceiver;
+    private BroadcastReceiver mCommandbroadcastReceiver;
+
+    private BroadcastReceiver mHeadsetBroadcastReceiver;
 
     public boolean hasNotification;
 
-    private final AppWidget4x1 widgetMedium = AppWidget4x1.getInstance();
+    private final AppWidget4x1 mWidgetMedium = AppWidget4x1.getInstance();
 
-    private final AppWidget4x2 widgetLarge = AppWidget4x2.getInstance();
-
-
-
-    int repeatMode = REPEAT_NONE;
-
-    int shuffleMode = SHUFFLE_NONE;
+    private final AppWidget4x2 mWidgetLarge = AppWidget4x2.getInstance();
 
 
 
-    private AbstractMediaManager.Media[] playlist = null;
+    int mRepeatMode = REPEAT_NONE;
 
-    private ArrayList<Integer> playlistOrder;
+    int mShuffleMode = SHUFFLE_NONE;
 
-    private int playlistOrderIndex;
 
-    private int playlistIndex;
+
+    private AbstractMediaManager.Media[] mPlaylist = null;
+
+    private List<Integer> mShuffledPlaylistIndexList;
+
+    private int mShuffledPlaylistIndex;
+
+    private int mPlaylistIndex;
 
     private Lock notifyMutex = new ReentrantLock();
 
@@ -164,7 +161,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             public void run() {
                 LogUtils.LOGD(TAG, "completed track");
                 try {
-                    switch (repeatMode) {
+                    switch (mRepeatMode) {
                         case REPEAT_ALL:
                             playerServiceImpl.next();
                             playerServiceImpl.play();
@@ -202,29 +199,29 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void onCreate() {
         super.onCreate();
 
-        uiUpdateExecutor = Executors.newFixedThreadPool(1);
-        mediaManagementExecutor = Executors.newFixedThreadPool(1);
+        mUiUpdateExecutor = Executors.newFixedThreadPool(1);
+        mMediaManagementExecutor = Executors.newFixedThreadPool(1);
 
         PowerManager powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+        mPlaybackWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
-        notificationHelper = new NotificationHelper(this);
-        remoteControlClient = new RemoteControlClientHelper();
+        mNotificationHelper = new NotificationHelper(this);
+        mRemoteControlClient = new RemoteControlClientHelper();
 
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         setAudioListener();
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         hasNotification = false;
-        repeatMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, REPEAT_NONE);
-        shuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
+        mRepeatMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, REPEAT_NONE);
+        mShuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
         int position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
 
         reloadPlaylist();
 
-        if (playlist != null && playlist.length > 0) {
+        if (mPlaylist != null && mPlaylist.length > 0) {
             try {
                 playerServiceImpl.queueSetPosition(position);
             } catch (final RemoteException remoteException) {
@@ -242,7 +239,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         doUpdateRemoteClient();
         doUpdateNotification();
 
-        broadcastReceiver = new BroadcastReceiver() {
+        mCommandbroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 doManageCommandIntent(intent);
@@ -252,11 +249,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final IntentFilter intentFilter = new IntentFilter(ACTION_NOTIFICATION_COMMAND);
         intentFilter.addAction(ACTION_CLIENT_COMMAND);
 
-        registerReceiver(broadcastReceiver, intentFilter);
+        registerReceiver(mCommandbroadcastReceiver, intentFilter);
 
 
 
-        final BroadcastReceiver headsetBroadcastReceiver = new BroadcastReceiver() {
+        mHeadsetBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -274,7 +271,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         };
 
         final IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-        registerReceiver(headsetBroadcastReceiver, filter);
+        registerReceiver(mHeadsetBroadcastReceiver, filter);
     }
 
     @Override
@@ -290,17 +287,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     @Override
     public void onDestroy() {
-        unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(mCommandbroadcastReceiver);
+        unregisterReceiver(mHeadsetBroadcastReceiver);
 
         stopForeground(true);
         hasNotification = false;
 
-        if (uiUpdateExecutor != null) {
-            uiUpdateExecutor.shutdown();
+        if (mUiUpdateExecutor != null) {
+            mUiUpdateExecutor.shutdown();
         }
 
-        if (mediaManagementExecutor != null) {
-            mediaManagementExecutor.shutdown();
+        if (mMediaManagementExecutor != null) {
+            mMediaManagementExecutor.shutdown();
         }
 
         super.onDestroy();
@@ -327,14 +325,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
             // should never happen..
-            if (!playlist[playlistIndex].isLoaded()) {
-                playlist[playlistIndex].load();
+            if (!mPlaylist[mPlaylistIndex].isLoaded()) {
+                mPlaylist[mPlaylistIndex].load();
             }
-            mediaManagementExecutor.submit(loadingManagementRunnable);
+            mMediaManagementExecutor.submit(mediaPreloaderRunnable);
 
             if (!player.playerIsPlaying()) {
                 player.playerPlay();
-                wakelock.acquire();
+                mPlaybackWakeLock.acquire();
             }
 
             notifyPlay();
@@ -347,7 +345,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             if (player.playerIsPlaying()) {
                 player.playerPause(true);
-                wakelock.release();
+                mPlaybackWakeLock.release();
             }
 
             notifyPause(keepNotification);
@@ -361,8 +359,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             player.playerStop();
 
             notifyStop();
-            if (wakelock.isHeld()) {
-                wakelock.release();
+            if (mPlaybackWakeLock.isHeld()) {
+                mPlaybackWakeLock.release();
             }
         }
 
@@ -370,18 +368,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         public boolean next() throws RemoteException {
             boolean looped = false;
 
-            seekPreviousTrackRunnable.index = playlistIndex;
-            mediaManagementExecutor.submit(seekPreviousTrackRunnable);
+            seekPreviousTrackRunnable.index = mPlaylistIndex;
+            mMediaManagementExecutor.submit(seekPreviousTrackRunnable);
 
-            if (playlist != null && playlist.length > 0) {
+            if (mPlaylist != null && mPlaylist.length > 0) {
                 looped = doMoveToNextPosition();
                 notifySetQueuePosition();
             }
 
-            if (playlist != null) {
+            if (mPlaylist != null) {
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
-                player.playerSetContent(playlist[playlistIndex]);
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
 
             return looped;
@@ -396,7 +394,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-                player.playerSeek(playlist[index], 0);
+                player.playerSeek(mPlaylist[index], 0);
             }
         }
 
@@ -408,16 +406,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         public boolean prev() throws RemoteException {
             boolean looped = false;
 
-            if (playlist != null && playlist.length > 0) {
+            if (mPlaylist != null && mPlaylist.length > 0) {
                 looped = doMoveToPrevPosition();
                 notifySetQueuePosition();
             }
 
-            if (playlist != null) {
+            if (mPlaylist != null) {
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-                player.playerSetContent(playlist[playlistIndex]);
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
 
             return looped;
@@ -452,19 +450,19 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
             final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-            player.playerSeek(playlist[playlistIndex], position);
+            player.playerSeek(mPlaylist[mPlaylistIndex], position);
             notifyTimestampUpdate(position);
         }
 
         @Override
         public int getShuffleMode() throws RemoteException {
-            return shuffleMode;
+            return mShuffleMode;
         }
 
         @Override
         public void setShuffleMode(int mode) throws RemoteException {
-            shuffleMode = mode;
-            if (shuffleMode == SHUFFLE_AUTO) {
+            mShuffleMode = mode;
+            if (mShuffleMode == SHUFFLE_AUTO) {
                 if (getRepeatMode() == REPEAT_CURRENT) {
                     setRepeatMode(REPEAT_ALL);
                 }
@@ -475,13 +473,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public int getRepeatMode() throws RemoteException {
-            return repeatMode;
+            return mRepeatMode;
         }
 
         @Override
         public void setRepeatMode(int mode) throws RemoteException {
-            repeatMode = mode;
-            if (repeatMode == REPEAT_CURRENT) {
+            mRepeatMode = mode;
+            if (mRepeatMode == REPEAT_CURRENT) {
                 if (getShuffleMode() != SHUFFLE_NONE) {
                     setShuffleMode(SHUFFLE_NONE);
                 }
@@ -498,16 +496,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             reloadPlaylist();
 
-            if (playlistIndex >= playlist.length) {
-                playlistIndex = playlist.length - 1;
+            if (mPlaylistIndex >= mPlaylist.length) {
+                mPlaylistIndex = mPlaylist.length - 1;
             }
 
-            if (playlist.length == 1) {
+            if (mPlaylist.length == 1) {
                 play();
             }
 
             notifyQueueChanged();
-            mediaManagementExecutor.submit(runnableRefreshSongData);
+            mMediaManagementExecutor.submit(runnableRefreshSongData);
         }
 
         @Override
@@ -516,14 +514,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 return;
             }
 
-            if (indexFrom < playlistIndex && indexTo >= playlistIndex) {
-                playlistIndex--;
+            if (indexFrom < mPlaylistIndex && indexTo >= mPlaylistIndex) {
+                mPlaylistIndex--;
             }
-            else if (indexFrom > playlistIndex && indexTo <= playlistIndex) {
-                playlistIndex++;
+            else if (indexFrom > mPlaylistIndex && indexTo <= mPlaylistIndex) {
+                mPlaylistIndex++;
             }
-            else if (indexFrom == playlistIndex) {
-                playlistIndex = indexTo;
+            else if (indexFrom == mPlaylistIndex) {
+                mPlaylistIndex = indexTo;
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
@@ -532,15 +530,15 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             reloadPlaylist();
 
-            if (playlistIndex >= playlist.length) {
-                playlistIndex = playlist.length - 1;
+            if (mPlaylistIndex >= mPlaylist.length) {
+                mPlaylistIndex = mPlaylist.length - 1;
             }
         }
 
         @Override
         public void queueRemove(int entry) throws RemoteException {
-            if (entry < playlistIndex) {
-                playlistIndex--;
+            if (entry < mPlaylistIndex) {
+                mPlaylistIndex--;
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
@@ -549,7 +547,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             boolean wasPlaying = isPlaying();
 
-            if (playlistIndex == entry) {
+            if (mPlaylistIndex == entry) {
                 wasPlaying = false;
                 stop();
             }
@@ -559,9 +557,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             reloadPlaylist();
 
-            if (playlist.length != 0) {
-                if (playlistIndex <= playlist.length) {
-                    playlistIndex = playlist.length - 1;
+            if (mPlaylist.length != 0) {
+                if (mPlaylistIndex <= mPlaylist.length) {
+                    mPlaylistIndex = mPlaylist.length - 1;
                 }
 
                 if (wasPlaying) {
@@ -583,7 +581,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
             provider.playlistClear(null);
-            playlistIndex = 0;
+            mPlaylistIndex = 0;
             reloadPlaylist();
 
             notifyQueueChanged();
@@ -598,24 +596,24 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             String uri = null;
-            if (playlist.length > playlistIndex) {
-                uri = playlist[playlistIndex].getUri();
+            if (mPlaylist.length > mPlaylistIndex) {
+                uri = mPlaylist[mPlaylistIndex].getUri();
             }
 
             reloadPlaylist();
 
-            if (playlistIndex >= playlist.length) {
-                playlistIndex = 0;
+            if (mPlaylistIndex >= mPlaylist.length) {
+                mPlaylistIndex = 0;
             }
 
-            if (playlist != null && playlistIndex < playlist.length) {
+            if (mPlaylist != null && mPlaylistIndex < mPlaylist.length) {
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
-                player.playerSetContent(playlist[playlistIndex]);
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
 
-            if (playlist.length > playlistIndex) {
-                if (playlist[playlistIndex].getUri().equals(uri)) {
+            if (mPlaylist.length > mPlaylistIndex) {
+                if (mPlaylist[mPlaylistIndex].getUri().equals(uri)) {
                     if (wasPlaying) {
                         play();
                     }
@@ -623,56 +621,56 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             notifyQueueChanged();
-            mediaManagementExecutor.submit(runnableRefreshSongData);
+            mMediaManagementExecutor.submit(runnableRefreshSongData);
         }
 
 
         @Override
         public void queueSetPosition(int position) throws RemoteException {
-            if (playlist != null && playlist.length > 0) {
+            if (mPlaylist != null && mPlaylist.length > 0) {
                 LogUtils.LOGD(TAG, "moving to position " + position);
 
-                if (shuffleMode == SHUFFLE_NONE) {
-                    if (playlistIndex != position) {
-                        playlistIndex = position;
-                        if (playlistIndex >= playlist.length) {
-                            playlistIndex = 0;
+                if (mShuffleMode == SHUFFLE_NONE) {
+                    if (mPlaylistIndex != position) {
+                        mPlaylistIndex = position;
+                        if (mPlaylistIndex >= mPlaylist.length) {
+                            mPlaylistIndex = 0;
                         }
                     }
-                } else if (shuffleMode == SHUFFLE_AUTO) {
-                    int currentTrackIndex = playlistOrder.get(playlistOrderIndex);
+                } else if (mShuffleMode == SHUFFLE_AUTO) {
+                    int currentTrackIndex = mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
                     if (currentTrackIndex != position) {
-                        int indexOfPosition = playlistOrder.indexOf(position);
-                        playlistOrder.set(indexOfPosition, currentTrackIndex);
-                        playlistOrder.set(playlistOrderIndex, position);
+                        int indexOfPosition = mShuffledPlaylistIndexList.indexOf(position);
+                        mShuffledPlaylistIndexList.set(indexOfPosition, currentTrackIndex);
+                        mShuffledPlaylistIndexList.set(mShuffledPlaylistIndex, position);
 
-                        playlistIndex = position;
+                        mPlaylistIndex = position;
                     }
                 }
 
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
                 final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
-                player.playerSetContent(playlist[playlistIndex]);
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
 
                 notifySetQueuePosition();
             }
             else if (position == 0) {
-                playlistIndex = 0;
+                mPlaylistIndex = 0;
             }
         }
 
         @Override
         public int queueGetPosition() throws RemoteException {
-            if (playlist == null || playlist.length == 0) {
+            if (mPlaylist == null || mPlaylist.length == 0) {
                 return -1;
             }
 
-            if (shuffleMode == SHUFFLE_NONE) {
-                return playlistIndex;
+            if (mShuffleMode == SHUFFLE_NONE) {
+                return mPlaylistIndex;
             }
-            else if (shuffleMode == SHUFFLE_AUTO) {
-                return playlistOrder.get(playlistOrderIndex);
+            else if (mShuffleMode == SHUFFLE_AUTO) {
+                return mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
             }
 
             return 0;
@@ -680,7 +678,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public int queueGetSize() throws RemoteException {
-            return playlist.length;
+            return mPlaylist.length;
         }
 
         @Override
@@ -723,7 +721,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         public void notifyPlay() {
-            uiUpdateExecutor.submit(runnablePlay);
+            mUiUpdateExecutor.submit(runnablePlay);
 
             lockNotify();
             /*
@@ -743,13 +741,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         public void notifyPause(boolean keepNotification) {
-            runnablePause.keepNotification = keepNotification;
-            uiUpdateExecutor.submit(runnablePause);
+            Runnable runnablePause = keepNotification ? runnablePauseKeepingNotification : runnablePauseNotKeepingNotification;
+            mUiUpdateExecutor.submit(runnablePause);
 
             lockNotify();
-            /*
-                Client ui update
-             */
+
             int count = playerServiceListeners.beginBroadcast();
             try {
                 for (int index = 0 ; index < count ; index++) {
@@ -764,7 +760,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         public void notifyStop() {
-            uiUpdateExecutor.submit(runnableStop);
+            mUiUpdateExecutor.submit(runnableStop);
 
             lockNotify();
             /*
@@ -800,7 +796,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             final SharedPreferences.Editor edit = sharedPreferences.edit();
-            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlistIndex);
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, mPlaylistIndex);
             edit.apply();
             unlockNotify();
         }
@@ -820,7 +816,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             final SharedPreferences.Editor edit = sharedPreferences.edit();
-            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, shuffleMode);
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, mShuffleMode);
             edit.apply();
             unlockNotify();
         }
@@ -840,13 +836,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             final SharedPreferences.Editor edit = sharedPreferences.edit();
-            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, repeatMode);
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, mRepeatMode);
             edit.apply();
             unlockNotify();
         }
 
         private void notifySetQueuePosition() {
-            uiUpdateExecutor.submit(runnableRefreshSongData);
+            mUiUpdateExecutor.submit(runnableRefreshSongData);
 
             lockNotify();
             final int count = playerServiceListeners.beginBroadcast();
@@ -862,7 +858,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             final SharedPreferences.Editor edit = sharedPreferences.edit();
-            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, playlistIndex);
+            edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, mPlaylistIndex);
             edit.apply();
             unlockNotify();
         }
@@ -871,11 +867,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     @TargetApi(14)
     private void setAudioListener() {
         if (PlayerApplication.hasICS()) {
-            audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            mAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
                 @Override
                 public void onAudioFocusChange(int focusChange) {
                     if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                        remoteControlClient.release();
+                        mRemoteControlClient.release();
                         try {
                             playerServiceImpl.pause(false);
                         } catch (final Exception exception) {
@@ -891,15 +887,15 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         try {
             boolean isPlaying = playerServiceImpl.isPlaying();
 
-            if (playlist != null && playlist.length > 0) {
-                final AbstractMediaManager.Media media = playlist[playlistIndex];
+            if (mPlaylist != null && mPlaylist.length > 0) {
+                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
 
                 AbstractAppWidget.setHasPlaylist(true);
                 AbstractAppWidget.setPlaying(isPlaying);
                 AbstractAppWidget.setMetadata(media.name, media.artist, media.album, currentArt);
 
-                widgetLarge.applyUpdate(this);
-                widgetMedium.applyUpdate(this);
+                mWidgetLarge.applyUpdate(this);
+                mWidgetMedium.applyUpdate(this);
 
             }
             else {
@@ -907,8 +903,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 AbstractAppWidget.setPlaying(isPlaying);
                 AbstractAppWidget.setMetadata(null, null, null, null);
 
-                widgetLarge.applyUpdate(this);
-                widgetMedium.applyUpdate(this);
+                mWidgetLarge.applyUpdate(this);
+                mWidgetMedium.applyUpdate(this);
             }
         }
         catch (final Exception exception) {
@@ -917,27 +913,27 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void doUpdateRemoteClient() {
-        if (playlist.length > 0) {
-            final AbstractMediaManager.Media media = playlist[playlistIndex];
-            remoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
+        if (mPlaylist.length > 0) {
+            final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
+            mRemoteControlClient.updateMetadata(currentArt, media.name, media.artist, media.album, media.duration);
         }
         else {
-            remoteControlClient.updateMetadata(currentArt, null, null, null, 0);
+            mRemoteControlClient.updateMetadata(currentArt, null, null, null, 0);
         }
     }
 
     protected void doUpdateNotification() {
-        if (playlist.length > 0) {
-            final AbstractMediaManager.Media media = playlist[playlistIndex];
-            notificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
+        if (mPlaylist.length > 0) {
+            final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
+            mNotificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
         }
         else {
-            notificationHelper.buildNotification(null, null, null, null);
+            mNotificationHelper.buildNotification(null, null, null, null);
         }
 
         try {
             if (playerServiceImpl.isPlaying()) {
-                startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, notificationHelper.getNotification());
+                startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
             }
         }
         catch (final Exception exception) {
@@ -986,14 +982,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         if (playerServiceImpl.isPlaying()) {
                             playerServiceImpl.pause(isNotificationControl);
                         } else {
-                            if (playlist != null && playlist.length > 0) {
+                            if (mPlaylist != null && mPlaylist.length > 0) {
                                 playerServiceImpl.play();
                             }
                         }
                     }
                     else if (action.equals(PlayerService.ACTION_PLAY)) {
                         if (!playerServiceImpl.isPlaying()) {
-                            if (playlist != null && playlist.length > 0) {
+                            if (mPlaylist != null && mPlaylist.length > 0) {
                                 playerServiceImpl.play();
                             }
                         }
@@ -1014,43 +1010,43 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     protected boolean doMoveToNextPosition() {
         boolean looped = false;
-        if (shuffleMode == SHUFFLE_NONE) {
-            playlistIndex++;
-            if (playlistIndex >= playlist.length) {
-                playlistIndex = 0;
+        if (mShuffleMode == SHUFFLE_NONE) {
+            mPlaylistIndex++;
+            if (mPlaylistIndex >= mPlaylist.length) {
+                mPlaylistIndex = 0;
                 looped = true;
             }
         }
-        else if (shuffleMode == SHUFFLE_AUTO) {
-            playlistOrderIndex++;
-            if (playlistOrderIndex >= playlistOrder.size()) {
-                playlistOrderIndex = 0;
+        else if (mShuffleMode == SHUFFLE_AUTO) {
+            mShuffledPlaylistIndex++;
+            if (mShuffledPlaylistIndex >= mShuffledPlaylistIndexList.size()) {
+                mShuffledPlaylistIndex = 0;
                 looped = true;
             }
 
 
-            playlistIndex = playlistOrder.get(playlistOrderIndex);
+            mPlaylistIndex = mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
         }
         return looped;
     }
 
     protected boolean doMoveToPrevPosition() {
         boolean looped = false;
-        if (shuffleMode == SHUFFLE_NONE) {
-            playlistIndex--;
-            if (playlistIndex < 0) {
-                playlistIndex = playlist.length - 1;
+        if (mShuffleMode == SHUFFLE_NONE) {
+            mPlaylistIndex--;
+            if (mPlaylistIndex < 0) {
+                mPlaylistIndex = mPlaylist.length - 1;
                 looped = true;
             }
         }
-        else if (shuffleMode == SHUFFLE_AUTO) {
-            playlistOrderIndex--;
-            if (playlistOrderIndex < 0) {
-                playlistOrderIndex = playlistOrder.size() - 1;
+        else if (mShuffleMode == SHUFFLE_AUTO) {
+            mShuffledPlaylistIndex--;
+            if (mShuffledPlaylistIndex < 0) {
+                mShuffledPlaylistIndex = mShuffledPlaylistIndexList.size() - 1;
                 looped = true;
             }
 
-            playlistIndex = playlistOrder.get(playlistOrderIndex);
+            mPlaylistIndex = mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
         }
         return looped;
     }
@@ -1059,17 +1055,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        playlist = provider.getCurrentPlaylist(mediaManager.getPlayer());
+        mPlaylist = provider.getCurrentPlaylist(mediaManager.getPlayer());
 
-        int playlistLength = playlist != null ? playlist.length : 0;
+        int playlistLength = mPlaylist != null ? mPlaylist.length : 0;
 
-        playlistOrder = new ArrayList<Integer>();
+        mShuffledPlaylistIndexList = new ArrayList<Integer>();
         for (int playlistIndex = 0 ; playlistIndex < playlistLength ; playlistIndex++) {
-            playlistOrder.add(playlistIndex);
+            mShuffledPlaylistIndexList.add(playlistIndex);
         }
 
-        Collections.shuffle(playlistOrder);
-        playlistOrderIndex = 0;
+        Collections.shuffle(mShuffledPlaylistIndexList);
+        mShuffledPlaylistIndex = 0;
 
         doUpdateWidgets();
     }
@@ -1083,7 +1079,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
 
-    private ImageLoadingListener artImageLoaderListener = new ImageLoadingListener() {
+    private final ImageLoadingListener artImageLoaderListener = new ImageLoadingListener() {
 
         @Override
         public void onLoadingStarted(String imageUri, View view) {
@@ -1100,8 +1096,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
             String currentArtUri = null;
-            if (playlistIndex < playlist.length) {
-                currentArtUri = playlist[playlistIndex].artUri;
+            if (mPlaylistIndex < mPlaylist.length) {
+                currentArtUri = mPlaylist[mPlaylistIndex].artUri;
             }
 
             if (imageUri.equals(currentArtUri)) {
@@ -1126,7 +1122,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     };
 
-    private Runnable runnablePlay = new Runnable() {
+    private final Runnable runnablePlay = new Runnable() {
 
         @Override
         public void run() {
@@ -1136,18 +1132,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             int audioFocus = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
             if (PlayerApplication.hasICS()) {
-                audioFocus = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+                audioFocus = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
             }
 
-            remoteControlClient.register(PlayerService.this, audioManager);
+            mRemoteControlClient.register(PlayerService.this, mAudioManager);
             if (audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 if (hasNotification) {
-                    notificationHelper.goToIdleState(true);
+                    mNotificationHelper.goToIdleState(true);
                 } else {
-                    startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, notificationHelper.getNotification());
+                    startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
                     hasNotification = true;
                 }
-                remoteControlClient.updateState(true);
+                mRemoteControlClient.updateState(true);
             }
 
             doUpdateWidgets();
@@ -1156,57 +1152,50 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     };
 
-    private RunnablePause runnablePause = new RunnablePause();
-
-    class RunnablePause implements Runnable {
-
-        public boolean keepNotification = false;
-
+    private final Runnable runnablePauseKeepingNotification = new Runnable() {
         @Override
         public void run() {
-            LogUtils.LOGD(TAG, "keepNotification = " + keepNotification);
-            /*
-                System ui update
-             */
-            remoteControlClient.updateState(false);
+            mRemoteControlClient.updateState(false);
+            mNotificationHelper.goToIdleState(false);
 
-            if (keepNotification) {
-                notificationHelper.goToIdleState(false);
-            }
-            else {
-                stopForeground(true);
-                hasNotification = false;
+            doUpdateWidgets();
+        }
+    };
 
-                if (PlayerApplication.hasICS()) {
-                    audioManager.abandonAudioFocus(audioFocusChangeListener);
-                }
+    private final Runnable runnablePauseNotKeepingNotification = new Runnable() {
+        @Override
+        public void run() {
+            mRemoteControlClient.updateState(false);
+
+            stopForeground(true);
+            hasNotification = false;
+
+            if (PlayerApplication.hasICS()) {
+                mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
             }
 
             doUpdateWidgets();
         }
-    }
+    };
 
-    private Runnable runnableStop = new Runnable() {
+    private final Runnable runnableStop = new Runnable() {
 
         @Override
         public void run() {
-            /*
-                System ui update
-             */
             stopForeground(true);
             hasNotification = false;
-            remoteControlClient.stop();
-            remoteControlClient.release();
+            mRemoteControlClient.stop();
+            mRemoteControlClient.release();
 
             doUpdateWidgets();
 
             if (PlayerApplication.hasICS()) {
-                audioManager.abandonAudioFocus(audioFocusChangeListener);
+                mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
             }
         }
     };
 
-    private Runnable runnableRefreshSongData = new Runnable() {
+    private final Runnable runnableRefreshSongData = new Runnable() {
         @Override
         public void run() {
             try {
@@ -1218,9 +1207,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             String currentArtUri = null;
-            if (playlist != null) {
-                if (playlistIndex < playlist.length) {
-                    currentArtUri = playlist[playlistIndex].artUri;
+            if (mPlaylist != null) {
+                if (mPlaylistIndex < mPlaylist.length) {
+                    currentArtUri = mPlaylist[mPlaylistIndex].artUri;
                 }
 
                 PlayerApplication.normalImageLoader.loadImage(currentArtUri, (DisplayImageOptions) null, artImageLoaderListener);
@@ -1228,11 +1217,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     };
 
-    class LoadRunnable implements Runnable {
+    class MediaLoaderRunnable implements Runnable {
 
         public AbstractMediaManager.Media track;
 
-        public LoadRunnable(AbstractMediaManager.Media track) {
+        public MediaLoaderRunnable(AbstractMediaManager.Media track) {
             this.track = track;
         }
 
@@ -1242,41 +1231,41 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    private LoadingManagementRunnable loadingManagementRunnable = new LoadingManagementRunnable();
+    private final MediaPreloaderRunnable mediaPreloaderRunnable = new MediaPreloaderRunnable();
 
-    class LoadingManagementRunnable implements Runnable {
+    class MediaPreloaderRunnable implements Runnable {
         @Override
         public void run() {
             LogUtils.LOGI(TAG, "loader in action !");
             Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
-            int nextPlaylistIndex = playlistIndex;
+            int nextPlaylistIndex = mPlaylistIndex;
 
-            if (shuffleMode == SHUFFLE_NONE) {
+            if (mShuffleMode == SHUFFLE_NONE) {
                 nextPlaylistIndex++;
-                if (nextPlaylistIndex >= playlist.length) {
+                if (nextPlaylistIndex >= mPlaylist.length) {
                     nextPlaylistIndex = 0;
                 }
             }
-            else if (shuffleMode == SHUFFLE_AUTO) {
-                int nextPlaylistOrderIndex = playlistOrderIndex + 1;
-                if (nextPlaylistOrderIndex >= playlistOrder.size()) {
+            else if (mShuffleMode == SHUFFLE_AUTO) {
+                int nextPlaylistOrderIndex = mShuffledPlaylistIndex + 1;
+                if (nextPlaylistOrderIndex >= mShuffledPlaylistIndexList.size()) {
                     nextPlaylistOrderIndex = 0;
                 }
 
-                nextPlaylistIndex = playlistOrder.get(nextPlaylistOrderIndex);
+                nextPlaylistIndex = mShuffledPlaylistIndexList.get(nextPlaylistOrderIndex);
             }
 
-            for (int mediaIndex = 0 ; mediaIndex < playlist.length ; mediaIndex++) {
+            for (int mediaIndex = 0 ; mediaIndex < mPlaylist.length ; mediaIndex++) {
                 if (mediaIndex == nextPlaylistIndex) {
-                    playlist[mediaIndex].load();
+                    mPlaylist[mediaIndex].load();
                 }
-                else if (mediaIndex != playlistIndex) {
-                    playlist[mediaIndex].unload();
+                else if (mediaIndex != mPlaylistIndex) {
+                    mPlaylist[mediaIndex].unload();
                 }
             }
 
-            mediaManagementExecutor.submit(new LoadRunnable(playlist[nextPlaylistIndex]));
+            mMediaManagementExecutor.submit(new MediaLoaderRunnable(mPlaylist[nextPlaylistIndex]));
         }
     }
 }
