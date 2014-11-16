@@ -46,10 +46,9 @@ public class AppWidget4x2 extends AbstractAppWidget {
             view.setOnClickPendingIntent(R.id.four_by_two_info, pendingIntent);
             view.setOnClickPendingIntent(R.id.four_by_two_albumart, pendingIntent);
 
-            final ComponentName serviceName = new ComponentName(context, PlayerService.class);
-            view.setOnClickPendingIntent(R.id.four_by_two_control_play, buildPendingIntent(context, 1, serviceName));
-            view.setOnClickPendingIntent(R.id.four_by_two_control_next, buildPendingIntent(context, 2, serviceName));
-            view.setOnClickPendingIntent(R.id.four_by_two_control_prev, buildPendingIntent(context, 3, serviceName));
+            view.setOnClickPendingIntent(R.id.four_by_two_control_play, PlayerService.APPWIDGET_PAUSE_INTENT);
+            view.setOnClickPendingIntent(R.id.four_by_two_control_next, PlayerService.APPWIDGET_NEXT_INTENT);
+            view.setOnClickPendingIntent(R.id.four_by_two_control_prev, PlayerService.APPWIDGET_PREV_INTENT);
 
             // set widget content
             view.setTextViewText(R.id.four_by_two_trackname, track);

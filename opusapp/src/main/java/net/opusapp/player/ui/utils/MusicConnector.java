@@ -14,10 +14,9 @@ package net.opusapp.player.ui.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
@@ -81,29 +80,51 @@ public class MusicConnector {
         return false;
     }
 
-    public static boolean doStopAction() {
+    public static int getCurrentPlaylistPosition() {
         if (PlayerApplication.playerService != null) {
-            PlayerApplication.playerService.stop();
-            return true;
+            return PlayerApplication.playerService.queueGetPosition();
         }
         else {
-            LogUtils.LOGService(TAG, "doStopAction", 0);
+            LogUtils.LOGService(TAG, "getCurrentPlaylistPosition", 0);
         }
-        return false;
+
+        return 0;
     }
 
-    public static boolean doPlayAction() {
-        return doPlayAction(false);
+
+
+    public static void sendPlayIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PLAY_INTENT);
     }
 
-    public static boolean doPlayAction(boolean keepNotification) {
+    public static void sendPauseIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PAUSE_INTENT);
+    }
+
+    public static void sendStopIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_STOP_INTENT);
+    }
+
+    public static void sendPrevIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PREVIOUS_INTENT);
+    }
+
+    public static void sendNextIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_NEXT_INTENT);
+    }
+
+    public static boolean servicePlayAction() {
         boolean isPlaying = isPlaying();
-        LogUtils.LOGD(TAG, "play with notif=" + keepNotification);
 
         if (PlayerApplication.playerService != null) {
             if (PlayerApplication.playerService.queueGetSize() != 0) {
                 if (isPlaying) {
-                    PlayerApplication.playerService.pause(keepNotification);
+                    PlayerApplication.playerService.pause(false);
                 }
                 else {
                     PlayerApplication.playerService.play();
@@ -116,6 +137,20 @@ public class MusicConnector {
         }
         return false;
     }
+
+/*
+    public static boolean doStopAction() {
+        if (PlayerApplication.playerService != null) {
+            PlayerApplication.playerService.stop();
+            return true;
+        }
+        else {
+            LogUtils.LOGService(TAG, "doStopAction", 0);
+        }
+        return false;
+    }
+
+
 
 
     public static void doPlayActionIntent() {
@@ -177,31 +212,7 @@ public class MusicConnector {
             LogUtils.LOGException(TAG, "doNextAction", 0, exception);
         }
     }
-
-    public static void doPlayActionReceiverIntent() {
-        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
-        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PLAY);
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 5, action, 0);
-        try {
-            pendingIntent.send();
-        }
-        catch (final PendingIntent.CanceledException exception) {
-            LogUtils.LOGException(TAG, "doPlayActionIntent", 0, exception);
-        }
-    }
-
-    public static void doPauseActionReceiverIntent() {
-        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
-        action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PAUSE);
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 6, action, 0);
-        try {
-            pendingIntent.send();
-        }
-        catch (final PendingIntent.CanceledException exception) {
-            LogUtils.LOGException(TAG, "doPlayActionIntent", 0, exception);
-        }
-    }
-
+*/
     public static void doRepeatAction() {
         if (PlayerApplication.playerService != null) {
             int repeatMode = PlayerApplication.playerService.getRepeatMode();
@@ -241,16 +252,7 @@ public class MusicConnector {
         }
     }
 
-    public static int getCurrentPlaylistPosition() {
-        if (PlayerApplication.playerService != null) {
-            return PlayerApplication.playerService.queueGetPosition();
-        }
-        else {
-            LogUtils.LOGService(TAG, "getCurrentPlaylistPosition", 0);
-        }
 
-        return 0;
-    }
 
 
 
@@ -395,10 +397,10 @@ public class MusicConnector {
 
     private static void doPrepareProviderSwitch() {
         if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
-            doStopAction();
+            sendStopIntent();
+
             PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
             PlayerApplication.saveLibraryIndexes();
-
             PlayerApplication.playerService.queueReload();
         }
     }
@@ -520,7 +522,7 @@ public class MusicConnector {
 
         @Override
         public void onClick(View view) {
-            MusicConnector.doPrevAction();
+            sendPrevIntent();
         }
     };
 
@@ -528,7 +530,7 @@ public class MusicConnector {
 
         @Override
         public void onClick(View view) {
-            MusicConnector.doNextAction();
+            sendNextIntent();
         }
     };
 
@@ -550,7 +552,7 @@ public class MusicConnector {
 
         @Override
         public void onClick(View view) {
-            if (!MusicConnector.doPlayAction()) {
+            if (!MusicConnector.servicePlayAction()) {
                 currentActivity.runOnUiThread(new Runnable() {
 
                     @Override

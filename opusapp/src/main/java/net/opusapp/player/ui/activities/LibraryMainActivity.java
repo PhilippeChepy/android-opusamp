@@ -243,7 +243,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
                 if (mediaManager.getMediaManagerType() == AbstractMediaManager.LOCAL_MEDIA_MANAGER) {
                     if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
-                        MusicConnector.doStopAction();
+                        MusicConnector.sendStopIntent();
                         PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
                         PlayerApplication.saveLibraryIndexes();
 

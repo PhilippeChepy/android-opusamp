@@ -450,9 +450,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
 
     // Player service listener
-    private PlayerServiceListenerImpl playerServiceListener = new PlayerServiceListenerImpl();
+    private PlayerServiceStateListenerImpl playerServiceListener = new PlayerServiceStateListenerImpl();
 
-    public final class PlayerServiceListenerImpl implements PlayerService.IPlayerServiceListener {
+    public final class PlayerServiceStateListenerImpl implements PlayerService.PlayerServiceStateListener {
 
         @Override
         public void onShuffleModeChanged() {
@@ -791,7 +791,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                                         autostopTask = new Runnable() {
                                             @Override
                                             public void run() {
-                                                MusicConnector.doStopAction();
+                                                MusicConnector.sendStopIntent();
                                             }
                                         };
 

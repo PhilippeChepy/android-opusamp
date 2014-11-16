@@ -41,19 +41,19 @@ public class CallStateBroadcastReceiver extends BroadcastReceiver {
 				case TelephonyManager.CALL_STATE_IDLE:
 					if (pausedByCallManager) {
                         pausedByCallManager = false;
-                        MusicConnector.doPlayActionReceiverIntent();
+                        MusicConnector.sendPlayIntent();
                     }
 					break;
 				case TelephonyManager.CALL_STATE_OFFHOOK:
                     if (!pausedByCallManager) {
                         pausedByCallManager = true;
-                        MusicConnector.doPauseActionReceiverIntent();
+                        MusicConnector.sendPauseIntent();
                     }
 					break;
 				case TelephonyManager.CALL_STATE_RINGING:
                     if (!pausedByCallManager) {
                         pausedByCallManager = true;
-                        MusicConnector.doPauseActionReceiverIntent();
+                        MusicConnector.sendPauseIntent();
                     }
 					break;
 				}

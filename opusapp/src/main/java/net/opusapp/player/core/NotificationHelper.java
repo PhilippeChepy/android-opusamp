@@ -40,7 +40,6 @@ public class NotificationHelper {
     private final NotificationManager notificationManager;
 
 
-
     private final PlayerService service;
 
 
@@ -126,59 +125,21 @@ public class NotificationHelper {
     }
 
     private void initExpandedPlaybackActions() {
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_play, retrievePlaybackActions(1));
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_next, retrievePlaybackActions(2));
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, retrievePlaybackActions(3));
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, retrievePlaybackActions(4));
+        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
+
         expandedView.setImageViewResource(R.id.notification_expanded_base_play, R.drawable.btn_playback_pause_transparent);
     }
 
     private void initPlaybackActions() {
-        // Play and playerPause
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_play, retrievePlaybackActions(1));
+        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
 
-        // Skip tracks
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_next, retrievePlaybackActions(2));
-
-        // Previous tracks
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_previous, retrievePlaybackActions(3));
-
-        // Stop and collapse the notification
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_collapse, retrievePlaybackActions(4));
-
-        // Update the playerPlay button image
         notificationTemplate.setImageViewResource(R.id.notification_base_play, R.drawable.btn_playback_pause_transparent);
-    }
-
-    private PendingIntent retrievePlaybackActions(final int which) {
-    	Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
-    	PendingIntent pendingIntent;
-        
-        switch (which) {
-            case 1:
-                // Play and playerPause
-                action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_TOGGLEPAUSE);
-                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 1, action, 0);
-                return pendingIntent;
-            case 2:
-                // Next track
-            	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
-                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
-                return pendingIntent;
-            case 3:
-                // Previous track
-            	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
-                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
-                return pendingIntent;
-            case 4:
-                // Stop and collapse the notification
-            	action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_STOP);
-                pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 4, action, 0);
-                return pendingIntent;
-            default:
-                break;
-        }
-        return null;
     }
 
 }

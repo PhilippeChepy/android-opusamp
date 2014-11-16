@@ -12,9 +12,10 @@
  */
 package net.opusapp.player.core.service;
 
-import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -26,6 +27,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -36,7 +38,6 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.NotificationHelper;
 import net.opusapp.player.core.RemoteControlClientHelper;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.widgets.AbstractAppWidget;
 import net.opusapp.player.ui.widgets.AppWidget4x1;
@@ -48,8 +49,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
 
 
 public class PlayerService extends Service implements AbstractMediaManager.Player.OnProviderCompletionListener {
@@ -66,6 +66,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public static final String ACTION_NOTIFICATION_COMMAND = "net.opusapp.player.core.service.ACTION_NOTIFICATION_COMMAND";
 
     public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.core.service.ACTION_CLIENT_COMMAND";
+
+
 
     public static final String ACTION_TOGGLEPAUSE = "net.opusapp.player.core.service.ACTION_TOGGLEPAUSE";
 
@@ -142,8 +144,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     private int mPlaylistIndex;
 
-    private Lock notifyMutex = new ReentrantLock();
-
 
 
     /*
@@ -206,7 +206,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-        setAudioListener();
+        if (PlayerApplication.hasICS()) {
+            mAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                        mRemoteControlClient.release();
+                        pause(false);
+                    }
+                }
+            };
+        }
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -234,11 +244,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
         };
 
+        // TODO: check usefulness of ACTION_NOTIFICATION_COMMAND.
         final IntentFilter intentFilter = new IntentFilter(ACTION_NOTIFICATION_COMMAND);
         intentFilter.addAction(ACTION_CLIENT_COMMAND);
-
-        registerReceiver(mCommandbroadcastReceiver, intentFilter);
-
+        LocalBroadcastManager.getInstance(PlayerApplication.context).registerReceiver(mCommandbroadcastReceiver, intentFilter);
 
 
         mHeadsetBroadcastReceiver = new BroadcastReceiver() {
@@ -248,10 +257,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 if (sharedPreferences.getBoolean(PlayerApplication.context.getString(R.string.preference_key_plug_auto_play), true)) {
                     switch (intent.getIntExtra("state", -1)) {
                         case 0:
-                            MusicConnector.doPauseActionReceiverIntent();
+                            pause(false);
                             break;
                         case 1:
-                            MusicConnector.doPlayActionReceiverIntent();
+                            play();
                             break;
                     }
                 }
@@ -306,21 +315,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-    @TargetApi(14)
-    private void setAudioListener() {
-        if (PlayerApplication.hasICS()) {
-            mAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusChange(int focusChange) {
-                    if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                        mRemoteControlClient.release();
-                        pause(false);
-                    }
-                }
-            };
-        }
-    }
-
     protected void doUpdateWidgets() {
         try {
             boolean isPlaying = isPlaying();
@@ -361,6 +355,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void doUpdateNotification() {
+
         if (mPlaylist.length > 0) {
             final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
             mNotificationHelper.buildNotification(media.album, media.artist, media.name, currentArt);
@@ -368,15 +363,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         else {
             mNotificationHelper.buildNotification(null, null, null, null);
         }
-
+/*
         try {
             if (isPlaying()) {
+                LogUtils.LOGW(TAG, "doUpdateNotification() : showing notification");
                 startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
             }
         }
         catch (final Exception exception) {
             LogUtils.LOGException(TAG, "doUpdateNotification", 0, exception);
-        }
+        }*/
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -503,15 +499,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         doUpdateWidgets();
     }
 
-    protected void lockNotify() {
-        notifyMutex.lock();
-    }
-
-    protected void unlockNotify() {
-        notifyMutex.unlock();
-    }
-
-
     private final ImageLoadingListener artImageLoaderListener = new ImageLoadingListener() {
 
         @Override
@@ -573,6 +560,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 if (hasNotification) {
                     mNotificationHelper.goToIdleState(true);
                 } else {
+                    LogUtils.LOGW(TAG, "runnablePlay: showing notification");
                     startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
                     hasNotification = true;
                 }
@@ -704,7 +692,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Public API
-    public interface IPlayerServiceListener {
+    public interface PlayerServiceStateListener {
         void onPlay();
         void onPause();
         void onStop();
@@ -717,7 +705,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         void onQueuePositionChanged();
     }
 
-    private List<IPlayerServiceListener> serviceListeners = new ArrayList<IPlayerServiceListener>();
+    private List<PlayerServiceStateListener> mServiceListenerList = new ArrayList<PlayerServiceStateListener>();
 
     public void play() {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
@@ -1010,22 +998,25 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         if (mPlaylist != null && mPlaylist.length > 0) {
             LogUtils.LOGD(TAG, "moving to position " + position);
 
-            if (mShuffleMode == SHUFFLE_NONE) {
-                if (mPlaylistIndex != position) {
-                    mPlaylistIndex = position;
-                    if (mPlaylistIndex >= mPlaylist.length) {
-                        mPlaylistIndex = 0;
+            switch (mShuffleMode) {
+                case SHUFFLE_NONE:
+                    if (mPlaylistIndex != position) {
+                        mPlaylistIndex = position;
+                        if (mPlaylistIndex >= mPlaylist.length) {
+                            mPlaylistIndex = 0;
+                        }
                     }
-                }
-            } else if (mShuffleMode == SHUFFLE_AUTO) {
-                int currentTrackIndex = mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
-                if (currentTrackIndex != position) {
-                    int indexOfPosition = mShuffledPlaylistIndexList.indexOf(position);
-                    mShuffledPlaylistIndexList.set(indexOfPosition, currentTrackIndex);
-                    mShuffledPlaylistIndexList.set(mShuffledPlaylistIndex, position);
+                    break;
+                case SHUFFLE_AUTO:
+                    int currentTrackIndex = mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
+                    if (currentTrackIndex != position) {
+                        int indexOfPosition = mShuffledPlaylistIndexList.indexOf(position);
+                        mShuffledPlaylistIndexList.set(indexOfPosition, currentTrackIndex);
+                        mShuffledPlaylistIndexList.set(mShuffledPlaylistIndex, position);
 
-                    mPlaylistIndex = position;
-                }
+                        mPlaylistIndex = position;
+                    }
+                    break;
             }
 
             final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
@@ -1045,11 +1036,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             return -1;
         }
 
-        if (mShuffleMode == SHUFFLE_NONE) {
-            return mPlaylistIndex;
-        }
-        else if (mShuffleMode == SHUFFLE_AUTO) {
-            return mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
+        switch (mShuffleMode) {
+            case SHUFFLE_NONE:
+                return mPlaylistIndex;
+            case SHUFFLE_AUTO:
+                return mShuffledPlaylistIndexList.get(mShuffledPlaylistIndex);
         }
 
         return 0;
@@ -1060,25 +1051,23 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         return mPlaylist.length;
     }
 
-    public void registerPlayerCallback(IPlayerServiceListener playerServiceListener) {
-        serviceListeners.add(playerServiceListener);
+    public void registerPlayerCallback(PlayerServiceStateListener serviceListener) {
+        mServiceListenerList.add(serviceListener);
     }
 
-    public void unregisterPlayerCallback(IPlayerServiceListener playerServiceListener) {
-        serviceListeners.remove(playerServiceListener);
+    public void unregisterPlayerCallback(PlayerServiceStateListener serviceListener) {
+        mServiceListenerList.remove(serviceListener);
     }
 
     public void notifyProviderChanged() {
-        lockNotify();
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
         final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
         player.addCompletionListener(PlayerService.this);
-        unlockNotify();
     }
 
     public void notifyTimestampUpdate(long timestamp) {
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onSeek(timestamp);
         }
     }
@@ -1086,7 +1075,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void notifyPlay() {
         mUiUpdateExecutor.submit(runnablePlay);
 
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onPlay();
         }
     }
@@ -1095,7 +1084,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         Runnable runnablePause = keepNotification ? runnablePauseKeepingNotification : runnablePauseNotKeepingNotification;
         mUiUpdateExecutor.submit(runnablePause);
 
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onPause();
         }
     }
@@ -1103,7 +1092,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void notifyStop() {
         mUiUpdateExecutor.submit(runnableStop);
 
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onStop();
         }
     }
@@ -1111,7 +1100,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private void notifyQueueChanged() {
         doUpdateWidgets();
 
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onQueueChanged();
         }
 
@@ -1122,7 +1111,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyShuffleChange() {
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onShuffleModeChanged();
         }
 
@@ -1133,7 +1122,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyRepeatChange() {
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onRepeatModeChanged();
         }
 
@@ -1146,7 +1135,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private void notifySetQueuePosition() {
         mUiUpdateExecutor.submit(runnableRefreshSongData);
 
-        for (IPlayerServiceListener serviceListener : serviceListeners) {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
             serviceListener.onQueuePositionChanged();
         }
 
@@ -1154,5 +1143,86 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final SharedPreferences.Editor edit = sharedPreferences.edit();
         edit.putInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, mPlaylistIndex);
         edit.apply();
+    }
+
+
+
+
+
+    public static final PendingIntent APPWIDGET_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+
+    public static final PendingIntent APPWIDGET_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_NEXT);
+
+    public static final PendingIntent APPWIDGET_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_PREVIOUS);
+
+
+
+    public static final PendingIntent NOTIFICATION_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+
+    public static final PendingIntent NOTIFICATION_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_NEXT);
+
+    public static final PendingIntent NOTIFICATION_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_PREVIOUS);
+
+    public static final PendingIntent NOTIFICATION_STOP_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_STOP);
+
+
+
+
+    public static final Intent MEDIABUTTON_TOGGLE_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+
+    public static final Intent CLIENT_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PLAY);
+
+    public static final Intent CLIENT_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PAUSE);
+
+    public static final Intent CLIENT_NEXT_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_NEXT);
+
+    public static final Intent CLIENT_PREVIOUS_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PREVIOUS);
+
+    public static final Intent CLIENT_STOP_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_STOP);
+
+
+
+    public static PendingIntent buildServiceIntent(final String source, final String action) {
+        final Context context = PlayerApplication.context;
+
+        final ComponentName serviceName = new ComponentName(context, PlayerService.class);
+
+        final Intent intent = new Intent(source);
+        intent.setComponent(serviceName);
+        intent.putExtra(PlayerService.COMMAND_KEY, action);
+
+        PendingIntent pendingIntent = null;
+
+        if (ACTION_TOGGLEPAUSE.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 1, intent, 0);
+        }
+        else if (ACTION_PLAY.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 2, intent, 0);
+        }
+        else if (ACTION_PAUSE.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 3, intent, 0);
+        }
+        else if (ACTION_NEXT.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 4, intent, 0);
+        }
+        else if (ACTION_PREVIOUS.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 5, intent, 0);
+        }
+        else if (ACTION_STOP.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 6, intent, 0);
+        }
+
+        return pendingIntent;
+    }
+
+    public static Intent buildBroadcastIntent(final String source, final String action) {
+        final Context context = PlayerApplication.context;
+
+        final ComponentName serviceName = new ComponentName(context, PlayerService.class);
+
+        final Intent intent = new Intent(source);
+        intent.setComponent(serviceName);
+        intent.putExtra(PlayerService.COMMAND_KEY, action);
+        return intent;
     }
 }

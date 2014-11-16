@@ -15,9 +15,12 @@ package net.opusapp.player.core.broadcastreceiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.KeyEvent;
 
+import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.ui.utils.MusicConnector;
+import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
 
@@ -29,13 +32,14 @@ public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
             final KeyEvent event = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
             if (event != null && event.getAction() == KeyEvent.ACTION_UP) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
-                    MusicConnector.doPlayActionIntent();
+                    final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+                    localBroadcastManager.sendBroadcast(PlayerService.MEDIABUTTON_TOGGLE_PAUSE_INTENT);
                 }
                 else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
-                    MusicConnector.doNextActionIntent();
+                    MusicConnector.sendNextIntent();
                 }
                 else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
-                    MusicConnector.doPrevActionIntent();
+                    MusicConnector.sendPrevIntent();
                 }
             }
         }
