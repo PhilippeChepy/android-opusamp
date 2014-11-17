@@ -17,11 +17,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
 import net.opusapp.player.R;
-import net.opusapp.player.ui.utils.MusicConnector;
+import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class CallStateBroadcastReceiver extends BroadcastReceiver {
@@ -30,31 +31,19 @@ public class CallStateBroadcastReceiver extends BroadcastReceiver {
 
 
 
-    protected static boolean pausedByCallManager = false;
-
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		PhoneStateListener phoneListener = new PhoneStateListener() {
 			
 			public void onCallStateChanged(int state, String incomingNumber) {
+                final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
 				switch (state) {
 				case TelephonyManager.CALL_STATE_IDLE:
-					if (pausedByCallManager) {
-                        pausedByCallManager = false;
-                        MusicConnector.sendPlayIntent();
-                    }
+                        localBroadcastManager.sendBroadcast(PlayerService.TELEPHONY_PLAY_INTENT);
 					break;
 				case TelephonyManager.CALL_STATE_OFFHOOK:
-                    if (!pausedByCallManager) {
-                        pausedByCallManager = true;
-                        MusicConnector.sendPauseIntent();
-                    }
-					break;
 				case TelephonyManager.CALL_STATE_RINGING:
-                    if (!pausedByCallManager) {
-                        pausedByCallManager = true;
-                        MusicConnector.sendPauseIntent();
-                    }
+                    localBroadcastManager.sendBroadcast(PlayerService.TELEPHONY_PAUSE_INTENT);
 					break;
 				}
 			}

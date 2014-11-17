@@ -65,6 +65,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public static final String ACTION_NOTIFICATION_COMMAND = "net.opusapp.player.core.service.ACTION_NOTIFICATION_COMMAND";
 
+    public static final String ACTION_TELEPHONY_COMMAND = "net.opusapp.player.core.service.ACTION_TELEPHONY_COMMAND";
+
     public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.core.service.ACTION_CLIENT_COMMAND";
 
 
@@ -141,6 +143,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private List<Integer> mShuffledPlaylistIndexList;
 
     private int mShuffledPlaylistIndex;
+
+    private boolean mPausedByTelephony = false;
 
     private int mPlaylistIndex;
 
@@ -242,6 +246,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         // TODO: check usefulness of ACTION_NOTIFICATION_COMMAND.
         final IntentFilter intentFilter = new IntentFilter(ACTION_NOTIFICATION_COMMAND);
+        intentFilter.addAction(ACTION_TELEPHONY_COMMAND);
         intentFilter.addAction(ACTION_CLIENT_COMMAND);
         LocalBroadcastManager.getInstance(PlayerApplication.context).registerReceiver(mCommandbroadcastReceiver, intentFilter);
 
@@ -361,55 +366,74 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             boolean isNotificationControl = source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND);
             boolean isWidgetControl = source.equals(PlayerService.ACTION_APPWIDGET_COMMAND);
+            boolean isTelephonyControl = source.equals(ACTION_TELEPHONY_COMMAND);
             boolean isClientControl = source.equals(PlayerService.ACTION_CLIENT_COMMAND);
             boolean isRemoteControl = isNotificationControl || isWidgetControl || isClientControl;
 
-            if (action != null && isRemoteControl) {
-                if (action.equals(PlayerService.ACTION_PREVIOUS)) {
-                    if (isPlaying()) {
-                        pause(true);
-                        setPosition(0);
-                        prev();
-                        play();
-                    }
-                    else {
-                        prev();
-                    }
-                }
-                else if (action.equals(PlayerService.ACTION_NEXT)) {
-                    if (isPlaying()) {
-                        pause(true);
-                        setPosition(0);
-                        next();
-                        play();
-                    }
-                    else {
-                        next();
-                    }
-                }
-                else if (action.equals(PlayerService.ACTION_STOP)) {
-                    stop();
-                }
-                else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
-                    if (isPlaying()) {
-                        pause(isNotificationControl);
-                    } else {
-                        if (mPlaylist != null && mPlaylist.length > 0) {
+            if (action != null) {
+                if (isRemoteControl) {
+                    if (action.equals(PlayerService.ACTION_PREVIOUS)) {
+                        if (isPlaying()) {
+                            pause(true);
+                            setPosition(0);
+                            prev();
                             play();
+                        } else {
+                            prev();
+                        }
+                    } else if (action.equals(PlayerService.ACTION_NEXT)) {
+                        if (isPlaying()) {
+                            pause(true);
+                            setPosition(0);
+                            next();
+                            play();
+                        } else {
+                            next();
+                        }
+                    } else if (action.equals(PlayerService.ACTION_STOP)) {
+                        stop();
+                    } else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
+                        if (isPlaying()) {
+                            pause(isNotificationControl);
+                        } else {
+                            if (mPlaylist != null && mPlaylist.length > 0) {
+                                play();
+                            }
+                        }
+                    } else if (action.equals(PlayerService.ACTION_PLAY)) {
+                        if (!isPlaying()) {
+                            if (mPlaylist != null && mPlaylist.length > 0) {
+                                play();
+                            }
+                        }
+                    } else if (action.equals(PlayerService.ACTION_PAUSE)) {
+                        LogUtils.LOGD(TAG, "pause");
+                        if (isPlaying()) {
+                            pause(isNotificationControl);
                         }
                     }
                 }
-                else if (action.equals(PlayerService.ACTION_PLAY)) {
-                    if (!isPlaying()) {
-                        if (mPlaylist != null && mPlaylist.length > 0) {
-                            play();
+                else if (isTelephonyControl) {
+                    if (action.equals(PlayerService.ACTION_PLAY)) {
+                        LogUtils.LOGD(TAG, "telephony : querying ACTION_PLAY");
+                        if (pausedByTelephopny()) {
+                            setPausedByTelephony(false);
+                            LogUtils.LOGD(TAG, "telephony : ACTION_PLAY");
+
+                            if (!isPlaying()) {
+                                if (mPlaylist != null && mPlaylist.length > 0) {
+                                    play();
+                                }
+                            }
                         }
                     }
-                }
-                else if (action.equals(PlayerService.ACTION_PAUSE)) {
-                    LogUtils.LOGD(TAG, "pause");
-                    if (isPlaying()) {
-                        pause(isNotificationControl);
+                    else if (action.equals(PlayerService.ACTION_PAUSE)) {
+                        LogUtils.LOGD(TAG, "telephony : querying ACTION_PAUSE");
+                        if (isPlaying()) {
+                            LogUtils.LOGD(TAG, "telephony : ACTION_PAUSE");
+                            setPausedByTelephony(true);
+                            pause(false);
+                        }
                     }
                 }
             }
@@ -476,6 +500,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mShuffledPlaylistIndex = 0;
 
         updateExternalControlers(false, false);
+    }
+
+    protected boolean pausedByTelephopny() {
+        return mPausedByTelephony;
+    }
+
+    protected void setPausedByTelephony(boolean paused) {
+        mPausedByTelephony = paused;
     }
 
     private final ImageLoadingListener mImageLoaderListener = new ImageLoadingListener() {
@@ -1137,6 +1169,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     public static final Intent MEDIABUTTON_TOGGLE_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+
+    public static final Intent TELEPHONY_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_TELEPHONY_COMMAND, PlayerService.ACTION_PLAY);
+
+    public static final Intent TELEPHONY_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_TELEPHONY_COMMAND, PlayerService.ACTION_PAUSE);
 
     public static final Intent CLIENT_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PLAY);
 
