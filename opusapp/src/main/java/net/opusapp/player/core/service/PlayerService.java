@@ -357,6 +357,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         // Updating notification
         mNotificationHelper.buildNotification(mediaGroup, mediaAuthor, mediaTitle, mMediaCover);
+        mNotificationHelper.forceUpdate();
     }
 
     protected void doManageCommandIntent(final Intent intent) {

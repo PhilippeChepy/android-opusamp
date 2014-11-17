@@ -119,6 +119,10 @@ public class NotificationHelper {
         notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
     }
 
+    public void forceUpdate() {
+        notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
+    }
+
     private void initCollapsedLayout(final String trackName, final String artistName, final Bitmap albumArt) {
         notificationTemplate.setTextViewText(R.id.notification_base_line_one, trackName);
         notificationTemplate.setTextViewText(R.id.notification_base_line_two, artistName);
