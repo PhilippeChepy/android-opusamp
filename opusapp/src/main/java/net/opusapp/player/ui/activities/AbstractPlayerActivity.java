@@ -22,7 +22,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -145,12 +144,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     // Player Ui logic
     private boolean updateSeekBar = true;
-
-    private static int autostop;
-
-    private static Handler autostopHandler;
-
-    private static Runnable autostopTask;
 
     protected boolean isFirstRun = false;
 
@@ -765,21 +758,25 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         });
 
         if (MusicConnector.isPlaying()) {
-            final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, autostop != 0 ?
-                    String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(autostop)) : // format minutes (not secs)
+
+            long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
+            long remainingSecs = 0;
+            if (remaining > 0) {
+                remainingSecs = remaining / 1000;
+            }
+
+            final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, remaining > 0 ?
+                    String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(remainingSecs)) : // format minutes (not secs)
                     getString(R.string.menuitem_label_delayed_pause));
             autoPause.setCheckable(true);
-            autoPause.setChecked(autostop != 0);
+            autoPause.setChecked(remaining > 0);
             autoPause.setIcon(R.drawable.ic_action_alarm);
             autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     if (autoPause.isChecked()) {
-                        autostop = 0;
-                        if (autostopHandler != null && autostopTask != null) {
-                            autostopHandler.removeCallbacks(autostopTask);
-                            autostopHandler = null;
-                            autostopTask = null;
+                        if (PlayerApplication.playerService != null) {
+                            PlayerApplication.playerService.setAutoStopTimestamp(-1);
                         }
                     } else {
                         final TimePickerDialog tpd = new TimePickerDialog(AbstractPlayerActivity.this,
@@ -787,16 +784,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
                                     @Override
                                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                                        autostop = hourOfDay * 60 + minute;
-                                        autostopTask = new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                MusicConnector.sendStopIntent();
-                                            }
-                                        };
-
-                                        autostopHandler = new Handler();
-                                        autostopHandler.postDelayed(autostopTask, autostop * 60000);
+                                        if (PlayerApplication.playerService != null) {
+                                            PlayerApplication.playerService.setAutoStopTimestamp((hourOfDay * 60 + minute) * 60000);
+                                        }
                                     }
                                 }, 0, 0, true
                         );

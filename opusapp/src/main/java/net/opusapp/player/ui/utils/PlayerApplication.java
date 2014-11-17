@@ -366,9 +366,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return  formatSecs((int) (duration / 1000));
     }
 
-    public static String formatSecs(int durationSecs) {
-        int mins = (durationSecs / 60);
-        int secs = (durationSecs % 60);
+    public static String formatSecs(long durationSecs) {
+        long mins = (durationSecs / 60);
+        long secs = (durationSecs % 60);
 
         return  (mins < 10 ? "0" + mins : mins) + (secs < 10 ? (secs == 0 ? ":00" : ":0" + secs) : ":" + secs);
     }

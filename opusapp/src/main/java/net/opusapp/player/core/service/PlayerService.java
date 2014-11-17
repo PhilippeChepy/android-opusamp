@@ -46,6 +46,7 @@ import net.opusapp.player.utils.LogUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -124,7 +125,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     private BroadcastReceiver mHeadsetBroadcastReceiver;
 
-    public boolean hasNotification;
+    public boolean hasNotification; // TODO: remove this variable by encapsulating in NotificaitionHelper.
 
     private final AppWidget4x1 mWidgetMedium = AppWidget4x1.getInstance();
 
@@ -147,6 +148,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private boolean mPausedByTelephony = false;
 
     private int mPlaylistIndex;
+
+    private Date mAutostopTimestamp = null;
 
 
 
@@ -191,6 +194,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void onCodecTimestampUpdate(long newPosition) {
         /* Playing, request for timestamp update */
         notifyTimestampUpdate(newPosition);
+
+        if (getAutostopTimestamp() == 0) {
+            LogUtils.LOGD(TAG, "autostop timestamp reached : " + getAutostopTimestamp());
+            setAutoStopTimestamp(-1);
+            pause(true);
+        }
     }
 
     @Override
@@ -321,11 +330,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         long mediaDuration = 0;
 
         if (mPlaylist.length > 0) {
-            final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-            mediaTitle = media.name;
-            mediaAuthor = media.artist;
-            mediaGroup = media.album;
-            mediaDuration = media.duration;
+            if (mPlaylistIndex < mPlaylist.length) {
+                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
+                mediaTitle = media.name;
+                mediaAuthor = media.artist;
+                mediaGroup = media.album;
+                mediaDuration = media.duration;
+            }
 
             if (!onlyPlaystate) {
                 if (coverIsLoaded) {
@@ -357,7 +368,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         // Updating notification
         mNotificationHelper.buildNotification(mediaGroup, mediaAuthor, mediaTitle, mMediaCover);
-        mNotificationHelper.forceUpdate();
+        if (hasNotification) {
+            mNotificationHelper.forceUpdate();
+        }
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -1052,6 +1065,31 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public int queueGetSize() {
         return mPlaylist.length;
+    }
+
+
+    public synchronized void setAutoStopTimestamp(long msecs) {
+        if (msecs < 0) {
+            mAutostopTimestamp = null;
+        }
+        else {
+            mAutostopTimestamp = new Date();
+            mAutostopTimestamp.setTime(mAutostopTimestamp.getTime() + msecs);
+        }
+    }
+
+    public synchronized long getAutostopTimestamp() {
+        if (mAutostopTimestamp == null) {
+            return -1;
+        }
+
+        long remaining = mAutostopTimestamp.getTime() - (new Date().getTime());
+
+        if (remaining < 0) {
+            return 0;
+        }
+
+        return remaining;
     }
 
     public void registerPlayerCallback(PlayerServiceStateListener serviceListener) {
