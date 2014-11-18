@@ -101,25 +101,19 @@ public class NotificationHelper {
         return PendingIntent.getActivity(mService, 0, new Intent(mService.getApplicationContext(), LibraryMainActivity.class), 0);
     }
 
-    public void goToIdleState(final boolean isPlaying) {
+    public void forceUpdate(final boolean isPlaying) {
         if (notification == null || notificationManager == null) {
             return;
         }
         
         if (notificationTemplate != null) {
-            notificationTemplate.setImageViewResource(R.id.notification_base_play,
-                    isPlaying ? mPauseDrawable : mPlayDrawable);
+            notificationTemplate.setImageViewResource(R.id.notification_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && expandedView != null) {
-            expandedView.setImageViewResource(R.id.notification_expanded_base_play,
-                    isPlaying ? mPauseDrawable : mPlayDrawable);
+            expandedView.setImageViewResource(R.id.notification_expanded_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
         }
         
-        notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
-    }
-
-    public void forceUpdate() {
         notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
     }
 

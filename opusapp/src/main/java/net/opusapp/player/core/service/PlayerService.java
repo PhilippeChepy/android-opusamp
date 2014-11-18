@@ -102,16 +102,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    /*
+    //
+    public boolean mIsForeground;
 
-     */
     private PlayerBinder mBinder;
 
     private WakeLock mPlaybackWakeLock;
-
-    private ExecutorService mUiUpdateExecutor;
-
-    private ExecutorService mMediaManagementExecutor;
 
     private NotificationHelper mNotificationHelper;
 
@@ -125,17 +121,19 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     private BroadcastReceiver mHeadsetBroadcastReceiver;
 
-    public boolean hasNotification; // TODO: remove this variable by encapsulating in NotificaitionHelper.
-
     private final AppWidget4x1 mWidgetMedium = AppWidget4x1.getInstance();
 
     private final AppWidget4x2 mWidgetLarge = AppWidget4x2.getInstance();
 
+    private ExecutorService mUiUpdateExecutor;
+
+    private ExecutorService mMediaManagementExecutor;
 
 
-    int mRepeatMode = REPEAT_NONE;
 
-    int mShuffleMode = SHUFFLE_NONE;
+    private int mRepeatMode = REPEAT_NONE;
+
+    private int mShuffleMode = SHUFFLE_NONE;
 
 
 
@@ -233,7 +231,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        hasNotification = false;
+        mIsForeground = false;
         mRepeatMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_REPEAT_MODE, REPEAT_NONE);
         mShuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
         int position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
@@ -295,8 +293,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         unregisterReceiver(mCommandbroadcastReceiver);
         unregisterReceiver(mHeadsetBroadcastReceiver);
 
+        mIsForeground = false;
         stopForeground(true);
-        hasNotification = false;
 
         if (mUiUpdateExecutor != null) {
             mUiUpdateExecutor.shutdown();
@@ -368,8 +366,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         // Updating notification
         mNotificationHelper.buildNotification(mediaGroup, mediaAuthor, mediaTitle, mMediaCover);
-        if (hasNotification) {
-            mNotificationHelper.forceUpdate();
+        if (mIsForeground) {
+            mNotificationHelper.forceUpdate(isPlaying);
         }
     }
 
@@ -573,12 +571,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             mRemoteControlClient.register(PlayerService.this, mAudioManager);
             if (audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                if (hasNotification) {
-                    mNotificationHelper.goToIdleState(true);
-                } else {
+                if (!mIsForeground) {
                     LogUtils.LOGW(TAG, "runnablePlay: showing notification");
                     startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
-                    hasNotification = true;
+                    mIsForeground = true;
                 }
                 mRemoteControlClient.updateState(true);
             }
@@ -591,8 +587,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void run() {
             mRemoteControlClient.updateState(false);
-            mNotificationHelper.goToIdleState(false);
-
             updateExternalControlers(true, false);
         }
     };
@@ -602,8 +596,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         public void run() {
             mRemoteControlClient.updateState(false);
 
+            mIsForeground = false;
             stopForeground(true);
-            hasNotification = false;
 
             if (PlayerApplication.hasICS()) {
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
@@ -617,8 +611,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void run() {
+            mIsForeground = false;
             stopForeground(true);
-            hasNotification = false;
+
             mRemoteControlClient.stop();
             mRemoteControlClient.release();
 
