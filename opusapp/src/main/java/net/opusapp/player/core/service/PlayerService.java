@@ -102,7 +102,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    //
+    // Service management.
     public boolean mIsForeground;
 
     private PlayerBinder mBinder;
