@@ -6,7 +6,6 @@
     </style>
 
     <style name="AudioKit.FullScreenActivity" parent="Theme.AppCompat.Light.NoActionBar">
-
     </style>
 
     <style name="AudioKit.TransparentActionBar" parent="AudioKit">

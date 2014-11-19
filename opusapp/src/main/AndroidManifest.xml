@@ -126,7 +126,7 @@
         </activity>
         <activity
             android:name=".ui.activities.CarModeActivity"
-            android:theme="@style/Theme.AudioKit.FullScreenActivity" >
+            android:theme="@style/AudioKit.FullScreenActivity" >
         </activity>
         <activity
             android:name=".core.service.providers.local.ui.activities.SearchPathActivity"

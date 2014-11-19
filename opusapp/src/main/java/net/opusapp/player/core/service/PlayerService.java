@@ -265,10 +265,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 if (sharedPreferences.getBoolean(PlayerApplication.context.getString(R.string.preference_key_plug_auto_play), true)) {
                     switch (intent.getIntExtra("state", -1)) {
                         case 0:
-                            pause(false);
+                            if (isPlaying()) {
+                                pause(false);
+                            }
                             break;
                         case 1:
-                            play();
+                            if (mPlaylistIndex < mPlaylist.length) {
+                                play();
+                            }
                             break;
                     }
                 }
