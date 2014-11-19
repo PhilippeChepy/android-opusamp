@@ -154,7 +154,7 @@ public class MusicConnector {
 
 
     public static void doPlayActionIntent() {
-        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        final Intent action = new Intent(PlayerService.COMMAND_SOURCE_NOTIFICATION);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_TOGGLEPAUSE);
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 1, action, 0);
         try {
@@ -166,7 +166,7 @@ public class MusicConnector {
     }
 
     public static void doPrevActionIntent() {
-        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        final Intent action = new Intent(PlayerService.COMMAND_SOURCE_NOTIFICATION);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
         try {
@@ -178,7 +178,7 @@ public class MusicConnector {
     }
 
     public static void doNextActionIntent() {
-        final Intent action = new Intent(PlayerService.ACTION_NOTIFICATION_COMMAND);
+        final Intent action = new Intent(PlayerService.COMMAND_SOURCE_NOTIFICATION);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
         try {
@@ -190,7 +190,7 @@ public class MusicConnector {
     }
 
     public static void doPrevAction() {
-        final Intent action = new Intent(PlayerService.ACTION_CLIENT_COMMAND);
+        final Intent action = new Intent(PlayerService.COMMAND_SOURCE_CLIENT_APP);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_PREVIOUS);
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 3, action, 0);
         try {
@@ -202,7 +202,7 @@ public class MusicConnector {
     }
 
     public static void doNextAction() {
-        final Intent action = new Intent(PlayerService.ACTION_CLIENT_COMMAND);
+        final Intent action = new Intent(PlayerService.COMMAND_SOURCE_CLIENT_APP);
         action.putExtra(PlayerService.COMMAND_KEY, PlayerService.ACTION_NEXT);
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(PlayerApplication.context, 2, action, 0);
         try {

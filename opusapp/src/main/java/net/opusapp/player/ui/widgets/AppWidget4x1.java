@@ -2,7 +2,6 @@ package net.opusapp.player.ui.widgets;
 
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -15,6 +14,9 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class AppWidget4x1 extends AbstractAppWidget {
 
+    public static final String TAG = AppWidget4x1.class.getSimpleName();
+
+
 
     private static AppWidget4x1 instance;
 
@@ -26,16 +28,10 @@ public class AppWidget4x1 extends AbstractAppWidget {
         return instance;
     }
 
-    @Override
-    protected void pushUpdate(Context context, int[] appWidgetIds) {
-        final ComponentName serviceName = new ComponentName(context, PlayerService.class);
-        final Intent action = new Intent(PlayerService.ACTION_APPWIDGET_COMMAND);
-        action.setComponent(serviceName);
-    }
 
     @Override
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-    public void doUpdate(Context context) {
+    public void applyUpdate(Context context) {
         final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, LibraryMainActivity.class), 0);
 
         if (hasPlaylist) {

@@ -12,6 +12,7 @@
  */
 package net.opusapp.player.ui.widgets;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -19,8 +20,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.widget.RemoteViews;
 
+import net.opusapp.player.core.service.PlayerService;
+import net.opusapp.player.utils.LogUtils;
+
 
 public abstract class AbstractAppWidget extends AppWidgetProvider {
+
+    public static final String TAG = AbstractAppWidget.class.getSimpleName();
+
+
 
     protected static boolean isPlaying;
 
@@ -35,10 +43,21 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
     protected static boolean hasPlaylist = false;
 
 
+    @Override
+    public void onEnabled(Context context) {
+        super.onEnabled(context);
+
+
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        pushUpdate(context, appWidgetIds);
+        try {
+            PlayerService.APPWIDGET_REFRESH_INTENT.send();
+        }
+        catch (final PendingIntent.CanceledException canceledException) {
+            LogUtils.LOGException(TAG, "pushUpdate", 0, canceledException);
+        }
     }
 
 
@@ -58,13 +77,7 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
         albumImage = art;
     }
 
-    public void applyUpdate(Context context) {
-        doUpdate(context);
-    }
-
-    protected abstract void pushUpdate(Context context, final int[] appWidgetIds);
-
-    protected abstract void doUpdate(Context context);
+    protected abstract void applyUpdate(Context context);
 
     protected void notifyUpdate(final Context context, final int[] appWidgetIds, final RemoteViews views) {
         final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);

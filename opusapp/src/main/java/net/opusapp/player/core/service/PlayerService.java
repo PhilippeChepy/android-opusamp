@@ -62,15 +62,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     // Command
     public static final String COMMAND_KEY = "net.opusapp.player.core.service.COMMAND_KEY";
 
-    public static final String ACTION_APPWIDGET_COMMAND = "net.opusapp.player.core.service.ACTION_APPWIDGET_COMMAND";
+    public static final String COMMAND_SOURCE_APPWIDGET = "net.opusapp.player.core.service.COMMAND_SOURCE_APPWIDGET";
 
-    public static final String ACTION_NOTIFICATION_COMMAND = "net.opusapp.player.core.service.ACTION_NOTIFICATION_COMMAND";
+    public static final String COMMAND_SOURCE_NOTIFICATION = "net.opusapp.player.core.service.COMMAND_SOURCE_NOTIFICATION";
 
-    public static final String ACTION_TELEPHONY_COMMAND = "net.opusapp.player.core.service.ACTION_TELEPHONY_COMMAND";
+    public static final String COMMAND_SOURCE_TELEPHONY = "net.opusapp.player.core.service.COMMAND_SOURCE_TELEPHONY";
 
-    public static final String ACTION_CLIENT_COMMAND = "net.opusapp.player.core.service.ACTION_CLIENT_COMMAND";
+    public static final String COMMAND_SOURCE_CLIENT_APP = "net.opusapp.player.core.service.COMMAND_SOURCE_CLIENT_APP";
 
 
+
+    public static final String ACTION_REFRESH_WIDGETS = "net.opusapp.player.core.service.ACTION_REFRESH_WIDGETS";
 
     public static final String ACTION_TOGGLEPAUSE = "net.opusapp.player.core.service.ACTION_TOGGLEPAUSE";
 
@@ -155,6 +157,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private String mMediaCoverUri = null;
 
     private Bitmap mMediaCover = null;
+
+    private String mMediaTitle = null;
+
+    private String mMediaAuthor = null;
+
+    private String mMediaGroup = null;
 
 
 
@@ -251,10 +259,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
         };
 
-        // TODO: check usefulness of ACTION_NOTIFICATION_COMMAND.
-        final IntentFilter intentFilter = new IntentFilter(ACTION_NOTIFICATION_COMMAND);
-        intentFilter.addAction(ACTION_TELEPHONY_COMMAND);
-        intentFilter.addAction(ACTION_CLIENT_COMMAND);
+        // TODO: check usefulness of COMMAND_SOURCE_NOTIFICATION.
+        final IntentFilter intentFilter = new IntentFilter(COMMAND_SOURCE_NOTIFICATION);
+        intentFilter.addAction(COMMAND_SOURCE_TELEPHONY);
+        intentFilter.addAction(COMMAND_SOURCE_CLIENT_APP);
         LocalBroadcastManager.getInstance(PlayerApplication.context).registerReceiver(mCommandbroadcastReceiver, intentFilter);
 
 
@@ -325,18 +333,28 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
+    protected void updateWidgets() {
+        AbstractAppWidget.setHasPlaylist(mPlaylist.length > 0);
+        AbstractAppWidget.setPlaying(isPlaying());
+
+        AbstractAppWidget.setMetadata(mMediaTitle, mMediaAuthor, mMediaGroup, mMediaCover);
+
+        mWidgetLarge.applyUpdate(this);
+        mWidgetMedium.applyUpdate(this);
+    }
+
     protected void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
-        String mediaTitle = null;
-        String mediaAuthor = null;
-        String mediaGroup = null;
+        mMediaTitle = null;
+        mMediaAuthor = null;
+        mMediaGroup = null;
         long mediaDuration = 0;
 
         if (mPlaylist.length > 0) {
             if (mPlaylistIndex < mPlaylist.length) {
                 final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-                mediaTitle = media.name;
-                mediaAuthor = media.artist;
-                mediaGroup = media.album;
+                mMediaTitle = media.name;
+                mMediaAuthor = media.artist;
+                mMediaGroup = media.album;
                 mediaDuration = media.duration;
             }
 
@@ -357,19 +375,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         // Updating widget
         boolean isPlaying = isPlaying();
 
-        AbstractAppWidget.setHasPlaylist(mPlaylist.length > 0);
-        AbstractAppWidget.setPlaying(isPlaying);
-
-        AbstractAppWidget.setMetadata(mediaTitle, mediaAuthor, mediaGroup, mMediaCover);
-
-        mWidgetLarge.applyUpdate(this);
-        mWidgetMedium.applyUpdate(this);
+        updateWidgets();
 
         // Updating remote client
-        mRemoteControlClient.updateMetadata(mMediaCover, mediaTitle, mediaAuthor, mediaGroup, mediaDuration);
+        mRemoteControlClient.updateMetadata(mMediaCover, mMediaTitle, mMediaAuthor, mMediaGroup, mediaDuration);
 
         // Updating notification
-        mNotificationHelper.buildNotification(mediaGroup, mediaAuthor, mediaTitle, mMediaCover);
+        mNotificationHelper.buildNotification(mMediaGroup, mMediaAuthor, mMediaTitle, mMediaCover);
         if (mIsForeground) {
             mNotificationHelper.forceUpdate(isPlaying);
         }
@@ -380,15 +392,15 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             final String source = intent.getAction();
             final String action = intent.getStringExtra(PlayerService.COMMAND_KEY);
 
-            boolean isNotificationControl = source.equals(PlayerService.ACTION_NOTIFICATION_COMMAND);
-            boolean isWidgetControl = source.equals(PlayerService.ACTION_APPWIDGET_COMMAND);
-            boolean isTelephonyControl = source.equals(ACTION_TELEPHONY_COMMAND);
-            boolean isClientControl = source.equals(PlayerService.ACTION_CLIENT_COMMAND);
+            boolean isNotificationControl = source.equals(PlayerService.COMMAND_SOURCE_NOTIFICATION);
+            boolean isWidgetControl = source.equals(PlayerService.COMMAND_SOURCE_APPWIDGET);
+            boolean isTelephonyControl = source.equals(COMMAND_SOURCE_TELEPHONY);
+            boolean isClientControl = source.equals(PlayerService.COMMAND_SOURCE_CLIENT_APP);
             boolean isRemoteControl = isNotificationControl || isWidgetControl || isClientControl;
 
             if (action != null) {
                 if (isRemoteControl) {
-                    if (action.equals(PlayerService.ACTION_PREVIOUS)) {
+                    if (action.equals(ACTION_PREVIOUS)) {
                         if (isPlaying()) {
                             pause(true);
                             setPosition(0);
@@ -397,7 +409,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         } else {
                             prev();
                         }
-                    } else if (action.equals(PlayerService.ACTION_NEXT)) {
+                    } else if (action.equals(ACTION_NEXT)) {
                         if (isPlaying()) {
                             pause(true);
                             setPosition(0);
@@ -406,9 +418,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         } else {
                             next();
                         }
-                    } else if (action.equals(PlayerService.ACTION_STOP)) {
+                    } else if (action.equals(ACTION_STOP)) {
                         stop();
-                    } else if (action.equals(PlayerService.ACTION_TOGGLEPAUSE)) {
+                    } else if (action.equals(ACTION_TOGGLEPAUSE)) {
                         if (isPlaying()) {
                             pause(isNotificationControl);
                         } else {
@@ -416,21 +428,23 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                                 play();
                             }
                         }
-                    } else if (action.equals(PlayerService.ACTION_PLAY)) {
+                    } else if (action.equals(ACTION_PLAY)) {
                         if (!isPlaying()) {
                             if (mPlaylist != null && mPlaylist.length > 0) {
                                 play();
                             }
                         }
-                    } else if (action.equals(PlayerService.ACTION_PAUSE)) {
+                    } else if (action.equals(ACTION_PAUSE)) {
                         LogUtils.LOGD(TAG, "pause");
                         if (isPlaying()) {
                             pause(isNotificationControl);
                         }
+                    } else if (action.equals(ACTION_REFRESH_WIDGETS)) {
+                        updateWidgets();
                     }
                 }
                 else if (isTelephonyControl) {
-                    if (action.equals(PlayerService.ACTION_PLAY)) {
+                    if (action.equals(ACTION_PLAY)) {
                         LogUtils.LOGD(TAG, "telephony : querying ACTION_PLAY");
                         if (pausedByTelephopny()) {
                             setPausedByTelephony(false);
@@ -443,7 +457,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                             }
                         }
                     }
-                    else if (action.equals(PlayerService.ACTION_PAUSE)) {
+                    else if (action.equals(ACTION_PAUSE)) {
                         LogUtils.LOGD(TAG, "telephony : querying ACTION_PAUSE");
                         if (isPlaying()) {
                             LogUtils.LOGD(TAG, "telephony : ACTION_PAUSE");
@@ -1185,40 +1199,42 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    public static final PendingIntent APPWIDGET_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+    public static final PendingIntent APPWIDGET_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_TOGGLEPAUSE);
 
-    public static final PendingIntent APPWIDGET_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_NEXT);
+    public static final PendingIntent APPWIDGET_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_NEXT);
 
-    public static final PendingIntent APPWIDGET_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_APPWIDGET_COMMAND, PlayerService.ACTION_PREVIOUS);
+    public static final PendingIntent APPWIDGET_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_PREVIOUS);
 
-
-
-    public static final PendingIntent NOTIFICATION_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
-
-    public static final PendingIntent NOTIFICATION_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_NEXT);
-
-    public static final PendingIntent NOTIFICATION_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_PREVIOUS);
-
-    public static final PendingIntent NOTIFICATION_STOP_INTENT = PlayerService.buildServiceIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_STOP);
+    public static final PendingIntent APPWIDGET_REFRESH_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_REFRESH_WIDGETS);
 
 
 
+    public static final PendingIntent NOTIFICATION_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_TOGGLEPAUSE);
 
-    public static final Intent MEDIABUTTON_TOGGLE_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_NOTIFICATION_COMMAND, PlayerService.ACTION_TOGGLEPAUSE);
+    public static final PendingIntent NOTIFICATION_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_NEXT);
 
-    public static final Intent TELEPHONY_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_TELEPHONY_COMMAND, PlayerService.ACTION_PLAY);
+    public static final PendingIntent NOTIFICATION_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_PREVIOUS);
 
-    public static final Intent TELEPHONY_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_TELEPHONY_COMMAND, PlayerService.ACTION_PAUSE);
+    public static final PendingIntent NOTIFICATION_STOP_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_STOP);
 
-    public static final Intent CLIENT_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PLAY);
 
-    public static final Intent CLIENT_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PAUSE);
 
-    public static final Intent CLIENT_NEXT_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_NEXT);
 
-    public static final Intent CLIENT_PREVIOUS_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_PREVIOUS);
+    public static final Intent MEDIABUTTON_TOGGLE_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_TOGGLEPAUSE);
 
-    public static final Intent CLIENT_STOP_INTENT = PlayerService.buildBroadcastIntent(PlayerService.ACTION_CLIENT_COMMAND, PlayerService.ACTION_STOP);
+    public static final Intent TELEPHONY_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_TELEPHONY, PlayerService.ACTION_PLAY);
+
+    public static final Intent TELEPHONY_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_TELEPHONY, PlayerService.ACTION_PAUSE);
+
+    public static final Intent CLIENT_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_PLAY);
+
+    public static final Intent CLIENT_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_PAUSE);
+
+    public static final Intent CLIENT_NEXT_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_NEXT);
+
+    public static final Intent CLIENT_PREVIOUS_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_PREVIOUS);
+
+    public static final Intent CLIENT_STOP_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_STOP);
 
 
 
@@ -1250,6 +1266,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
         else if (ACTION_STOP.equals(action)) {
             pendingIntent = PendingIntent.getService(context, 6, intent, 0);
+        }
+        else if (ACTION_REFRESH_WIDGETS.equals(action)) {
+            pendingIntent = PendingIntent.getService(context, 7, intent, 0);
         }
 
         return pendingIntent;
