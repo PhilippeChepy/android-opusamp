@@ -50,7 +50,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class PlayerService extends Service implements AbstractMediaManager.Player.OnProviderCompletionListener {
@@ -154,6 +155,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Current song informations
+    private Lock mUpdateControlersLock = new ReentrantLock();
+
+    private boolean mIsUpdatingControlers = false;
+
     private String mMediaCoverUri = null;
 
     private Bitmap mMediaCover = null;
@@ -343,7 +348,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mWidgetMedium.applyUpdate(this);
     }
 
-    protected void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
+    protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
+
+        mUpdateControlersLock.lock();
+        if (mIsUpdatingControlers) {
+            mUpdateControlersLock.unlock();
+            return;
+        }
+        mIsUpdatingControlers = true;
+        mUpdateControlersLock.unlock();
+
+
         mMediaTitle = null;
         mMediaAuthor = null;
         mMediaGroup = null;
@@ -385,6 +400,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         if (mIsForeground) {
             mNotificationHelper.forceUpdate(isPlaying);
         }
+
+        mIsUpdatingControlers = false;
     }
 
     protected void doManageCommandIntent(final Intent intent) {
