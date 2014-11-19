@@ -19,7 +19,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
@@ -31,9 +30,9 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 @SuppressLint("NewApi")
 public class NotificationHelper {
 
-    private RemoteViews notificationTemplate;
+    private RemoteViews mCollapsedView;
 
-    private RemoteViews expandedView;
+    private RemoteViews mExpandedView;
 
     private Notification notification = null;
 
@@ -64,32 +63,65 @@ public class NotificationHelper {
     }
 
     public void buildNotification(final String albumName, final String artistName, final String trackName, final Bitmap albumArt) {
-    	notificationTemplate = new RemoteViews(mService.getPackageName(), R.layout.notification_template_base);
-        
-        initCollapsedLayout(trackName, artistName, albumArt);
+        final Intent intent = new Intent(mService.getApplicationContext(), LibraryMainActivity.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(mService, 0, intent, 0);
+
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mService)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setLargeIcon(albumArt)
+                .setContentTitle(albumName)
+                .setContentText(String.format(PlayerApplication.context.getString(R.string.notification_fallback_info_format), trackName, artistName))
+                .setContentIntent(pendingIntent);
 
         if (PlayerApplication.hasHoneycomb()) {
-            notification = new NotificationCompat.Builder(mService)
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .setContentIntent(getPendingIntent())
-                    .setContent(notificationTemplate)
+            mCollapsedView = new RemoteViews(mService.getPackageName(), R.layout.notification_template_base);
+            notification = builder
+                    .setContent(mCollapsedView)
                     .build();
 
-            initPlaybackActions();
-            if (PlayerApplication.hasJellyBean()) {
-                expandedView = new RemoteViews(mService.getPackageName(), R.layout.notification_template_expanded_base);
-                
-                notification.bigContentView = expandedView;
+            // Actions
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
 
-                initExpandedPlaybackActions();
-                initExpandedLayout(trackName, albumName, artistName, albumArt);
+            mCollapsedView.setImageViewResource(R.id.notification_base_play, mPauseDrawable);
+
+            // Media informations
+            mCollapsedView.setTextViewText(R.id.notification_base_line_one, trackName);
+            mCollapsedView.setTextViewText(R.id.notification_base_line_two, artistName);
+
+            if (albumArt != null) {
+                mCollapsedView.setImageViewBitmap(R.id.notification_base_image, albumArt);
             }
-        } else {
-            notification = new Notification();
-            notification.contentView = notificationTemplate;
+        }
+        else {
+            notification = builder.build();
             notification.flags |= Notification.FLAG_ONGOING_EVENT;
             notification.icon = R.drawable.ic_notification;
-            notification.contentIntent = getPendingIntent();
+            notification.contentIntent = pendingIntent;
+        }
+
+        if (PlayerApplication.hasJellyBean()) {
+            mExpandedView = new RemoteViews(mService.getPackageName(), R.layout.notification_template_expanded_base);
+            notification.bigContentView = mExpandedView;
+
+            // Actions
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
+
+            mExpandedView.setImageViewResource(R.id.notification_expanded_base_play, mPauseDrawable);
+
+            // Media informations
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_one, trackName);
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_two, albumName);
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_three, artistName);
+
+            if (albumArt != null) {
+                mExpandedView.setImageViewBitmap(R.id.notification_expanded_base_image, albumArt);
+            }
         }
     }
     
@@ -97,61 +129,19 @@ public class NotificationHelper {
     	return notification;
     }
 
-    private PendingIntent getPendingIntent() {
-        return PendingIntent.getActivity(mService, 0, new Intent(mService.getApplicationContext(), LibraryMainActivity.class), 0);
-    }
-
     public void forceUpdate(final boolean isPlaying) {
         if (notification == null || notificationManager == null) {
             return;
         }
         
-        if (notificationTemplate != null) {
-            notificationTemplate.setImageViewResource(R.id.notification_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
+        if (mCollapsedView != null) {
+            mCollapsedView.setImageViewResource(R.id.notification_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && expandedView != null) {
-            expandedView.setImageViewResource(R.id.notification_expanded_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
+        if (mExpandedView != null) {
+            mExpandedView.setImageViewResource(R.id.notification_expanded_base_play, isPlaying ? mPauseDrawable : mPlayDrawable);
         }
         
         notificationManager.notify(PlayerApplication.NOTIFICATION_PLAY_ID, notification);
     }
-
-    private void initCollapsedLayout(final String trackName, final String artistName, final Bitmap albumArt) {
-        notificationTemplate.setTextViewText(R.id.notification_base_line_one, trackName);
-        notificationTemplate.setTextViewText(R.id.notification_base_line_two, artistName);
-        
-        if (albumArt != null) {
-        	notificationTemplate.setImageViewBitmap(R.id.notification_base_image, albumArt);
-        }
-    }
-
-    private void initExpandedLayout(final String trackName, final String artistName, final String albumName, final Bitmap albumArt) {
-        expandedView.setTextViewText(R.id.notification_expanded_base_line_one, trackName);
-        expandedView.setTextViewText(R.id.notification_expanded_base_line_two, albumName);
-        expandedView.setTextViewText(R.id.notification_expanded_base_line_three, artistName);
-        
-        if (albumArt != null) {
-            expandedView.setImageViewBitmap(R.id.notification_expanded_base_image, albumArt);
-        }
-    }
-
-    private void initExpandedPlaybackActions() {
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
-        expandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
-
-        expandedView.setImageViewResource(R.id.notification_expanded_base_play, mPauseDrawable);
-    }
-
-    private void initPlaybackActions() {
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
-        notificationTemplate.setOnClickPendingIntent(R.id.notification_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
-
-        notificationTemplate.setImageViewResource(R.id.notification_base_play, mPauseDrawable);
-    }
-
 }
