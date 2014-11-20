@@ -63,6 +63,8 @@ public class MusicConnector {
 
     public static int details_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK;
 
+    public static int details_playlist_sort_order = AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION;
+
     public static int details_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME;
 
 

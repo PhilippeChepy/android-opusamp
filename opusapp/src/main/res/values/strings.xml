@@ -122,6 +122,8 @@
     <string name="label_sort_Z_A">Z-A</string>
     <string name="label_track_asc">Track # asc.</string>
     <string name="label_track_desc">Track # desc.</string>
+    <string name="label_position_asc">Position asc.</string>
+    <string name="label_position_desc">Position desc.</string>
     <string name="label_filename_A_Z">File name A-Z</string>
     <string name="label_filename_Z_A">File name Z-A</string>
     <string name="label_sort_artist_A_Z">Artist A-Z</string>

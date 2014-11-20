@@ -244,9 +244,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 });
         adapter.setTransparentBackground(true);
 
-        playlist = (DragSortListView) findViewById(R.id.dragable_list_base);
+        playlist = (DragSortListView) findViewById(R.id.dragable_list_playlist);
         if (playlist != null) {
-            playlist.setEmptyView(findViewById(R.id.dragable_list_empty));
+            playlist.setEmptyView(findViewById(R.id.dragable_list_empty_playlist));
             playlist.setAdapter(adapter);
             playlist.setDropListener(this);
             playlist.setDragScrollProfile(this);
@@ -297,9 +297,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
     }
 
-    /*
-                DragScrollProfile implementation
-             */
+    // DragScrollProfile implementation
     @Override
     public float getSpeed(float w, long t) {
         if (w > 0.8F) {
@@ -308,9 +306,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         return 10.0F * w;
     }
 
-    /*
-        DropListener implementation
-     */
+    // DropListener implementation
     @Override
     public void drop(int from, int to) {
         if (PlayerApplication.playerService != null) {

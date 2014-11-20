@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.mobeta.android.dslv.DragSortListView;
+
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
@@ -28,15 +30,16 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     public static final String TAG = LibraryDetailActivity.class.getSimpleName();
 
+
+
+
     private static final int CONTEXT_MENU_GROUP_ID = 1;
 
     private static final int CONTEXT_ART_GROUP_ID = 100;
 
 
 
-    /*
-        Actionbar
-     */
+
     private static final int OPTION_MENUITEM_SORT = 1;
 
 
@@ -55,9 +58,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     /*
 
      */
-    private LibraryAdapter adapter;
+    private LibraryAdapter mAdapter;
 
     private ListView contentList;
+
+    private DragSortListView dragableContentList;
 
 
 
@@ -70,6 +75,22 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     private static final int COLUMN_SONG_ART_URI = 3;
 
     private static final int COLUMN_SONG_VISIBLE = 4;
+
+
+
+    private static final int COLUMN_PLAYLIST_SONG_ID = 0;
+
+    private static final int COLUMN_PLAYLIST_SONG_TITLE = 1;
+
+    private static final int COLUMN_PLAYLIST_SONG_ARTIST = 2;
+
+    private static final int COLUMN_PLAYLIST_ENTRY_POSITION = 3;
+
+    private static final int COLUMN_PLAYLIST_SONG_ART_URI = 4;
+
+    private static final int COLUMN_PLAYLIST_SONG_VISIBLE = 5;
+
+
 
     private static final int COLUMN_ALBUM_ID = 0;
 
@@ -98,7 +119,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        if (v == contentList) {
+        if (v == contentList || v == dragableContentList) {
             doOnCreateDetailContextMenu(menu);
         }
         else {
@@ -118,76 +139,147 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState, R.layout.activity_library_detail, null);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Bundle parameters = getIntent().getExtras();
         if (parameters != null) {
             contentType = (AbstractMediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
             contentSourceId = parameters.getString(PlayerApplication.CONTENT_SOURCE_ID_KEY);
-
-            final Activity hostActivity = this;
-            final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
-                @Override
-                public Activity getActivity() {
-                    return hostActivity;
-                }
-
-                @Override
-                public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
-                    return new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem menuItem) {
-                            return doOnDetailContextItemSelected(menuItem.getItemId());
-                        }
-                    };
-                }
-
-                @Override
-                public void createMenu(final Menu menu, int position) {
-                    cursor.moveToPosition(position);
-                    doOnCreateDetailContextMenu(menu);
-                }
-            };
-
-            /*
-                Setting adapter
-             */
-            switch (contentType) {
-                case CONTENT_TYPE_ARTIST:
-                case CONTENT_TYPE_ALBUM:
-                case CONTENT_TYPE_PLAYLIST:
-                    adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG, LibraryAdapter.LIBRARY_MANAGER,
-                            new int[]{
-                                    COLUMN_SONG_ID,
-                                    COLUMN_SONG_TITLE,
-                                    COLUMN_SONG_ARTIST,
-                                    COLUMN_SONG_ART_URI,
-                                    COLUMN_SONG_VISIBLE
-                            });
-                    break;
-                case CONTENT_TYPE_ALBUM_ARTIST:
-                case CONTENT_TYPE_GENRE:
-                    adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
-                            new int[]{
-                                    COLUMN_ALBUM_ID,
-                                    COLUMN_ALBUM_NAME,
-                                    COLUMN_ALBUM_ARTIST,
-                                    COLUMN_ALBUM_ART_URI,
-                                    COLUMN_ALBUM_VISIBLE
-                            });
-                    break;
-                default:
-                    throw new IllegalArgumentException();
-            }
+        }
+        else {
+            contentType = AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST;
+            contentSourceId = null;
         }
 
-        contentList = (ListView) findViewById(R.id.list_view_base);
-        contentList.setAdapter(adapter);
+        switch (contentType) {
+            case CONTENT_TYPE_ARTIST:
+            case CONTENT_TYPE_ALBUM:
+            case CONTENT_TYPE_ALBUM_ARTIST:
+            case CONTENT_TYPE_GENRE:
+                super.onCreate(savedInstanceState, R.layout.activity_library_detail, null);
+                break;
+            case CONTENT_TYPE_PLAYLIST:
+                super.onCreate(savedInstanceState, R.layout.activity_library_sortable_detail, null);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
 
-        contentList.setOnItemClickListener(contentListOnItemClickListener);
-        contentList.setOnCreateContextMenuListener(this);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+
+        final Activity hostActivity = this;
+        final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
+            @Override
+            public Activity getActivity() {
+                return hostActivity;
+            }
+
+            @Override
+            public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
+                return new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        return doOnDetailContextItemSelected(menuItem.getItemId());
+                    }
+                };
+            }
+
+            @Override
+            public void createMenu(final Menu menu, int position) {
+                cursor.moveToPosition(position);
+                doOnCreateDetailContextMenu(menu);
+            }
+        };
+
+        /*
+            Setting adapter
+         */
+        switch (contentType) {
+            case CONTENT_TYPE_ARTIST:
+            case CONTENT_TYPE_ALBUM:
+                mAdapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG, LibraryAdapter.LIBRARY_MANAGER,
+                        new int[]{
+                                COLUMN_SONG_ID,
+                                COLUMN_SONG_TITLE,
+                                COLUMN_SONG_ARTIST,
+                                COLUMN_SONG_ART_URI,
+                                COLUMN_SONG_VISIBLE
+                        });
+                break;
+            case CONTENT_TYPE_PLAYLIST:
+                mAdapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS, LibraryAdapter.LIBRARY_MANAGER,
+                        new int[]{
+                                COLUMN_PLAYLIST_SONG_ID,
+                                COLUMN_PLAYLIST_SONG_TITLE,
+                                COLUMN_PLAYLIST_SONG_ARTIST,
+                                COLUMN_PLAYLIST_SONG_ART_URI,
+                                COLUMN_PLAYLIST_SONG_VISIBLE
+                        });
+                mAdapter.setTransparentBackground(true);
+                break;
+            case CONTENT_TYPE_ALBUM_ARTIST:
+            case CONTENT_TYPE_GENRE:
+                mAdapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
+                        new int[]{
+                                COLUMN_ALBUM_ID,
+                                COLUMN_ALBUM_NAME,
+                                COLUMN_ALBUM_ARTIST,
+                                COLUMN_ALBUM_ART_URI,
+                                COLUMN_ALBUM_VISIBLE
+                        });
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+
+
+        switch (contentType) {
+            case CONTENT_TYPE_ARTIST:
+            case CONTENT_TYPE_ALBUM:
+            case CONTENT_TYPE_ALBUM_ARTIST:
+            case CONTENT_TYPE_GENRE:
+                contentList = (ListView) findViewById(R.id.list_view_base);
+                contentList.setEmptyView(findViewById(R.id.list_view_empty));
+                contentList.setAdapter(mAdapter);
+
+                contentList.setOnItemClickListener(contentListOnItemClickListener);
+                contentList.setOnCreateContextMenuListener(this);
+                break;
+            case CONTENT_TYPE_PLAYLIST:
+                dragableContentList = (DragSortListView) findViewById(R.id.dragable_list_base);
+                dragableContentList.setEmptyView(findViewById(R.id.dragable_list_empty));
+                dragableContentList.setAdapter(mAdapter);
+
+
+                DragSortListView.DropListener dragListener = new DragSortListView.DropListener() {
+                    @Override
+                    public void drop(int from, int to) {
+                        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+                        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                        provider.playlistMove(contentSourceId, from, to);
+                        getSupportLoaderManager().restartLoader(1, null, LibraryDetailActivity.this);
+                    }
+                };
+
+                DragSortListView.DragScrollProfile scrollProfile = new DragSortListView.DragScrollProfile() {
+                    @Override
+                    public float getSpeed(float w, long t) {
+                        if (w > 0.8F) {
+                            return mAdapter.getCount() / 0.001F;
+                        }
+                        return 10.0F * w;
+                    }
+                };
+
+                dragableContentList.setOnItemClickListener(contentListOnItemClickListener);
+                dragableContentList.setOnCreateContextMenuListener(this);
+                dragableContentList.setDropListener(dragListener);
+                dragableContentList.setDragScrollProfile(scrollProfile);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
 
         getSupportLoaderManager().initLoader(0, null, this);
         getSupportLoaderManager().initLoader(1, null, this);
@@ -248,16 +340,15 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
                         AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
-
-                        AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
                 };
 
                 return PlayerApplication.buildMediaLoader(
                         PlayerApplication.libraryManagerIndex,
                         requestedFields,
-                        new int[]{ MusicConnector.details_songs_sort_order },
+                        new int[]{ MusicConnector.details_playlist_sort_order },
                         null,
                         contentType,
                         contentSourceId);
@@ -290,8 +381,8 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 super.onLoaderReset(cursorLoader);
                 break;
             case 1:
-                if (adapter != null) {
-                    adapter.changeCursor(null);
+                if (mAdapter != null) {
+                    mAdapter.changeCursor(null);
                     cursor = null;
                 }
                 break;
@@ -305,9 +396,9 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 super.onLoadFinished(cursorLoader, cursor);
                 break;
             case 1:
-                if (adapter != null) {
+                if (mAdapter != null) {
                     this.cursor = cursor;
-                    adapter.changeCursor(cursor);
+                    mAdapter.changeCursor(cursor);
                 }
                 break;
         }
@@ -391,7 +482,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             case CONTENT_TYPE_ALBUM:
                 return PlayerApplication.albumDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
             case CONTENT_TYPE_PLAYLIST:
-                boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
+                boolean playlistActionResult = PlayerApplication.playlistDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_playlist_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
 
                 switch (itemId) {
                     case PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
@@ -420,7 +511,6 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             switch (contentType) {
                 case CONTENT_TYPE_ARTIST:
                 case CONTENT_TYPE_ALBUM:
-                case CONTENT_TYPE_PLAYLIST:
                     switch (MusicConnector.details_songs_sort_order) {
                         case +AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
                         case -AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
@@ -435,6 +525,24 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                     }
 
                     alertDialogBuilder.setSingleChoiceItems(R.array.sort_songs, sortIndex, songFragmentAlertDialogClickListener);
+                    break;
+                case CONTENT_TYPE_PLAYLIST:
+                    switch (MusicConnector.details_playlist_sort_order) {
+                        case +AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
+                        case -AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
+                        case +AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 2; break;
+                        case -AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 3; break;
+                        case +AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 4; break;
+                        case -AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 5; break;
+                        case +AbstractMediaManager.Provider.SONG_URI:    sortIndex = 6; break;
+                        case -AbstractMediaManager.Provider.SONG_URI:    sortIndex = 7; break;
+                        case +AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 8; break;
+                        case -AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 9; break;
+                        case +AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 10; break;
+                        case -AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 11; break;
+                    }
+
+                    alertDialogBuilder.setSingleChoiceItems(R.array.sort_playlist_entries, sortIndex, playlistFragmentAlertDialogClickListener);
                     break;
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
@@ -471,6 +579,30 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 case 7:  MusicConnector.details_songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
                 case 8:  MusicConnector.details_songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
                 case 9:  MusicConnector.details_songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
+            }
+
+            doRefresh();
+            dialog.dismiss();
+        }
+    };
+
+    private DialogInterface.OnClickListener playlistFragmentAlertDialogClickListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case 0:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 1:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 2:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 3:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 4:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
+                case 5:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
+                case 6:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
+                case 7:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
+                case 8:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 9:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 10:  MusicConnector.details_playlist_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 11:  MusicConnector.details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
             doRefresh();

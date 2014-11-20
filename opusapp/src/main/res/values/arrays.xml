@@ -75,19 +75,34 @@
 	    <item>@string/label_sort_artist_A_Z</item>
 	    <item>@string/label_sort_artist_Z_A</item>
 	</string-array>
-	
-	<string-array name="sort_songs">
-	    <item>@string/label_sort_A_Z</item>
-	    <item>@string/label_sort_Z_A</item>
-	    <item>@string/label_track_asc</item>
-	    <item>@string/label_track_desc</item>
-	    <item>@string/label_filename_A_Z</item>
-	    <item>@string/label_filename_Z_A</item>
-	    <item>@string/label_sort_artist_A_Z</item>
-	    <item>@string/label_sort_artist_Z_A</item>
-	    <item>@string/label_sort_album_A_Z</item>
-	    <item>@string/label_sort_album_Z_A</item>
-	</string-array>
+
+    <string-array name="sort_playlist_entries">
+        <item>@string/label_sort_A_Z</item>
+        <item>@string/label_sort_Z_A</item>
+        <item>@string/label_track_asc</item>
+        <item>@string/label_track_desc</item>
+        <item>@string/label_position_asc</item>
+        <item>@string/label_position_desc</item>
+        <item>@string/label_filename_A_Z</item>
+        <item>@string/label_filename_Z_A</item>
+        <item>@string/label_sort_artist_A_Z</item>
+        <item>@string/label_sort_artist_Z_A</item>
+        <item>@string/label_sort_album_A_Z</item>
+        <item>@string/label_sort_album_Z_A</item>
+    </string-array>
+
+    <string-array name="sort_songs">
+        <item>@string/label_sort_A_Z</item>
+        <item>@string/label_sort_Z_A</item>
+        <item>@string/label_track_asc</item>
+        <item>@string/label_track_desc</item>
+        <item>@string/label_filename_A_Z</item>
+        <item>@string/label_filename_Z_A</item>
+        <item>@string/label_sort_artist_A_Z</item>
+        <item>@string/label_sort_artist_Z_A</item>
+        <item>@string/label_sort_album_A_Z</item>
+        <item>@string/label_sort_album_Z_A</item>
+    </string-array>
 
     <string-array name="sort_genre">
         <item>@string/label_sort_A_Z</item>

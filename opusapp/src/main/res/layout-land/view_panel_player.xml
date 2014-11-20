@@ -197,7 +197,7 @@
                 android:padding="5dp"
                 android:layout_marginBottom="@dimen/audio_controls_controls_height">
 
-                <include layout="@layout/view_list_dragable_listview"/>
+                <include layout="@layout/view_list_playlist"/>
 
             </LinearLayout>
 

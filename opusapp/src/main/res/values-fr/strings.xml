@@ -124,6 +124,8 @@
     <string name="label_sort_Z_A">Z-A</string>
     <string name="label_track_asc">Piste croissante</string>
     <string name="label_track_desc">Piste décroissante</string>
+    <string name="label_position_asc">Position croissante</string>
+    <string name="label_position_desc">Position décroissante</string>
     <string name="label_filename_A_Z">Nom de fichier A-Z</string>
     <string name="label_filename_Z_A">Nom de fichier Z-A</string>
     <string name="label_sort_artist_A_Z">Artiste A-Z</string>
