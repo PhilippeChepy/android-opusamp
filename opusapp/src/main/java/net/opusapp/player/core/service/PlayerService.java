@@ -545,6 +545,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         Collections.shuffle(mShuffledPlaylistIndexList);
         mShuffledPlaylistIndex = 0;
+
+        updateExternalControlers(false, false); // TODO: search for removing this call.
     }
 
     protected boolean pausedByTelephopny() {
