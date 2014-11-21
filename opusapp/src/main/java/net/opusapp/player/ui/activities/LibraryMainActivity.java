@@ -232,8 +232,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
 
-        doInitLibrary();
-        doInitLibraryContent();
+        initProvidersList();
+        initCurrentProvider();
         final Intent intent = getIntent();
         final String action = intent.getAction();
 
@@ -407,7 +407,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         switch (requestCode) {
             case OPTION_MENUITEM_LIBRARY_SETTINGS_ID:
             case AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH:
-                doInitLibrary();
+                initProvidersList();
+                initCurrentProvider();
                 break;
             case OPTION_MENUITEM_APPLICATION_SETTINGS_ID:
                 if (PlayerApplication.uiColorsChanged) {
@@ -469,7 +470,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     }
 
 
-    protected void doInitLibrary() {
+    protected void initProvidersList() {
         SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
 
         if (database != null) {
@@ -489,7 +490,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
     }
 
-    protected void doInitLibraryContent() {
+    protected void initCurrentProvider() {
         initLibraryView();
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
 
@@ -512,7 +513,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 getSupportActionBar().setTitle(navigationCursor.getString(1));
                 getSupportActionBar().setSubtitle(MediaManagerFactory.getDescriptionFromType(navigationCursor.getInt(2)));
             } catch (final Exception exception) {
-                LogUtils.LOGException(TAG, "doInitLibraryContent", 0, exception);
+                LogUtils.LOGException(TAG, "initCurrentProvider", 0, exception);
             }
         }
     }
@@ -847,7 +848,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
 
             PlayerApplication.libraryManagerIndex = (int) id;
-            doInitLibraryContent();
+            initCurrentProvider();
             PlayerApplication.saveLibraryIndexes();
 
             drawerLayout.closeDrawers();
