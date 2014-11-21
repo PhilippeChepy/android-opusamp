@@ -1005,16 +1005,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void queueReload() {
-        boolean wasPlaying = isPlaying();
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+
+        boolean wasPlaying = player.playerIsPlaying();
 
         if (wasPlaying) {
-            pause(true);
+            player.playerPause(true);
         }
 
-        String uri = null;
-        if (mPlaylist.length > mPlaylistIndex) {
-            uri = mPlaylist[mPlaylistIndex].getUri();
-        }
+        final String uri = mPlaylistIndex < mPlaylist.length ? mPlaylist[mPlaylistIndex].getUri() : null;
 
         loadPlaylist();
 
@@ -1023,16 +1023,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         if (mPlaylist != null && mPlaylistIndex < mPlaylist.length) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
-            player.playerSetContent(mPlaylist[mPlaylistIndex]);
-        }
-
-        if (mPlaylist.length > mPlaylistIndex) {
-            if (mPlaylist[mPlaylistIndex].getUri().equals(uri)) {
-                if (wasPlaying) {
-                    play();
-                }
+            if (mPlaylist[mPlaylistIndex].getUri().equals(uri) && wasPlaying) {
+                player.playerPause(false);
+            }
+            else {
+                player.playerStop();
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
         }
 
