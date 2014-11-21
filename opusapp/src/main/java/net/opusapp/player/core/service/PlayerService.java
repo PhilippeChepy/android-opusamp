@@ -976,7 +976,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         loadPlaylist();
 
         if (mPlaylist.length != 0) {
-            if (mPlaylistIndex <= mPlaylist.length) {
+            if (mPlaylistIndex >= mPlaylist.length) {
                 mPlaylistIndex = mPlaylist.length - 1;
             }
 
