@@ -730,12 +730,22 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static int getLibraryPlayerIndex() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getInt(PREFERENCE_LIBRARY_PLAYER_INDEX, 0);
+        int libraryIndex = sharedPreferences.getInt(PREFERENCE_LIBRARY_PLAYER_INDEX, 0);
+        if (libraryIndex >= mediaManagers.length) {
+            libraryIndex = 0;
+        }
+
+        return libraryIndex;
     }
 
     public static int getLibraryLibraryIndex() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getInt(PREFERENCE_LIBRARY_LIBRARY_INDEX, 0);
+        int libraryIndex = sharedPreferences.getInt(PREFERENCE_LIBRARY_LIBRARY_INDEX, 0);
+        if (libraryIndex >= mediaManagers.length) {
+            libraryIndex = 0;
+        }
+
+        return libraryIndex;
     }
 
 

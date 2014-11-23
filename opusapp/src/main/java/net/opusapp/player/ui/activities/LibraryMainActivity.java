@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
@@ -213,9 +214,29 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         navigationAdapter = new ProviderAdapter(this, R.layout.view_item_double_line_no_anchor, null);
 
+        final View footerView = getLayoutInflater().inflate(R.layout.view_item_settings, null, false);
+        final TextView textView = (TextView) footerView.findViewById(R.id.line_one);
+        textView.setText(R.string.menuitem_label_add_provider);
+
+        footerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MusicConnector.addLibrary(LibraryMainActivity.this, new Runnable() {
+                    @Override
+                    public void run() {
+                        PlayerApplication.allocateMediaManagers();
+
+                        initProvidersList();
+                        initCurrentProvider();
+                    }
+                });
+            }
+        });
+
         final ListView drawerList = (ListView) findViewById(R.id.list_drawer);
         drawerList.setAdapter(navigationAdapter);
         drawerList.setOnItemClickListener(navigationDrawerListOnItemClickListener);
+        drawerList.addFooterView(footerView, null, true);
 
         drawerLayout.setDrawerListener(drawerToggle);
 

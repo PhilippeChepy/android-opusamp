@@ -14,18 +14,24 @@ package net.opusapp.player.ui.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.MediaMetadata;
+import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.adapter.ux.MetadataListAdapter;
 import net.opusapp.player.utils.LogUtils;
@@ -432,6 +438,119 @@ public class MusicConnector {
         }
     }
 
+
+
+    //
+    public static void addLibrary(final Activity parent, final Runnable completionRunnable) {
+        final ArrayList<Integer> managerItemIds = new ArrayList<Integer>();
+        final ArrayList<String> managerItemDescriptions = new ArrayList<String>();
+
+        final MediaManagerFactory.MediaManagerDescription managerList[] = MediaManagerFactory.getMediaManagerList();
+
+        for (MediaManagerFactory.MediaManagerDescription mediaManager : managerList) {
+            if (mediaManager != null && mediaManager.isEnabled) {
+                managerItemIds.add(mediaManager.typeId);
+                managerItemDescriptions.add(mediaManager.description);
+            }
+        }
+
+        final EditText nameEditText = new EditText(parent);
+
+        final DialogInterface.OnClickListener newLibraryOnClickListener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                // nothing to be done.
+                SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+                final Editable collectionName = nameEditText.getText();
+
+                int mediaProviderType = managerItemIds.get(which);
+
+                if (database != null && collectionName != null) {
+                    String columns[] = new String[] {
+                            "COUNT(*) AS " + Entities.Provider._COUNT
+                    };
+
+                    Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, null);
+                    long count = 0;
+                    if (cursor != null) {
+                        if (cursor.getCount() > 0) {
+                            cursor.moveToFirst();
+                            count = cursor.getLong(0);
+                        }
+                        cursor.close();
+                    }
+
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION, count + 1);
+
+                    long rowId = database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
+                    if (rowId < 0) {
+                        LogUtils.LOGW(TAG, "new library: database insertion failure.");
+                    } else {
+                        configureLibrary(parent, (int) rowId, mediaProviderType);
+                        completionRunnable.run();
+                    }
+                }
+            }
+        };
+
+        final DialogInterface.OnClickListener onMediaManagerTypeSelection = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                editLibrary(parent, nameEditText, newLibraryOnClickListener, which);
+            }
+        };
+
+        new AlertDialog.Builder(parent)
+                .setTitle(R.string.alert_dialog_title_type_of_library)
+                .setItems(managerItemDescriptions.toArray(new String[managerItemDescriptions.size()]), onMediaManagerTypeSelection)
+                .show();
+    }
+
+    public static void editLibrary(Activity parent, final EditText nameEditText, final DialogInterface.OnClickListener newPlaylistPositiveOnClickListener, final int itemType) {
+        final InputMethodManager inputMethodManager = (InputMethodManager) parent.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        final DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                newPlaylistPositiveOnClickListener.onClick(dialogInterface, itemType);
+                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            }
+        };
+
+        final DialogInterface.OnClickListener negativeClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            }
+        };
+
+        new AlertDialog.Builder(parent)
+                .setTitle(R.string.label_new_library)
+                .setView(nameEditText)
+                .setPositiveButton(android.R.string.ok, positiveClickListener)
+                .setNegativeButton(android.R.string.cancel, negativeClickListener)
+                .show();
+
+        nameEditText.requestFocus();
+        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+    }
+
+    public static void configureLibrary(Activity sourceActivity, int mediaProviderId, int mediaProviderType) {
+        LogUtils.LOGD(TAG, "providerId : " + mediaProviderId + " providerType : " + mediaProviderType);
+
+        final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
+        final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
+        final AbstractMediaManager.ProviderAction providerAction = provider.getSettingsAction();
+
+        if (providerAction != null) {
+            /* launch activity */ providerAction.launch(sourceActivity);
+        }
+    }
 
 
     /*

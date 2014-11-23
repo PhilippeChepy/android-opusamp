@@ -12,9 +12,7 @@
  */
 package net.opusapp.player.ui.activities;
 
-import android.app.AlertDialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -29,7 +27,6 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -38,15 +35,12 @@ import com.mobeta.android.dslv.DragSortListView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.core.service.providers.MediaManagerFactory;
-import net.opusapp.player.core.service.providers.MediaManagerFactory.MediaManagerDescription;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
+import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
-
-import java.util.ArrayList;
 
 public class SettingsActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
@@ -242,13 +236,13 @@ public class SettingsActivity extends ActionBarActivity implements
                                             String.valueOf(providerId)
                                     });
 
-                            doLibraryConfiguration(providerId, mediaProviderType);
+                            MusicConnector.configureLibrary(SettingsActivity.this, providerId, mediaProviderType);
                             doRefresh();
                         }
                     }
                 };
 
-                doLibraryEdition(nameEditText, newLibraryOnClickListener);
+                MusicConnector.editLibrary(this, nameEditText, newLibraryOnClickListener, 0);
                 return true;
             case CONTEXT_MENUITEM_DELETE:
                 if (providerId != 1) {
@@ -277,114 +271,13 @@ public class SettingsActivity extends ActionBarActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        doLibraryConfiguration(cursor.getInt(COLUMN_PROVIDER_ID), cursor.getInt(COLUMN_PROVIDER_TYPE));
+        MusicConnector.configureLibrary(this, cursor.getInt(COLUMN_PROVIDER_ID), cursor.getInt(COLUMN_PROVIDER_TYPE));
     }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    protected boolean addProvider() {
-        final ArrayList<Integer> managerItemIds = new ArrayList<Integer>();
-        final ArrayList<String> managerItemDescriptions = new ArrayList<String>();
-
-        final MediaManagerDescription managerList[] = MediaManagerFactory.getMediaManagerList();
-
-
-        for (MediaManagerDescription mediaManager : managerList) {
-            if (mediaManager != null && mediaManager.isEnabled) {
-                managerItemIds.add(mediaManager.typeId);
-                managerItemDescriptions.add(mediaManager.description);
-            }
-        }
-
-        final EditText nameEditText = new EditText(SettingsActivity.this);
-
-        final DialogInterface.OnClickListener newLibraryOnClickListener = new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                // nothing to be done.
-                SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
-                final Editable collectionName = nameEditText.getText();
-
-                int mediaProviderType = managerItemIds.get(lastLibraryTypeIndex);
-
-                if (database != null && collectionName != null) {
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
-                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
-                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION, cursor.getCount());
-
-                    long rowId = database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
-                    if (rowId < 0) {
-                        LogUtils.LOGW(TAG, "new library: database insertion failure.");
-                    } else {
-                        doLibraryConfiguration((int) rowId, mediaProviderType);
-                        doRefresh();
-                    }
-                }
-            }
-        };
-
-        final DialogInterface.OnClickListener onMediaManagerTypeSelection = new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                lastLibraryTypeIndex = which;
-                doLibraryEdition(nameEditText, newLibraryOnClickListener);
-            }
-        };
-
-        new AlertDialog.Builder(SettingsActivity.this)
-                .setTitle(R.string.alert_dialog_title_type_of_library)
-                .setItems(managerItemDescriptions.toArray(new String[managerItemDescriptions.size()]), onMediaManagerTypeSelection)
-                .show();
-
-        return true;
-    }
-
-    protected void doLibraryConfiguration(int mediaProviderId, int mediaProviderType) {
-        LogUtils.LOGD(TAG, "providerId : " + mediaProviderId + " providerType : " + mediaProviderType);
-
-        final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
-        final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
-        final AbstractMediaManager.ProviderAction providerAction = provider.getSettingsAction();
-
-        if (providerAction != null) {
-            /* launch activity */ providerAction.launch(this);
-        }
-    }
-
-    protected void doLibraryEdition(final EditText nameEditText, final DialogInterface.OnClickListener newPlaylistPositiveOnClickListener) {
-        final InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        final DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                newPlaylistPositiveOnClickListener.onClick(dialogInterface, i);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        };
-
-        final DialogInterface.OnClickListener negativeClickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        };
-
-        new AlertDialog.Builder(SettingsActivity.this)
-                .setTitle(R.string.label_new_library)
-                .setView(nameEditText)
-                .setPositiveButton(android.R.string.ok, positiveClickListener)
-                .setNegativeButton(android.R.string.cancel, negativeClickListener)
-                .show();
-
-        nameEditText.requestFocus();
-        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
     }
 
     protected void doMoveProviders(int indexFrom, int indexTo) {
@@ -462,10 +355,6 @@ public class SettingsActivity extends ActionBarActivity implements
         }
     }
 
-
-    private static int lastLibraryTypeIndex;
-
-
     private View.OnClickListener mHeaderViewClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -479,7 +368,12 @@ public class SettingsActivity extends ActionBarActivity implements
         @Override
         public void onClick(View v) {
             LogUtils.LOGW(TAG, "footer view");
-            addProvider();
+            MusicConnector.addLibrary(SettingsActivity.this, new Runnable() {
+                @Override
+                public void run() {
+                    doRefresh();
+                }
+            });
         }
     };
 

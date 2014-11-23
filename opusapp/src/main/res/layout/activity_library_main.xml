@@ -41,19 +41,26 @@
                 <include layout="@layout/view_tabbed_pager"/>
             </LinearLayout>
 
-            <ListView
-                android:id="@+id/list_drawer"
-                android:layout_gravity="start"
+            <LinearLayout
+                android:id="@+id/drawer_container"
                 android:layout_width="280dp"
                 android:layout_height="fill_parent"
-                android:choiceMode="singleChoice"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="0dp"
-                android:horizontalSpacing="@dimen/grid_item_spacing"
-                android:verticalSpacing="@dimen/grid_item_spacing"
-                android:paddingTop="10.0dip"
-                android:paddingBottom="10.0dip"
-                android:background="@color/background_material_light" />
+                android:layout_gravity="start"
+                android:orientation="vertical">
+
+                <ListView
+                    android:id="@+id/list_drawer"
+                    android:layout_width="280dp"
+                    android:layout_height="fill_parent"
+                    android:choiceMode="singleChoice"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="0dp"
+                    android:horizontalSpacing="@dimen/grid_item_spacing"
+                    android:verticalSpacing="@dimen/grid_item_spacing"
+                    android:paddingTop="10.0dip"
+                    android:paddingBottom="10.0dip"
+                    android:background="@color/background_material_light" />
+            </LinearLayout>
 
         </android.support.v4.widget.DrawerLayout>
     </LinearLayout>
