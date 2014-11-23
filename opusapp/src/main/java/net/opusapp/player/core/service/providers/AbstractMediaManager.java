@@ -191,8 +191,10 @@ public interface AbstractMediaManager {
         public boolean hasContentType(ContentType contentType);
 
         public AbstractEmptyContentAction getEmptyContentAction(ContentType contentType);
-        public ProviderAction getAbstractProviderAction(int index);
-        public ProviderAction[] getAbstractProviderActionList();
+
+        public ProviderAction getSettingsAction();
+        public ProviderAction getAction(int index);
+        public ProviderAction[] getActionList();
 
 
         public void changeAlbumArt(Activity sourceActivity, RefreshableView sourceRefreshable, String albumId, boolean restore);

@@ -11,9 +11,9 @@
     <string name="widget_content_start_app">Open player</string>
 
     <!-- Activities -->
-    <string name="activity_title_preferences">Preferences</string>
+    <string name="activity_title_settings">Settings</string>
+    <string name="activity_title_global_settings">Global settings</string>
     <string name="activity_title_library_path">Location settings</string>
-    <string name="activity_title_library_management">Libraries</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
     <string name="activity_label_art_selection">Art selection</string>
     <string name="activity_label_deezer_signin">Connection to Deezer service</string>
@@ -101,6 +101,7 @@
     <string name="menuitem_label_delayed_pause">Auto pause</string>
     <string name="menuitem_label_delayed_pause_in">Auto pause (%1$s)</string>
     <string name="menuitem_label_add">Add</string>
+    <string name="menuitem_label_add_provider">Add a provider</string>
     <string name="menuitem_label_play">Play</string>
     <string name="menuitem_label_play_next">Play next</string>
     <string name="menuitem_label_add_to_queue">Add to queue</string>
@@ -143,6 +144,7 @@
     <string name="drawer_item_label_library_soundfx">Sound effects</string>
     <string name="drawer_item_label_library_settings">Library settings</string>
     <string name="drawer_item_label_application_settings">Global settings</string>
+    <string name="drawer_item_label_settings">Settings</string>
 
     <string name="searchview_query_hint">Search</string>
 

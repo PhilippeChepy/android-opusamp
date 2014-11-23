@@ -84,7 +84,7 @@ public class SettingsActivity extends PreferenceActivity {
                         PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
 
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-                provider.getAbstractProviderAction(0).launch(SettingsActivity.this);
+                provider.getAction(0).launch(SettingsActivity.this);
                 return true;
             }
         });

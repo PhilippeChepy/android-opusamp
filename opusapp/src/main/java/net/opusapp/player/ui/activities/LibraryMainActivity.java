@@ -154,9 +154,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         updateReloadMenuItem();
 
         int menuIndex = 7;
-
+/*
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getAbstractProviderActionList();
+        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getActionList();
 
         if (providerActionList != null) {
             for (int index = 0; index < providerActionList.length; index++) {
@@ -169,23 +169,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 }
             }
         }
-
-        final MenuItem libraryManagementMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_LIBRARY_SETTINGS_ID, menuIndex++, R.string.drawer_item_label_manage_libraries);
-        libraryManagementMenuItem.setIcon(R.drawable.ic_action_database);
-        libraryManagementMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                doLibraryManagement();
-                return true;
-            }
-        });
-
-        final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_application_settings);
+*/
+        final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_settings);
         settingsMenuItem.setIcon(R.drawable.ic_action_settings);
         settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), OPTION_MENUITEM_APPLICATION_SETTINGS_ID);
+                startActivityForResult(new Intent(PlayerApplication.context, SettingsActivity.class), OPTION_MENUITEM_LIBRARY_SETTINGS_ID);
                 return true;
             }
         });
@@ -316,32 +306,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
-
-
-    class ActionMenuItemClickListener implements MenuItem.OnMenuItemClickListener {
-
-        private final int index;
-
-        public ActionMenuItemClickListener(int index) {
-            this.index = index;
-        }
-
-        @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-            final AbstractMediaManager.ProviderAction providerAction = provider.getAbstractProviderAction(index);
-            if (providerAction != null) {
-                providerAction.launch(LibraryMainActivity.this);
-            }
-
-            return true;
-        }
-    }
-
-
-
-
-
     protected void updateReloadMenuItem() {
         if (reloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
@@ -404,21 +368,15 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch (requestCode) {
-            case OPTION_MENUITEM_LIBRARY_SETTINGS_ID:
-            case AbstractMediaManager.Provider.ACTIVITY_NEED_UI_REFRESH:
-                initProvidersList();
-                initCurrentProvider();
-                break;
-            case OPTION_MENUITEM_APPLICATION_SETTINGS_ID:
-                if (PlayerApplication.uiColorsChanged) {
-                    PlayerApplication.uiColorsChanged = false;
-                    Intent intent = getIntent();
-                    finish();
-                    startActivity(intent);
-                }
-                break;
+        if (PlayerApplication.uiColorsChanged) {
+            PlayerApplication.uiColorsChanged = false;
+            Intent intent = getIntent();
+            finish();
+            startActivity(intent);
         }
+
+        initProvidersList();
+        initCurrentProvider();
     }
 
     @Override
@@ -518,9 +476,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
     }
 
-    protected  void doLibraryManagement() {
-        startActivityForResult(new Intent(PlayerApplication.context, SettingsLibrariesActivity.class), OPTION_MENUITEM_LIBRARY_SETTINGS_ID);
-    }
 
     protected void doManageMenuitemVisibility(PagerAdapter pagerAdapter, int position) {
         final Class<?> itemClass = ((Object)pagerAdapter.getItem(position)).getClass();

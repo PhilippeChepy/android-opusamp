@@ -865,10 +865,16 @@ public class PlayerApplication extends Application implements ServiceConnection 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Toolbar applyActionBar(ActionBarActivity activity) {
         Toolbar toolbar = (Toolbar) activity.findViewById(iconsAreDark() ? R.id.main_toolbar_light : R.id.main_toolbar_dark);
+        Toolbar otherToolbar = (Toolbar) activity.findViewById(!iconsAreDark() ? R.id.main_toolbar_light : R.id.main_toolbar_dark);
+
         if (toolbar != null) {
             toolbar.setVisibility(View.VISIBLE);
             toolbar.setBackgroundColor(getBackgroundColor());
             activity.setSupportActionBar(toolbar);
+        }
+
+        if (otherToolbar != null) {
+            otherToolbar.setVisibility(View.GONE);
         }
 
         if (hasLollipop()) {

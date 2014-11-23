@@ -954,12 +954,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     @Override
-    public AbstractMediaManager.ProviderAction getAbstractProviderAction(int index) {
+    public AbstractMediaManager.ProviderAction getSettingsAction() {
+        return ACTION_LIST[1];
+    }
+
+    @Override
+    public AbstractMediaManager.ProviderAction getAction(int index) {
         return ACTION_LIST[index];
     }
 
     @Override
-    public AbstractMediaManager.ProviderAction[] getAbstractProviderActionList() {
+    public AbstractMediaManager.ProviderAction[] getActionList() {
         return ACTION_LIST;
     }
 

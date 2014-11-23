@@ -11,9 +11,9 @@
     <string name="widget_content_start_app">Ouvrir le lecteur</string>
 
     <!-- Activities -->
-    <string name="activity_title_preferences">Préferences</string>
+    <string name="activity_title_settings">Paramètres</string>
+    <string name="activity_title_global_settings">Paramètres généraux</string>
     <string name="activity_title_library_path">"Paramètrage des emplacements"</string>
-    <string name="activity_title_library_management">Bibliothèques</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
     <string name="activity_label_art_selection">"Choix d'une pochette"</string>
     <string name="activity_label_deezer_signin">Connexion au service Deezer</string>
@@ -103,6 +103,7 @@
     <string name="menuitem_label_delayed_pause">Pause auto.</string>
     <string name="menuitem_label_delayed_pause_in">Pause auto. (%1$s)</string>
     <string name="menuitem_label_add">Ajouter</string>
+    <string name="menuitem_label_add_provider">Ajouter une bibliothèque</string>
     <string name="menuitem_label_play">Lire</string>
     <string name="menuitem_label_play_next">Lire après</string>
     <string name="menuitem_label_add_to_queue">Ajouter à la file</string>
@@ -145,6 +146,7 @@
     <string name="drawer_item_label_library_soundfx">Effets sonores</string>
     <string name="drawer_item_label_library_settings">Paramètres de la bibliothèque</string>
     <string name="drawer_item_label_application_settings">Paramètres généraux</string>
+    <string name="drawer_item_label_settings">Paramètres</string>
 
     <string name="searchview_query_hint">Recherche</string>
 

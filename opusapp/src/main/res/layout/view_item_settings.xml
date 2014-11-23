@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="@dimen/item_normal_height"
+    android:baselineAligned="false"
+    android:background="@drawable/audiokit_item_background_holo_light"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/item_normal_height"
+    android:orientation="horizontal"
+    android:descendantFocusability="blocksDescendants"  >
+
+    <net.opusapp.player.ui.views.CustomBoldTextView
+        android:id="@+id/line_one"
+        android:layout_margin="@dimen/list_preferred_item_padding"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textColor="#ff000000"
+        android:textSize="@dimen/text_size_medium"
+        android:textStyle="bold" />
+
+</LinearLayout>

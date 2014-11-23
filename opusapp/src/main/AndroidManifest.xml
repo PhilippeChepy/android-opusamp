@@ -109,14 +109,12 @@
             android:theme="@style/AudioKit.TransparentActionBar" >
         </activity>
         <activity
-            android:name=".ui.activities.SettingsLibrariesActivity"
-            android:label="@string/activity_title_library_management"
-            android:launchMode="singleTop"
-            android:theme="@style/AudioKit" >
+            android:name=".ui.activities.SettingsActivity"
+            android:label="@string/activity_title_settings" >
         </activity>
         <activity
-            android:name=".ui.activities.SettingsActivity"
-            android:label="@string/activity_title_preferences" >
+            android:name=".ui.activities.GlobalSettingsActivity"
+            android:label="@string/activity_title_global_settings" >
         </activity>
         <activity android:name=".ui.activities.SoundEffectsActivity" >
         </activity>
