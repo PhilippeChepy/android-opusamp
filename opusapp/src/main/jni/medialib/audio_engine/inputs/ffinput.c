@@ -170,7 +170,7 @@ media_player_decode_frame_done:
 			break;
 		}
 
-		if (error_code == ENGINE_TERMINATED || error_code == ENGINE_GENERIC_ERROR) {
+		if (error_code == ENGINE_TERMINATED /*|| error_code == ENGINE_GENERIC_ERROR*/) {
 			ffinput_stream_set_position(stream, 0);
 			ffinput_stream->state_callback(stream, STREAM_STATE_TERMINATED);
 			break;
