@@ -330,11 +330,19 @@ public class MusicConnector {
 
     private static void doPrepareProviderSwitch() {
         if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
-            sendStopIntent();
+            boolean playing = PlayerApplication.playerService.isPlaying();
+
+            if (playing) {
+                PlayerApplication.playerService.stop();
+            }
 
             PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
             PlayerApplication.saveLibraryIndexes();
             PlayerApplication.playerService.queueReload();
+
+            if (playing) {
+                PlayerApplication.playerService.play();
+            }
         }
     }
 
