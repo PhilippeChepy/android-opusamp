@@ -291,7 +291,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     protected void onPause() {
         super.onPause();
 
-        PlayerApplication.additionalCallbacks.remove(this);
+        PlayerApplication.disconnectService(this);
         if (PlayerApplication.playerService != null) { // Avoid NPE while killing process (in dev only).
             PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
         }

@@ -54,7 +54,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-public class PlayerService extends Service implements AbstractMediaManager.Player.OnProviderCompletionListener {
+public class PlayerService extends Service implements AbstractMediaManager.Player.PlaybackStatusListener {
 
 	private final static String TAG = PlayerService.class.getSimpleName();
 
@@ -172,7 +172,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     @Override
-    public void onCodecCompletion() {
+    public void onPlaybackCompleted() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -202,7 +202,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     @Override
-    public void onCodecTimestampUpdate(long newPosition) {
+    public void onPlaybackTimestampUpdate(long newPosition) {
         /* Playing, request for timestamp update */
         notifyTimestampUpdate(newPosition);
 
@@ -1127,10 +1127,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void notifyProviderChanged() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
-
-        player.addCompletionListener(PlayerService.this);
+        for (AbstractMediaManager manager : PlayerApplication.mediaManagers) {
+            final AbstractMediaManager.Player player = manager.getPlayer();
+            player.clearPlaybackStatusListeners();
+            player.addPlaybackStatusListener(this);
+        }
     }
 
     public void notifyTimestampUpdate(long timestamp) {

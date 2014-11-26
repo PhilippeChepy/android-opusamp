@@ -71,7 +71,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static PlayerService playerService = null;
 
-    public static ArrayList<ServiceConnection> additionalCallbacks = new ArrayList<ServiceConnection>();
+    private static ArrayList<ServiceConnection> mServiceListenerList = new ArrayList<ServiceConnection>();
 
 
 
@@ -131,13 +131,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
         BuildSpecific.initApp();
     }
 
-    public synchronized static void connectService(ServiceConnection additionalConnectionCallback) {
+    public synchronized static void connectService(ServiceConnection serviceListener) {
         if (connecting) {
             return;
         }
 
-        if (additionalConnectionCallback != null) {
-            additionalCallbacks.add(additionalConnectionCallback);
+        if (serviceListener != null) {
+            if (!mServiceListenerList.contains(serviceListener)) {
+                mServiceListenerList.add(serviceListener);
+            }
         }
 
         if (playerService == null) {
@@ -149,13 +151,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
             connecting = false;
         }
-        else if (additionalConnectionCallback != null) {
-            additionalConnectionCallback.onServiceConnected(null, playerBinder);
+        else if (serviceListener != null) {
+            serviceListener.onServiceConnected(null, playerBinder);
         }
     }
 
-    public synchronized static void unregisterServiceCallback(ServiceConnection additionalCallback) {
-        additionalCallbacks.remove(additionalCallback);
+    public synchronized static void disconnectService(ServiceConnection serviceListener) {
+        if (serviceListener != null && mServiceListenerList.contains(serviceListener)) {
+            mServiceListenerList.remove(serviceListener);
+        }
     }
 
     @Override
@@ -163,7 +167,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         playerBinder = (PlayerService.PlayerBinder)iBinder;
         playerService = playerBinder.getService();
 
-        for (ServiceConnection callback : additionalCallbacks) {
+        for (ServiceConnection callback : mServiceListenerList) {
             callback.onServiceConnected(componentName, iBinder);
         }
     }
@@ -186,7 +190,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 currentProvider = null;
             }
             else {
-                currentProvider.getPlayer().resetListeners();
                 currentProviderId = currentProvider.getMediaManagerId();
                 currentProviderType = currentProvider.getMediaManagerType();
             }

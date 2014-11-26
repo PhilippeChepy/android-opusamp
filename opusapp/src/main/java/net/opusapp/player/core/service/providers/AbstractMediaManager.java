@@ -282,13 +282,13 @@ public interface AbstractMediaManager {
         public long equalizerBandGetGain(int band);
         public boolean equalizerApplyProperties();
 
-        void addCompletionListener(OnProviderCompletionListener listener);
-        void removeCompletionListener(OnProviderCompletionListener listener);
-        void resetListeners();
+        void addPlaybackStatusListener(PlaybackStatusListener listener);
+        void removePlaybackStatusListener(PlaybackStatusListener listener);
+        void clearPlaybackStatusListeners();
 
-        public interface OnProviderCompletionListener {
-            public void onCodecCompletion();
-            public void onCodecTimestampUpdate(long newPosition);
+        public interface PlaybackStatusListener {
+            public void onPlaybackCompleted();
+            public void onPlaybackTimestampUpdate(long newPosition);
         }
     }
 

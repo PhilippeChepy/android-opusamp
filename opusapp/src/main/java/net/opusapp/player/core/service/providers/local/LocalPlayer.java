@@ -39,8 +39,8 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 	protected void playbackUpdateTimestamp(long timestamp) {
         if ((timestamp - lastTimestampUpdate) > 200) { /* every ~200 msecs, request an update */
             lastTimestampUpdate = timestamp;
-            for (OnProviderCompletionListener listener : listenerList) {
-                listener.onCodecTimestampUpdate(timestamp);
+            for (PlaybackStatusListener listener : mCompletionListenersList) {
+                listener.onPlaybackTimestampUpdate(timestamp);
             }
         }
 	}
@@ -49,8 +49,8 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
 	protected void playbackEndNotification() {
         playing = false;
 
-        for (OnProviderCompletionListener listener : listenerList) {
-            listener.onCodecCompletion();
+        for (PlaybackStatusListener listener : mCompletionListenersList) {
+            listener.onPlaybackCompleted();
         }
 	}
 
@@ -216,22 +216,24 @@ public class LocalPlayer extends JniMediaLib implements AbstractMediaManager.Pla
         return engineEqualizerApplyProperties();
     }
 
-    private ArrayList<OnProviderCompletionListener> listenerList = new ArrayList<OnProviderCompletionListener>();
+    private ArrayList<PlaybackStatusListener> mCompletionListenersList = new ArrayList<PlaybackStatusListener>();
 
 	@Override
-	public void addCompletionListener(OnProviderCompletionListener listener) {
-        if (listenerList.indexOf(listener) < 0) {
-            listenerList.add(listener);
+	public void addPlaybackStatusListener(PlaybackStatusListener completionListener) {
+        if (!mCompletionListenersList.contains(completionListener)) {
+            mCompletionListenersList.add(completionListener);
         }
 	}
 
 	@Override
-	public void removeCompletionListener(OnProviderCompletionListener listener) {
-		listenerList.remove(listener);
+	public void removePlaybackStatusListener(PlaybackStatusListener completionListener) {
+        if (mCompletionListenersList.contains(completionListener)) {
+            mCompletionListenersList.remove(completionListener);
+        }
 	}
 
     @Override
-    public void resetListeners() {
-        listenerList.clear();
+    public void clearPlaybackStatusListeners() {
+        mCompletionListenersList.clear();
     }
 }
