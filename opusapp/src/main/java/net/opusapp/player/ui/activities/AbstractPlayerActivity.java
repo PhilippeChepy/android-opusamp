@@ -43,8 +43,6 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import com.mobeta.android.dslv.DragSortListView;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import net.opusapp.player.R;
@@ -391,6 +389,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         playerServiceListener.playButtonUpdateRunnable.run();
         playerServiceListener.repeatButtonUpdateRunnable.run();
         playerServiceListener.shuffleButtonUpdateRunnable.run();
+        playerServiceListener.onCoverLoaded(PlayerApplication.playerService.getCurrentCover());
         playlistButtonUpdateRunnable.run();
     }
 
@@ -444,6 +443,27 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     public final class PlayerServiceStateListenerImpl implements PlayerService.PlayerServiceStateListener {
 
         @Override
+        public void onPlay() {
+            runOnUiThread(playButtonUpdateRunnable);
+        }
+
+        @Override
+        public void onPause() {
+            runOnUiThread(playButtonUpdateRunnable);
+        }
+
+        @Override
+        public void onStop() {
+            runOnUiThread(playButtonUpdateRunnable);
+        }
+
+        @Override
+        public void onSeek(final long position) {
+            seekbarRunnable.position = (int) position;
+            runOnUiThread(seekbarRunnable);
+        }
+
+        @Override
         public void onShuffleModeChanged() {
             runOnUiThread(shuffleButtonUpdateRunnable);
         }
@@ -451,12 +471,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         @Override
         public void onRepeatModeChanged() {
             runOnUiThread(repeatButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onSeek(final long position) {
-            seekbarRunnable.position = (int) position;
-            runOnUiThread(seekbarRunnable);
         }
 
         @Override
@@ -470,18 +484,21 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
 
         @Override
-        public void onPlay() {
-            runOnUiThread(playButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onPause() {
-            runOnUiThread(playButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onStop() {
-            runOnUiThread(playButtonUpdateRunnable);
+        public void onCoverLoaded(final Bitmap bitmap) {
+            if (bitmap == null) {
+                artImageView.setImageResource(R.drawable.no_art_normal);
+                bluredImageView.setImageResource(R.drawable.no_art_normal);
+            }
+            else {
+                // TODO: create Runnable once.
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        artImageView.setImageBitmap(bitmap);
+                        bluredImageView.setImageBitmap(bitmap);
+                    }
+                });
+            }
         }
 
         private Runnable playButtonUpdateRunnable = new Runnable() {
@@ -577,19 +594,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                     titleTextView.setText(playlistCursor.getString(COLUMN_SONG_TITLE));
                     artistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
                     timeTextView.setText(PlayerApplication.formatMSecs(position));
-
-                    final String songArtUri = playlistCursor.getString(COLUMN_SONG_ART_URI);
-
-                    PlayerApplication.normalImageLoader.displayImage(songArtUri, artImageView, loaderListener);
                 }
                 else {
                     titleTextView.setText("");
                     artistTextView.setText("");
                     timeTextView.setText(R.string.label_00_00);
-                    artImageView.setImageResource(R.drawable.no_art_normal);
-                    if (bluredImageView != null) {
-                        bluredImageView.setImageResource(R.drawable.no_art_normal);
-                    }
                 }
 
                 seekbarRunnable.position = (int) position;
@@ -665,33 +674,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         }
     };
-
-    final private ImageLoadingListener loaderListener = new ImageLoadingListener() {
-        @Override
-        public void onLoadingStarted(String imageUri, View view) {
-        }
-
-        @Override
-        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            artImageView.setImageResource(R.drawable.no_art_normal);
-            if (bluredImageView != null) {
-                bluredImageView.setImageResource(R.drawable.no_art_normal);
-            }
-        }
-
-        @Override
-        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            if (bluredImageView != null) {
-                bluredImageView.setImageBitmap(loadedImage);
-            }
-        }
-
-        @Override
-        public void onLoadingCancelled(String imageUri, View view) {
-
-        }
-    };
-
 
     public void changePlaylistCursor() {
         if (adapter != null) {

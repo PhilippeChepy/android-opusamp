@@ -50,8 +50,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class PlayerService extends Service implements AbstractMediaManager.Player.PlaybackStatusListener {
@@ -155,10 +153,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Current song informations
-    private Lock mUpdateControlersLock = new ReentrantLock();
-
-    private boolean mIsUpdatingControlers = false;
-
     private String mMediaCoverUri = null;
 
     private Bitmap mMediaCover = null;
@@ -350,14 +344,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
 
-        mUpdateControlersLock.lock();
-        if (mIsUpdatingControlers) {
-            mUpdateControlersLock.unlock();
-            return;
-        }
-        mIsUpdatingControlers = true;
-        mUpdateControlersLock.unlock();
-
+        LogUtils.LOGW(TAG, "updateExternalControlers with {onlyPlaystate=" + onlyPlaystate + ", coverIsLoaded=" + coverIsLoaded + "}");
 
         mMediaTitle = null;
         mMediaAuthor = null;
@@ -374,14 +361,16 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             if (!onlyPlaystate) {
-                if (coverIsLoaded) {
-                    LogUtils.LOGD(TAG, "updateExternalControlers -> cover is loaded");
-                } else {
+                if (!coverIsLoaded) {
                     LogUtils.LOGD(TAG, "updateExternalControlers -> querying for cover loading with mMediaCoverUri = " + mMediaCoverUri);
 
                     if (mMediaCoverUri != null) {
                         LogUtils.LOGD(TAG, "updateExternalControlers: triggering cover loading");
+                        mMediaCover = null;
                         PlayerApplication.normalImageLoader.loadImage(mMediaCoverUri, (DisplayImageOptions) null, mImageLoaderListener);
+                    }
+                    else {
+                        mMediaCover = null;
                     }
                 }
             }
@@ -400,8 +389,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         if (mIsForeground) {
             mNotificationHelper.forceUpdate(isPlaying);
         }
-
-        mIsUpdatingControlers = false;
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -545,8 +532,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         Collections.shuffle(mShuffledPlaylistIndexList);
         mShuffledPlaylistIndex = 0;
-
-        updateExternalControlers(false, false); // TODO: search for removing this call.
     }
 
     protected boolean pausedByTelephopny() {
@@ -561,12 +546,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void onLoadingStarted(String imageUri, View view) {
-        }
-
-        @Override
-        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            mMediaCover = null;
-            applyUiUpdate();
+            LogUtils.LOGW(TAG, "starting cover update");
         }
 
         @Override
@@ -584,12 +564,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void onLoadingCancelled(String imageUri, View view) {
-            mMediaCover = null;
+        }
+
+        @Override
+        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
             applyUiUpdate();
         }
 
         protected void applyUiUpdate() {
+            LogUtils.LOGW(TAG, "applying cover update");
             updateExternalControlers(false, true);
+            notifyCoverLoaded();
         }
     };
 
@@ -616,7 +601,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mRemoteControlClient.updateState(true);
             }
 
-            updateExternalControlers(true, false);
+            updateExternalControlers(true, true);
         }
     };
 
@@ -624,7 +609,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         @Override
         public void run() {
             mRemoteControlClient.updateState(false);
-            updateExternalControlers(true, false);
+            updateExternalControlers(true, true);
         }
     };
 
@@ -640,7 +625,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
             }
 
-            updateExternalControlers(true, false);
+            updateExternalControlers(true, true);
         }
     };
 
@@ -654,7 +639,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mRemoteControlClient.stop();
             mRemoteControlClient.release();
 
-            updateExternalControlers(true, false);
+            updateExternalControlers(true, true);
 
             if (PlayerApplication.hasICS()) {
                 mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
@@ -677,9 +662,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (mPlaylist != null) {
                 if (mPlaylistIndex < mPlaylist.length) {
                     mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
+                    updateExternalControlers(false, false);
                 }
-
-                updateExternalControlers(false, false);
             }
         }
     };
@@ -749,6 +733,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         void onQueueChanged();
         void onQueuePositionChanged();
+
+        void onCoverLoaded(final Bitmap bitmap);
     }
 
     private List<PlayerServiceStateListener> mServiceListenerList = new ArrayList<PlayerServiceStateListener>();
@@ -869,6 +855,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
         return player.playerGetPosition();
+    }
+
+    public Bitmap getCurrentCover() {
+        return mMediaCover;
     }
 
     public void setPosition(long position) {
@@ -1211,7 +1201,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         edit.apply();
     }
 
-
+    private void notifyCoverLoaded() {
+        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
+            serviceListener.onCoverLoaded(mMediaCover);
+        }
+    }
 
 
 
