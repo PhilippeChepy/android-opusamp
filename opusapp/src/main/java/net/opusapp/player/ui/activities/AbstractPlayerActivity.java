@@ -487,7 +487,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onCoverLoaded(final Bitmap bitmap) {
             if (bitmap == null) {
                 artImageView.setImageResource(R.drawable.no_art_normal);
-                bluredImageView.setImageResource(R.drawable.no_art_normal);
+                if (bluredImageView != null) {
+                    bluredImageView.setImageResource(R.drawable.no_art_normal);
+                }
             }
             else {
                 // TODO: create Runnable once.
@@ -495,7 +497,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                     @Override
                     public void run() {
                         artImageView.setImageBitmap(bitmap);
-                        bluredImageView.setImageBitmap(bitmap);
+                        if (bluredImageView != null) {
+                            bluredImageView.setImageBitmap(bitmap);
+                        }
                     }
                 });
             }
