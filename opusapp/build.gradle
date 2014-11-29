@@ -8,8 +8,8 @@ android {
         applicationId "net.opusapp.player.test"
         minSdkVersion 9
         targetSdkVersion 21
-        versionCode 13
-        versionName "1.0.1.5"
+        versionCode 14
+        versionName "1.0.1.6"
     }
 
     flavorDimensions "abi", "version"
