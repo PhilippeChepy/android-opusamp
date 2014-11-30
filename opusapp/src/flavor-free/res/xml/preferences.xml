@@ -4,7 +4,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_ui"
-        android:icon="@drawable/ic_action_tiles_large" >
+        android:icon="@drawable/ic_apps_grey600_48dp" >
 
         <Preference
             android:key="@string/preference_key_color_presets"
@@ -40,7 +40,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_storage"
-        android:icon="@drawable/ic_action_database" >
+        android:icon="@drawable/ic_storage_grey600_48dp" >
 
         <PreferenceCategory
             android:title="@string/preference_category_title_cache_size">
@@ -75,7 +75,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_headphones"
-        android:icon="@drawable/ic_action_headphones">
+        android:icon="@drawable/ic_headset_grey600_48dp">
 
         <CheckBoxPreference
             android:key="@string/preference_key_plug_auto_play"
@@ -92,22 +92,22 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_about"
-        android:icon="@drawable/ic_action_help">
+        android:icon="@drawable/ic_help_grey600_48dp">
 
         <Preference
             android:key="@string/preference_key_privacy_policy"
             android:title="@string/preference_title_privacy_policy"
-            android:icon="@drawable/ic_action_info" />
+            android:icon="@drawable/ic_info_grey600_48dp" />
 
         <Preference
             android:key="@string/preference_key_opensource"
             android:title="@string/preference_title_opensource"
-            android:icon="@drawable/ic_action_info" />
+            android:icon="@drawable/ic_info_grey600_48dp" />
     </PreferenceScreen>
 
     <Preference
         android:key="@string/preference_key_premium"
         android:title="@string/preference_title_premium"
-        android:icon="@drawable/ic_action_creditcard" />
+        android:icon="@drawable/ic_credit_card_grey600_48dp" />
 
 </PreferenceScreen>

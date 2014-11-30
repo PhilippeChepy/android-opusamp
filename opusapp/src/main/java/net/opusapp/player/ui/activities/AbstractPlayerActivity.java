@@ -546,9 +546,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                     switch (PlayerApplication.playerService.getShuffleMode()) {
                         case PlayerService.SHUFFLE_AUTO:
                             shuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
+                            shuffleButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.SHUFFLE_NONE:
                             shuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
+                            shuffleButton.setColorFilter(null);
                             break;
                     }
                 }
@@ -566,12 +568,15 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                     switch (PlayerApplication.playerService.getRepeatMode()) {
                         case PlayerService.REPEAT_ALL:
                             repeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
+                            repeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.REPEAT_CURRENT:
                             repeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
+                            repeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.REPEAT_NONE:
                             repeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
+                            repeatButton.setColorFilter(null);
                             break;
                     }
                 }
@@ -636,9 +641,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void run() {
             if (playlistButton != null) {
                 if (saved_state_playlist_is_visible) {
-                    playlistButton.setImageResource(R.drawable.ic_view_list_black_48dp);
+                    playlistButton.setImageResource(R.drawable.ic_list_black_36dp);
+                    playlistButton.setColorFilter(PlayerApplication.getBackgroundColor());
                 } else {
-                    playlistButton.setImageResource(R.drawable.ic_view_list_grey600_48dp);
+                    playlistButton.setImageResource(R.drawable.ic_list_grey600_36dp);
+                    playlistButton.setColorFilter(null);
                 }
             }
 

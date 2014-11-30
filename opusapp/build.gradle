@@ -79,12 +79,14 @@ android {
     }
     buildTypes {
         release {
-            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+            zipAlignEnabled true
+            minifyEnabled true
+            shrinkResources true
         }
         debug {
-            jniDebugBuild true
+            jniDebuggable true
         }
     }
 }

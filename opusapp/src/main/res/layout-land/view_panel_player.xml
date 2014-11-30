@@ -234,7 +234,7 @@
                         android:id="@+id/song_options"
                         style="@style/PlayerButton"
                         android:contentDescription="@string/imageview_content_description_option_menu"
-                        android:src="@drawable/ic_more_vert_grey600_48dp" />
+                        android:src="@drawable/ic_more_vert_grey600_24dp" />
                 </LinearLayout>
             </LinearLayout>
         </RelativeLayout>
