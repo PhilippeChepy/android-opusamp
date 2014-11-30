@@ -37,7 +37,7 @@
             android:background="?android:selectableItemBackground"
             android:padding="@dimen/notification_expanded_button_padding"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_action_playback_prev" />
+            android:src="@drawable/ic_skip_previous_grey600_48dp" />
 
         <ImageButton
             android:id="@+id/notification_expanded_base_play"
@@ -47,7 +47,7 @@
             android:background="?android:selectableItemBackground"
             android:padding="@dimen/notification_expanded_button_padding"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_action_playback_play" />
+            android:src="@drawable/ic_play_arrow_grey600_48dp" />
 
         <ImageButton
             android:id="@+id/notification_expanded_base_next"
@@ -57,7 +57,7 @@
             android:background="?android:selectableItemBackground"
             android:padding="@dimen/notification_expanded_button_padding"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_action_playback_next" />
+            android:src="@drawable/ic_skip_next_grey600_48dp" />
     </LinearLayout>
 
     <ImageView
@@ -76,7 +76,7 @@
         android:layout_alignParentTop="true"
         android:background="?android:selectableItemBackground"
         android:padding="@dimen/notification_expanded_collapse_padding"
-        android:src="@drawable/btn_notification_collapse_dark" />
+        android:src="@drawable/ic_clear_grey600_24dp" />
 
     <LinearLayout
         android:layout_width="match_parent"

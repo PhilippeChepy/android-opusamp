@@ -118,7 +118,7 @@ public class ArtSelectActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add);
-        addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_add : R.drawable.ic_action_add_dark);
+        addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_add_black_48dp : R.drawable.ic_add_white_48dp);
         addMenuItem.setVisible(viewPager != null && viewPager.getCurrentItem() == 1);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);

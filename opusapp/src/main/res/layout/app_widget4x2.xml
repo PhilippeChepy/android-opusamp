@@ -21,7 +21,7 @@
         <ImageButton
             android:id="@+id/four_by_two_control_prev"
             style="@style/AppWidgetMediaButton"
-            android:src="@drawable/ic_action_playback_prev_dark" />
+            android:src="@drawable/ic_skip_previous_white_48dp" />
 
         <ImageView
             android:layout_width="1dp"
@@ -31,7 +31,7 @@
         <ImageButton
             android:id="@+id/four_by_two_control_play"
             style="@style/AppWidgetMediaButton"
-            android:src="@drawable/ic_action_playback_pause_dark" />
+            android:src="@drawable/ic_pause_white_48dp" />
 
         <ImageView
             android:layout_width="1dp"
@@ -41,7 +41,7 @@
         <ImageButton
             android:id="@+id/four_by_two_control_next"
             style="@style/AppWidgetMediaButton"
-            android:src="@drawable/ic_action_playback_next_dark" />
+            android:src="@drawable/ic_skip_next_white_48dp" />
     </LinearLayout>
 
     <ImageView

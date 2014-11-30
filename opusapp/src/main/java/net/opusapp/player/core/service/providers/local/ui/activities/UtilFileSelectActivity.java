@@ -92,7 +92,7 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.actionbar_confirmation_text_cancel);
-        cancelMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_cancel : R.drawable.ic_action_cancel_dark);
+        cancelMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
         MenuItemCompat.setShowAsAction(cancelMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         cancelMenuItem.setOnMenuItemClickListener(onCancelOptionMenuItemListener);
         return true;
@@ -218,7 +218,7 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
 			File file = getItem(position);
 
 			if (!UtilFileSelectActivity.isAtRootLevel && position == 0) {
-				viewHolder.image.setImageResource(R.drawable.ic_action_arrow_left_top);
+				viewHolder.image.setImageResource(R.drawable.ic_arrow_drop_up_grey600_48dp);
                 viewHolder.lineOne.setText("Parent folder"); // TODO: translation @see UtilDirectorySelectActivity
                 viewHolder.lineTwo.setVisibility(View.GONE);
 			}
@@ -226,12 +226,12 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
                 viewHolder.lineOne.setText(file.getName());
 		
 				if (file.isDirectory()) {
-                    viewHolder.image.setImageResource(R.drawable.ic_action_folder_closed);
+                    viewHolder.image.setImageResource(R.drawable.ic_folder_grey600_48dp);
                     viewHolder.lineTwo.setVisibility(View.VISIBLE);
                     viewHolder.lineTwo.setText(R.string.fs_directory);
 				} else {
                     PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewHolder.image);
-                    viewHolder.image.setImageResource(R.drawable.ic_action_document);
+                    viewHolder.image.setImageResource(R.drawable.ic_insert_drive_file_grey600_48dp);
                     PlayerApplication.thumbnailImageLoader.displayImage(PlayerApplication.fileToUri(file), viewHolder.image);
 
                     viewHolder.lineTwo.setVisibility(View.GONE);

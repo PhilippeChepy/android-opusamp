@@ -511,11 +511,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             public void run() {
                 if (PlayerApplication.playerService != null) {
                     if (PlayerApplication.playerService.isPlaying()) {
-                        playButton.setImageResource(R.drawable.ic_action_playback_pause);
+                        playButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
                         timeTextView.clearAnimation();
                     }
                     else {
-                        playButton.setImageResource(R.drawable.ic_action_playback_play);
+                        playButton.setImageResource(R.drawable.ic_play_arrow_grey600_48dp);
                         Animation animation = new AlphaAnimation(0.0f, 1.0f);
                         animation.setDuration(100);
                         animation.setStartOffset(400);
@@ -545,10 +545,10 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 if (PlayerApplication.playerService != null) {
                     switch (PlayerApplication.playerService.getShuffleMode()) {
                         case PlayerService.SHUFFLE_AUTO:
-                            shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle);
+                            shuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
                             break;
                         case PlayerService.SHUFFLE_NONE:
-                            shuffleButton.setImageResource(R.drawable.ic_action_playback_shuffle_off);
+                            shuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
                             break;
                     }
                 }
@@ -565,13 +565,13 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 if (PlayerApplication.playerService != null) {
                     switch (PlayerApplication.playerService.getRepeatMode()) {
                         case PlayerService.REPEAT_ALL:
-                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat);
+                            repeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
                             break;
                         case PlayerService.REPEAT_CURRENT:
-                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_1);
+                            repeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
                             break;
                         case PlayerService.REPEAT_NONE:
-                            repeatButton.setImageResource(R.drawable.ic_action_playback_repeat_off);
+                            repeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
                             break;
                     }
                 }
@@ -636,9 +636,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void run() {
             if (playlistButton != null) {
                 if (saved_state_playlist_is_visible) {
-                    playlistButton.setImageResource(R.drawable.ic_action_list_2);
+                    playlistButton.setImageResource(R.drawable.ic_view_list_black_48dp);
                 } else {
-                    playlistButton.setImageResource(R.drawable.ic_action_list_2_off);
+                    playlistButton.setImageResource(R.drawable.ic_view_list_grey600_48dp);
                 }
             }
 
@@ -696,7 +696,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         final PopupMenu popupMenu = new PopupMenu(this, v);
 
         final MenuItem share = popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menuitem_label_share);
-        share.setIcon(R.drawable.ic_action_share_dark);
+        // share.setIcon(R.drawable.ic_action_share_dark);
         share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 
             @Override
@@ -729,7 +729,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
 
         final MenuItem carMode = popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menuitem_label_toggle_car_mode);
-        carMode.setIcon(R.drawable.ic_action_car);
+        // TODO: remove resources for "carMode.setIcon(R.drawable.ic_directions_car_grey600_48dp);"
         carMode.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -752,7 +752,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                     getString(R.string.menuitem_label_delayed_pause));
             autoPause.setCheckable(true);
             autoPause.setChecked(remaining > 0);
-            autoPause.setIcon(R.drawable.ic_action_alarm);
+            autoPause.setIcon(R.drawable.ic_alarm_grey600_48dp);
             autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {

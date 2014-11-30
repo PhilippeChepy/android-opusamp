@@ -228,13 +228,13 @@
                         style="@style/PlayerButton"
                         android:contentDescription="@string/imageview_content_description_playlist"
                         android:visibility="invisible"
-                        android:src="@drawable/ic_action_list_2_off" />
+                        android:src="@drawable/ic_more_vert_grey600_48dp" />
 
                     <ImageButton
                         android:id="@+id/song_options"
                         style="@style/PlayerButton"
                         android:contentDescription="@string/imageview_content_description_option_menu"
-                        android:src="@drawable/ic_action_overflow" />
+                        android:src="@drawable/ic_more_vert_grey600_48dp" />
                 </LinearLayout>
             </LinearLayout>
         </RelativeLayout>

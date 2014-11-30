@@ -130,17 +130,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         searchView.setOnCloseListener(searchViewOnCloseListener);
 
         sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_sort_2 : R.drawable.ic_action_sort_2_dark);
+        sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
         searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
-        searchMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_search : R.drawable.ic_action_search_dark);
+        searchMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_search_black_48dp : R.drawable.ic_search_white_48dp);
         MenuItemCompat.setActionView(searchMenuItem, searchView);
         MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
         final MenuItem hiddenMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 4, R.string.menuitem_label_show_hidden);
-        hiddenMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_show : R.drawable.ic_action_show_dark);
+        hiddenMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_visibility_black_48dp : R.drawable.ic_visibility_white_48dp);
         hiddenMenuItem.setCheckable(true);
         MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
@@ -148,7 +148,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
 
         reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_reload : R.drawable.ic_action_reload_dark);
+        reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
         MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
@@ -172,7 +172,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
 */
         final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_settings);
-        settingsMenuItem.setIcon(R.drawable.ic_action_settings);
+        settingsMenuItem.setIcon(R.drawable.ic_settings_grey600_48dp);
         settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -331,10 +331,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         if (reloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
                 reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_cancel : R.drawable.ic_action_cancel_dark);
+                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
             } else {
                 reloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_reload : R.drawable.ic_action_reload_dark);
+                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
             }
         }
     }

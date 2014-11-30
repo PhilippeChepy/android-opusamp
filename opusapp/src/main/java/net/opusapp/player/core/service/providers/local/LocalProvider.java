@@ -1952,7 +1952,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         currentRow[columnIndex] = PlayerApplication.fileToUri(currentFolder.getParentFile());
                         break;
                     case SONG_ART_URI:
-                        currentRow[columnIndex] = "drawable://" + R.drawable.ic_action_arrow_left_top;
+                        currentRow[columnIndex] = "drawable://" + R.drawable.ic_arrow_drop_up_grey600_48dp;
                         break;
                     case SONG_DURATION:
                     case SONG_BITRATE:
@@ -2070,7 +2070,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             currentRow[columnIndex] = PlayerApplication.fileToUri(currentFile);
                             break;
                         case SONG_ART_URI:
-                            currentRow[columnIndex] = "drawable://" + R.drawable.ic_action_folder_closed;
+                            currentRow[columnIndex] = "drawable://" + R.drawable.ic_folder_grey600_48dp;
                             break;
                         case SONG_DURATION:
                         case SONG_BITRATE:

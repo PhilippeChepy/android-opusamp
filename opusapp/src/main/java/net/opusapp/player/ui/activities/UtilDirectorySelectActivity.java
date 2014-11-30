@@ -89,12 +89,12 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuItem okMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_OK, 1, R.string.actionbar_confirmation_text_done);
-        okMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_tick : R.drawable.ic_action_tick_dark);
+        okMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_check_black_48dp : R.drawable.ic_check_white_48dp);
         MenuItemCompat.setShowAsAction(okMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         okMenuItem.setOnMenuItemClickListener(onOKOptionMenuItemListener);
 
         final MenuItem cancelMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_CANCEL, 2, R.string.actionbar_confirmation_text_cancel);
-        cancelMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_action_cancel : R.drawable.ic_action_cancel_dark);
+        cancelMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
         MenuItemCompat.setShowAsAction(cancelMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         cancelMenuItem.setOnMenuItemClickListener(onCancelOptionMenuItemListener);
         return true;
@@ -224,7 +224,7 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
 			File file = getItem(position);
 
 			if (!UtilDirectorySelectActivity.isAtRootLevel && position == 0) {
-				viewHolder.image.setImageResource(R.drawable.ic_action_arrow_left_top);
+				viewHolder.image.setImageResource(R.drawable.ic_arrow_drop_up_grey600_48dp);
                 viewHolder.lineOne.setText("Parent folder");
                 viewHolder.lineTwo.setVisibility(View.GONE);
 			}
@@ -232,11 +232,11 @@ public class UtilDirectorySelectActivity extends ActionBarActivity implements On
                 viewHolder.lineOne.setText(file.getName());
 		
 				if (file.isDirectory()) {
-                    viewHolder.image.setImageResource(R.drawable.ic_action_folder_closed);
+                    viewHolder.image.setImageResource(R.drawable.ic_folder_grey600_48dp);
                     viewHolder.lineTwo.setVisibility(View.VISIBLE);
                     viewHolder.lineTwo.setText(R.string.fs_directory);
 				} else { /* should never happen */
-                    viewHolder.image.setImageResource(R.drawable.ic_action_document);
+                    viewHolder.image.setImageResource(R.drawable.ic_insert_drive_file_grey600_48dp);
                     viewHolder.lineTwo.setVisibility(View.GONE);
 				}
 			}

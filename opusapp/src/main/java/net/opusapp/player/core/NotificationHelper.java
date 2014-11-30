@@ -53,12 +53,12 @@ public class NotificationHelper {
         notificationManager = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (PlayerApplication.hasLollipop()) {
-            mPlayDrawable = R.drawable.ic_action_playback_play;
-            mPauseDrawable = R.drawable.ic_action_playback_pause;
+            mPlayDrawable = R.drawable.ic_play_arrow_grey600_48dp;
+            mPauseDrawable = R.drawable.ic_pause_grey600_48dp;
         }
         else {
-            mPlayDrawable = R.drawable.ic_action_playback_play_dark;
-            mPauseDrawable = R.drawable.ic_action_playback_pause_dark;
+            mPlayDrawable = R.drawable.ic_play_arrow_white_48dp;
+            mPauseDrawable = R.drawable.ic_pause_white_48dp;
         }
     }
 

@@ -55,12 +55,12 @@ public class AppWidget4x2 extends AbstractAppWidget {
             }
 
             if (isPlaying) {
-                view.setImageViewResource(R.id.four_by_two_control_play, R.drawable.ic_action_playback_pause_dark);
+                view.setImageViewResource(R.id.four_by_two_control_play, R.drawable.ic_pause_white_48dp);
                 if (PlayerApplication.hasICS_MR1()) {
                     view.setContentDescription(R.id.four_by_two_control_play, context.getString(R.string.imageview_content_description_play));
                 }
             } else {
-                view.setImageViewResource(R.id.four_by_two_control_play, R.drawable.ic_action_playback_play_dark);
+                view.setImageViewResource(R.id.four_by_two_control_play, R.drawable.ic_play_arrow_white_48dp);
                 if (PlayerApplication.hasICS_MR1()) {
                     view.setContentDescription(R.id.four_by_two_control_play, context.getString(R.string.imageview_content_description_play));
                 }

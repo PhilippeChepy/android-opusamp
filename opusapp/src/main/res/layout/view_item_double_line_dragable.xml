@@ -53,7 +53,7 @@
         android:contentDescription="@string/imageview_content_description_currently_playing"
         android:adjustViewBounds="false"
         android:paddingRight="15.0dip"
-        android:src="@drawable/ic_action_volume_up"
+        android:src="@drawable/ic_volume_up_grey600_48dp"
         android:visibility="gone" />
 
     <ImageButton

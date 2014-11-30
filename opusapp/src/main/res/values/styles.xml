@@ -26,7 +26,7 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:background">@drawable/holo_selector</item>
+        <item name="android:background">@drawable/media_button_selector</item>
     </style>
 
 
@@ -47,37 +47,6 @@
     <style name="BottomActionBarLineTwo" parent="BottomActionBarText">
     </style>
 
-    <style name="BottomActionBarItem">
-        <item name="android:layout_weight">1</item>
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:gravity">center|right</item>
-        <item name="android:paddingLeft">@dimen/bottom_action_bar_item_padding_left</item>
-        <item name="android:paddingRight">@dimen/bottom_action_bar_item_padding_right</item>
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:background">@drawable/holo_selector</item>
-    </style>
-
-    <style name="BottomActionBarItem.Previous" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/imageview_content_description_previous</item>
-    </style>
-
-    <style name="BottomActionBarItem.Next" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/imageview_content_description_next</item>
-    </style>
-
-    <style name="BottomActionBarItem.Play" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/imageview_content_description_play</item>
-    </style>
-
-    <style name="BottomActionBarItem.Shuffle" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/imageview_content_description_shuffle</item>
-    </style>
-
-    <style name="BottomActionBarItem.Repeat" parent="BottomActionBarItem">
-        <item name="android:contentDescription">@string/imageview_content_description_repeat</item>
-    </style>
-
     <style name="NotificationText">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -90,7 +59,7 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">@dimen/notification_action_height</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:background">@drawable/holo_selector</item>
+        <item name="android:background">@drawable/media_button_selector</item>
         <item name="android:scaleType">center</item>
     </style>
 </resources>
