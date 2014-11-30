@@ -94,6 +94,9 @@ public class NotificationHelper {
             if (albumArt != null) {
                 mCollapsedView.setImageViewBitmap(R.id.notification_base_image, albumArt);
             }
+            else {
+                mCollapsedView.setImageViewResource(R.id.notification_base_image, R.drawable.no_art_normal);
+            }
         }
         else {
             notification = builder.build();
@@ -121,6 +124,9 @@ public class NotificationHelper {
 
             if (albumArt != null) {
                 mExpandedView.setImageViewBitmap(R.id.notification_expanded_base_image, albumArt);
+            }
+            else {
+                mExpandedView.setImageViewResource(R.id.notification_expanded_base_image, R.drawable.no_art_normal);
             }
         }
     }

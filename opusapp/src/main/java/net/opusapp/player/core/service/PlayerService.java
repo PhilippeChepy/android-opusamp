@@ -371,6 +371,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                     }
                     else {
                         mMediaCover = null;
+                        notifyCoverLoaded();
                     }
                 }
             }
