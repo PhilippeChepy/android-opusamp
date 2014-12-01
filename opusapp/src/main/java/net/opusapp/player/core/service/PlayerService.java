@@ -405,7 +405,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
             if (action != null) {
                 if (isRemoteControl) {
-                    if (action.equals(ACTION_PREVIOUS)) {
+                    switch (action) {
+                    case ACTION_PREVIOUS:
                         if (isPlaying()) {
                             pause(true);
                             setPosition(0);
@@ -414,7 +415,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         } else {
                             prev();
                         }
-                    } else if (action.equals(ACTION_NEXT)) {
+                        break;
+                    case ACTION_NEXT:
                         if (isPlaying()) {
                             pause(true);
                             setPosition(0);
@@ -423,9 +425,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         } else {
                             next();
                         }
-                    } else if (action.equals(ACTION_STOP)) {
+                        break;
+                    case ACTION_STOP:
                         stop();
-                    } else if (action.equals(ACTION_TOGGLEPAUSE)) {
+                        break;
+                    case ACTION_TOGGLEPAUSE:
                         if (isPlaying()) {
                             pause(isNotificationControl);
                         } else {
@@ -433,42 +437,48 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                                 play();
                             }
                         }
-                    } else if (action.equals(ACTION_PLAY)) {
+                        break;
+                    case ACTION_PLAY:
                         if (!isPlaying()) {
                             if (mPlaylist != null && mPlaylist.length > 0) {
                                 play();
                             }
                         }
-                    } else if (action.equals(ACTION_PAUSE)) {
+                        break;
+                    case ACTION_PAUSE:
                         LogUtils.LOGD(TAG, "pause");
                         if (isPlaying()) {
                             pause(isNotificationControl);
                         }
-                    } else if (action.equals(ACTION_REFRESH_WIDGETS)) {
+                        break;
+                    case ACTION_REFRESH_WIDGETS:
                         updateWidgets();
+                        break;
                     }
                 }
                 else if (isTelephonyControl) {
-                    if (action.equals(ACTION_PLAY)) {
-                        LogUtils.LOGD(TAG, "telephony : querying ACTION_PLAY");
-                        if (pausedByTelephopny()) {
-                            setPausedByTelephony(false);
-                            LogUtils.LOGD(TAG, "telephony : ACTION_PLAY");
+                    switch (action) {
+                        case ACTION_PLAY:
+                            LogUtils.LOGD(TAG, "telephony : querying ACTION_PLAY");
+                            if (pausedByTelephopny()) {
+                                setPausedByTelephony(false);
+                                LogUtils.LOGD(TAG, "telephony : ACTION_PLAY");
 
-                            if (!isPlaying()) {
-                                if (mPlaylist != null && mPlaylist.length > 0) {
-                                    play();
+                                if (!isPlaying()) {
+                                    if (mPlaylist != null && mPlaylist.length > 0) {
+                                        play();
+                                    }
                                 }
                             }
-                        }
-                    }
-                    else if (action.equals(ACTION_PAUSE)) {
-                        LogUtils.LOGD(TAG, "telephony : querying ACTION_PAUSE");
-                        if (isPlaying()) {
-                            LogUtils.LOGD(TAG, "telephony : ACTION_PAUSE");
-                            setPausedByTelephony(true);
-                            pause(false);
-                        }
+                        break;
+                        case ACTION_PAUSE:
+                            LogUtils.LOGD(TAG, "telephony : querying ACTION_PAUSE");
+                            if (isPlaying()) {
+                                LogUtils.LOGD(TAG, "telephony : ACTION_PAUSE");
+                                setPausedByTelephony(true);
+                                pause(false);
+                            }
+                        break;
                     }
                 }
             }
@@ -526,7 +536,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         int playlistLength = mPlaylist != null ? mPlaylist.length : 0;
 
-        mShuffledPlaylistIndexList = new ArrayList<Integer>();
+        mShuffledPlaylistIndexList = new ArrayList<>();
         for (int playlistIndex = 0 ; playlistIndex < playlistLength ; playlistIndex++) {
             mShuffledPlaylistIndexList.add(playlistIndex);
         }
@@ -738,7 +748,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         void onCoverLoaded(final Bitmap bitmap);
     }
 
-    private List<PlayerServiceStateListener> mServiceListenerList = new ArrayList<PlayerServiceStateListener>();
+    private List<PlayerServiceStateListener> mServiceListenerList = new ArrayList<>();
 
     public void play() {
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
@@ -1260,26 +1270,28 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         PendingIntent pendingIntent = null;
 
-        if (ACTION_TOGGLEPAUSE.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 1, intent, 0);
-        }
-        else if (ACTION_PLAY.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 2, intent, 0);
-        }
-        else if (ACTION_PAUSE.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 3, intent, 0);
-        }
-        else if (ACTION_NEXT.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 4, intent, 0);
-        }
-        else if (ACTION_PREVIOUS.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 5, intent, 0);
-        }
-        else if (ACTION_STOP.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 6, intent, 0);
-        }
-        else if (ACTION_REFRESH_WIDGETS.equals(action)) {
-            pendingIntent = PendingIntent.getService(context, 7, intent, 0);
+        switch (action) {
+            case ACTION_TOGGLEPAUSE:
+                pendingIntent = PendingIntent.getService(context, 1, intent, 0);
+                break;
+            case ACTION_PLAY:
+                pendingIntent = PendingIntent.getService(context, 2, intent, 0);
+                break;
+            case ACTION_PAUSE:
+                pendingIntent = PendingIntent.getService(context, 3, intent, 0);
+                break;
+            case ACTION_NEXT:
+                pendingIntent = PendingIntent.getService(context, 4, intent, 0);
+                break;
+            case ACTION_PREVIOUS:
+                pendingIntent = PendingIntent.getService(context, 5, intent, 0);
+                break;
+            case ACTION_STOP:
+                pendingIntent = PendingIntent.getService(context, 6, intent, 0);
+                break;
+            case ACTION_REFRESH_WIDGETS:
+                pendingIntent = PendingIntent.getService(context, 7, intent, 0);
+                break;
         }
 
         return pendingIntent;

@@ -130,7 +130,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         this.mediaManager = mediaManager;
 
         openHelper = new OpenHelper(mediaManager.getMediaManagerId());
-        scanListeners = new ArrayList<OnLibraryChangeListener>();
+        scanListeners = new ArrayList<>();
 
         currentFolder = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         isAtRootLevel = true;
@@ -140,7 +140,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
-        Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
+        Set<String> defaultTabs = new HashSet<>(Arrays.asList(tabTitles));
         Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), null);
 
         // Default instead of no selection.
@@ -339,7 +339,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
                     try {
                         final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                        final List<File> filePlaylist = new ArrayList<File>();
+                        final List<File> filePlaylist = new ArrayList<>();
                         filePlaylist.add(selection);
 
                         if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
@@ -481,7 +481,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
                     try {
                         final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                        final List<File> filePlaylist = new ArrayList<File>();
+                        final List<File> filePlaylist = new ArrayList<>();
                         filePlaylist.add(selection);
 
                         if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
@@ -749,7 +749,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 }
                 return -1;
             case CONTENT_METADATA_LIST:
-                ArrayList<MediaMetadata> mediaMetadataList = new ArrayList<MediaMetadata>();
+                ArrayList<MediaMetadata> mediaMetadataList = new ArrayList<>();
 
                 switch (contentType) {
                     case CONTENT_TYPE_ALBUM:
@@ -794,7 +794,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         };
 
                         final Cursor artistsCursor = database.query(Entities.Media.TABLE_NAME, artistsColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_ARTIST, null, Entities.Media.COLUMN_FIELD_ARTIST);
-                        final ArrayList<String> artists = new ArrayList<String>();
+                        final ArrayList<String> artists = new ArrayList<>();
 
                         if (artistsCursor != null) {
                             while (artistsCursor.moveToNext()) {
@@ -809,7 +809,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         };
 
                         final Cursor genreCursor = database.query(Entities.Media.TABLE_NAME, genresColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_GENRE, null, Entities.Media.COLUMN_FIELD_GENRE);
-                        final ArrayList<String> genres = new ArrayList<String>();
+                        final ArrayList<String> genres = new ArrayList<>();
 
                         if (genreCursor != null) {
                             while (genreCursor.moveToNext()) {
@@ -909,7 +909,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
-        Set<String> defaultTabs = new HashSet<String>(Arrays.asList(tabTitles));
+        Set<String> defaultTabs = new HashSet<>(Arrays.asList(tabTitles));
         Set<String> userEnabledTabs = SharedPreferencesCompat.getStringSet(sharedPrefs, resources.getString(R.string.preference_key_tab_visibility), defaultTabs);
 
         if (userEnabledTabs.size() == 0) {
@@ -1150,7 +1150,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected Cursor doBuildAlbumArtistCursor(final int[] requestedFields, final int[] sortFields, String filter) {
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         for (int field : requestedFields) {
             switch (field) {
@@ -1213,7 +1213,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected Cursor doBuildAlbumCursor(final int[] requestedFields, final int[] sortFields, String filter, final ContentType source, final String sourceId) {
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         boolean usesArtTable = false;
 
@@ -1340,7 +1340,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected Cursor doBuildArtistCursor(final int[] requestedFields, final int[] sortFields, String filter) {
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         for (int field : requestedFields) {
             switch (field) {
@@ -1404,7 +1404,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected Cursor doBuildGenreCursor(final int[] requestedFields, final int[] sortFields, String filter) {
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         for (int field : requestedFields) {
             switch (field) {
@@ -1469,7 +1469,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     protected Cursor doBuildPlaylistCursor(int[] requestedFields, int[] sortFields, String filter) {
 
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         for (int field : requestedFields) {
             switch (field) {
@@ -1538,13 +1538,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         boolean usesSongTable = false;
         boolean usesPlaylistEntryTable = false;
 
-        final ArrayList<String> columnsList = new ArrayList<String>();
+        final ArrayList<String> columnsList = new ArrayList<>();
 
         for (int field : requestedFields) {
             switch (field) {
                 case AbstractMediaManager.Provider.SONG_ID:
                     usesSongTable = true;
-                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media._ID);
+                    columnsList.add(Entities.Media.TABLE_NAME + "." + Entities.Media._ID + " AS " + "_id");
                     break;
                 case AbstractMediaManager.Provider.SONG_URI:
                     usesSongTable = true;
@@ -1592,11 +1592,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                     if (manageMissingTags) {
                         columnsList.add(
-                            "CASE (LENGTH(TRIM(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + "))) "+
-                            "WHEN 0 THEN " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " " +
-                            "ELSE " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " " +
-                            "END " +
-                            "AS " + Entities.Media.COLUMN_FIELD_TITLE
+                                "CASE WHEN COALESCE(" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + ", '') = '' "+
+                                        "THEN " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_URI + " " +
+                                        "ELSE " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_TITLE + " " +
+                                        "END " +
+                                        "AS " + Entities.Media.COLUMN_FIELD_TITLE
                         );
                     }
                     else {
@@ -1668,7 +1668,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.PLAYLIST_ENTRY_ID:
                     usesPlaylistEntryTable = true;
-                    columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID);
+                    columnsList.add(Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID + " AS " + "_id");
                     break;
                 case AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:
                     usesPlaylistEntryTable = true;
@@ -2434,14 +2434,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         if (scanContext.albumArtExtensions == null) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
 
-            Set<String> defaults = new HashSet<String>(Arrays.asList(PlayerApplication.context.getResources().getStringArray(R.array.cover_exts)));
+            Set<String> defaults = new HashSet<>(Arrays.asList(PlayerApplication.context.getResources().getStringArray(R.array.cover_exts)));
             Set<String> extensionSet = SharedPreferencesCompat.getStringSet(sharedPrefs, PlayerApplication.context.getString(R.string.key_cover_exts), defaults);
 
             if(extensionSet.size() == 0) {
                 extensionSet = defaults;
             }
 
-            scanContext.albumArtExtensions = new ArrayList<String>(extensionSet);
+            scanContext.albumArtExtensions = new ArrayList<>(extensionSet);
         }
 
         for(String extension : scanContext.albumArtExtensions) {
@@ -2466,14 +2466,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         if (scanContext.audioFilesExtensions == null) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
 
-            Set<String> defaults = new HashSet<String>(Arrays.asList(PlayerApplication.context.getResources().getStringArray(R.array.audio_exts)));
+            Set<String> defaults = new HashSet<>(Arrays.asList(PlayerApplication.context.getResources().getStringArray(R.array.audio_exts)));
             Set<String> extensionSet = SharedPreferencesCompat.getStringSet(sharedPrefs, PlayerApplication.context.getString(R.string.key_audio_exts), defaults);
 
             if(extensionSet.size() == 0) {
                 extensionSet = defaults;
             }
 
-            scanContext.audioFilesExtensions = new ArrayList<String>(extensionSet);
+            scanContext.audioFilesExtensions = new ArrayList<>(extensionSet);
         }
 
         for(String extension : scanContext.audioFilesExtensions) {
@@ -2545,12 +2545,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "1"
                 };
 
-                ArrayList<File> acceptList = new ArrayList<File>();
+                ArrayList<File> acceptList = new ArrayList<>();
 
                 acceptCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
                 discardCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
 
-                Map<String, Boolean> discardMap = new HashMap<String, Boolean>();
+                Map<String, Boolean> discardMap = new HashMap<>();
                 if (discardCursor != null && discardCursor.getCount() > 0) {
                     scanContext.database.beginTransaction();
 
@@ -2900,7 +2900,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             if (scanContext.coverMap.containsKey(parentFile.getName())) {
                 coverId = scanContext.coverMap.get(parentFile.getName());
             } else {
-                List<File> fileList = new ArrayList<File>();
+                List<File> fileList = new ArrayList<>();
                 fileList.add(parentFile);
 
                 for (int pathIndex = 0; pathIndex < fileList.size(); ) {
@@ -3057,10 +3057,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     protected void doSyncDirectoryScan(List<File> fileList, Map<String, Boolean> discardMap, SyncScanContext scanContext) {
         ContentValues mediaTags = new ContentValues();
 
-        scanContext.coverMap = new HashMap<String, Long>();
-        scanContext.artistIdMap = new HashMap<String, Long>();
-        scanContext.albumIdMap = new HashMap<String, Long>();
-        scanContext.genreIdMap = new HashMap<String, Long>();
+        scanContext.coverMap = new HashMap<>();
+        scanContext.artistIdMap = new HashMap<>();
+        scanContext.albumIdMap = new HashMap<>();
+        scanContext.genreIdMap = new HashMap<>();
 
         int refreshThreshold = 0;
         for (int pathIndex = 0 ; pathIndex < fileList.size() ; ) {
@@ -3427,7 +3427,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         final File[] currentFileList = currentFolder.listFiles(hiddenFilter);
-        ArrayList<File> fileList = new ArrayList<File>();
+        ArrayList<File> fileList = new ArrayList<>();
 
         if (currentFileList != null) {
             storageSortOrder = sortFields;
