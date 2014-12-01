@@ -333,7 +333,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void updateWidgets() {
-        AbstractAppWidget.setHasPlaylist(mPlaylist.length > 0);
+        AbstractAppWidget.setHasPlaylist(hasPlaylist());
         AbstractAppWidget.setPlaying(isPlaying());
 
         AbstractAppWidget.setMetadata(mMediaTitle, mMediaAuthor, mMediaGroup, mMediaCover);
@@ -732,6 +732,29 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
 
+    // Public API helpers
+    protected boolean hasPlaylist() {
+        return mPlaylist != null && mPlaylist.length > 0;
+    }
+
+
+
+    class SeekPreviousTrackRunnable implements Runnable {
+
+        public int index;
+
+        @Override
+        public void run() {
+            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+            final AbstractMediaManager.Player player = mediaManager.getPlayer();
+
+            player.playerSeek(mPlaylist[index], 0);
+        }
+    }
+
+    protected  SeekPreviousTrackRunnable mSeekPreviousTrackRunnable = new SeekPreviousTrackRunnable();
+
+
     // Public API
     public interface PlayerServiceStateListener {
         void onPlay();
@@ -795,53 +818,35 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public boolean next() {
         boolean looped = false;
 
-        seekPreviousTrackRunnable.index = mPlaylistIndex;
-        mMediaManagementExecutor.submit(seekPreviousTrackRunnable);
+        mSeekPreviousTrackRunnable.index = mPlaylistIndex;
+        mMediaManagementExecutor.submit(mSeekPreviousTrackRunnable);
 
-        if (mPlaylist != null && mPlaylist.length > 0) {
+        if (hasPlaylist()) {
             looped = doMoveToNextPosition();
             notifySetQueuePosition();
-        }
 
-        if (mPlaylist != null) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
-            player.playerSetContent(mPlaylist[mPlaylistIndex]);
+            if (mPlaylistIndex < mPlaylist.length) {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
+            }
         }
 
         return looped;
     }
 
-    class SeekPreviousTrackRunnable implements Runnable {
-
-        public int index;
-
-        @Override
-        public void run() {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
-
-            player.playerSeek(mPlaylist[index], 0);
-        }
-    }
-
-    SeekPreviousTrackRunnable seekPreviousTrackRunnable = new SeekPreviousTrackRunnable() {
-
-    };
-
     public boolean prev() {
         boolean looped = false;
 
-        if (mPlaylist != null && mPlaylist.length > 0) {
+        if (hasPlaylist() && mPlaylistIndex < mPlaylist.length) {
             looped = doMoveToPrevPosition();
             notifySetQueuePosition();
-        }
 
-        if (mPlaylist != null) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
-
-            player.playerSetContent(mPlaylist[mPlaylistIndex]);
+            if (mPlaylistIndex < mPlaylist.length) {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                player.playerSetContent(mPlaylist[mPlaylistIndex]);
+            }
         }
 
         return looped;
@@ -1003,6 +1008,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         loadPlaylist();
 
         notifyQueueChanged();
+
+        // Widgets are always displayed, even if not playing so we need to update them if playlist is now empty.
+        updateWidgets();
     }
 
     public void queueReload() {
