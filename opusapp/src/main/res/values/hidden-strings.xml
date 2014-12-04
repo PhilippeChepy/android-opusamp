@@ -6,27 +6,50 @@
     <string name="key_audio_exts">audio_exts</string>
     <string name="key_cover_exts">cover_exts</string>
 
+    <string name="ext_3gp">3gp</string>
+    <string name="ext_aac">aac</string>
+    <string name="ext_ape">ape</string>
+    <string name="ext_asf">asf</string>
+    <string name="ext_flac">flac</string>
+    <string name="ext_m4a">m4a</string>
+    <string name="ext_m4b">m4b</string>
+    <string name="ext_m4p">m4p</string>
+    <string name="ext_mp4">mp4</string>
+    <string name="ext_mp3">mp3</string>
+    <string name="ext_mp2">mp2</string>
+    <string name="ext_mp1">mp1</string>
+    <string name="ext_mpc">mpc</string>
+    <string name="ext_mpp">mpp</string>
+    <string name="ext_mplus">mp+</string>
+    <string name="ext_oga">oga</string>
+    <string name="ext_ogg">ogg</string>
+    <string name="ext_ogv">ogv</string>
+    <string name="ext_ogx">ogx</string>
+    <string name="ext_pcm">pcm</string>
+    <string name="ext_tta">tta</string>
+    <string name="ext_wav">wav</string>
+    <string name="ext_wma">wma</string>
+    <string name="ext_wmv">wmv</string>
+    <string name="ext_wv">wv</string>
+    <string name="ext_xwma">xwma</string>
+
+
     <string name="ext_jpeg">jpeg</string>
     <string name="ext_jpg">jpg</string>
     <string name="ext_png">png</string>
     <string name="ext_bmp">bmp</string>
+
+    <!--
     <string name="ext_cda">cda</string>
-    <string name="ext_mp3">mp3</string>
-    <string name="ext_mp2">mp2</string>
-    <string name="ext_mp1">mp1</string>
-    <string name="ext_aac">aac</string>
     <string name="ext_vlb">vlb</string>
-    <string name="ext_m4a">m4a</string>
-    <string name="ext_mp4">mp4</string>
     <string name="ext_nsa">nsa</string>
-    <string name="ext_flac">flac</string>
     <string name="ext_ogg">ogg</string>
-    <string name="ext_wma">wma</string>
     <string name="ext_mid">mid</string>
     <string name="ext_midi">midi</string>
     <string name="ext_rmi">rmi</string>
     <string name="ext_kar">kar</string>
     <string name="ext_miz">miz</string>
+    <string name="ext_mka">mka</string>
     <string name="ext_mod">mod</string>
     <string name="ext_mdz">mdz</string>
     <string name="ext_nst">nst</string>
@@ -53,7 +76,7 @@
     <string name="ext_aiff">aiff</string>
     <string name="ext_atrac">atrac</string>
     <string name="ext_omg">omg</string>
-    <string name="ext_at3">at3</string>
+    <string name="ext_at3">at3</string>-->
 
     <string name="label_00_00">00:00</string>
 </resources>
