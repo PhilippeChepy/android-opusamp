@@ -54,13 +54,6 @@ extern "C" {
 
 
 
-typedef struct {
-    TagLib::File * file;
-    TagLib::ByteVector coverData;
-} inputstream_context_s;
-
-
-
 static long ptr_to_id(void * ptr) {
 	return (long) ptr;
 }
@@ -71,7 +64,7 @@ static void * id_to_ptr(long id) {
 
 
 
-bool apeGetCover(TagLib::APE::Tag* tag, inputstream_context_s * target, bool getCover) {
+bool apeGetCover(TagLib::APE::Tag* tag, TagLib::ByteVector &target, bool getCover) {
 	const TagLib::APE::ItemListMap& listMap = tag->itemListMap();
 
 	if (listMap.contains("COVER ART (FRONT)")) {
@@ -82,7 +75,7 @@ bool apeGetCover(TagLib::APE::Tag* tag, inputstream_context_s * target, bool get
 
 		if (++pos > 0) {
 		    if (getCover) {
-			    target->coverData = item.mid(pos);
+			    target = item.mid(pos);
 			}
 			return true;
 		}
@@ -91,14 +84,14 @@ bool apeGetCover(TagLib::APE::Tag* tag, inputstream_context_s * target, bool get
 	return false;
 }
 
-bool id3GetCover(TagLib::ID3v2::Tag* tag, inputstream_context_s * target, bool getCover) {
+bool id3GetCover(TagLib::ID3v2::Tag* tag, TagLib::ByteVector &target, bool getCover) {
 	const TagLib::ID3v2::FrameList& frameList = tag->frameList("APIC");
 
 	if (!frameList.isEmpty()) {
 	    TagLib::ID3v2::AttachedPictureFrame* frame = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frameList.front());
 
 	    if (getCover) {
-		    target->coverData = frame->picture();
+		    target = frame->picture();
 		}
 		return true;
 	}
@@ -106,7 +99,7 @@ bool id3GetCover(TagLib::ID3v2::Tag* tag, inputstream_context_s * target, bool g
 	return false;
 }
 
-bool asfGetCover(TagLib::ASF::File* file, inputstream_context_s * target, bool getCover)
+bool asfGetCover(TagLib::ASF::File* file, TagLib::ByteVector &target, bool getCover)
 {
 	const TagLib::ASF::AttributeListMap& attrListMap = file->tag()->attributeListMap();
 
@@ -116,7 +109,7 @@ bool asfGetCover(TagLib::ASF::File* file, inputstream_context_s * target, bool g
 		if (!attrList.isEmpty()) {
 		    if (getCover) {
 			    TagLib::ASF::Picture wmpic = attrList[0].toPicture();
-			    target->coverData = wmpic.picture();
+			    target = wmpic.picture();
 			}
 		    return true;
 		}
@@ -125,13 +118,13 @@ bool asfGetCover(TagLib::ASF::File* file, inputstream_context_s * target, bool g
 	return false;
 }
 
-bool flacGetCover(TagLib::FLAC::File* file, inputstream_context_s * target, bool getCover) {
+bool flacGetCover(TagLib::FLAC::File* file, TagLib::ByteVector &target, bool getCover) {
 	const TagLib::List<TagLib::FLAC::Picture*>& picList = file->pictureList();
 
 	if (!picList.isEmpty()) {
 	    if (getCover) {
 		    TagLib::FLAC::Picture* pic = picList[0];
-		    target->coverData = pic->data();
+		    target = pic->data();
 		}
 		return true;
 	}
@@ -139,7 +132,7 @@ bool flacGetCover(TagLib::FLAC::File* file, inputstream_context_s * target, bool
 	return false;
 }
 
-bool mp4GetCover(TagLib::MP4::File* file, inputstream_context_s * target, bool getCover)
+bool mp4GetCover(TagLib::MP4::File* file, TagLib::ByteVector &target, bool getCover)
 {
 	TagLib::MP4::Tag* tag = file->tag();
 	if (tag->itemListMap().contains("covr")) {
@@ -147,7 +140,7 @@ bool mp4GetCover(TagLib::MP4::File* file, inputstream_context_s * target, bool g
 
 		if (coverList[0].data().size() > 0) {
 		    if (getCover) {
-			    target->coverData = coverList[0].data();
+			    target = coverList[0].data();
 			}
 			return true;
 		}
@@ -156,46 +149,47 @@ bool mp4GetCover(TagLib::MP4::File* file, inputstream_context_s * target, bool g
 	return false;
 }
 
-bool findCoverArt(inputstream_context_s * inputstream_context, bool getCover) {
+bool findCoverArt(TagLib::FileRef &fileRef, TagLib::ByteVector &target, bool getCover) {
     bool found = false;
+    TagLib::File * sourceFile = fileRef.file();
 
-    if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(inputstream_context->file)) {
+    if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(sourceFile)) {
 		if (file->hasID3v2Tag()) {
-			found = id3GetCover(file->ID3v2Tag(), inputstream_context, getCover);
+			found = id3GetCover(file->ID3v2Tag(), target, getCover);
 		}
 
 		if (!found && file->hasAPETag()) {
-			found = apeGetCover(file->APETag(), inputstream_context, getCover);
+			found = apeGetCover(file->APETag(), target, getCover);
 		}
 	}
-	else if (TagLib::MP4::File* file = dynamic_cast<TagLib::MP4::File*>(inputstream_context->file)) {
+	else if (TagLib::MP4::File* file = dynamic_cast<TagLib::MP4::File*>(sourceFile)) {
 		if (file->tag()) {
-			found = mp4GetCover(file, inputstream_context, getCover);
+			found = mp4GetCover(file, target, getCover);
 		}
 	}
-	else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(inputstream_context->file)) {
-		found = flacGetCover(file, inputstream_context, getCover);
+	else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(sourceFile)) {
+		found = flacGetCover(file, target, getCover);
 
 		if (!found && file->ID3v2Tag()) {
-			found = id3GetCover(file->ID3v2Tag(), inputstream_context, getCover);
+			found = id3GetCover(file->ID3v2Tag(), target, getCover);
 		}
 	}
-	else if (TagLib::ASF::File* file = dynamic_cast<TagLib::ASF::File*>(inputstream_context->file)) {
-		found = asfGetCover(file, inputstream_context, getCover);
+	else if (TagLib::ASF::File* file = dynamic_cast<TagLib::ASF::File*>(sourceFile)) {
+		found = asfGetCover(file, target, getCover);
 	}
-	else if (TagLib::APE::File* file = dynamic_cast<TagLib::APE::File*>(inputstream_context->file)) {
+	else if (TagLib::APE::File* file = dynamic_cast<TagLib::APE::File*>(sourceFile)) {
 		if (file->APETag()) {
-			found = apeGetCover(file->APETag(), inputstream_context, getCover);
+			found = apeGetCover(file->APETag(), target, getCover);
 		}
 	}
-	else if (TagLib::MPC::File* file = dynamic_cast<TagLib::MPC::File*>(inputstream_context->file)) {
+	else if (TagLib::MPC::File* file = dynamic_cast<TagLib::MPC::File*>(sourceFile)) {
 		if (file->APETag()) {
-			found = apeGetCover(file->APETag(), inputstream_context, getCover);
+			found = apeGetCover(file->APETag(), target, getCover);
 		}
 	}
-	else if (TagLib::WavPack::File* file = dynamic_cast<TagLib::WavPack::File*>(inputstream_context->file)) {
+	else if (TagLib::WavPack::File* file = dynamic_cast<TagLib::WavPack::File*>(sourceFile)) {
 		if (file->APETag()) {
-			found = apeGetCover(file->APETag(), inputstream_context, getCover);
+			found = apeGetCover(file->APETag(), target, getCover);
 		}
 	}
 
@@ -226,14 +220,12 @@ JNIEXPORT void JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_tagsRead(JN
 
 	const char * media_path = env->GetStringUTFChars(path, (jboolean *)0);
 
-    inputstream_context_s inputstream_context;
-    inputstream_context.file = TagLib::FileRef::create(media_path);
+    TagLib::FileRef file(media_path);
+    TagLib::ByteVector coverData;
 
-   	TagLib::File * currentFile = inputstream_context.file;
-
-	if(currentFile && currentFile->isValid()) {
-		TagLib::Tag *tag = currentFile->tag();
-		TagLib::AudioProperties *properties = currentFile->audioProperties();
+	if(!file.isNull() && file.file()->isValid()) {
+		TagLib::Tag *tag = file.tag();
+		TagLib::AudioProperties *properties = file.audioProperties();
 
 		if(tag) {
 		  	env->SetStaticObjectField(classLibraryScannerService, fieldTagTitle, env->NewStringUTF(tag->title().toCString(true)));
@@ -250,7 +242,7 @@ JNIEXPORT void JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_tagsRead(JN
 
 			env->SetStaticObjectField(classLibraryScannerService, fieldTagComment, env->NewStringUTF(tag->comment().toCString(true)));
 			//env->SetStaticObjectField(classLibraryScannerService, fieldTagLyrics, env->NewStringUTF());
-			env->SetStaticBooleanField(classLibraryScannerService, fieldTagHasEmbeddedArt, findCoverArt(&inputstream_context, false));
+			env->SetStaticBooleanField(classLibraryScannerService, fieldTagHasEmbeddedArt, findCoverArt(file, coverData, false));
 		}
 
 		if(properties) {
@@ -259,52 +251,134 @@ JNIEXPORT void JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_tagsRead(JN
 			env->SetStaticIntField(classLibraryScannerService, fieldTagDuration, properties->length());
 			// properties->channels();
 		}
-		delete currentFile;
 	}
 
 	env->ReleaseStringUTFChars(path, media_path);
 }
 
-JNIEXPORT jlong JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamOpen(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
-    inputstream_context_s * inputstream_context = new inputstream_context_s();
+JNIEXPORT void JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_tagsWrite(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
 
-    const char * media_path = env->GetStringUTFChars(path, (jboolean *)0);
-    inputstream_context->file = TagLib::FileRef::create(media_path);
+	jfieldID fieldTagTitle = env->GetStaticFieldID(classLibraryScannerService, "tagTitle", "Ljava/lang/String;");
+	jfieldID fieldTagArtist = env->GetStaticFieldID(classLibraryScannerService, "tagArtist", "Ljava/lang/String;");
+//	jfieldID fieldTagComposer = env->GetStaticFieldID(classLibraryScannerService, "tagComposer", "Ljava/lang/String;");
+//	jfieldID fieldTagAlbumArtist = env->GetStaticFieldID(classLibraryScannerService, "tagAlbumArtist", "Ljava/lang/String;");
+	jfieldID fieldTagAlbum = env->GetStaticFieldID(classLibraryScannerService, "tagAlbum", "Ljava/lang/String;");
+	jfieldID fieldTagGenre = env->GetStaticFieldID(classLibraryScannerService, "tagGenre", "Ljava/lang/String;");
 
-    if (findCoverArt(inputstream_context, true)) {
-        return ptr_to_id(inputstream_context);
+	jfieldID fieldTagYear = env->GetStaticFieldID(classLibraryScannerService, "tagYear", "I");
+	jfieldID fieldTagTrack = env->GetStaticFieldID(classLibraryScannerService, "tagTrack", "I");
+//	jfieldID fieldTagDisc = env->GetStaticFieldID(classLibraryScannerService, "tagDisc", "I");
+//	jfieldID fieldTagBpm = env->GetStaticFieldID(classLibraryScannerService, "tagBpm", "I");
+
+	jfieldID fieldTagComment = env->GetStaticFieldID(classLibraryScannerService, "tagComment", "Ljava/lang/String;");
+//	jfieldID fieldTagLyrics = env->GetStaticFieldID(classLibraryScannerService, "tagLyrics", "Ljava/lang/String;");
+
+	const char * media_path = env->GetStringUTFChars(path, (jboolean *)0);
+    TagLib::FileRef file(TagLib::FileRef::create(media_path));
+    LOG_ERROR(LOG_TAG, "writing tags for file '%s'", media_path);
+
+	if(!file.isNull() && file.tag()) { //} && file.file()->isValid()) {
+	    LOG_ERROR(LOG_TAG, "writing tags...");
+
+		TagLib::Tag *tag = file.tag();
+
+        char const * tagContent = NULL;
+        jstring tagField;
+        jboolean isCopy = JNI_FALSE;
+
+        tagField = (jstring) env->GetStaticObjectField(classLibraryScannerService, fieldTagTitle);
+        tagContent = env->GetStringUTFChars(tagField, &isCopy);
+        tag->setTitle(tagContent);
+        LOG_ERROR(LOG_TAG, "setTitle = %s", tagContent)
+        env->ReleaseStringUTFChars(tagField, tagContent);
+
+        tagField = (jstring) env->GetStaticObjectField(classLibraryScannerService, fieldTagArtist);
+        tagContent = env->GetStringUTFChars(tagField, &isCopy);
+        tag->setArtist(tagContent);
+        LOG_ERROR(LOG_TAG, "setArtist = %s", tagContent)
+        env->ReleaseStringUTFChars(tagField, tagContent);
+
+        tagField = (jstring) env->GetStaticObjectField(classLibraryScannerService, fieldTagAlbum);
+        tagContent = env->GetStringUTFChars(tagField, &isCopy);
+        tag->setAlbum(tagContent);
+        LOG_ERROR(LOG_TAG, "setArtist = %s", tagContent)
+        env->ReleaseStringUTFChars(tagField, tagContent);
+
+        tagField = (jstring) env->GetStaticObjectField(classLibraryScannerService, fieldTagGenre);
+        tagContent = env->GetStringUTFChars(tagField, &isCopy);
+        tag->setGenre(tagContent);
+        env->ReleaseStringUTFChars(tagField, tagContent);
+
+        tag->setYear(env->GetStaticIntField(classLibraryScannerService, fieldTagYear));
+        tag->setTrack(env->GetStaticIntField(classLibraryScannerService, fieldTagTrack));
+
+        tagField = (jstring) env->GetStaticObjectField(classLibraryScannerService, fieldTagComment);
+        tagContent = env->GetStringUTFChars(tagField, &isCopy);
+        tag->setComment(tagContent);
+        env->ReleaseStringUTFChars(tagField, tagContent);
+
+        // fieldTagComposer, fieldTagAlbumArtist, fieldTagDisc, fieldTagBpm, fieldTagLyrics
+
+        file.save();
+	}
+
+	env->ReleaseStringUTFChars(path, media_path);
+}
+
+class CoverStreamContext {
+public:
+    TagLib::FileRef mFileRef;
+    TagLib::ByteVector mCoverData;
+    bool mIsValid;
+
+public:
+    CoverStreamContext(TagLib::FileName path) : mFileRef(path) {
+        mIsValid = !mFileRef.isNull() && mFileRef.file()->isValid();
+        mIsValid = mIsValid && findCoverArt(mFileRef, mCoverData, true);
     }
 
-    delete inputstream_context;
+    bool isValid() {
+        return mIsValid;
+    }
+};
 
+JNIEXPORT jlong JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamOpen(JNIEnv * env, jclass classLibraryScannerService, jstring path) {
+    const char * mediaPath = env->GetStringUTFChars(path, (jboolean *)0);
+    CoverStreamContext * streamContext = new CoverStreamContext(mediaPath);
+    env->ReleaseStringUTFChars(path, mediaPath);
+
+    if (streamContext->isValid()) {
+        return ptr_to_id(streamContext);
+    }
+
+    delete streamContext;
     return 0;
 }
 
 JNIEXPORT jint JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamClose(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
-    inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
+    CoverStreamContext * streamContext = (CoverStreamContext *) id_to_ptr(context);
 
-    if (inputstream_context != NULL) {
-        delete inputstream_context;
+    if (streamContext != NULL) {
+        delete streamContext;
     }
     return 0;
 }
 
 JNIEXPORT jint JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamReadGetCount(JNIEnv * env, jclass classLibraryScannerService, jlong context) {
-    inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
+    CoverStreamContext * streamContext = (CoverStreamContext *) id_to_ptr(context);
 
-    if (inputstream_context != NULL) {
-        return inputstream_context->coverData.size();
+    if (streamContext != NULL) {
+        return streamContext->mCoverData.size();
     }
 
     return 0;
 }
 
 JNIEXPORT jint JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamReadSingle(JNIEnv * env, jclass classLibraryScannerService, jlong context, jint position) {
-    inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
+    CoverStreamContext * streamContext = (CoverStreamContext *) id_to_ptr(context);
 
-    if (inputstream_context != NULL) {
-        int result = inputstream_context->coverData.at(position);
-        return result;
+    if (streamContext != NULL) {
+        return streamContext->mCoverData.at(position);
     }
 
     return -1;
@@ -312,10 +386,10 @@ JNIEXPORT jint JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputS
 
 JNIEXPORT jint JNICALL Java_net_opusapp_player_utils_jni_JniMediaLib_coverInputStreamReadArray(JNIEnv * env, jclass classLibraryScannerService,
     jlong context, jbyteArray target, jint offset, jint length, jint nativePos) {
-    inputstream_context_s * inputstream_context = (inputstream_context_s *) id_to_ptr(context);
+    CoverStreamContext * streamContext = (CoverStreamContext *) id_to_ptr(context);
 
-    if (inputstream_context != NULL) {
-        jbyte * coverData = (jbyte *) inputstream_context->coverData.data();
+    if (streamContext != NULL) {
+        jbyte * coverData = (jbyte *) streamContext->mCoverData.data();
         // TODO: add buffer overflow check
         env->SetByteArrayRegion(target, offset, length, &coverData[nativePos]);
         return 0;

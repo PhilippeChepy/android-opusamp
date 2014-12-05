@@ -20,6 +20,7 @@
     <string name="activity_label_deezer_signout">Déconnexion du service</string>
 
     <!-- Dialogs -->
+    <string name="alert_dialog_button_edit">"Édition"</string>
     <string name="alert_dialog_title_album_properties">"Propriétés de l'album"</string>
     <string name="alert_dialog_title_media_properties">Propriétés du média</string>
     <string name="alert_dialog_title_playlist_is_empty">La liste de lecture est vide</string>
@@ -181,6 +182,7 @@
 
     <!-- Content properties -->
     <string name="label_metadata_unknown">inconnu</string>
+    <string name="label_metadata_album_title">"Nom de l'album"</string>
     <string name="label_metadata_album_track_count">Nombre de pistes</string>
     <string name="label_metadata_album_duration">Durée totale</string>
 
@@ -195,7 +197,8 @@
         <item quantity="other">Genres</item>
     </plurals>
 
-    <string name="label_metadata_media_uri">Chemin</string>
+    <string name="label_metadata_media_path">Chemin</string>
+    <string name="label_metadata_media_filename">Nom du fichier</string>
     <string name="label_metadata_media_duration">Durée</string>
     <string name="label_metadata_media_bitrate">Débit</string>
     <string name="label_metadata_media_samplerate">Taux d\'échantillonnage</string>

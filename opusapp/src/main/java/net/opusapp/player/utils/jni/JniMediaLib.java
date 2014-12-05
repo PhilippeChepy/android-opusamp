@@ -91,6 +91,8 @@ public abstract class JniMediaLib {
 
     private native static void tagsRead(String path);
 
+    private native static void tagsWrite(String path);
+
     public native static long coverInputStreamOpen(String path);
 
     public native static long coverInputStreamClose(long nativeContext);
@@ -134,7 +136,7 @@ public abstract class JniMediaLib {
         hasEmbeddedArt = false;
 	}
 
-	public static ContentValues doReadTags(File file, ContentValues contentValues) {
+	public static void readTags(final File file, final ContentValues contentValues) {
         synchronized (threadLocker) {
             resetTags();
             tagsRead(file.getAbsolutePath());
@@ -157,10 +159,29 @@ public abstract class JniMediaLib {
             contentValues.put(Entities.Media.COLUMN_FIELD_COMMENT, tagComment);
             contentValues.put(Entities.Media.COLUMN_FIELD_LYRICS, tagLyrics);
             contentValues.put(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
-
-            return contentValues;
         }
 	}
+
+    public static void writeTags(File file, ContentValues contentValues) {
+        synchronized (threadLocker) {
+            resetTags();
+
+            tagTitle = contentValues.getAsString(Entities.Media.COLUMN_FIELD_TITLE);
+            tagArtist = contentValues.getAsString(Entities.Media.COLUMN_FIELD_ARTIST);
+            //tagComposer = contentValues.getAsString(Media.COLUMN_FIELD_COMPOSER);
+            tagAlbumArtist = contentValues.getAsString(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
+            tagAlbum = contentValues.getAsString(Entities.Media.COLUMN_FIELD_ALBUM);
+            tagGenre = contentValues.getAsString(Entities.Media.COLUMN_FIELD_GENRE);
+            tagYear = contentValues.getAsInteger(Entities.Media.COLUMN_FIELD_YEAR);
+            tagTrack = contentValues.getAsInteger(Entities.Media.COLUMN_FIELD_TRACK);
+            tagDisc = contentValues.getAsInteger(Entities.Media.COLUMN_FIELD_DISC);
+            tagBpm = contentValues.getAsInteger(Entities.Media.COLUMN_FIELD_BPM);
+            tagComment = contentValues.getAsString(Entities.Media.COLUMN_FIELD_COMMENT);
+            tagLyrics = contentValues.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
+
+            tagsWrite(file.getAbsolutePath());
+        }
+    }
 
     public static InputStream getCoverInputStream(File file) {
         if (file != null) {

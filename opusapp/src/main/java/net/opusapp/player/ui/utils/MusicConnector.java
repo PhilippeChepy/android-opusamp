@@ -30,10 +30,9 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
-import net.opusapp.player.core.service.providers.MediaMetadata;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
-import net.opusapp.player.ui.adapter.ux.MetadataListAdapter;
+import net.opusapp.player.ui.dialogs.MetadataDialog;
 import net.opusapp.player.utils.LogUtils;
 
 import java.util.ArrayList;
@@ -97,18 +96,6 @@ public class MusicConnector {
         }
 
         return 0;
-    }
-
-
-
-    public static void sendPlayIntent() {
-        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
-        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PLAY_INTENT);
-    }
-
-    public static void sendPauseIntent() {
-        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
-        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PAUSE_INTENT);
     }
 
     public static void sendStopIntent() {
@@ -261,33 +248,12 @@ public class MusicConnector {
         switch (contentType) {
             case CONTENT_TYPE_ALBUM:
                 titleResId = R.string.alert_dialog_title_album_properties;
-
                 break;
-            case CONTENT_TYPE_MEDIA:
-                break;
-            default:
-                return false;
         }
 
-        final Object metadataList = provider.getProperty(contentType, contentId, AbstractMediaManager.Provider.ContentProperty.CONTENT_METADATA_LIST);
-        final MetadataListAdapter adapter = new MetadataListAdapter(hostActivity, (ArrayList<MediaMetadata>)metadataList);
+        final MetadataDialog metadataDialog = new MetadataDialog(hostActivity, titleResId, provider, contentType, contentId);
+        metadataDialog.show();
 
-        new AlertDialog.Builder(hostActivity)
-                .setTitle(titleResId)
-                .setIcon(R.drawable.ic_launcher)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                })
-                .setAdapter(adapter,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialoginterface, int i) {
-                            }
-                        }
-                )
-                .show();
         return true;
     }
 
@@ -379,8 +345,8 @@ public class MusicConnector {
         final int PLAYLIST_COLUMN_NAME = 1;
 
         if (playlistCursor != null) {
-            final ArrayList<String> playlistItemIds = new ArrayList<String>();
-            final ArrayList<String> playlistItemDescriptions = new ArrayList<String>();
+            final ArrayList<String> playlistItemIds = new ArrayList<>();
+            final ArrayList<String> playlistItemDescriptions = new ArrayList<>();
 
             playlistItemIds.add(null);
             playlistItemDescriptions.add(hostActivity.getString(R.string.label_new_playlist));
@@ -450,8 +416,8 @@ public class MusicConnector {
 
     //
     public static void addLibrary(final Activity parent, final Runnable completionRunnable) {
-        final ArrayList<Integer> managerItemIds = new ArrayList<Integer>();
-        final ArrayList<String> managerItemDescriptions = new ArrayList<String>();
+        final ArrayList<Integer> managerItemIds = new ArrayList<>();
+        final ArrayList<String> managerItemDescriptions = new ArrayList<>();
 
         final MediaManagerFactory.MediaManagerDescription managerList[] = MediaManagerFactory.getMediaManagerList();
 

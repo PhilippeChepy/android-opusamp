@@ -14,18 +14,33 @@ package net.opusapp.player.core.service.providers;
 
 public class MediaMetadata {
 
-    public int index;
+    public int mFieldType;
 
-    public String description;
+    public String mDescription;
 
-    public String value;
+    public String mValue;
 
-    public boolean editable;
+    public EditType mEditable;
 
-    public MediaMetadata(int index, String description, String value, boolean editable) {
-        this.index = index;
-        this.description = description;
-        this.value = value;
-        this.editable = editable;
+    private String mOriginalValue;
+
+
+    public enum EditType {
+        TYPE_STRING,
+        TYPE_NUMERIC,
+        TYPE_READONLY
+    }
+
+
+    public MediaMetadata(int fieldType, String description, String value, EditType editable) {
+        mFieldType = fieldType;
+        mDescription = description;
+        mValue = value;
+        mOriginalValue = value;
+        mEditable = editable;
+    }
+
+    public boolean changed() {
+        return mValue == null || !mValue.equals(mOriginalValue);
     }
 }

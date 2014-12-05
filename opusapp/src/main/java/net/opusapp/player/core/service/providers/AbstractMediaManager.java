@@ -17,6 +17,8 @@ import android.database.Cursor;
 
 import net.opusapp.player.ui.views.RefreshableView;
 
+import java.util.List;
+
 public interface AbstractMediaManager {
 
     public static final int INVALID_MEDIA_MANAGER = -1;
@@ -185,7 +187,12 @@ public interface AbstractMediaManager {
 
         public boolean hasFeature(Feature feature);
         public void setProperty(ContentType contentType, Object target, ContentProperty key, Object object, Object options);
+
         public Object getProperty(ContentType contentType, Object target, ContentProperty key);
+
+        public List<MediaMetadata> getMetadataList(ContentType contentType, Object target);
+        public void setMetadataList(ContentType contentType, Object target, List<MediaMetadata> metadataList);
+
         public String getAlbumArtUri(String albumId);
 
         public boolean hasContentType(ContentType contentType);
@@ -208,7 +215,6 @@ public interface AbstractMediaManager {
             CONTENT_ART_URI,                    /* write only */
             CONTENT_ART_ORIGINAL_URI,           /* write only */
             CONTENT_ART_STREAM,                 /* read only */
-            CONTENT_METADATA_LIST,              /* read only */
 
             CONTENT_STORAGE_UPDATE_VIEW,        /* write only */
             CONTENT_STORAGE_HAS_PARENT,         /* read only */
@@ -217,9 +223,7 @@ public interface AbstractMediaManager {
             CONTENT_STORAGE_RESOURCE_POSITION,  /* read only */
         }
 
-        /*
-            Other content management routines
-         */
+        // Other content management routines
         public enum Feature {
             CONSTRAINT_REQUIRE_SD_CARD,         /* unimplemented */
             CONSTRAINT_REQUIRE_CONNECTION,      /* unimplemented */
@@ -229,9 +233,7 @@ public interface AbstractMediaManager {
             SUPPORT_CONFIGURATION               /* unimplemented */
         }
 
-        /*
-            Library content management
-         */
+        // Library content management
         public enum ContentType {
             CONTENT_TYPE_DEFAULT,
             CONTENT_TYPE_PLAYLIST,
@@ -256,17 +258,13 @@ public interface AbstractMediaManager {
 
     public interface Player {
 
-        /*
-            Stream management
-         */
+        // Stream management
         public boolean loadMedia(Media media);
         public void unloadMedia(Media media);
 
 
 
-        /*
-            MediaPlayer management
-         */
+        // MediaPlayer management
         public void playerSetContent(Media context);
         public void playerPlay();
         public void playerPause(boolean setPaused);
