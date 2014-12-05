@@ -27,6 +27,7 @@
         <item>@string/ext_ogg</item>
         <item>@string/ext_ogv</item>
         <item>@string/ext_ogx</item>
+        <item>@string/ext_opus</item>
         <item>@string/ext_pcm</item>
         <item>@string/ext_tta</item>
         <item>@string/ext_wav</item>

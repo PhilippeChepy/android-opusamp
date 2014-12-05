@@ -25,6 +25,7 @@
     <string name="ext_ogg">ogg</string>
     <string name="ext_ogv">ogv</string>
     <string name="ext_ogx">ogx</string>
+    <string name="ext_opus">opus</string>
     <string name="ext_pcm">pcm</string>
     <string name="ext_tta">tta</string>
     <string name="ext_wav">wav</string>
