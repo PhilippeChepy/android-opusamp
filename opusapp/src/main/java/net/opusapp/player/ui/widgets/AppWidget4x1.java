@@ -8,7 +8,6 @@ import android.os.Build;
 import android.widget.RemoteViews;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
@@ -41,9 +40,9 @@ public class AppWidget4x1 extends AbstractAppWidget {
             view.setOnClickPendingIntent(R.id.four_by_one_info, pendingIntent);
             view.setOnClickPendingIntent(R.id.four_by_one_albumart, pendingIntent);
 
-            view.setOnClickPendingIntent(R.id.four_by_one_control_play, PlayerService.APPWIDGET_PAUSE_INTENT);
-            view.setOnClickPendingIntent(R.id.four_by_one_control_next, PlayerService.APPWIDGET_NEXT_INTENT);
-            view.setOnClickPendingIntent(R.id.four_by_one_control_prev, PlayerService.APPWIDGET_PREV_INTENT);
+            view.setOnClickPendingIntent(R.id.four_by_one_control_play, APPWIDGET_PAUSE_INTENT);
+            view.setOnClickPendingIntent(R.id.four_by_one_control_next, APPWIDGET_NEXT_INTENT);
+            view.setOnClickPendingIntent(R.id.four_by_one_control_prev, APPWIDGET_PREV_INTENT);
 
             // set widget content
             view.setTextViewText(R.id.four_by_one_trackname, track);

@@ -43,6 +43,15 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
     protected static boolean hasPlaylist = false;
 
 
+
+    protected final PendingIntent APPWIDGET_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_TOGGLEPAUSE);
+
+    protected final PendingIntent APPWIDGET_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_NEXT);
+
+    protected final PendingIntent APPWIDGET_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_PREVIOUS);
+
+
+
     @Override
     public void onEnabled(Context context) {
         super.onEnabled(context);

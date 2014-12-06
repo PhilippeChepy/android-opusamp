@@ -258,8 +258,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
         };
 
-        // TODO: check usefulness of COMMAND_SOURCE_NOTIFICATION.
-        final IntentFilter intentFilter = new IntentFilter(COMMAND_SOURCE_NOTIFICATION);
+        final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(COMMAND_SOURCE_TELEPHONY);
         intentFilter.addAction(COMMAND_SOURCE_CLIENT_APP);
         LocalBroadcastManager.getInstance(PlayerApplication.context).registerReceiver(mCommandbroadcastReceiver, intentFilter);
@@ -1226,13 +1225,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
-
-
-    public static final PendingIntent APPWIDGET_PAUSE_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_TOGGLEPAUSE);
-
-    public static final PendingIntent APPWIDGET_NEXT_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_NEXT);
-
-    public static final PendingIntent APPWIDGET_PREV_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_PREVIOUS);
 
     public static final PendingIntent APPWIDGET_REFRESH_INTENT = PlayerService.buildServiceIntent(PlayerService.COMMAND_SOURCE_APPWIDGET, PlayerService.ACTION_REFRESH_WIDGETS);
 
