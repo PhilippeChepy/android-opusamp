@@ -3133,7 +3133,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return id;
     }
 
-    protected long getCoverForFile(File sourceFile, SyncScanContext scanContext, boolean hasEmbeddedTag) {
+    protected synchronized long getCoverForFile(File sourceFile, SyncScanContext scanContext, boolean hasEmbeddedTag) {
         if (sourceFile == null || sourceFile.getParentFile() == null) {
             return 0;
         }
