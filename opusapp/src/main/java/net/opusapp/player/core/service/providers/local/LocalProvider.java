@@ -37,6 +37,7 @@ import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.activities.ArtSelectActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SearchPathActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SettingsActivity;
+import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
@@ -841,7 +842,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
                 // Data compilation
-                mediaMetadataList.add(new MediaMetadata(ALBUM_NAME,resources.getString(R.string.label_metadata_album_title), albumName, MediaMetadata.EditType.TYPE_READONLY));
+                mediaMetadataList.add(new MediaMetadata(ALBUM_NAME,resources.getString(R.string.label_metadata_album_title), albumName, MediaMetadata.EditType.TYPE_STRING));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(R.string.label_metadata_album_track_count), String.valueOf(trackCount), MediaMetadata.EditType.TYPE_READONLY));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(R.string.label_metadata_album_duration), totalDuration, MediaMetadata.EditType.TYPE_READONLY));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getQuantityString(R.plurals.label_metadata_album_artists, artists.size()), TextUtils.join(", ", artists), MediaMetadata.EditType.TYPE_READONLY));
@@ -949,82 +950,142 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public void setMetadataList(ContentType contentType, Object target, List<MediaMetadata> metadataList) {
-
-        final int requestedFields[] = new int[] {
+        final int requestedFields[] = new int[]{
                 SONG_URI,
         };
 
-        final Cursor cursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_MEDIA, (String) target);
-        String mediaUri = null;
-        if (cursor != null) {
-            if (cursor.getCount() > 0) {
-                cursor.moveToFirst();
-                mediaUri = cursor.getString(0);
-            }
-            cursor.close();
-        }
+        final int COLUMN_URI = 0;
 
-        if (!TextUtils.isEmpty(mediaUri)) {
-            File mediaFile = PlayerApplication.uriToFile(mediaUri);
-            if (mediaFile.exists()) {
+        switch (contentType) {
+            case CONTENT_TYPE_ALBUM:
+                boolean albumChanged = false;
+                final Cursor albumCursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_ALBUM, (String) target);
 
-                final ContentValues tags = new ContentValues();
-                JniMediaLib.readTags(mediaFile, tags);
+                if (CursorUtils.validCursor(albumCursor)) {
+                    while (albumCursor.moveToNext()) {
+                        final String mediaUri = albumCursor.getString(COLUMN_URI);
 
-                for (final MediaMetadata mediaMetadata : metadataList) {
-                    if (mediaMetadata.changed()) {
-                        LogUtils.LOGE(TAG, "tag changed {desc=" + mediaMetadata.mDescription + ", val=" + mediaMetadata.mValue + "}");
+                        if (!TextUtils.isEmpty(mediaUri)) {
+                            File mediaFile = PlayerApplication.uriToFile(mediaUri);
+                            if (mediaFile.exists()) {
+                                final ContentValues tags = new ContentValues();
+                                JniMediaLib.readTags(mediaFile, tags);
 
-                        switch (mediaMetadata.mFieldType) {
-                            case SONG_TITLE:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_TITLE, mediaMetadata.mValue);
+                                boolean changed = false;
+                                for (final MediaMetadata mediaMetadata : metadataList) {
+                                    if (mediaMetadata.changed()) {
+                                        LogUtils.LOGE(TAG, "album tag changed {desc=" + mediaMetadata.mDescription + ", val=" + mediaMetadata.mValue + "}");
+
+                                        switch (mediaMetadata.mFieldType) {
+                                            case ALBUM_NAME:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                        }
+                                    }
                                 }
-                                break;
-                            case SONG_ARTIST:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_ARTIST, mediaMetadata.mValue);
+
+                                if (changed) {
+                                    albumChanged = true;
+                                    JniMediaLib.writeTags(mediaFile, tags);
                                 }
-                                break;
-                            case SONG_ALBUM_ARTIST:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST, mediaMetadata.mValue);
-                                }
-                                break;
-                            case SONG_ALBUM:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM, mediaMetadata.mValue);
-                                }
-                                break;
-                            case SONG_GENRE:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_GENRE, mediaMetadata.mValue);
-                                }
-                                break;
-                            case SONG_YEAR:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_YEAR, Integer.parseInt(mediaMetadata.mValue));
-                                }
-                                break;
-                            case SONG_TRACK:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_TRACK, Integer.parseInt(mediaMetadata.mValue));
-                                }
-                                break;
-                            case SONG_DISC:
-                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
-                                    tags.put(Entities.Media.COLUMN_FIELD_DISC, Integer.parseInt(mediaMetadata.mValue));
-                                }
-                                break;
+                            }
                         }
                     }
+
+                    if (albumChanged) {
+                        scanStart();
+                    }
+
+                    CursorUtils.freeCursor(albumCursor);
                 }
 
-                JniMediaLib.writeTags(mediaFile, tags);
-            }
+                break;
+            case CONTENT_TYPE_MEDIA:
+                final Cursor mediaCursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_MEDIA, (String) target);
 
+                if (CursorUtils.validCursor(mediaCursor)) {
+                    while (mediaCursor.moveToNext()) {
+                        final String mediaUri = mediaCursor.getString(COLUMN_URI);
 
-            scanStart();
+                        if (!TextUtils.isEmpty(mediaUri)) {
+                            File mediaFile = PlayerApplication.uriToFile(mediaUri);
+                            if (mediaFile.exists()) {
+
+                                final ContentValues tags = new ContentValues();
+                                JniMediaLib.readTags(mediaFile, tags);
+
+                                boolean changed = false;
+                                for (final MediaMetadata mediaMetadata : metadataList) {
+                                    if (mediaMetadata.changed()) {
+                                        LogUtils.LOGE(TAG, "media tag changed {desc=" + mediaMetadata.mDescription + ", val=" + mediaMetadata.mValue + "}");
+
+                                        switch (mediaMetadata.mFieldType) {
+                                            case SONG_TITLE:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_TITLE, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_ARTIST:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_ARTIST, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_ALBUM_ARTIST:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_ALBUM:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_GENRE:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_GENRE, mediaMetadata.mValue);
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_YEAR:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_YEAR, Integer.parseInt(mediaMetadata.mValue));
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_TRACK:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_TRACK, Integer.parseInt(mediaMetadata.mValue));
+                                                    changed = true;
+                                                }
+                                                break;
+                                            case SONG_DISC:
+                                                if (!TextUtils.isEmpty(mediaMetadata.mValue)) {
+                                                    tags.put(Entities.Media.COLUMN_FIELD_DISC, Integer.parseInt(mediaMetadata.mValue));
+                                                    changed = true;
+                                                }
+                                                break;
+                                        }
+                                    }
+                                }
+
+                                if (changed) {
+                                    JniMediaLib.writeTags(mediaFile, tags);
+                                    scanStart();
+                                }
+                            }
+                        }
+                    }
+
+                    CursorUtils.freeCursor(mediaCursor);
+                }
+                break;
         }
     }
 
