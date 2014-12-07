@@ -199,9 +199,10 @@ public interface AbstractMediaManager {
 
         public AbstractEmptyContentAction getEmptyContentAction(ContentType contentType);
 
-        public ProviderAction getSettingsAction();
+
+        public static final int ACTION_INDEX_SETTINGS = 0;
+
         public ProviderAction getAction(int index);
-        public ProviderAction[] getActionList();
 
 
         public void changeAlbumArt(Activity sourceActivity, RefreshableView sourceRefreshable, String albumId, boolean restore);

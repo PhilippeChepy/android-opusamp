@@ -519,7 +519,8 @@ public class MusicConnector {
 
         final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
         final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
-        final AbstractMediaManager.ProviderAction providerAction = provider.getSettingsAction();
+
+        final AbstractMediaManager.ProviderAction providerAction = provider.getAction(AbstractMediaManager.Provider.ACTION_INDEX_SETTINGS);
 
         if (providerAction != null) {
             /* launch activity */ providerAction.launch(sourceActivity);

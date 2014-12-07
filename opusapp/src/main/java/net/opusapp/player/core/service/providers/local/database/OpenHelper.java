@@ -27,20 +27,26 @@ public class OpenHelper extends SQLiteOpenHelper {
     public static final String TAG = OpenHelper.class.getSimpleName();
 
 
-    private final static int DATABASE_VERSION = 1;
+    private final static int DATABASE_VERSION = 2;
 
-    private int providerId;
+    private int mProviderId;
+
+    private String[] mDefaultExtensionList = new String[] {
+            "3gp", "aac", "ac3", "ape", "asf", "flac", "m4a", "m4b", "m4p", "mka", "mks", "mkv",
+            "mov", "mp+", "mp1", "mp2", "mp3", "mp4", "mpc", "mpp", "oga", "ogg", "ogv", "ogx",
+            "opus", "tta", "wav", "wave", "wma", "wmv", "wv"
+    };
 
     public OpenHelper(int providerId) {
         super(PlayerApplication.context, "provider-" + providerId + ".db", null, DATABASE_VERSION);
-        this.providerId = providerId;
+        mProviderId = providerId;
     }
 
     public void deleteDatabaseFile() {
-        File databaseFile = PlayerApplication.context.getDatabasePath("provDb" + providerId + ".db");
+        File databaseFile = PlayerApplication.context.getDatabasePath("provider-" + mProviderId + ".db");
         if (databaseFile != null) {
             boolean deleted = databaseFile.delete();
-            LogUtils.LOGI(TAG, "deleting provider data (" + providerId + ") : " + deleted);
+            LogUtils.LOGI(TAG, "deleting provider data (" + mProviderId + ") : " + deleted);
         }
     }
 
@@ -60,7 +66,13 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.Media.createTable(database);
         Entities.ScanDirectory.createTable(database);
 
-		/* Current queue */
+        if (DATABASE_VERSION >= 2) {
+            Entities.FileExtensions.createTable(database);
+        }
+
+
+        /// Playlists
+		// Current queue
         ContentValues contentValues = new ContentValues();
         contentValues.put(Entities.Playlist._ID, 0);
         contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, "");
@@ -68,32 +80,52 @@ public class OpenHelper extends SQLiteOpenHelper {
         contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
         database.insert(Entities.Playlist.TABLE_NAME, null, contentValues);
 
-		/* Favorite playlist */
+		// Favorite playlist
         contentValues.clear();
-        //contentValues.put(Playlist._ID, 1);
         contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, PlayerApplication.context.getString(R.string.label_favorites));
         contentValues.put(Entities.Playlist.COLUMN_FIELD_VISIBLE, true);
         contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
         database.insert(Entities.Playlist.TABLE_NAME, null, contentValues);
+
+        /// File extensions
+        for (final String extension : mDefaultExtensionList) {
+            contentValues.clear();
+            contentValues.put(Entities.FileExtensions.COLUMN_FIELD_EXTENSION, extension);
+            database.insert(Entities.FileExtensions.TABLE_NAME, null, contentValues);
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-		/*
-		 * Library tables
-		 */
-        Entities.Album.destroyTable(database);
-        Entities.AlbumArtist.destroyTable(database);
-        Entities.Artist.destroyTable(database);
-        Entities.Genre.destroyTable(database);
-        Entities.Art.destroyTable(database);
-        Entities.AlbumHasArts.destroyTable(database);
-        Entities.Playlist.destroyTable(database);
-        Entities.PlaylistEntry.destroyTable(database);
-        Entities.Media.destroyTable(database);
-        Entities.ScanDirectory.destroyTable(database);
+        if (oldVersion == 1 && newVersion == 2) {
+            Entities.FileExtensions.createTable(database);
 
-        onCreate(database);
+            ContentValues contentValues = new ContentValues();
+            /// File extensions
+            for (final String extension : mDefaultExtensionList) {
+                contentValues.put(Entities.FileExtensions.COLUMN_FIELD_EXTENSION, extension);
+                database.insert(Entities.FileExtensions.TABLE_NAME, null, contentValues);
+                contentValues.clear();
+            }
+        }
+        else {
+            Entities.Album.destroyTable(database);
+            Entities.AlbumArtist.destroyTable(database);
+            Entities.Artist.destroyTable(database);
+            Entities.Genre.destroyTable(database);
+            Entities.Art.destroyTable(database);
+            Entities.AlbumHasArts.destroyTable(database);
+            Entities.Playlist.destroyTable(database);
+            Entities.PlaylistEntry.destroyTable(database);
+            Entities.Media.destroyTable(database);
+            Entities.ScanDirectory.destroyTable(database);
+
+            if (DATABASE_VERSION >= 2) {
+                Entities.FileExtensions.destroyTable(database);
+            }
+
+            onCreate(database);
+        }
     }
 
     @Override

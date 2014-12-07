@@ -10,6 +10,11 @@
             android:key="@string/preference_key_settings_location"
             android:title="@string/preference_title_settings_location"
             android:summary="@string/preference_summary_settings_location" />
+
+        <Preference
+            android:key="@string/preference_key_settings_extensions"
+            android:title="@string/preference_title_settings_extensions"
+            android:summary="@string/preference_summary_settings_extensions" />
     </PreferenceCategory>
 
     <PreferenceCategory

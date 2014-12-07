@@ -35,6 +35,7 @@ import net.opusapp.player.core.service.providers.MediaMetadata;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.activities.ArtSelectActivity;
+import net.opusapp.player.core.service.providers.local.ui.activities.FileExtensionsActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SearchPathActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SettingsActivity;
 import net.opusapp.player.core.service.utils.CursorUtils;
@@ -121,9 +122,16 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
 
+    public static final int ACTION_INDEX_LOCATION = 1;
+
+    public static final int ACTION_INDEX_EXTENSIONS = 2;
+
+
+
     public AbstractMediaManager.ProviderAction ACTION_LIST[] = new AbstractMediaManager.ProviderAction[] {
+            new SettingsAction(),
             new LocationAction(),
-            new SettingsAction()
+            new FileExtensionAction()
     };
 
 
@@ -1141,18 +1149,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     @Override
-    public AbstractMediaManager.ProviderAction getSettingsAction() {
-        return ACTION_LIST[1];
-    }
-
-    @Override
     public AbstractMediaManager.ProviderAction getAction(int index) {
-        return ACTION_LIST[index];
-    }
+        LogUtils.LOGE(TAG, "index = " + index);
+        if (index >= ACTION_LIST.length) {
+            return null;
+        }
 
-    @Override
-    public AbstractMediaManager.ProviderAction[] getActionList() {
-        return ACTION_LIST;
+        return ACTION_LIST[index];
     }
 
     @Override
@@ -2643,24 +2646,31 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return false;
     }
 
-    public static boolean isAudioFile(SyncScanContext scanContext, File file) {
+    public boolean isAudioFile(SyncScanContext scanContext, File file) {
         if (file.isDirectory()) {
             return false;
         }
 
-        String filePath = file.getAbsolutePath();
-
+        final String filePath = file.getAbsolutePath();
         if (scanContext.audioFilesExtensions == null) {
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+            scanContext.audioFilesExtensions = new ArrayList<>();
 
-            Set<String> defaults = new HashSet<>(Arrays.asList(PlayerApplication.context.getResources().getStringArray(R.array.audio_exts)));
-            Set<String> extensionSet = SharedPreferencesCompat.getStringSet(sharedPrefs, PlayerApplication.context.getString(R.string.key_audio_exts), defaults);
+            final SQLiteDatabase database = openHelper.getReadableDatabase();
 
-            if(extensionSet.size() == 0) {
-                extensionSet = defaults;
+            final String[] columns = new String[] {
+                Entities.FileExtensions.COLUMN_FIELD_EXTENSION
+            };
+
+            final int COLUMN_EXTENSION = 0;
+
+            final Cursor cursor = database.query(Entities.FileExtensions.TABLE_NAME, columns, null, null, null, null, null, null);
+            if (CursorUtils.validCursor(cursor)) {
+                while (cursor.moveToNext()) {
+                    scanContext.audioFilesExtensions.add(cursor.getString(COLUMN_EXTENSION));
+                }
+
+                CursorUtils.freeCursor(cursor);
             }
-
-            scanContext.audioFilesExtensions = new ArrayList<>(extensionSet);
         }
 
         for(String extension : scanContext.audioFilesExtensions) {
@@ -2710,13 +2720,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         scanning = true;
-        scanContext.database = openHelper.getWritableDatabase();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         Cursor acceptCursor = null;
         Cursor discardCursor = null;
 
         try {
-            if (scanContext.database != null) {
+            if (database != null) {
                 // construction of a list of forbidden paths.
                 final String pathProjection[] = new String[]{
                         Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
@@ -2734,18 +2744,18 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                 ArrayList<File> acceptList = new ArrayList<>();
 
-                acceptCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
-                discardCursor = scanContext.database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
+                acceptCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
+                discardCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
 
                 Map<String, Boolean> discardMap = new HashMap<>();
                 if (discardCursor != null && discardCursor.getCount() > 0) {
-                    scanContext.database.beginTransaction();
+                    database.beginTransaction();
 
                     while (discardCursor.moveToNext()) {
                         final String discardPath = discardCursor.getString(0);
                         discardMap.put(discardPath, true);
 
-                        scanContext.database.delete(
+                        database.delete(
                                 Entities.Media.TABLE_NAME,
                                 Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
                                 new String[]{
@@ -2754,8 +2764,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         );
                     }
 
-                    scanContext.database.setTransactionSuccessful();
-                    scanContext.database.endTransaction();
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                 }
 
                 if (acceptCursor != null && acceptCursor.getCount() > 0) {
@@ -2796,7 +2806,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 final int COLUMN_COMMENT = 10;
                 final int COLUMN_LYRICS = 11;
 
-                Cursor medias = scanContext.database.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
+                Cursor medias = database.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
                 if (medias != null) {
                     if (medias.getCount() > 0) {
                         while (medias.moveToNext()) {
@@ -2834,32 +2844,36 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                     }
                                 }
 
+                                if (!needDeletion && !isAudioFile(scanContext, currentMediaFile)) {
+                                    needDeletion = true;
+                                }
+
                                 ContentValues tags = new ContentValues();
                                 if (!needDeletion) {
                                     JniMediaLib.readTags(currentMediaFile, tags);
 
                                     String title = tags.getAsString(Entities.Media.COLUMN_FIELD_TITLE);
-                                    if (title != null && title.equals(medias.getString(COLUMN_TITLE))) {
+                                    if (title != null && !title.equals(medias.getString(COLUMN_TITLE))) {
                                         needDbUpdate = true;
                                     }
 
                                     String artist = tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST);
-                                    if (!needDbUpdate && artist != null && artist.equals(medias.getString(COLUMN_ARTIST))) {
+                                    if (!needDbUpdate && artist != null && !artist.equals(medias.getString(COLUMN_ARTIST))) {
                                         needDbUpdate = true;
                                     }
 
                                     String albumArtist = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
-                                    if (!needDbUpdate && albumArtist != null && albumArtist.equals(medias.getString(COLUMN_ALBUM_ARTIST))) {
+                                    if (!needDbUpdate && albumArtist != null && !albumArtist.equals(medias.getString(COLUMN_ALBUM_ARTIST))) {
                                         needDbUpdate = true;
                                     }
 
                                     String album = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM);
-                                    if (!needDbUpdate && album != null && album.equals(medias.getString(COLUMN_ALBUM))) {
+                                    if (!needDbUpdate && album != null && !album.equals(medias.getString(COLUMN_ALBUM))) {
                                         needDbUpdate = true;
                                     }
 
                                     String genre = tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE);
-                                    if (!needDbUpdate && genre != null && genre.equals(medias.getString(COLUMN_GENRE))) {
+                                    if (!needDbUpdate && genre != null && !genre.equals(medias.getString(COLUMN_GENRE))) {
                                         needDbUpdate = true;
                                     }
 
@@ -2879,20 +2893,20 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                     }
 
                                     String comment = tags.getAsString(Entities.Media.COLUMN_FIELD_COMMENT);
-                                    if (!needDbUpdate && comment != null && comment.equals(medias.getString(COLUMN_COMMENT))) {
+                                    if (!needDbUpdate && comment != null && !comment.equals(medias.getString(COLUMN_COMMENT))) {
                                         needDbUpdate = true;
                                     }
 
                                     String lyrics = tags.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
-                                    if (!needDbUpdate && lyrics != null && lyrics.equals(medias.getString(COLUMN_LYRICS))) {
+                                    if (!needDbUpdate && lyrics != null && !lyrics.equals(medias.getString(COLUMN_LYRICS))) {
                                         needDbUpdate = true;
                                     }
                                 }
 
                                 if (needDeletion) {
                                     LogUtils.LOGI(TAG, "!Media : " + currentMediaPath);
-                                    scanContext.database.delete(Entities.Media.TABLE_NAME, "_ID = ?", new String[]{String.valueOf(currentMediaId)});
-                                    scanContext.database.delete(Entities.Art.TABLE_NAME, Entities.Art.COLUMN_FIELD_URI + " LIKE ?", new String[]{currentMediaPath + "%"});
+                                    database.delete(Entities.Media.TABLE_NAME, "_ID = ?", new String[]{String.valueOf(currentMediaId)});
+                                    database.delete(Entities.Art.TABLE_NAME, Entities.Art.COLUMN_FIELD_URI + " LIKE ?", new String[]{currentMediaPath + "%"});
                                 }
                                 else if (needDbUpdate) {
                                     LogUtils.LOGI(TAG, "~Media : " + currentMediaPath);
@@ -2902,7 +2916,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                     tags.put(Entities.Media.COLUMN_FIELD_GENRE_ID, getGenreId(tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE), scanContext));
 
                                     tags.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
-                                    scanContext.database.update(Entities.Media.TABLE_NAME, tags, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
+                                    database.update(Entities.Media.TABLE_NAME, tags, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
                                 }
                             }
                         }
@@ -2917,10 +2931,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     doSyncDirectoryScan(acceptList, discardMap, scanContext);
                 }
 
-                scanContext.database.beginTransaction();
+                database.beginTransaction();
 
                 LogUtils.LOGI(TAG, "Updating albums");
-                scanContext.database.delete(
+                database.delete(
                         Entities.Album.TABLE_NAME,
                         Entities.Album._ID + " NOT IN ( " +
                                 "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " " +
@@ -2931,7 +2945,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 );
 
                 LogUtils.LOGI(TAG, "Updating Album artists");
-                scanContext.database.delete(
+                database.delete(
                         Entities.AlbumArtist.TABLE_NAME,
                         Entities.AlbumArtist._ID + " NOT IN ( " +
                                 "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " " +
@@ -2942,7 +2956,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 );
 
                 LogUtils.LOGI(TAG, "Updating Artists");
-                scanContext.database.delete(
+                database.delete(
                         Entities.Artist.TABLE_NAME,
                         Entities.Artist._ID + " NOT IN ( " +
                                 "SELECT " + Entities.Media.COLUMN_FIELD_ARTIST_ID + " " +
@@ -2953,7 +2967,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 );
 
                 LogUtils.LOGI(TAG, "Updating Genres");
-                scanContext.database.delete(
+                database.delete(
                         Entities.Genre.TABLE_NAME,
                         Entities.Genre._ID + " NOT IN ( " +
                                 "SELECT " + Entities.Media.COLUMN_FIELD_GENRE_ID + " " +
@@ -2964,7 +2978,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 );
 
                 LogUtils.LOGI(TAG, "Updating Arts");
-                scanContext.database.rawQuery(
+                database.rawQuery(
                         "UPDATE " + Entities.Album.TABLE_NAME + " " +
                         "SET " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = NULL " +
                         "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " NOT IN (" +
@@ -2973,7 +2987,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         null
                 );
 
-                scanContext.database.rawQuery(
+                database.rawQuery(
                         "UPDATE " + Entities.Media.TABLE_NAME + " " +
                         "SET " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = NULL " +
                         "WHERE " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " NOT IN (" +
@@ -2982,7 +2996,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         null
                 );
 
-                scanContext.database.rawQuery(
+                database.rawQuery(
                         "UPDATE " + Entities.Album.TABLE_NAME + " " +
                         "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " " +
                         "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " NOT IN (" +
@@ -2991,7 +3005,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         null
                 );
 
-                scanContext.database.rawQuery(
+                database.rawQuery(
                         "UPDATE " + Entities.Media.TABLE_NAME + " " +
                         "SET " + Entities.Media.COLUMN_FIELD_ART_ID + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " " +
                         "WHERE " + Entities.Media.COLUMN_FIELD_ART_ID + " NOT IN (" +
@@ -3001,18 +3015,16 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 );
 
                 LogUtils.LOGI(TAG, "updates done");
-                scanContext.database.setTransactionSuccessful();
-                scanContext.database.endTransaction();
-
-                scanContext.database = null;
+                database.setTransactionSuccessful();
+                database.endTransaction();
             }
         }
         catch (final Exception exception) {
             LogUtils.LOGException(TAG, "doSyncStartScan", 0, exception);
         }
         finally {
-            if (scanContext.database != null && scanContext.database.inTransaction()) {
-                scanContext.database.endTransaction();
+            if (database != null && database.inTransaction()) {
+                database.endTransaction();
             }
 
             if (acceptCursor != null) {
@@ -3039,8 +3051,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             return null;
         }
 
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
+
         if (id == null) {
-            Cursor artistCursor = scanContext.database.query(Entities.Artist.TABLE_NAME, new String[] {Entities.Artist._ID}, Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " = ?", new String[] { artist }, null, null, null);
+            Cursor artistCursor = database.query(Entities.Artist.TABLE_NAME, new String[] {Entities.Artist._ID}, Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " = ?", new String[] { artist }, null, null, null);
 
             if (artistCursor != null && artistCursor.getCount() > 0) {
                 artistCursor.moveToPosition(0);
@@ -3051,7 +3065,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 artistValues.put(Entities.Artist.COLUMN_FIELD_ARTIST_NAME, artist);
                 artistValues.put(Entities.Artist.COLUMN_FIELD_USER_HIDDEN, false);
                 artistValues.put(Entities.Artist.COLUMN_FIELD_VISIBLE, true);
-                id = scanContext.database.insert(Entities.Artist.TABLE_NAME, null, artistValues);
+                id = database.insert(Entities.Artist.TABLE_NAME, null, artistValues);
             }
 
             if (scanContext.artistIdMap != null) {
@@ -3074,7 +3088,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         if (id == null) {
-            Cursor albumCursor = scanContext.database.query(Entities.Album.TABLE_NAME, new String[]{Entities.Album._ID}, Entities.Album.COLUMN_FIELD_ALBUM_NAME + " = ?", new String[]{album}, null, null, null);
+            final SQLiteDatabase database = openHelper.getWritableDatabase();
+
+            Cursor albumCursor = database.query(Entities.Album.TABLE_NAME, new String[]{Entities.Album._ID}, Entities.Album.COLUMN_FIELD_ALBUM_NAME + " = ?", new String[]{album}, null, null, null);
 
             if (albumCursor != null && albumCursor.getCount() > 0) {
                 albumCursor.moveToPosition(0);
@@ -3084,7 +3100,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 ContentValues albumValues = new ContentValues();
                 albumValues.put(Entities.Album.COLUMN_FIELD_ALBUM_NAME, album);
                 albumValues.put(Entities.Album.COLUMN_FIELD_USER_HIDDEN, false);
-                id = scanContext.database.insert(Entities.Album.TABLE_NAME, null, albumValues);
+                id = database.insert(Entities.Album.TABLE_NAME, null, albumValues);
             }
 
             if (scanContext.albumIdMap != null) {
@@ -3107,7 +3123,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         if (id == null) {
-            Cursor genreCursor = scanContext.database.query(Entities.Genre.TABLE_NAME, new String[]{Entities.Genre._ID}, Entities.Genre.COLUMN_FIELD_GENRE_NAME + " = ?", new String[]{genre}, null, null, null);
+            final SQLiteDatabase database = openHelper.getWritableDatabase();
+            Cursor genreCursor = database.query(Entities.Genre.TABLE_NAME, new String[]{Entities.Genre._ID}, Entities.Genre.COLUMN_FIELD_GENRE_NAME + " = ?", new String[]{genre}, null, null, null);
 
             if (genreCursor != null && genreCursor.getCount() > 0) {
                 genreCursor.moveToPosition(0);
@@ -3118,7 +3135,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 genreValues.put(Entities.Genre.COLUMN_FIELD_GENRE_NAME, genre);
                 genreValues.put(Entities.Genre.COLUMN_FIELD_USER_HIDDEN, false);
                 genreValues.put(Entities.Genre.COLUMN_FIELD_VISIBLE, true);
-                id = scanContext.database.insert(Entities.Genre.TABLE_NAME, null, genreValues);
+                id = database.insert(Entities.Genre.TABLE_NAME, null, genreValues);
             }
 
             if (scanContext.genreIdMap != null) {
@@ -3154,7 +3171,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     PlayerApplication.fileToUri(sourceFile)
             };
 
-            Cursor coverCursor = scanContext.database.query(Entities.Art.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+            final SQLiteDatabase database = openHelper.getWritableDatabase();
+            Cursor coverCursor = database.query(Entities.Art.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
             if (coverCursor != null) {
                 if (coverCursor.getCount() > 0) {
                     coverCursor.moveToFirst();
@@ -3168,7 +3186,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 mediaCover.clear();
                 mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(sourceFile));
                 mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
-                embeddedCoverId = scanContext.database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+                embeddedCoverId = database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
             }
         }
 
@@ -3209,6 +3227,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         }
 
                         if (isArtFile(scanContext, currentFile)) {
+                            final SQLiteDatabase database = openHelper.getWritableDatabase();
+
                             final String artUri = PlayerApplication.fileToUri(currentFile);
                             coverId = 0l;
                             if (scanContext.coverMap.containsKey(parentFile.getName())) {
@@ -3220,13 +3240,13 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 mediaCover.clear();
                                 mediaCover.put(Entities.Art.COLUMN_FIELD_URI, artUri);
                                 mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, false);
-                                coverId = scanContext.database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+                                coverId = database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
 
                                 mediaCover.clear();
                                 mediaCover.put(Entities.Media.COLUMN_FIELD_ART_ID, artUri);
                                 mediaCover.put(Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID, artUri);
 
-                                int rows = scanContext.database.update(
+                                int rows = database.update(
                                         Entities.Media.TABLE_NAME,
                                         mediaCover,
                                         Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
@@ -3246,8 +3266,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return embeddedCoverId != 0 ? embeddedCoverId : coverId;
     }
 
-    protected void updateAlbumArtists(SyncScanContext scanContext) {
-        scanContext.database.execSQL(
+    protected void updateAlbumArtists() {
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
+
+        database.execSQL(
                 "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
                         Entities.Album.COLUMN_FIELD_ALBUM_ARTIST + " = ( " +
                         "SELECT " +
@@ -3264,7 +3286,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "GROUP BY " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID +
                         ")");
 
-        scanContext.database.execSQL(
+        database.execSQL(
                 "INSERT OR IGNORE INTO " + Entities.AlbumArtist.TABLE_NAME + " (" +
                         Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + ", " +
                         Entities.AlbumArtist.COLUMN_FIELD_VISIBLE + ", " +
@@ -3274,7 +3296,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "FROM " + Entities.Album.TABLE_NAME + " GROUP BY " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST
         );
 
-        scanContext.database.execSQL(
+        database.execSQL(
                 "UPDATE " + Entities.Album.TABLE_NAME + " SET " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
                         "SELECT " + Entities.AlbumArtist._ID + " " +
                         "FROM " + Entities.AlbumArtist.TABLE_NAME + " " +
@@ -3286,7 +3308,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "FROM " + Entities.AlbumArtist.TABLE_NAME +
                         ") ");
 
-        scanContext.database.execSQL(
+        database.execSQL(
                 "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
                         Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = (" +
                         "SELECT " + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST_ID + " " +
@@ -3306,14 +3328,16 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         ") "
         );
 
-        scanContext.database.execSQL(
+        database.execSQL(
                 "DELETE FROM " + Entities.AlbumArtist.TABLE_NAME + " WHERE " + Entities.AlbumArtist._ID + " NOT IN (" +
                         "SELECT " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " FROM " + Entities.Media.TABLE_NAME + ")"
         );
     }
 
-    protected void updateAlbumCovers(SyncScanContext scanContext) {
-        scanContext.database.execSQL(
+    protected void updateAlbumCovers() {
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
+
+        database.execSQL(
                 "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
                         Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = ( " +
                         "SELECT " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID + " " +
@@ -3328,7 +3352,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "WHERE (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " IS NULL) OR (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = '')"
         );
 
-        scanContext.database.execSQL(
+        database.execSQL(
                 "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
                         Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " " +
                         "WHERE (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " IS NULL) OR (" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = '')"
@@ -3336,7 +3360,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected void doSyncDirectoryScan(List<File> fileList, Map<String, Boolean> discardMap, SyncScanContext scanContext) {
-        ContentValues mediaTags = new ContentValues();
+        final ContentValues mediaTags = new ContentValues();
+        final SQLiteDatabase database = openHelper.getWritableDatabase();
 
         scanContext.coverMap = new HashMap<>();
         scanContext.artistIdMap = new HashMap<>();
@@ -3408,7 +3433,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
                         mediaTags.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
-                        scanContext.database.insert(Entities.Media.TABLE_NAME, null, mediaTags);
+                        database.insert(Entities.Media.TABLE_NAME, null, mediaTags);
 
                         refreshThreshold++;
                         if (refreshThreshold >= 25) {
@@ -3425,8 +3450,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             }
         }
 
-        updateAlbumArtists(scanContext);
-        updateAlbumCovers(scanContext);
+        updateAlbumArtists();
+        updateAlbumCovers();
 
         scanContext.coverMap.clear();
         scanContext.coverMap = null;
@@ -3790,8 +3815,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
     public static class SyncScanContext {
-        SQLiteDatabase database;
-
         ArrayList<String> albumArtExtensions = null;
 
         ArrayList<String> audioFilesExtensions = null;
@@ -3803,6 +3826,27 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         HashMap<String, Long> albumIdMap;
 
         HashMap<String, Long> genreIdMap;
+    }
+
+    public class SettingsAction implements AbstractMediaManager.ProviderAction {
+
+        @Override
+        public int getDescription() {
+            return R.string.drawer_item_label_library_settings;
+        }
+
+        @Override
+        public boolean isVisible() {
+            return true;
+        }
+
+        @Override
+        public void launch(Activity source) {
+            final Intent intent = new Intent(PlayerApplication.context, SettingsActivity.class);
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+
+            source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
+        }
     }
 
     public class LocationAction implements AbstractMediaManager.ProviderAction {
@@ -3825,22 +3869,22 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }
     }
-
-    public class SettingsAction implements AbstractMediaManager.ProviderAction {
+    
+    public class FileExtensionAction implements AbstractMediaManager.ProviderAction {
 
         @Override
         public int getDescription() {
-            return R.string.drawer_item_label_library_settings;
+            return R.string.preference_title_settings_extensions;
         }
 
         @Override
         public boolean isVisible() {
-            return true;
+            return false;
         }
 
         @Override
         public void launch(Activity source) {
-            final Intent intent = new Intent(PlayerApplication.context, SettingsActivity.class);
+            final Intent intent = new Intent(PlayerApplication.context, FileExtensionsActivity.class);
             intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);

@@ -131,6 +131,10 @@
             android:label="@string/activity_title_library_path" >
         </activity>
         <activity
+            android:name=".core.service.providers.local.ui.activities.FileExtensionsActivity"
+            android:label="@string/activity_title_library_file_extensions" >
+        </activity>
+        <activity
             android:name=".core.service.providers.local.ui.activities.SettingsActivity"
             android:label="@string/activity_label_files_to_scan" >
         </activity>

@@ -14,6 +14,7 @@
     <string name="activity_title_settings">Paramètres</string>
     <string name="activity_title_global_settings">Paramètres généraux</string>
     <string name="activity_title_library_path">"Paramètrage des emplacements"</string>
+    <string name="activity_title_library_file_extensions">Paramètrage des extensions de fichier</string>
     <string name="activity_label_files_to_scan">Fichiers à scanner</string>
     <string name="activity_label_art_selection">"Choix d'une pochette"</string>
     <string name="activity_label_deezer_signin">Connexion au service Deezer</string>
@@ -77,6 +78,8 @@
     <string name="preference_category_title_collection">Bibliothèque</string>
     <string name="preference_title_settings_location">Emplacements</string>
     <string name="preference_summary_settings_location">Définir quels dossiers scanner et exclure pour cette bibliothèque</string>
+    <string name="preference_title_settings_extensions">Types de fichier</string>
+    <string name="preference_summary_settings_extensions">Définir quelles sont les extensions des fichiers à rechercher</string>
     <string name="preference_category_title_display">Affichage</string>
     <string name="preference_title_tab_visibility">Onglets activés</string>
     <string name="preference_summary_tab_visibility">Définir quels onglets sont visibles dans la bibliothèque musicale</string>
@@ -255,6 +258,7 @@
     <string name="ni_files">Pas de fichiers</string>
     <string name="ni_providers">Pas de bibliothèques</string>
     <string name="ni_scan_directories">Pas de dossiers</string>
+    <string name="ni_scan_file_extensions">"Pas d'extensions de fichier"</string>
     <string name="ni_cover_arts">Pas de pochettes</string>
     <string name="ni_artists_hint">Vérifier l\'emplacement des fichiers</string>
     <string name="ni_albums_hint">Vérifier l\'emplacement des fichiers</string>

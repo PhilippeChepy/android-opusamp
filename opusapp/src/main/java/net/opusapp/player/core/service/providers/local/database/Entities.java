@@ -416,4 +416,29 @@ public class Entities {
             database.execSQL("DROP TABLE " + TABLE_NAME + ";");
         }
     }
+
+    public static abstract class FileExtensions implements BaseColumns {
+
+        public static final String TAG = ScanDirectory.class.getSimpleName();
+
+
+
+        public final static String TABLE_NAME = "library_extensions";
+
+
+
+        public static final String COLUMN_FIELD_EXTENSION = "extension";
+
+
+
+        public static void createTable(SQLiteDatabase database) {
+            database.execSQL("CREATE TABLE " + TABLE_NAME + " ("
+                    + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COLUMN_FIELD_EXTENSION + " TEXT UNIQUE ON CONFLICT FAIL);");
+        }
+
+        public static void destroyTable(SQLiteDatabase database) {
+            database.execSQL("DROP TABLE " + TABLE_NAME + ";");
+        }
+    }
 }

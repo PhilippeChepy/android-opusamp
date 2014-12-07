@@ -24,6 +24,7 @@ import android.preference.PreferenceManager;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class SettingsActivity extends PreferenceActivity {
@@ -51,6 +52,7 @@ public class SettingsActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.local_preferences);
 
         setLocationHandler();
+        setExtensionsHandler();
         setGenreHandler();
 
 
@@ -58,12 +60,12 @@ public class SettingsActivity extends PreferenceActivity {
         final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + providerId, Context.MODE_PRIVATE);
 
         boolean fileDetails = sharedPrefs.getBoolean(getString(R.string.preference_key_storage_display_details), false);
-        //boolean localArts = sharedPrefs.getBoolean(getString(R.string.preference_key_display_local_art), false);
+        boolean localArts = sharedPrefs.getBoolean(getString(R.string.preference_key_display_local_art), false);
         boolean emptyTags = sharedPrefs.getBoolean(getString(R.string.preference_key_display_source_if_no_tags), true);
 
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putBoolean(resources.getString(R.string.preference_key_storage_display_details), fileDetails);
-        //editor.putBoolean(resources.getString(R.string.preference_key_display_local_art), localArts);
+        editor.putBoolean(resources.getString(R.string.preference_key_display_local_art), localArts);
         editor.putBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), emptyTags);
         editor.apply();
 
@@ -75,16 +77,35 @@ public class SettingsActivity extends PreferenceActivity {
 
     @SuppressWarnings("deprecation")
     private void setLocationHandler() {
-        final Preference openSourceLicenses = findPreference(getString(R.string.preference_key_settings_location));
-        openSourceLicenses.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        final Preference locationPreference = findPreference(getString(R.string.preference_key_settings_location));
+        locationPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final AbstractMediaManager mediaManager =
-                        PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
-
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-                provider.getAction(0).launch(SettingsActivity.this);
+
+                if (provider instanceof LocalProvider) {
+                    provider.getAction(LocalProvider.ACTION_INDEX_LOCATION).launch(SettingsActivity.this);
+                }
+                return true;
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setExtensionsHandler() {
+        final Preference extensionPreference = findPreference(getString(R.string.preference_key_settings_extensions));
+        extensionPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+            @Override
+            public boolean onPreferenceClick(final Preference preference) {
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
+                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+                if (provider instanceof LocalProvider) {
+                    provider.getAction(LocalProvider.ACTION_INDEX_EXTENSIONS).launch(SettingsActivity.this);
+                }
                 return true;
             }
         });

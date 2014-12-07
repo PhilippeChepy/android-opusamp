@@ -14,6 +14,7 @@
     <string name="activity_title_settings">Settings</string>
     <string name="activity_title_global_settings">Global settings</string>
     <string name="activity_title_library_path">Location settings</string>
+    <string name="activity_title_library_file_extensions">File extensions settings</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
     <string name="activity_label_art_selection">Art selection</string>
     <string name="activity_label_deezer_signin">Connection to Deezer service</string>
@@ -77,6 +78,8 @@
     <string name="preference_category_title_collection">Media Library</string>
     <string name="preference_title_settings_location">Locations</string>
     <string name="preference_summary_settings_location">Define paths to scan and to exclude for this library</string>
+    <string name="preference_title_settings_extensions">File types</string>
+    <string name="preference_summary_settings_extensions">Define extensions of files to search</string>
     <string name="preference_category_title_display">Display</string>
     <string name="preference_title_tab_visibility">Enabled tabs</string>
     <string name="preference_summary_tab_visibility">Select what tabs are shown in music library</string>
@@ -257,6 +260,7 @@
     <string name="ni_songs_hint">Check files location</string>
     <string name="ni_genres_hint">Check files location</string>
     <string name="ni_scan_directories">No directories</string>
+    <string name="ni_scan_file_extensions">No file extensions</string>
     <string name="ni_cover_arts">No cover arts</string>
 
     <string name="fs_parent_directory">Parent directory</string>
