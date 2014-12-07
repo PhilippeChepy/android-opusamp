@@ -24,6 +24,7 @@
 
     <!-- Local preference keys -->
     <string name="preference_key_settings_location">settings_location</string>
+    <string name="preference_key_settings_extensions">settings_extensions</string>
     <string name="preference_key_tab_visibility">tab_visibility</string>
     <string name="preference_key_storage_display_details">storage_display</string>
     <string name="preference_key_display_local_art">show_local_art</string>

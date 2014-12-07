@@ -20,6 +20,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.widget.PopupMenu;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -43,13 +44,13 @@ import net.opusapp.player.ui.views.RefreshableView;
 
 public class SearchPathFragment extends Fragment implements RefreshableView, LoaderCallbacks<Cursor>, OnItemClickListener {
 
-	private GridView gridView;
+	private GridView mGridView;
 	
-    private CollectionScannerPathAdapter adapter;
+    private CollectionScannerPathAdapter mAdapter;
     
-    private Cursor cursor;
+    private Cursor mCursor;
 
-    private int providerId;
+    private int mProviderId;
 
 
 
@@ -71,7 +72,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 
 
     protected SQLiteDatabase getReadableDatabase() {
-        int index = PlayerApplication.getManagerIndex(providerId);
+        int index = PlayerApplication.getManagerIndex(mProviderId);
 
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
@@ -82,7 +83,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
     }
 
     protected SQLiteDatabase getWritableDatabase() {
-        int index = PlayerApplication.getManagerIndex(providerId);
+        int index = PlayerApplication.getManagerIndex(mProviderId);
 
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
@@ -95,7 +96,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 	
 	@Override
 	public void refresh() {
-        if( gridView != null ) {
+        if( mGridView != null ) {
             getLoaderManager().restartLoader(0, null, this);
         }
 	}
@@ -104,8 +105,8 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
         if (rootView != null) {
-            gridView = (GridView) rootView.findViewById(R.id.grid_view_base);
-            gridView.setEmptyView(rootView.findViewById(R.id.grid_view_empty));
+            mGridView = (GridView) rootView.findViewById(R.id.grid_view_base);
+            mGridView.setEmptyView(rootView.findViewById(R.id.grid_view_empty));
 
             final CustomTextView emptyDescription = (CustomTextView) rootView.findViewById(R.id.empty_description);
             emptyDescription.setText(R.string.ni_scan_directories);
@@ -118,15 +119,15 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 	public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        adapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
-        gridView.setOnCreateContextMenuListener(this);
-        gridView.setOnItemClickListener(this);
-        gridView.setAdapter(adapter);
-        gridView.setNumColumns(PlayerApplication.getListColumns());
+        mAdapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
+        mGridView.setOnCreateContextMenuListener(this);
+        mGridView.setOnItemClickListener(this);
+        mGridView.setAdapter(mAdapter);
+        mGridView.setNumColumns(PlayerApplication.getListColumns() / 2);
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            providerId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
+            mProviderId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
         }
 
         getLoaderManager().initLoader(0, null, this);
@@ -171,26 +172,16 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
             return;
         }
 
-        this.adapter.changeCursor(data);
-        this.gridView.invalidateViews();
-        this.cursor = data;
+        mAdapter.changeCursor(data);
+        mGridView.invalidateViews();
+        mCursor = data;
 	}
 	
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-        if (this.adapter != null) {
-        	this.adapter.changeCursor(null);
+        if (mAdapter != null) {
+        	mAdapter.changeCursor(null);
         }
-	}
-	
-	@Override
-	public void onStart() {
-        super.onStart();
-	}
-	
-	@Override
-	public void onStop() {
-        super.onStop();
 	}
 	
 	@Override
@@ -207,17 +198,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 		}
 
 		if (item.getItemId() == MENUITEM_DELETE) {
-            final String selection = Entities.ScanDirectory._ID + " = ? ";
-			
-			final String selectionArgs[] = new String[] {
-					cursor.getString(COLUMN_ID)
-			};
-
-            SQLiteDatabase database = getWritableDatabase();
-            if (database != null) {
-                database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
-            }
-            getLoaderManager().restartLoader(0, null, this);
+            deletePathMenuItemClick(mCursor.getInt(COLUMN_ID));
 		}
 
 		return super.onContextItemSelected(item);
@@ -225,12 +206,25 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        getActivity().openContextMenu(gridView);
+        getActivity().openContextMenu(mGridView);
 	}
+
+    protected void deletePathMenuItemClick(int id) {
+        final String selection = Entities.ScanDirectory._ID + " = ? ";
+
+        final String selectionArgs[] = new String[] {
+                String.valueOf(id)
+        };
+
+        SQLiteDatabase database = getWritableDatabase();
+        if (database != null) {
+            database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
+        }
+        getLoaderManager().restartLoader(0, null, this);
+    }
 	
-	public static class CollectionScannerPathAdapter extends SimpleCursorAdapter {
-		public static final String TAG = CollectionScannerPathAdapter.class.getSimpleName();
-	    
+	public class CollectionScannerPathAdapter extends SimpleCursorAdapter {
+
 	    public CollectionScannerPathAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
 	        super(context, layout, c, from, to, flags);
 	    }
@@ -239,16 +233,40 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 	    public View getView(final int position, View convertView, ViewGroup parent) {
 	        final View view = super.getView(position, convertView, parent);
 
-	        Cursor cursor = (Cursor) getItem(position);
+	        final Cursor cursor = (Cursor) getItem(position);
 	        final GridViewHolder viewholder;
 
 	        if (view != null) {
 	            viewholder = new GridViewHolder(view);
 	            viewholder.customView = view.findViewById(R.id.card_layout);
+                viewholder.contextMenuHandle = view.findViewById(R.id.context_menu_handle);
 	            view.setTag(viewholder);
 	        } else {
 	            viewholder = (GridViewHolder)convertView.getTag();
 	        }
+
+
+
+            viewholder.contextMenuHandle.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View view) {
+                    final PopupMenu popupMenu = new PopupMenu(getActivity(), view);
+                    final Menu menu = popupMenu.getMenu();
+
+                    final MenuItem menuItem = menu.add(R.string.menuitem_label_delete);
+                    menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            cursor.moveToPosition(position);
+                            deletePathMenuItemClick(cursor.getInt(0));
+                            return true;
+                        }
+                    });
+
+                    popupMenu.show();
+                }
+            });
 
             viewholder.lineOne.setText(cursor.getString(COLUMN_NAME));
 	        return view;

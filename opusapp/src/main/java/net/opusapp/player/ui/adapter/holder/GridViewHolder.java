@@ -27,6 +27,8 @@ public class GridViewHolder {
 	public TextView lineTwo;
 	
 	public View customView;
+
+    public View contextMenuHandle;
 	
 	public GridViewHolder(View view) {
 		image = (SquareImageView) view.findViewById(R.id.image);

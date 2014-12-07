@@ -100,7 +100,7 @@ dependencies {
     /* UniversalImageLoader */
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.2'
     /* SlidingupPanel */
-    compile 'com.sothree.slidinguppanel:library:+'
+    compile 'com.sothree.slidinguppanel:library:2.0.4'
     /* PagerSLidingTabStrip */
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     /* DragSortListView - directly in source tree - no longer maintained, previously : compile 'com.mobeta.android.dslv:drag-sort-listview:0.6.1' */

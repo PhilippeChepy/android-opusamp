@@ -37,21 +37,27 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class SearchPathActivity extends ActionBarActivity {
 
-	private ViewPager viewPager;
+
 	
 	private final static int REQUEST_CODE_SEARCH_PATH = 1;
 	
 	private final static int REQUEST_CODE_EXCLUDE_PATH = 2;
 
-    private PagerAdapter pagerAdapter;
 
-    private int providerId;
-	
+
+    private ViewPager mViewPager;
+
+    private PagerAdapter mPagerAdapter;
+
+    private int mProviderId;
+
+
+
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 
-        providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
 
 		setContentView(R.layout.activity_tabbed_grids);
 
@@ -59,24 +65,24 @@ public class SearchPathActivity extends ActionBarActivity {
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
-        searchBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
+        searchBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 		
 		Bundle excludedBundle = new Bundle();
 		excludedBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_EXCLUDE_PATH);
-        excludedBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
+        excludedBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 		
-		pagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
-		pagerAdapter.addFragment(new SearchPathFragment(), searchBundle, R.string.tab_label_accept_path);
-		pagerAdapter.addFragment(new SearchPathFragment(), excludedBundle, R.string.tab_label_exclude_path);
+		mPagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
+		mPagerAdapter.addFragment(new SearchPathFragment(), searchBundle, R.string.tab_label_accept_path);
+		mPagerAdapter.addFragment(new SearchPathFragment(), excludedBundle, R.string.tab_label_exclude_path);
 		
-        viewPager = (ViewPager)findViewById(R.id.pager_viewpager);
-        viewPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
-        viewPager.setOffscreenPageLimit(pagerAdapter.getCount());
-        viewPager.setAdapter(pagerAdapter);
+        mViewPager = (ViewPager)findViewById(R.id.pager_viewpager);
+        mViewPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
+        mViewPager.setOffscreenPageLimit(mPagerAdapter.getCount());
+        mViewPager.setAdapter(mPagerAdapter);
 
 
         final PagerSlidingTabStrip scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
-		scrollingTabs.setViewPager(viewPager);
+		scrollingTabs.setViewPager(mViewPager);
         PlayerApplication.applyThemeOnPagerTabs(scrollingTabs);
 	}
 
@@ -91,14 +97,14 @@ public class SearchPathActivity extends ActionBarActivity {
 
     @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (providerId < 0) {
+        if (mProviderId < 0) {
             return;
         }
 
 		switch(requestCode) {
 		case REQUEST_CODE_SEARCH_PATH:
 			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(providerId);
+                OpenHelper openHelper = new OpenHelper(mProviderId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
@@ -122,7 +128,7 @@ public class SearchPathActivity extends ActionBarActivity {
 			break;
 		case REQUEST_CODE_EXCLUDE_PATH:
 			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(providerId);
+                OpenHelper openHelper = new OpenHelper(mProviderId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
@@ -145,12 +151,13 @@ public class SearchPathActivity extends ActionBarActivity {
 			}
 			break;
 		}
-        pagerAdapter.refresh();
+        mPagerAdapter.refresh();
 	}
 
     protected void notifyLibraryChanges() {
-        pagerAdapter.refresh();
-        AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)].getProvider();
+        mPagerAdapter.refresh();
+
+        AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(mProviderId)].getProvider();
         if (localProvider != null) {
             localProvider.scanStart();
         }
@@ -160,9 +167,9 @@ public class SearchPathActivity extends ActionBarActivity {
 
 		@Override
 		public boolean onMenuItemClick(MenuItem item) {
-			Intent intent = new Intent(SearchPathActivity.this, UtilDirectorySelectActivity.class);
-			startActivityForResult(intent, viewPager.getCurrentItem() == 0 ? REQUEST_CODE_SEARCH_PATH : REQUEST_CODE_EXCLUDE_PATH);
-			return false;
+        Intent intent = new Intent(SearchPathActivity.this, UtilDirectorySelectActivity.class);
+        startActivityForResult(intent, mViewPager.getCurrentItem() == 0 ? REQUEST_CODE_SEARCH_PATH : REQUEST_CODE_EXCLUDE_PATH);
+        return false;
 		}
 	};
 }

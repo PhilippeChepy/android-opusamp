@@ -73,47 +73,47 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
 
     // Actionbar search system
-    private SearchView searchView;
+    private SearchView mSearchView;
 
 
 
     // Actionbar items
-    private MenuItem sortMenuItem;
+    private MenuItem mSortMenuItem;
 
-    private MenuItem searchMenuItem;
+    private MenuItem mSearchMenuItem;
 
-    private MenuItem reloadMenuItem;
+    private MenuItem mReloadMenuItem;
 
 
 
     // Main content
-    private ViewPager libraryPager;
+    private ViewPager mLibraryPager;
 
-    private PagerAdapter libraryAdapter;
+    private PagerAdapter mLibraryAdapter;
 
-    private PagerSlidingTabStrip scrollingTabs;
+    private PagerSlidingTabStrip mScrollingTabs;
 
 
 
     // Navigation
-    private DrawerLayout drawerLayout;
+    private DrawerLayout mDrawerLayout;
 
-    private Cursor navigationCursor;
+    private Cursor mNavigationCursor;
 
-    private ProviderAdapter navigationAdapter;
+    private ProviderAdapter mNavigationAdapter;
 
 
 
     // Drawer
     private static final String SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN = "player_panel_is_hidden";
 
-    private boolean hiddenPanel;
+    private boolean mHiddenPanel;
 
-    private ActionBarDrawerToggle drawerToggle;
+    private ActionBarDrawerToggle mDrawerToggle;
 
 
 
-    private boolean doubleBackToExitPressedOnce = false;
+    private boolean mDoubleBackToExitPressedOnce = false;
 
 
 
@@ -124,20 +124,20 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             PlayerApplication.lastSearchFilter = null;
         }
 
-        searchView = new SearchView(getSupportActionBar().getThemedContext());
-        searchView.setQueryHint(getString(R.string.searchview_query_hint));
-        searchView.setOnQueryTextListener(searchViewOnQueryTextListener);
-        searchView.setOnCloseListener(searchViewOnCloseListener);
+        mSearchView = new SearchView(getSupportActionBar().getThemedContext());
+        mSearchView.setQueryHint(getString(R.string.searchview_query_hint));
+        mSearchView.setOnQueryTextListener(searchViewOnQueryTextListener);
+        mSearchView.setOnCloseListener(searchViewOnCloseListener);
 
-        sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
-        sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
-        MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-        sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
+        mSortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
+        mSortMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
+        MenuItemCompat.setShowAsAction(mSortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+        mSortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
 
-        searchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
-        searchMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_search_black_48dp : R.drawable.ic_search_white_48dp);
-        MenuItemCompat.setActionView(searchMenuItem, searchView);
-        MenuItemCompat.setShowAsAction(searchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        mSearchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
+        mSearchMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_search_black_48dp : R.drawable.ic_search_white_48dp);
+        MenuItemCompat.setActionView(mSearchMenuItem, mSearchView);
+        MenuItemCompat.setShowAsAction(mSearchMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
         final MenuItem hiddenMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SHOW_HIDDEN, 4, R.string.menuitem_label_show_hidden);
         hiddenMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_visibility_black_48dp : R.drawable.ic_visibility_white_48dp);
@@ -145,33 +145,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
         hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
 
-        doManageMenuitemVisibility(libraryAdapter, libraryPager.getCurrentItem());
+        doManageMenuitemVisibility(mLibraryAdapter, mLibraryPager.getCurrentItem());
 
-        reloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
-        MenuItemCompat.setShowAsAction(reloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-        reloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
+        mReloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
+        mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
+        MenuItemCompat.setShowAsAction(mReloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        mReloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
 
         updateReloadMenuItem();
 
-        int menuIndex = 7;
-/*
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
-        final AbstractMediaManager.ProviderAction providerActionList[] = provider.getActionList();
-
-        if (providerActionList != null) {
-            for (int index = 0; index < providerActionList.length; index++) {
-                final AbstractMediaManager.ProviderAction providerAction = providerActionList[index];
-
-                if (providerAction.isVisible()) {
-                    final MenuItem menuItem = menu.add(Menu.NONE, 200 + index, menuIndex++, providerAction.getDescription());
-                    menuItem.setIcon(R.drawable.ic_action_tiles_large);
-                    menuItem.setOnMenuItemClickListener(new ActionMenuItemClickListener(index));
-                }
-            }
-        }
-*/
-        final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, menuIndex, R.string.drawer_item_label_settings);
+        final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, 7, R.string.drawer_item_label_settings);
         settingsMenuItem.setIcon(R.drawable.ic_settings_grey600_48dp);
         settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -193,17 +176,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         super.onCreate(savedInstanceState, R.layout.activity_library_main, null);
 
         // Pager & Tabs
-        libraryPager = (ViewPager) findViewById(R.id.pager_viewpager);
-        libraryPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
+        mLibraryPager = (ViewPager) findViewById(R.id.pager_viewpager);
+        mLibraryPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
 
-        scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
-        scrollingTabs.setOnPageChangeListener(scrollingTabsOnPageChangeListener);
-        scrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
-        scrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
-        PlayerApplication.applyThemeOnPagerTabs(scrollingTabs);
+        mScrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
+        mScrollingTabs.setOnPageChangeListener(scrollingTabsOnPageChangeListener);
+        mScrollingTabs.setIndicatorColorResource(R.color.materialAccentColor);
+        mScrollingTabs.setTextColor(getResources().getColor(R.color.tabTextColor));
+        PlayerApplication.applyThemeOnPagerTabs(mScrollingTabs);
 
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.actionbar_drawer_toggle_label_open, R.string.actionbar_drawer_toggle_label_close) {
 
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
@@ -212,9 +195,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
         };
 
-        navigationAdapter = new ProviderAdapter(this, R.layout.view_item_double_line_no_anchor, null);
+        mNavigationAdapter = new ProviderAdapter(this, R.layout.view_item_double_line_no_anchor, null);
 
-        final View footerView = getLayoutInflater().inflate(R.layout.view_item_settings, null, false);
+        final ListView drawerList = (ListView) findViewById(R.id.list_drawer);
+        drawerList.setAdapter(mNavigationAdapter);
+        drawerList.setOnItemClickListener(navigationDrawerListOnItemClickListener);
+
+        final View footerView = getLayoutInflater().inflate(R.layout.view_item_settings, drawerList, false);
         final TextView textView = (TextView) footerView.findViewById(R.id.line_one);
         textView.setText(R.string.menuitem_label_add_provider);
 
@@ -233,12 +220,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
         });
 
-        final ListView drawerList = (ListView) findViewById(R.id.list_drawer);
-        drawerList.setAdapter(navigationAdapter);
-        drawerList.setOnItemClickListener(navigationDrawerListOnItemClickListener);
+
         drawerList.addFooterView(footerView, null, true);
 
-        drawerLayout.setDrawerListener(drawerToggle);
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -279,7 +264,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                             dataUri.getPath(),
                             AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
 
-                    libraryAdapter.refresh();
+                    mLibraryAdapter.refresh();
 
                     MusicConnector.doContextActionPlay(
                             AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
@@ -302,39 +287,39 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        hiddenPanel = savedInstanceState.getBoolean(SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN, false);
+        mHiddenPanel = savedInstanceState.getBoolean(SAVED_STATE_ACTION_PLAYER_PANEL_IS_HIDDEN, false);
     }
 
     @Override
     protected boolean canShowPanel() {
-        return !hiddenPanel;
+        return !mHiddenPanel;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        drawerToggle.syncState();
+        mDrawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        drawerToggle.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     protected void updateReloadMenuItem() {
-        if (reloadMenuItem != null) {
+        if (mReloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
-                reloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
+                mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
+                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
             } else {
-                reloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                reloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
+                mReloadMenuItem.setTitle(R.string.menuitem_label_reload);
+                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
             }
         }
     }
@@ -352,23 +337,23 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     @Override
     public void onBackPressed() {
-        int position = libraryPager.getCurrentItem();
-        final Object currentFragment = libraryAdapter.getItem(position);
+        int position = mLibraryPager.getCurrentItem();
+        final Object currentFragment = mLibraryAdapter.getItem(position);
         if (currentFragment instanceof StorageFragment) {
             if (!((StorageFragment) currentFragment).handleBackButton()) {
-                if (doubleBackToExitPressedOnce) {
+                if (mDoubleBackToExitPressedOnce) {
                     super.onBackPressed();
                     return;
                 }
 
-                doubleBackToExitPressedOnce = true;
+                mDoubleBackToExitPressedOnce = true;
                 Toast.makeText(PlayerApplication.context, R.string.toast_press_back_again, Toast.LENGTH_SHORT).show();
 
                 new Handler().postDelayed(new Runnable() {
 
                     @Override
                     public void run() {
-                        doubleBackToExitPressedOnce = false;
+                        mDoubleBackToExitPressedOnce = false;
                     }
                 }, 2000);
             }
@@ -380,7 +365,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     @Override
     public boolean onSearchRequested() {
-        final SupportMenuItem search = (SupportMenuItem)searchMenuItem;
+        final SupportMenuItem search = (SupportMenuItem) mSearchMenuItem;
         search.expandActionView();
         return true;
     }
@@ -402,50 +387,49 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     @Override
     public void refresh() {
-        if (libraryAdapter != null) {
-            libraryAdapter.refresh();
+        if (mLibraryAdapter != null) {
+            mLibraryAdapter.refresh();
         }
     }
 
 
     protected void initLibraryView() {
-        libraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
+        mLibraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
 
         final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         // Only show tabs that were set in preferences
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
-            libraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
+            mLibraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
-            libraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
+            mLibraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
-            libraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
+            mLibraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
-            libraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
+            mLibraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
-            libraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
+            mLibraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
-            libraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
+            mLibraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
         }
 
         if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
-            libraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
+            mLibraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
         }
 
-        libraryPager.setAdapter(libraryAdapter);
-        // libraryPager.setOffscreenPageLimit(libraryAdapter.getCount());
-        scrollingTabs.setViewPager(libraryPager);
+        mLibraryPager.setAdapter(mLibraryAdapter);
+        mScrollingTabs.setViewPager(mLibraryPager);
     }
 
 
@@ -462,9 +446,9 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                     },
                     null, null, null, null, Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION);
 
-            navigationCursor = cursor;
+            mNavigationCursor = cursor;
             if (cursor != null) {
-                navigationAdapter.changeCursor(cursor);
+                mNavigationAdapter.changeCursor(cursor);
             }
         }
     }
@@ -485,12 +469,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             provider.scanStart();
         }
 
-        if (navigationCursor != null) {
+        if (mNavigationCursor != null) {
             try {
-                navigationCursor.moveToPosition(PlayerApplication.libraryManagerIndex);
+                mNavigationCursor.moveToPosition(PlayerApplication.libraryManagerIndex);
 
-                getSupportActionBar().setTitle(navigationCursor.getString(1));
-                getSupportActionBar().setSubtitle(MediaManagerFactory.getDescriptionFromType(navigationCursor.getInt(2)));
+                getSupportActionBar().setTitle(mNavigationCursor.getString(1));
+                getSupportActionBar().setSubtitle(MediaManagerFactory.getDescriptionFromType(mNavigationCursor.getInt(2)));
             } catch (final Exception exception) {
                 LogUtils.LOGException(TAG, "initCurrentProvider", 0, exception);
             }
@@ -502,28 +486,28 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         final Class<?> itemClass = ((Object)pagerAdapter.getItem(position)).getClass();
 
         if (itemClass.equals(PlaylistFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(ArtistFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(AlbumArtistFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(AlbumFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(SongFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(GenreFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else if (itemClass.equals(StorageFragment.class)) {
-            sortMenuItem.setVisible(true);
+            mSortMenuItem.setVisible(true);
         }
         else {
-            sortMenuItem.setVisible(false);
+            mSortMenuItem.setVisible(false);
         }
     }
 
@@ -543,14 +527,14 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public boolean onQueryTextChange(String searchText) {
             PlayerApplication.lastSearchFilter = searchText;
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             return true;
         }
 
         @Override
         public boolean onQueryTextSubmit(String query) {
             final InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+            inputMethodManager.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
             return true;
         }
     };
@@ -559,8 +543,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         @Override
         public boolean onClose() {
-            searchView.setQuery(null, true);
-            libraryAdapter.refresh();
+            mSearchView.setQuery(null, true);
+            mLibraryAdapter.refresh();
             return false;
         }
     };
@@ -578,8 +562,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         @Override
         public void onPageSelected(int position) {
-            if (sortMenuItem != null /*&& recentMenuItem != null*/) {
-                doManageMenuitemVisibility(libraryAdapter, position);
+            if (mSortMenuItem != null /*&& recentMenuItem != null*/) {
+                doManageMenuitemVisibility(mLibraryAdapter, position);
             }
         }
 
@@ -594,7 +578,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
             item.setChecked(show_hidden);
             MusicConnector.show_hidden = show_hidden;
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             return true;
         }
     };
@@ -620,7 +604,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         public boolean onMenuItemClick(MenuItem item) {
             final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(LibraryMainActivity.this);
 
-            final Class<?> currentItemClass = ((Object)libraryAdapter.getItem(libraryPager.getCurrentItem())).getClass();
+            final Class<?> currentItemClass = ((Object) mLibraryAdapter.getItem(mLibraryPager.getCurrentItem())).getClass();
 
             if (currentItemClass.equals(PlaylistFragment.class)) {
                 int sortIndex = 0;
@@ -710,7 +694,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 1:  MusicConnector.playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -724,7 +708,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 1:  MusicConnector.artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -738,7 +722,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 1:  MusicConnector.album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -754,7 +738,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 3:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -776,7 +760,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 9:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -790,7 +774,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 1:  MusicConnector.genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -804,7 +788,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
                 case 1:  MusicConnector.storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
             }
 
-            libraryAdapter.refresh();
+            mLibraryAdapter.refresh();
             dialog.dismiss();
         }
     };
@@ -827,7 +811,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             initCurrentProvider();
             PlayerApplication.saveLibraryIndexes();
 
-            drawerLayout.closeDrawers();
+            mDrawerLayout.closeDrawers();
         }
     };
 
@@ -839,7 +823,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    libraryAdapter.refresh();
+                    mLibraryAdapter.refresh();
                 }
             });
         }
