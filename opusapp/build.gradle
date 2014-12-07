@@ -8,8 +8,8 @@ android {
         applicationId "net.opusapp.player.test"
         minSdkVersion 9
         targetSdkVersion 21
-        versionCode 16
-        versionName "1.0.2.1"
+        versionCode 17
+        versionName "1.0.2.2"
     }
 
     flavorDimensions "abi", "version"
@@ -19,7 +19,6 @@ android {
             flavorDimension "version"
             applicationId 'net.opusapp.player.premium'
 
-//            android.sourceSets.premiumApp.manifest.srcFile 'src/flavor-premium/AndroidManifest.xml'
             android.sourceSets.premiumApp.java.srcDirs = ['src/flavor-premium/java']
             android.sourceSets.premiumApp.res.srcDirs = ['src/flavor-premium/res']
         }
