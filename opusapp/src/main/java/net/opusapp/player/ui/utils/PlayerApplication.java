@@ -22,6 +22,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -943,6 +944,11 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
+    public static boolean isTablet() {
+        final int layout = context.getResources().getConfiguration().screenLayout;
+        return (layout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
 	public static float convertPixelsToDp(float width, Context context) {
 		return width / (context.getResources().getDisplayMetrics().densityDpi / 160.0f);
 	}
@@ -952,8 +958,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return (int) Math.floor(width / 225.0F);
 	}
 
-	public static final int NOTIFICATION_PLAY_ID = 1;
-	
 	public static String getVariousArtists() {
         return PlayerApplication.context.getString(R.string.preference_default_various_artists);
 	}

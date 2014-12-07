@@ -9,13 +9,13 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <TableLayout
+        <LinearLayout
             android:id="@+id/table_container"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:stretchColumns="1">
+            android:orientation="vertical">
 
-        </TableLayout>
+        </LinearLayout>
     </ScrollView>
 
     <LinearLayout

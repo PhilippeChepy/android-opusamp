@@ -5,10 +5,16 @@ import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.widget.EditText;
 
-public class CustomFilteringEditText extends EditText{
+import net.opusapp.player.ui.utils.TypefaceCache;
+
+public class CustomFilteringEditText extends EditText {
 
     public CustomFilteringEditText(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
+
+        if (!isInEditMode()) {
+            setTypeface(TypefaceCache.getTypeface("RobotoLight.ttf", context));
+        }
     }
 
     @Override

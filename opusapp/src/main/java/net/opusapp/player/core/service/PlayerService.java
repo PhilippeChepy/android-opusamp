@@ -12,6 +12,8 @@
  */
 package net.opusapp.player.core.service;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -27,17 +29,19 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
+import android.widget.RemoteViews;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.NotificationHelper;
 import net.opusapp.player.core.RemoteControlClientHelper;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.widgets.AbstractAppWidget;
 import net.opusapp.player.ui.widgets.AppWidget4x1;
@@ -103,14 +107,29 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
+    // Notification
+    private static final int NOTIFICATION_ID = 1;
+
+    private Notification mNotification = null;
+
+    private NotificationManager mNotificationManager;
+
+    private RemoteViews mCollapsedView;
+
+    private RemoteViews mExpandedView;
+
+    private int mPlayDrawable;
+
+    private int mPauseDrawable;
+
+
+
     // Service management.
     public boolean mIsForeground;
 
     private PlayerBinder mBinder;
 
     private WakeLock mPlaybackWakeLock;
-
-    private NotificationHelper mNotificationHelper;
 
     private RemoteControlClientHelper mRemoteControlClient;
 
@@ -219,7 +238,19 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         PowerManager powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mPlaybackWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
-        mNotificationHelper = new NotificationHelper(this);
+        // Notification system (external control)
+        mNotificationManager = (NotificationManager) PlayerApplication.context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (PlayerApplication.hasLollipop()) {
+            mPlayDrawable = R.drawable.ic_play_arrow_grey600_48dp;
+            mPauseDrawable = R.drawable.ic_pause_grey600_48dp;
+        }
+        else {
+            mPlayDrawable = R.drawable.ic_play_arrow_white_48dp;
+            mPauseDrawable = R.drawable.ic_pause_white_48dp;
+        }
+
+        // Remote client (external control)
         mRemoteControlClient = new RemoteControlClientHelper();
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -341,6 +372,88 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mWidgetMedium.applyUpdate(this);
     }
 
+    @SuppressWarnings("NewApi")
+    public void updateNotification(final String albumName, final String artistName, final String trackName, final Bitmap albumArt) {
+        final Intent intent = new Intent(PlayerApplication.context, LibraryMainActivity.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(PlayerApplication.context, 0, intent, 0);
+
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(PlayerApplication.context)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setLargeIcon(albumArt)
+                .setContentTitle(albumName)
+                .setContentText(String.format(PlayerApplication.context.getString(R.string.notification_fallback_info_format), trackName, artistName))
+                .setContentIntent(pendingIntent);
+
+        if (PlayerApplication.hasHoneycomb()) {
+            mCollapsedView = new RemoteViews(PlayerApplication.context.getPackageName(), R.layout.notification_template_base);
+            mNotification = builder
+                    .setContent(mCollapsedView)
+                    .build();
+
+            // Actions
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+            mCollapsedView.setOnClickPendingIntent(R.id.notification_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
+
+            mCollapsedView.setImageViewResource(R.id.notification_base_play, mPauseDrawable);
+
+            // Media informations
+            mCollapsedView.setTextViewText(R.id.notification_base_line_one, trackName);
+            mCollapsedView.setTextViewText(R.id.notification_base_line_two, artistName);
+
+            if (albumArt != null) {
+                mCollapsedView.setImageViewBitmap(R.id.notification_base_image, albumArt);
+            }
+            else {
+                mCollapsedView.setImageViewResource(R.id.notification_base_image, R.drawable.no_art_normal);
+            }
+        }
+        else {
+            mNotification = builder.build();
+            mNotification.flags |= Notification.FLAG_ONGOING_EVENT;
+            mNotification.icon = R.drawable.ic_notification;
+            mNotification.contentIntent = pendingIntent;
+        }
+
+        if (PlayerApplication.hasJellyBean()) {
+            mExpandedView = new RemoteViews(PlayerApplication.context.getPackageName(), R.layout.notification_template_expanded_base);
+            mNotification.bigContentView = mExpandedView;
+
+            // Actions
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_play, PlayerService.NOTIFICATION_PAUSE_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_next, PlayerService.NOTIFICATION_NEXT_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_previous, PlayerService.NOTIFICATION_PREV_INTENT);
+            mExpandedView.setOnClickPendingIntent(R.id.notification_expanded_base_collapse, PlayerService.NOTIFICATION_STOP_INTENT);
+
+            mExpandedView.setImageViewResource(R.id.notification_expanded_base_play, mPauseDrawable);
+
+            // Media informations
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_one, trackName);
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_two, albumName);
+            mExpandedView.setTextViewText(R.id.notification_expanded_base_line_three, artistName);
+
+            if (albumArt != null) {
+                mExpandedView.setImageViewBitmap(R.id.notification_expanded_base_image, albumArt);
+            }
+            else {
+                mExpandedView.setImageViewResource(R.id.notification_expanded_base_image, R.drawable.no_art_normal);
+            }
+        }
+
+        if (mIsForeground) {
+            if (mCollapsedView != null) {
+                mCollapsedView.setImageViewResource(R.id.notification_base_play, isPlaying() ? mPauseDrawable : mPlayDrawable);
+            }
+
+            if (mExpandedView != null) {
+                mExpandedView.setImageViewResource(R.id.notification_expanded_base_play, isPlaying() ? mPauseDrawable : mPlayDrawable);
+            }
+
+            mNotificationManager.notify(NOTIFICATION_ID, mNotification);
+        }
+    }
+
     protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
 
         LogUtils.LOGW(TAG, "updateExternalControlers with {onlyPlaystate=" + onlyPlaystate + ", coverIsLoaded=" + coverIsLoaded + "}");
@@ -377,18 +490,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         // Updating widget
-        boolean isPlaying = isPlaying();
-
         updateWidgets();
 
         // Updating remote client
         mRemoteControlClient.updateMetadata(mMediaCover, mMediaTitle, mMediaAuthor, mMediaGroup, mediaDuration);
 
         // Updating notification
-        mNotificationHelper.buildNotification(mMediaGroup, mMediaAuthor, mMediaTitle, mMediaCover);
-        if (mIsForeground) {
-            mNotificationHelper.forceUpdate(isPlaying);
-        }
+        updateNotification(mMediaGroup, mMediaAuthor, mMediaTitle, mMediaCover);
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -592,9 +700,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void run() {
-            /*
-                System ui update
-             */
+            // System UI update
             int audioFocus = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
             if (PlayerApplication.hasICS()) {
@@ -605,7 +711,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             if (audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 if (!mIsForeground) {
                     LogUtils.LOGW(TAG, "runnablePlay: showing notification");
-                    startForeground(PlayerApplication.NOTIFICATION_PLAY_ID, mNotificationHelper.getNotification());
+                    startForeground(NOTIFICATION_ID, mNotification);
                     mIsForeground = true;
                 }
                 mRemoteControlClient.updateState(true);

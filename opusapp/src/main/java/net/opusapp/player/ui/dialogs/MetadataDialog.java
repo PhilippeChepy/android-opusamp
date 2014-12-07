@@ -8,11 +8,13 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TableLayout;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaMetadata;
+import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomTextView;
 
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.List;
 public class MetadataDialog extends Dialog {
 
     private TableLayout mTableContainer;
+
+    private LinearLayout mLayoutContainer;
 
     private boolean mIsReadOnly;
 
@@ -48,14 +52,20 @@ public class MetadataDialog extends Dialog {
         final List<MediaMetadata> metadataList = provider.getMetadataList(contentType, contentId);
 
         setTitle(title);
-        setContentView(R.layout.dialog_metadata_editor);
+        if (PlayerApplication.isTablet()) {
+            setContentView(R.layout.dialog_metadata_editor);
+            mTableContainer = (TableLayout) findViewById(R.id.table_container);
+        }
+        else {
+            setContentView(R.layout.dialog_metadata_phone_editor);
+            mLayoutContainer = (LinearLayout) findViewById(R.id.table_container);
+        }
 
         mProvider = provider;
         mContentType = contentType;
         mContentId = contentId;
         mMetadataList = metadataList;
 
-        mTableContainer = (TableLayout) findViewById(R.id.table_container);
         mPositiveButton = (Button) findViewById(R.id.dialog_ok);
         mNegativeButton = (Button) findViewById(R.id.dialog_cancel);
 
@@ -87,12 +97,20 @@ public class MetadataDialog extends Dialog {
         for (int dataIndex = 0 ; dataIndex < metadataList.size() ; dataIndex++) {
             final MediaMetadata metadata = metadataList.get(dataIndex);
 
-            final View rootView =
-                    metadata.mEditable == MediaMetadata.EditType.TYPE_NUMERIC ?
-                    layoutInflater.inflate(R.layout.view_metadata_integer_row, mTableContainer, false) :
-                    layoutInflater.inflate(R.layout.view_metadata_string_row, mTableContainer, false);
+            if (PlayerApplication.isTablet()) {
+                final View rootView = metadata.mEditable == MediaMetadata.EditType.TYPE_NUMERIC ?
+                            layoutInflater.inflate(R.layout.view_metadata_integer_row, mTableContainer, false) :
+                            layoutInflater.inflate(R.layout.view_metadata_string_row, mTableContainer, false);
 
-            mEditMapping[dataIndex] = new ViewHolder(mTableContainer, rootView, metadata);
+                mEditMapping[dataIndex] = new ViewHolder(mTableContainer, rootView, metadata);
+            }
+            else {
+                final View rootView = metadata.mEditable == MediaMetadata.EditType.TYPE_NUMERIC ?
+                            layoutInflater.inflate(R.layout.view_metadata_phone_integer_row, mLayoutContainer, false) :
+                            layoutInflater.inflate(R.layout.view_metadata_phone_string_row, mLayoutContainer, false);
+
+                mEditMapping[dataIndex] = new ViewHolder(mLayoutContainer, rootView, metadata);
+            }
         }
     }
 

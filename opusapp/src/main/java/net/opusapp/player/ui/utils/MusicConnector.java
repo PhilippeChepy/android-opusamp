@@ -98,6 +98,16 @@ public class MusicConnector {
         return 0;
     }
 
+    public static void sendPlayIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PLAY_INTENT);
+    }
+
+    public static void sendPauseIntent() {
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+        localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PAUSE_INTENT);
+    }
+
     public static void sendStopIntent() {
         final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
         localBroadcastManager.sendBroadcast(PlayerService.CLIENT_STOP_INTENT);

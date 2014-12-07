@@ -28,21 +28,7 @@
             android:enabled="true"
             android:icon="@drawable/ic_launcher"
             android:label="@string/service_label" >
-
-            <!--
-            <intent-filter>
-                <action android:name="net.opusapp.player.core.service.PlayerService" >
-                </action>
-            </intent-filter>
-            -->
         </service>
-
-        <receiver android:name=".core.service.ServiceBroadcastReceiver" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".ui.activities.SetupActivity"
