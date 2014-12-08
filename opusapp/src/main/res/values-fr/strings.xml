@@ -40,6 +40,8 @@
     <string name="alert_dialog_title_premium_negative_button">Ignorer</string>
     <string name="alert_dialog_title_type_of_library">Type de bibliothèque</string>
 
+    <string name="alert_dialog_message_reinitialize_presets">Réinitialiser la liste des préréglages aux valeurs par défaut ?</string>
+
     <!-- Global preferences -->
     <string name="preference_screen_title_ui">Interface</string>
     <string name="preference_title_preset">Préréglages</string>
@@ -108,6 +110,8 @@
     <string name="menuitem_label_delayed_pause_in">Pause auto. (%1$s)</string>
     <string name="menuitem_label_add">Ajouter</string>
     <string name="menuitem_label_add_provider">Ajouter une bibliothèque</string>
+    <string name="menuitem_label_add_preset">Enregistrer ce réglage</string>
+    <string name="menuitem_label_restore_presets">Réinitialiser les préréglages</string>
     <string name="menuitem_label_play">Lire</string>
     <string name="menuitem_label_play_next">Lire après</string>
     <string name="menuitem_label_add_to_queue">Ajouter à la file</string>

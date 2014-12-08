@@ -12,12 +12,10 @@
  */
 package net.opusapp.player.ui.fragments;
 
-import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.PopupMenu;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -115,32 +113,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        final Activity hostActivity = getActivity();
-        final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
-            @Override
-            public Activity getActivity() {
-                return hostActivity;
-            }
-
-            @Override
-            public PopupMenu.OnMenuItemClickListener getOnPopupMenuItemClickListener(final int position) {
-                return new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem menuItem) {
-                        cursor.moveToPosition(position);
-                        return PlayerApplication.storageContextItemSelected(menuItem.getItemId(), cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, position);
-                    }
-                };
-            }
-
-            @Override
-            public void createMenu(Menu menu, int position) {
-                cursor.moveToPosition(position);
-                doOnCreateContextMenu(menu, position);
-            }
-        };
-
-        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_STORAGE, LibraryAdapter.LIBRARY_MANAGER,
+        adapter = LibraryAdapterFactory.build(null, LibraryAdapterFactory.ADAPTER_STORAGE, LibraryAdapter.LIBRARY_MANAGER,
                 new int[]{
                         COLUMN_STORAGE_ID,
                         COLUMN_STORAGE_DISPLAY_NAME,

@@ -40,6 +40,9 @@
     <string name="alert_dialog_title_premium_negative_button">Ignore</string>
     <string name="alert_dialog_title_type_of_library">Type of library</string>
 
+    <string name="alert_dialog_message_reinitialize_presets">Reinitialize presets to defaults ?</string>
+
+
     <!-- Global preferences -->
     <string name="preference_screen_title_ui">Interface</string>
     <string name="preference_title_preset">Presets</string>
@@ -106,6 +109,8 @@
     <string name="menuitem_label_delayed_pause_in">Auto pause (%1$s)</string>
     <string name="menuitem_label_add">Add</string>
     <string name="menuitem_label_add_provider">Add a provider</string>
+    <string name="menuitem_label_add_preset">Save this preset</string>
+    <string name="menuitem_label_restore_presets">Reinitialize presets</string>
     <string name="menuitem_label_play">Play</string>
     <string name="menuitem_label_play_next">Play next</string>
     <string name="menuitem_label_add_to_queue">Add to queue</string>

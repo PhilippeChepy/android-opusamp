@@ -62,6 +62,7 @@ public class SearchPathActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_tabbed_grids);
 
         PlayerApplication.applyActionBar(this);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
@@ -94,6 +95,17 @@ public class SearchPathActivity extends ActionBarActivity {
 		addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
 		return true;
 	}
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {

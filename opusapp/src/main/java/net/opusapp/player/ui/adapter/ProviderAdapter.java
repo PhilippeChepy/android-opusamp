@@ -69,6 +69,13 @@ public class ProviderAdapter extends SimpleCursorAdapter {
             if (convertView != null) {
                 viewHolder.textViews1 = (TextView) convertView.findViewById(R.id.line_one);
                 viewHolder.textViews2 = (TextView) convertView.findViewById(R.id.line_two);
+                viewHolder.menuHandle = convertView.findViewById(R.id.context_menu_handle);
+
+                if (viewHolder.menuHandle != null) {
+                    // TODO: install menu handler instead of masking it.
+                    viewHolder.menuHandle.setVisibility(View.GONE);
+                }
+
                 convertView.setTag(viewHolder);
             }
         } else {
@@ -87,5 +94,7 @@ public class ProviderAdapter extends SimpleCursorAdapter {
         public TextView textViews1;
 
         public TextView textViews2;
+
+        public View menuHandle;
     }
 }

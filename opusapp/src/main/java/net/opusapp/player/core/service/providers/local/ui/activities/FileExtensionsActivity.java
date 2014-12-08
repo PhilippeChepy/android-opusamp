@@ -136,6 +136,7 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
         emptyDescription.setText(R.string.ni_scan_file_extensions);
 
         PlayerApplication.applyActionBar(this);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAdapter = new CollectionScannerExtensionAdapter(this);
         mGridView.setOnCreateContextMenuListener(this);
@@ -146,6 +147,17 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
         mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
 
         getSupportLoaderManager().initLoader(0, null, this);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

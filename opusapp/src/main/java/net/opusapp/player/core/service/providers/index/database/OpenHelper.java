@@ -54,9 +54,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase database) {
-		/*
-		 * Library tables
-		 */
+		// Library tables
         Entities.Provider.createTable(database);
 
         ContentValues contentValues = new ContentValues();
@@ -65,28 +63,10 @@ public class OpenHelper extends SQLiteOpenHelper {
         contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, AbstractMediaManager.LOCAL_MEDIA_MANAGER);
         database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
 
-        /*
-         * Default equalizer presets
-         */
+        // Default equalizer presets
         Entities.EqualizerPresets.createTable(database);
 
-        contentValues.clear();
-        for (EqualizerPreset preset : defaultPresets) {
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESET_NAME, preset.name);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESET_BAND_COUNT, preset.bandCount);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_PREAMP, preset.preamp);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND0, preset.bands[0]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND1, preset.bands[1]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND2, preset.bands[2]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND3, preset.bands[3]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND4, preset.bands[4]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND5, preset.bands[5]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND6, preset.bands[6]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND7, preset.bands[7]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND8, preset.bands[8]);
-            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND9, preset.bands[9]);
-            database.insert(Entities.EqualizerPresets.TABLE_NAME, null, contentValues);
-        }
+        initDefaultEQPresets(database);
     }
 
     @Override
@@ -107,6 +87,27 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.Provider.destroyTable(database);
         Entities.EqualizerPresets.destroyTable(database);
         onCreate(database);
+    }
+
+    public static void initDefaultEQPresets(SQLiteDatabase database) {
+        ContentValues contentValues = new ContentValues();
+
+        for (EqualizerPreset preset : defaultPresets) {
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESET_NAME, preset.name);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESET_BAND_COUNT, preset.bandCount);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_PREAMP, preset.preamp);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND0, preset.bands[0]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND1, preset.bands[1]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND2, preset.bands[2]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND3, preset.bands[3]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND4, preset.bands[4]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND5, preset.bands[5]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND6, preset.bands[6]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND7, preset.bands[7]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND8, preset.bands[8]);
+            contentValues.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESERT_BAND9, preset.bands[9]);
+            database.insert(Entities.EqualizerPresets.TABLE_NAME, null, contentValues);
+        }
     }
 
 

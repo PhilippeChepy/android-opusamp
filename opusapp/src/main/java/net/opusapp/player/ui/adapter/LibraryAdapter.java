@@ -182,16 +182,21 @@ public class LibraryAdapter extends SimpleCursorAdapter {
             }
 
             if (viewHolder.contextMenuHandle != null) {
-                viewHolder.contextMenuHandle.setOnClickListener(new View.OnClickListener() {
+                if (container == null) {
+                    viewHolder.contextMenuHandle.setVisibility(View.GONE);
+                }
+                else {
+                    viewHolder.contextMenuHandle.setOnClickListener(new View.OnClickListener() {
 
-                    @Override
-                    public void onClick(View view) {
-                        PopupMenu popupMenu = new PopupMenu(container.getActivity(), view);
-                        container.createMenu(popupMenu.getMenu(), position);
-                        popupMenu.setOnMenuItemClickListener(container.getOnPopupMenuItemClickListener(position));
-                        popupMenu.show();
-                    }
-                });
+                        @Override
+                        public void onClick(View view) {
+                            PopupMenu popupMenu = new PopupMenu(container.getActivity(), view);
+                            container.createMenu(popupMenu.getMenu(), position);
+                            popupMenu.setOnMenuItemClickListener(container.getOnPopupMenuItemClickListener(position));
+                            popupMenu.show();
+                        }
+                    });
+                }
             }
 
             if (visibilityColumn >= 0) {

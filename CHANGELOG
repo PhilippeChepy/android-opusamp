@@ -1,5 +1,8 @@
+*** Bugs ***
+~ A tester : édition de tags supprime la pochette embarquée ???
+! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
+
 *** Planned updates ***
-- Allowing edition of custom equalizer presets.
 - Improved UI navigation.
 - Tag edditing from current playlist UI.
 - Improved Bluetooth support.
@@ -11,6 +14,9 @@
 - Maybe support for webradios (streaming through HTTP and PLS support).	
 
 *** Changelog ***
+
+Update 18:
+Added: Management of EQ presets.
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).
