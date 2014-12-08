@@ -1,4 +1,4 @@
-package net.opusapp.player.ui.activities;
+package net.opusapp.player.ui.activities.settings;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,10 +7,11 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 
 import net.opusapp.player.R;
+import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.fragments.SetupWelcomeFragment;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
-public class SetupActivity extends FragmentActivity {
+public class FirstRunActivity extends FragmentActivity {
 
     private static final String SETUP_FRAGMENT_MAIN = "setup_fragment";
 

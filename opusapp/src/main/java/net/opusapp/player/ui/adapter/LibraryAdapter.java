@@ -14,13 +14,13 @@ package net.opusapp.player.ui.adapter;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
@@ -84,9 +84,8 @@ public class LibraryAdapter extends SimpleCursorAdapter {
         this(adapterContainer, source, managerType, itemView, textColumns, textViews, idColumn, artUriColumn, imagePlaceHolder, imageView, visibilityColumn, -1);
     }
 
-    @SuppressWarnings("deprecation")
     public LibraryAdapter(LibraryAdapterContainer container, int source, int managerType, int itemView, int[] textColumns, int[] textViews, int idColumn, int artUriColumn, int imagePlaceHolder, int imageView, int visibilityColumn, int indicator) {
-        super(PlayerApplication.context, itemView, null, new String[] {}, new int[] {});
+        super(PlayerApplication.context, itemView, null, new String[] {}, new int[] {}, 0);
 
         this.container = container;
 

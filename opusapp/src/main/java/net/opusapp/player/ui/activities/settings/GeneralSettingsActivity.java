@@ -10,7 +10,7 @@
  *
  * http://www.chepy.eu
  */
-package net.opusapp.player.ui.activities;
+package net.opusapp.player.ui.activities.settings;
 
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -42,13 +42,13 @@ import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
 
-public class SettingsActivity extends ActionBarActivity implements
+public class GeneralSettingsActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         AdapterView.OnItemClickListener,
         DragSortListView.DropListener,
         DragSortListView.DragScrollProfile {
 
-    public final static String TAG = SettingsActivity.class.getSimpleName();
+    public final static String TAG = GeneralSettingsActivity.class.getSimpleName();
 
 
 
@@ -60,16 +60,16 @@ public class SettingsActivity extends ActionBarActivity implements
 
 
     // Content UI
-    private DragSortListView listView;
+    private DragSortListView mListView;
 
-    private ProviderAdapter adapter;
+    private ProviderAdapter mAdapter;
 
-    private Cursor cursor;
+    private Cursor mCursor;
 
 
 
     // ContentType Data
-    private final static String[] requestedFields = new String[] {
+    private final static String[] mRequestedFields = new String[] {
             Entities.Provider._ID,
             Entities.Provider.COLUMN_FIELD_PROVIDER_NAME,
             Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE
@@ -81,7 +81,7 @@ public class SettingsActivity extends ActionBarActivity implements
 
     public static final int COLUMN_PROVIDER_TYPE = 2;
 
-    public void doRefresh() {
+    public void refresh() {
         getSupportLoaderManager().restartLoader(0, null, this);
         PlayerApplication.allocateMediaManagers();
     }
@@ -89,7 +89,7 @@ public class SettingsActivity extends ActionBarActivity implements
     @Override
     public float getSpeed(float w, long t) {
         if (w > 0.8F) {
-            return adapter.getCount() / 0.001F;
+            return mAdapter.getCount() / 0.001F;
         }
         return 10.0F * w;
     }
@@ -105,41 +105,39 @@ public class SettingsActivity extends ActionBarActivity implements
 
         setContentView(R.layout.activity_settings);
 
-        listView = (DragSortListView) findViewById(R.id.dragable_list_base);
+        mListView = (DragSortListView) findViewById(R.id.dragable_list_base);
 
         TextView emptyView = (TextView) findViewById(R.id.dragable_list_empty);
         emptyView.setText(R.string.ni_providers);
-        listView.setEmptyView(emptyView);
+        mListView.setEmptyView(emptyView);
 
         // Header view
-        View globalSettingsView = getLayoutInflater().inflate(R.layout.view_item_settings, null);
+        View globalSettingsView = getLayoutInflater().inflate(R.layout.view_item_settings, mListView, false);
         globalSettingsView.setFocusable(true);
         globalSettingsView.setClickable(true);
         globalSettingsView.setOnClickListener(mHeaderViewClickListener);
 
-        TextView headertextView = (TextView) globalSettingsView.findViewById(R.id.line_one);
-        headertextView.setText(R.string.drawer_item_label_application_settings);
-        //headertextView.setOnClickListener(mHeaderViewClickListener);
+        TextView headerTextView = (TextView) globalSettingsView.findViewById(R.id.line_one);
+        headerTextView.setText(R.string.drawer_item_label_application_settings);
 
         // Footer view
-        View addLibraryView = getLayoutInflater().inflate(R.layout.view_item_settings, null);
+        View addLibraryView = getLayoutInflater().inflate(R.layout.view_item_settings, mListView, false);
         addLibraryView.setFocusable(true);
         addLibraryView.setClickable(true);
         addLibraryView.setOnClickListener(mFooterViewClickListener);
 
         TextView footerTextView = (TextView) addLibraryView.findViewById(R.id.line_one);
         footerTextView.setText(R.string.menuitem_label_add_provider);
-        //footerTextView.setOnClickListener(mFooterViewClickListener);
 
-        adapter = new ProviderAdapter(this, R.layout.view_item_double_line_dragable, new int[] { COLUMN_PROVIDER_NAME, COLUMN_PROVIDER_TYPE });
+        mAdapter = new ProviderAdapter(this, R.layout.view_item_double_line_dragable, new int[] { COLUMN_PROVIDER_NAME, COLUMN_PROVIDER_TYPE });
 
-        listView.setOnCreateContextMenuListener(this);
-        listView.setOnItemClickListener(this);
-        listView.addHeaderView(globalSettingsView);
-        listView.addFooterView(addLibraryView);
-        listView.setAdapter(adapter);
-        listView.setDragScrollProfile(this);
-        listView.setDropListener(this);
+        mListView.setOnCreateContextMenuListener(this);
+        mListView.setOnItemClickListener(this);
+        mListView.addHeaderView(globalSettingsView);
+        mListView.addFooterView(addLibraryView);
+        mListView.setAdapter(mAdapter);
+        mListView.setDragScrollProfile(this);
+        mListView.setDropListener(this);
 
         getSupportLoaderManager().initLoader(0, null, this);
     }
@@ -173,7 +171,7 @@ public class SettingsActivity extends ActionBarActivity implements
                 if (database != null) {
                     final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-                    return database.query(Entities.Provider.TABLE_NAME, requestedFields, null, null, null, null, orderBy);
+                    return database.query(Entities.Provider.TABLE_NAME, mRequestedFields, null, null, null, null, orderBy);
                 }
                 return null;
             }
@@ -186,15 +184,15 @@ public class SettingsActivity extends ActionBarActivity implements
             return;
         }
 
-        cursor = data;
-        adapter.changeCursor(data);
-        listView.invalidateViews();
+        mCursor = data;
+        mAdapter.changeCursor(data);
+        mListView.invalidateViews();
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (adapter != null) {
-            adapter.changeCursor(null);
+        if (mAdapter != null) {
+            mAdapter.changeCursor(null);
         }
     }
 
@@ -203,19 +201,19 @@ public class SettingsActivity extends ActionBarActivity implements
         menu.setHeaderTitle(R.string.drawer_item_label_manage_libraries);
         menu.add(Menu.NONE, CONTEXT_MENUITEM_EDIT, 1, R.string.menuitem_label_edit);
 
-        if (cursor.getInt(COLUMN_PROVIDER_ID) != 1) {
+        if (mCursor.getInt(COLUMN_PROVIDER_ID) != 1) {
             menu.add(Menu.NONE, CONTEXT_MENUITEM_DELETE, 2, R.string.menuitem_label_delete);
         }
     }
 
     @Override
     public boolean onContextItemSelected(android.view.MenuItem item) {
-        final int providerId = cursor.getInt(COLUMN_PROVIDER_ID);
+        final int providerId = mCursor.getInt(COLUMN_PROVIDER_ID);
 
         switch (item.getItemId()) {
             case CONTEXT_MENUITEM_EDIT:
                 final EditText nameEditText = new EditText(this);
-                nameEditText.setText(cursor.getString(COLUMN_PROVIDER_NAME));
+                nameEditText.setText(mCursor.getString(COLUMN_PROVIDER_NAME));
 
                 final DialogInterface.OnClickListener newLibraryOnClickListener = new DialogInterface.OnClickListener() {
 
@@ -225,7 +223,7 @@ public class SettingsActivity extends ActionBarActivity implements
                         final Editable collectionName = nameEditText.getText();
 
                         if (database != null && collectionName != null) {
-                            int mediaProviderType = cursor.getInt(COLUMN_PROVIDER_TYPE);
+                            int mediaProviderType = mCursor.getInt(COLUMN_PROVIDER_TYPE);
 
                             ContentValues contentValues = new ContentValues();
                             contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
@@ -236,8 +234,8 @@ public class SettingsActivity extends ActionBarActivity implements
                                             String.valueOf(providerId)
                                     });
 
-                            MusicConnector.configureLibrary(SettingsActivity.this, providerId, mediaProviderType);
-                            doRefresh();
+                            MusicConnector.configureLibrary(GeneralSettingsActivity.this, providerId, mediaProviderType);
+                            refresh();
                         }
                     }
                 };
@@ -259,7 +257,7 @@ public class SettingsActivity extends ActionBarActivity implements
 
                         // Delete provider specific content
                         mediaManager.getProvider().erase();
-                        doRefresh();
+                        refresh();
                     }
 
                     return true;
@@ -271,7 +269,7 @@ public class SettingsActivity extends ActionBarActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        MusicConnector.configureLibrary(this, cursor.getInt(COLUMN_PROVIDER_ID), cursor.getInt(COLUMN_PROVIDER_TYPE));
+        MusicConnector.configureLibrary(this, mCursor.getInt(COLUMN_PROVIDER_ID), mCursor.getInt(COLUMN_PROVIDER_TYPE));
     }
 
 
@@ -351,7 +349,7 @@ public class SettingsActivity extends ActionBarActivity implements
                 database.endTransaction();
             }
 
-            doRefresh();
+            refresh();
         }
     }
 
@@ -359,7 +357,7 @@ public class SettingsActivity extends ActionBarActivity implements
         @Override
         public void onClick(View v) {
             LogUtils.LOGW(TAG, "header view");
-            final Intent intent = new Intent(getApplicationContext(), GlobalSettingsActivity.class);
+            final Intent intent = new Intent(getApplicationContext(), ApplicationSettingsActivity.class);
             startActivity(intent);
         }
     };
@@ -368,10 +366,10 @@ public class SettingsActivity extends ActionBarActivity implements
         @Override
         public void onClick(View v) {
             LogUtils.LOGW(TAG, "footer view");
-            MusicConnector.addLibrary(SettingsActivity.this, new Runnable() {
+            MusicConnector.addLibrary(GeneralSettingsActivity.this, new Runnable() {
                 @Override
                 public void run() {
-                    doRefresh();
+                    refresh();
                 }
             });
         }

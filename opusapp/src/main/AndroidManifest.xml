@@ -31,7 +31,7 @@
         </service>
 
         <activity
-            android:name=".ui.activities.SetupActivity"
+            android:name=".ui.activities.settings.FirstRunActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
         </activity>
 
@@ -95,14 +95,14 @@
             android:theme="@style/AudioKit.TransparentActionBar" >
         </activity>
         <activity
-            android:name=".ui.activities.SettingsActivity"
+            android:name=".ui.activities.settings.GeneralSettingsActivity"
             android:label="@string/activity_title_settings" >
         </activity>
         <activity
-            android:name=".ui.activities.GlobalSettingsActivity"
+            android:name=".ui.activities.settings.ApplicationSettingsActivity"
             android:label="@string/activity_title_global_settings" >
         </activity>
-        <activity android:name=".ui.activities.SoundEffectsActivity" >
+        <activity android:name=".ui.activities.settings.EqualizerSettingsActivity" >
         </activity>
         <activity
             android:name=".ui.activities.UtilDirectorySelectActivity"

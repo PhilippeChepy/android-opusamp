@@ -10,7 +10,7 @@
  *
  * http://www.chepy.eu
  */
-package net.opusapp.player.ui.activities;
+package net.opusapp.player.ui.activities.settings;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -36,9 +36,9 @@ import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
 import java.io.File;
 import java.text.DecimalFormat;
 
-public class GlobalSettingsActivity extends PreferenceActivity {
+public class ApplicationSettingsActivity extends PreferenceActivity {
 
-	public static final String TAG = GlobalSettingsActivity.class.getSimpleName();
+	public static final String TAG = ApplicationSettingsActivity.class.getSimpleName();
 
 
 
@@ -113,7 +113,7 @@ public class GlobalSettingsActivity extends PreferenceActivity {
         themePresetsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                final ColorSchemeDialog colorSchemeDialog = new ColorSchemeDialog(GlobalSettingsActivity.this);
+                final ColorSchemeDialog colorSchemeDialog = new ColorSchemeDialog(ApplicationSettingsActivity.this);
                 colorSchemeDialog.setPreferences(primaryColorPreference, accentColorPreference, foregroundColorPreference, useDarkIconsPreference);
                 colorSchemeDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
@@ -175,7 +175,7 @@ public class GlobalSettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final ProgressDialog progressDialog = new ProgressDialog(GlobalSettingsActivity.this);
+                final ProgressDialog progressDialog = new ProgressDialog(ApplicationSettingsActivity.this);
 
                 final AsyncTask<Void, Integer, Void> optimizationTask = new AsyncTask<Void, Integer, Void>() {
 
@@ -247,7 +247,7 @@ public class GlobalSettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                PlayerApplication.showOpenSourceDialog(GlobalSettingsActivity.this).show();
+                PlayerApplication.showOpenSourceDialog(ApplicationSettingsActivity.this).show();
                 return true;
             }
         });

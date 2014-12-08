@@ -10,13 +10,14 @@
  *
  * http://www.chepy.eu
  */
-package net.opusapp.player.ui.activities;
+package net.opusapp.player.ui.activities.settings;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,7 +27,6 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
@@ -37,30 +37,30 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.VerticalSeekBar;
 import net.opusapp.player.utils.LogUtils;
 
-public class SoundEffectsActivity extends ActionBarActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class EqualizerSettingsActivity extends ActionBarActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String TAG = SoundEffectsActivity.class.getSimpleName();
+    public static final String TAG = EqualizerSettingsActivity.class.getSimpleName();
 
 
 
-    private BandView bandList[] = new BandView[11];
+    private BandView mBandList[] = new BandView[11];
 
-    private String frequencies[] = new String[] {
+    private String mBandFrequencies[] = new String[] {
             "PREAMP",
             "31.5 Hz", "63 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz"
     };
 
-    private CheckBox equalizerEnabledCheckbox;
+    private CheckBox mEqualizerIsActive;
 
 
     // Presets in database
-    private ListView listView;
+    private ListView mListView;
 
-    private SimpleCursorAdapter adapter;
+    private SimpleCursorAdapter mAdapter;
 
-    private Cursor cursor;
+    private Cursor mCursor;
 
-    private final static String requestedFields[] = new String[] {
+    private final static String mRequestedFields[] = new String[] {
             Entities.EqualizerPresets._ID,
             Entities.EqualizerPresets.COLUMN_FIELD_PRESET_NAME,
             Entities.EqualizerPresets.COLUMN_FIELD_PRESET_BAND_COUNT,
@@ -87,7 +87,7 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
 
         setContentView(R.layout.activity_sound_effects);
 
-        listView = (ListView) findViewById(R.id.list_view_base);
+        mListView = (ListView) findViewById(R.id.list_view_base);
 
         final String from[] = new String[] {
                 Entities.EqualizerPresets.COLUMN_FIELD_PRESET_NAME
@@ -97,28 +97,28 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
                 R.id.line_one
         };
 
-        adapter = new SimpleCursorAdapter(this, R.layout.view_item_single_line_no_anchor, null, from, to);
-        listView.setAdapter(adapter);
+        mAdapter = new SimpleCursorAdapter(this, R.layout.view_item_single_line_no_anchor, null, from, to, 0);
+        mListView.setAdapter(mAdapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (cursor != null && cursor.getCount() > position) {
+                if (mCursor != null && mCursor.getCount() > position) {
                     final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
-                    cursor.moveToPosition(position);
+                    mCursor.moveToPosition(position);
 
-                    int preamp = cursor.getInt(COLUMN_PREAMP);
-                    bandList[0].seekBar.setProgress(preamp);
-                    bandList[0].seekBar.updateThumb();
+                    int preamp = mCursor.getInt(COLUMN_PREAMP);
+                    mBandList[0].seekBar.setProgress(preamp);
+                    mBandList[0].seekBar.updateThumb();
 
                     player.equalizerBandSetGain(0, preamp);
                     player.equalizerBandSetGain(11, preamp);
 
-                    for (int bandIndex = 1 ; bandIndex < 11 ; bandIndex++) {
-                        int gain = 20 + cursor.getInt(COLUMN_PREAMP + bandIndex);
+                    for (int bandIndex = 1; bandIndex < 11; bandIndex++) {
+                        int gain = 20 + mCursor.getInt(COLUMN_PREAMP + bandIndex);
 
-                        bandList[bandIndex].seekBar.setProgress(gain);
-                        bandList[bandIndex].seekBar.updateThumb();
+                        mBandList[bandIndex].seekBar.setProgress(gain);
+                        mBandList[bandIndex].seekBar.updateThumb();
 
                         player.equalizerBandSetGain(bandIndex, gain);
                         player.equalizerBandSetGain(bandIndex + 11, gain);
@@ -150,24 +150,24 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
     protected void onResume() {
         super.onResume();
 
-        equalizerEnabledCheckbox = (CheckBox) findViewById(R.id.equalizer_enabled);
+        mEqualizerIsActive = (CheckBox) findViewById(R.id.equalizer_enabled);
 
         final LinearLayout bandContainerLayout = (LinearLayout) findViewById(R.id.equalizer_bands);
         for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
             final View bandView = LayoutInflater.from(this).inflate(R.layout.view_equalizer_band, bandContainerLayout, false);
 
-            bandList[bandIndex] = new BandView();
+            mBandList[bandIndex] = new BandView();
 
-            bandList[bandIndex].band = bandView;
-            bandList[bandIndex].freq1 = (TextView) bandView.findViewById(R.id.band_freq1);
-            bandList[bandIndex].freq2 = (TextView) bandView.findViewById(R.id.band_freq2);
+            mBandList[bandIndex].band = bandView;
+            mBandList[bandIndex].freq1 = (TextView) bandView.findViewById(R.id.band_freq1);
+            mBandList[bandIndex].freq2 = (TextView) bandView.findViewById(R.id.band_freq2);
 
-            bandList[bandIndex].seekBar = (VerticalSeekBar) bandView.findViewById(R.id.band_seekbar);
-            bandList[bandIndex].seekBar.setMax(40);
-            bandList[bandIndex].seekBar.setProgress(20);
+            mBandList[bandIndex].seekBar = (VerticalSeekBar) bandView.findViewById(R.id.band_seekbar);
+            mBandList[bandIndex].seekBar.setMax(40);
+            mBandList[bandIndex].seekBar.setProgress(20);
 
-            bandList[bandIndex].freq1.setText(frequencies[bandIndex]);
-            bandList[bandIndex].freq2.setText(frequencies[bandIndex]);
+            mBandList[bandIndex].freq1.setText(mBandFrequencies[bandIndex]);
+            mBandList[bandIndex].freq2.setText(mBandFrequencies[bandIndex]);
 
             bandContainerLayout.addView(bandView);
         }
@@ -175,10 +175,10 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
         doUpdateBandState();
 
         for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
-            bandList[bandIndex].seekBar.setOnSeekBarChangeListener(new BandListener(bandIndex));
+            mBandList[bandIndex].seekBar.setOnSeekBarChangeListener(new BandListener(bandIndex));
         }
 
-        equalizerEnabledCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        mEqualizerIsActive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 applyBandState();
@@ -191,20 +191,20 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
     protected void doUpdateBandState() {
         final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
 
-        equalizerEnabledCheckbox.setChecked(player.equalizerIsEnabled());
+        mEqualizerIsActive.setChecked(player.equalizerIsEnabled());
 
         for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
-            bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
-            bandList[bandIndex].seekBar.setProgress((int) player.equalizerBandGetGain(bandIndex));
+            mBandList[bandIndex].seekBar.setEnabled(mEqualizerIsActive.isChecked());
+            mBandList[bandIndex].seekBar.setProgress((int) player.equalizerBandGetGain(bandIndex));
         }
     }
 
     protected void applyBandState() {
         final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
-        player.equalizerSetEnabled(equalizerEnabledCheckbox.isChecked());
+        player.equalizerSetEnabled(mEqualizerIsActive.isChecked());
 
         for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
-            bandList[bandIndex].seekBar.setEnabled(equalizerEnabledCheckbox.isChecked());
+            mBandList[bandIndex].seekBar.setEnabled(mEqualizerIsActive.isChecked());
         }
     }
 
@@ -216,7 +216,7 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
             public Cursor loadInBackground() {
                 final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
                 if (database != null) {
-                    return database.query(Entities.EqualizerPresets.TABLE_NAME, requestedFields, null, null, null, null, null);
+                    return database.query(Entities.EqualizerPresets.TABLE_NAME, mRequestedFields, null, null, null, null, null);
                 }
                 return null;
             }
@@ -229,15 +229,15 @@ public class SoundEffectsActivity extends ActionBarActivity implements LoaderMan
             return;
         }
 
-        adapter.changeCursor(data);
-        listView.invalidateViews();
-        cursor = data;
+        mAdapter.changeCursor(data);
+        mListView.invalidateViews();
+        mCursor = data;
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if (adapter != null) {
-            adapter.changeCursor(null);
+        if (mAdapter != null) {
+            mAdapter.changeCursor(null);
         }
     }
 

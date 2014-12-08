@@ -48,6 +48,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.ui.activities.settings.EqualizerSettingsActivity;
+import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.MusicConnector;
@@ -152,7 +154,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
         if (PlayerApplication.isFirstRun()) {
             isFirstRun = true;
-            final Intent intent = new Intent(this, SetupActivity.class);
+            final Intent intent = new Intent(this, FirstRunActivity.class);
             startActivity(intent);
             finish();
         }
@@ -729,7 +731,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         audioEffectsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                startActivity(new Intent(PlayerApplication.context, SoundEffectsActivity.class));
+                startActivity(new Intent(PlayerApplication.context, EqualizerSettingsActivity.class));
                 return true;
             }
         });

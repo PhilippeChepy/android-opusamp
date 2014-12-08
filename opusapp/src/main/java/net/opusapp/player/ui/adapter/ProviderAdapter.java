@@ -15,10 +15,10 @@ package net.opusapp.player.ui.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
@@ -39,9 +39,9 @@ public class ProviderAdapter extends SimpleCursorAdapter {
     private int columnProviderType = 2;
 
 
-    @SuppressWarnings("deprecation")
+
     public ProviderAdapter(Context context, int itemView, int columns[]) {
-        super(context, itemView, null, new String[] {}, new int[] {});
+        super(context, itemView, null, new String[] {}, new int[] {}, 0);
         this.context = context;
 
         this.itemView = itemView;

@@ -1,0 +1,65 @@
+*** Planned updates ***
+- Allowing edition of custom equalizer presets.
+- Improved UI navigation.
+- Tag edditing from current playlist UI.
+- Improved Bluetooth support.
+- Chromecast audio output.
+- Backup of library settings.
+- Neon and SSE optimizations for equalizer and resampling.
+- UPnP/DLNA audio output.
+- Container specific tags support (e.g. WMA star rating, embedded pictures, etc.).
+- Maybe support for webradios (streaming through HTTP and PLS support).	
+
+*** Changelog ***
+
+Update 16:
+Added: Support for media tags edition (and improved tag viewer look and feel).
+Added: Media scanner file extension settings.
+Updated: Scanned file extensions (notably, added ".mka" and ".opus").
+Fixed: App widgets not updated when clearing current playlist.
+Fixed: Force close when cleaning playlist and using next/prev buttons on app widgets (related to above fix).
+Fixed: Force close (rarely) occuring when searching for cover in media scanner (when scanning for medias).
+Fixed: Appwidget actions not working on some devices.
+	
+Update 15:
+Updated: Support for additional audio codecs and containers.
+Updated: Toggle buttons in screens with player are now tinted with background color.
+Updated: Smaller images for buttons of app widgets.
+Fixed: Art not changed by placeholder when there is no art associated with current media. 
+Fixed: Blank media names even if settings specify to use filename when there is no metadata in media.	
+
+Update 14:
+Updated: Improved Car mode look.
+Updated: New application launcher icon and notification icon.
+Updated: Switched from holo icons to material design icons.
+Fixed: Force close in car mode (regression from Update 13).
+
+Update 13:
+Fixed: Cover not loaded in some situations (include memory optimization in cover management).
+Fixed: Playback position not updated when changing current library.
+Fixed: Playback not started when clicking on a media from another library than current.
+
+Update 12:
+Added: In playlist management : now user playlists entries can be reordered.
+Updated: merged settings in a single interface.
+Updated: added a quick "add library" action in drawer menu, bellow library list.
+Fixed: Force close when removing a provider while using it.
+Fixed: Enabling/Disabling tabs not taken into account immediatly after leaving library settings.
+Fixed: Wrong reload icon showed (sometimes).
+Fixed: Moving playback position to 0s when adding media to queue (while playing).
+Fixed: Wrong position when removing an entry from current playlist.
+
+Update 11:
+Fixed: Force close when pluging headset if headset auto play is enabled (default) and playlist is empty.
+Fixed: Force close when entering car mode on Android <= 4.3.
+Fixed: Force close when starting playback on Android <= 2.3 on lots of devices.
+Fixed: Wrong play icon in notification when playback is paused.
+Fixed: AppWidget not updated/not able to launch the app sometimes.
+Fixed: Cover not correctly updated in Notifications when changing current playlist.
+
+Update 10: 
+Fixed: Wrong Notifications colors on Android 5.0 (Lollipop)
+Fixed: Starting playback sometimes on call endings, even if not playing before calls.
+Fixed: Cover update bug in AppWidgets.
+Fixed: Cover update bug in Notifications.
+Fixed: Force close occuring sometimes when updating playlist.

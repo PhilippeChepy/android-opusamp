@@ -17,7 +17,7 @@ import android.widget.TextView;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
-import net.opusapp.player.ui.activities.SetupActivity;
+import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 import net.opusapp.player.ui.utils.StorageOptions;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomRadioButton;
@@ -87,7 +87,7 @@ public class SetupPathsFragment extends Fragment {
 
                 final Activity activity = getActivity();
                 if (activity != null) {
-                    ((SetupActivity)activity).terminate();
+                    ((FirstRunActivity)activity).terminate();
                 }
             }
         });

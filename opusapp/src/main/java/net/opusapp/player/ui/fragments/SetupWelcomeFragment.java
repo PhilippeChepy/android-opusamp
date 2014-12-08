@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import net.opusapp.player.R;
-import net.opusapp.player.ui.activities.SetupActivity;
+import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 
 public class SetupWelcomeFragment extends Fragment {
 
@@ -24,7 +24,7 @@ public class SetupWelcomeFragment extends Fragment {
                 final Activity activity = getActivity();
 
                 if (activity != null) {
-                    ((SetupActivity)activity).updateFragment(new SetupPathsFragment());
+                    ((FirstRunActivity)activity).updateFragment(new SetupPathsFragment());
                 }
             }
         });

@@ -33,6 +33,7 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
+import net.opusapp.player.ui.activities.settings.GeneralSettingsActivity;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
 import net.opusapp.player.ui.fragments.AlbumArtistFragment;
@@ -159,7 +160,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         settingsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                startActivityForResult(new Intent(PlayerApplication.context, SettingsActivity.class), OPTION_MENUITEM_LIBRARY_SETTINGS_ID);
+                startActivityForResult(new Intent(PlayerApplication.context, GeneralSettingsActivity.class), OPTION_MENUITEM_LIBRARY_SETTINGS_ID);
                 return true;
             }
         });
