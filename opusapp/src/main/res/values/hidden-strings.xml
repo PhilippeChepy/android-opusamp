@@ -9,6 +9,4 @@
     <string name="ext_jpg">jpg</string>
     <string name="ext_png">png</string>
     <string name="ext_bmp">bmp</string>
-
-    <string name="label_00_00">00:00</string>
 </resources>

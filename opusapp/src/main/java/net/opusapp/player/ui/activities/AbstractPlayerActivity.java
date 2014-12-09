@@ -87,6 +87,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
             AbstractMediaManager.Provider.SONG_ART_URI,
             AbstractMediaManager.Provider.SONG_VISIBLE,
+            AbstractMediaManager.Provider.SONG_DURATION
     };
 
     private int[] sortFields = new int[] {
@@ -105,38 +106,47 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     private static final int COLUMN_SONG_VISIBLE = 5;
 
+    private static final int COLUMN_SONG_DURATION = 6;
+
 
 
     /*
         Player Ui
      */
-    private View imageViewContainer;
+    private View mCoverContainer;
 
-    private View playlistContainer;
+    private View mPlaylistContainer;
 
-    private ImageView artImageView;
 
-    private ImageView bluredImageView;
+    // Cover
+    private ImageView mCoverImageView;
 
-    private TextView titleTextView;
+    private ImageView mBackgroundCoverImageView;
 
-    private TextView artistTextView;
 
-    private TextView timeTextView;
+    // Song Info
+    private TextView mMediaTitleTextView;
 
-    private ImageButton repeatButton;
+    private TextView mMediaArtistTextView;
 
-    private ImageButton playButton;
+    private TextView mElapsedTimeTextView;
 
-    private ImageButton shuffleButton;
+    private TextView mTotalTimeTextView;
 
-    private SeekBar progressBar;
+    // Actions & interactions
+    private ImageButton mRepeatButton;
 
-    private DragSortListView playlist;
+    private ImageButton mPlayButton;
 
-    private ImageButton playlistButton;
+    private ImageButton mShuffleButton;
 
-    private TextView playlistLengthTextView;
+    private SeekBar mProgressSeekBar;
+
+    private DragSortListView mPlaylistListView;
+
+    private ImageButton mSwitchPlaylistButton;
+
+    private TextView mPlaylistPositionTextView;
 
 
 
@@ -179,35 +189,36 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         // Actionbar
         PlayerApplication.applyActionBar(this);
 
-        imageViewContainer = findViewById(R.id.square_view_container);
-        playlistContainer = findViewById(R.id.playlist_container);
+        mCoverContainer = findViewById(R.id.square_view_container);
+        mPlaylistContainer = findViewById(R.id.playlist_container);
 
-        artImageView = (ImageView) findViewById(R.id.player_art);
+        mCoverImageView = (ImageView) findViewById(R.id.player_art);
 
-        bluredImageView = (ImageView) findViewById(R.id.player_art_blured);
+        mBackgroundCoverImageView = (ImageView) findViewById(R.id.player_art_blured);
 
-        titleTextView = (TextView) findViewById(R.id.audio_player_track_name);
-        artistTextView = (TextView) findViewById(R.id.audio_player_artist_name);
-        timeTextView = (TextView) findViewById(R.id.audio_player_time);
-        playlistLengthTextView = (TextView) findViewById(R.id.playlist_track_count);
+        mMediaTitleTextView = (TextView) findViewById(R.id.audio_player_track_name);
+        mMediaArtistTextView = (TextView) findViewById(R.id.audio_player_artist_name);
+        mElapsedTimeTextView = (TextView) findViewById(R.id.audio_player_time);
+        mTotalTimeTextView = (TextView) findViewById(R.id.audio_player_time_total);
+        mPlaylistPositionTextView = (TextView) findViewById(R.id.playlist_track_count);
 
-        repeatButton = (ImageButton) findViewById(R.id.audio_player_repeat);
-        repeatButton.setOnClickListener(MusicConnector.repeatClickListener);
+        mRepeatButton = (ImageButton) findViewById(R.id.audio_player_repeat);
+        mRepeatButton.setOnClickListener(MusicConnector.repeatClickListener);
 
         final RepeatingImageButton prevButton = (RepeatingImageButton) findViewById(R.id.audio_player_prev);
         prevButton.setOnClickListener(MusicConnector.prevClickListener);
 
-        playButton = (ImageButton) findViewById(R.id.audio_player_play);
-        playButton.setOnClickListener(new MusicConnector.PlayClickListenerImpl(this));
+        mPlayButton = (ImageButton) findViewById(R.id.audio_player_play);
+        mPlayButton.setOnClickListener(new MusicConnector.PlayClickListenerImpl(this));
 
         final RepeatingImageButton nextButton = (RepeatingImageButton) findViewById(R.id.audio_player_next);
         nextButton.setOnClickListener(MusicConnector.nextClickListener);
 
-        shuffleButton = (ImageButton) findViewById(R.id.audio_player_shuffle);
-        shuffleButton.setOnClickListener(MusicConnector.shuffleClickListener);
+        mShuffleButton = (ImageButton) findViewById(R.id.audio_player_shuffle);
+        mShuffleButton.setOnClickListener(MusicConnector.shuffleClickListener);
 
-        progressBar = (SeekBar) findViewById(R.id.progress);
-        progressBar.setOnSeekBarChangeListener(progressBarOnChangeListener);
+        mProgressSeekBar = (SeekBar) findViewById(R.id.progress);
+        mProgressSeekBar.setOnSeekBarChangeListener(progressBarOnChangeListener);
 
         final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
             @Override
@@ -243,19 +254,19 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 });
         adapter.setTransparentBackground(true);
 
-        playlist = (DragSortListView) findViewById(R.id.dragable_list_playlist);
-        if (playlist != null) {
-            playlist.setEmptyView(findViewById(R.id.dragable_list_empty_playlist));
-            playlist.setAdapter(adapter);
-            playlist.setDropListener(this);
-            playlist.setDragScrollProfile(this);
-            playlist.setOnCreateContextMenuListener(this);
-            playlist.setOnItemClickListener(this);
+        mPlaylistListView = (DragSortListView) findViewById(R.id.dragable_list_playlist);
+        if (mPlaylistListView != null) {
+            mPlaylistListView.setEmptyView(findViewById(R.id.dragable_list_empty_playlist));
+            mPlaylistListView.setAdapter(adapter);
+            mPlaylistListView.setDropListener(this);
+            mPlaylistListView.setDragScrollProfile(this);
+            mPlaylistListView.setOnCreateContextMenuListener(this);
+            mPlaylistListView.setOnItemClickListener(this);
         }
 
-        playlistButton = (ImageButton) findViewById(R.id.playlist_show);
-        if (playlistButton != null) {
-            playlistButton.setOnClickListener(new View.OnClickListener() {
+        mSwitchPlaylistButton = (ImageButton) findViewById(R.id.playlist_show);
+        if (mSwitchPlaylistButton != null) {
+            mSwitchPlaylistButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     saved_state_playlist_is_visible = !saved_state_playlist_is_visible;
@@ -274,6 +285,14 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     protected void onResume() {
         super.onResume();
         PlayerApplication.connectService(this);
+
+        if (mElapsedTimeTextView != null) {
+            mElapsedTimeTextView.setTextColor(PlayerApplication.getAccentColor());
+        }
+
+        if (mTotalTimeTextView != null) {
+            mTotalTimeTextView.setTextColor(PlayerApplication.getBackgroundColor());
+        }
     }
 
     @Override
@@ -372,9 +391,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         playlistCursor = cursor;
         changePlaylistCursor();
 
-        if (playlistLengthTextView != null) {
+        if (mPlaylistPositionTextView != null) {
             int count = playlistCursor.getCount();
-            playlistLengthTextView.setText(getResources().getQuantityString(R.plurals.label_track_position, count, count));
+            mPlaylistPositionTextView.setText(getResources().getQuantityString(R.plurals.label_track_position, count, count));
         }
     }
 
@@ -389,7 +408,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
      */
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-        if (view == playlist) {
+        if (view == mPlaylistListView) {
             doOnCreateContextMenu(menu);
         }
     }
@@ -510,9 +529,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         @Override
         public void onCoverLoaded(final Bitmap bitmap) {
             if (bitmap == null) {
-                artImageView.setImageResource(R.drawable.no_art_normal);
-                if (bluredImageView != null) {
-                    bluredImageView.setImageResource(R.drawable.no_art_normal);
+                mCoverImageView.setImageResource(R.drawable.no_art_normal);
+                if (mBackgroundCoverImageView != null) {
+                    mBackgroundCoverImageView.setImageResource(R.drawable.no_art_normal);
                 }
             }
             else {
@@ -520,9 +539,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        artImageView.setImageBitmap(bitmap);
-                        if (bluredImageView != null) {
-                            bluredImageView.setImageBitmap(bitmap);
+                        mCoverImageView.setImageBitmap(bitmap);
+                        if (mBackgroundCoverImageView != null) {
+                            mBackgroundCoverImageView.setImageBitmap(bitmap);
                         }
                     }
                 });
@@ -535,17 +554,17 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             public void run() {
                 if (PlayerApplication.playerService != null) {
                     if (PlayerApplication.playerService.isPlaying()) {
-                        playButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
-                        timeTextView.clearAnimation();
+                        mPlayButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
+                        mElapsedTimeTextView.clearAnimation();
                     }
                     else {
-                        playButton.setImageResource(R.drawable.ic_play_arrow_grey600_48dp);
+                        mPlayButton.setImageResource(R.drawable.ic_play_arrow_grey600_48dp);
                         Animation animation = new AlphaAnimation(0.0f, 1.0f);
                         animation.setDuration(100);
                         animation.setStartOffset(400);
                         animation.setRepeatMode(Animation.REVERSE);
                         animation.setRepeatCount(Animation.INFINITE);
-                        timeTextView.startAnimation(animation);
+                        mElapsedTimeTextView.startAnimation(animation);
                     }
 
                     long currentPosition = PlayerApplication.playerService.getPosition();
@@ -554,7 +573,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                         onSeek(0);
                     }
 
-                    progressBar.setMax((int) PlayerApplication.playerService.getDuration());
+                    mProgressSeekBar.setMax((int) PlayerApplication.playerService.getDuration());
                 }
                 else {
                     LogUtils.LOGService(TAG, "doPlayButtonUpdate()", 0);
@@ -569,12 +588,12 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 if (PlayerApplication.playerService != null) {
                     switch (PlayerApplication.playerService.getShuffleMode()) {
                         case PlayerService.SHUFFLE_AUTO:
-                            shuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
-                            shuffleButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                            mShuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
+                            mShuffleButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.SHUFFLE_NONE:
-                            shuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
-                            shuffleButton.setColorFilter(null);
+                            mShuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
+                            mShuffleButton.setColorFilter(null);
                             break;
                     }
                 }
@@ -591,16 +610,16 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 if (PlayerApplication.playerService != null) {
                     switch (PlayerApplication.playerService.getRepeatMode()) {
                         case PlayerService.REPEAT_ALL:
-                            repeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
-                            repeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                            mRepeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
+                            mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.REPEAT_CURRENT:
-                            repeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
-                            repeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                            mRepeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
+                            mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
                             break;
                         case PlayerService.REPEAT_NONE:
-                            repeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
-                            repeatButton.setColorFilter(null);
+                            mRepeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
+                            mRepeatButton.setColorFilter(null);
                             break;
                     }
                 }
@@ -618,21 +637,26 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 long position = 0;
 
                 if (playlistCursor != null && queuePosition < playlistCursor.getCount()) {
-                    if (PlayerApplication.playerService != null) {
-                        position = PlayerApplication.playerService.getPosition();
-                    }
-
                     doSetPlaylistPosition(queuePosition);
-
-                    titleTextView.setText(playlistCursor.getString(COLUMN_SONG_TITLE));
-                    artistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
-                    timeTextView.setText(PlayerApplication.formatMSecs(position));
+                    mMediaTitleTextView.setText(playlistCursor.getString(COLUMN_SONG_TITLE));
+                    mMediaArtistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
+                    mTotalTimeTextView.setText(PlayerApplication.formatSecs(playlistCursor.getLong(COLUMN_SONG_DURATION)));
                 }
                 else {
-                    titleTextView.setText("");
-                    artistTextView.setText("");
-                    timeTextView.setText(R.string.label_00_00);
+                    mMediaTitleTextView.setText("");
+                    mMediaArtistTextView.setText("");
+                    mTotalTimeTextView.setText(PlayerApplication.formatMSecs(0));
                 }
+
+                if (PlayerApplication.playerService != null) {
+                    mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(PlayerApplication.playerService.getPosition()));
+                }
+                else {
+                    mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(0));
+                }
+
+
+
 
                 seekbarRunnable.position = (int) position;
                 runOnUiThread(seekbarRunnable);
@@ -653,30 +677,30 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         @Override
         public void run() {
             if (updateSeekBar) {
-                progressBar.setProgress(position);
+                mProgressSeekBar.setProgress(position);
             }
 
-            timeTextView.setText(PlayerApplication.formatMSecs(position));
+            mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(position));
         }
     }
 
     private Runnable playlistButtonUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (playlistButton != null) {
+            if (mSwitchPlaylistButton != null) {
                 if (saved_state_playlist_is_visible) {
-                    playlistButton.setImageResource(R.drawable.ic_list_black_36dp);
-                    playlistButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                    mSwitchPlaylistButton.setImageResource(R.drawable.ic_queue_music_black_36dp);
+                    mSwitchPlaylistButton.setColorFilter(PlayerApplication.getBackgroundColor());
                 } else {
-                    playlistButton.setImageResource(R.drawable.ic_list_grey600_36dp);
-                    playlistButton.setColorFilter(null);
+                    mSwitchPlaylistButton.setImageResource(R.drawable.ic_queue_music_grey600_36dp);
+                    mSwitchPlaylistButton.setColorFilter(null);
                 }
             }
 
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && playlistContainer != null) {
-                playlistContainer.setVisibility(saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
-                if (imageViewContainer != null) {
-                    imageViewContainer.setVisibility(!saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && mPlaylistContainer != null) {
+                mPlaylistContainer.setVisibility(saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
+                if (mCoverContainer != null) {
+                    mCoverContainer.setVisibility(!saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
                 }
             }
 
@@ -713,8 +737,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     public void changePlaylistCursor() {
         if (adapter != null) {
             adapter.changeCursor(playlistCursor);
-            if (playlist != null) {
-                playlist.invalidateViews();
+            if (mPlaylistListView != null) {
+                mPlaylistListView.invalidateViews();
             }
 
             if (playlistCursor != null && playlistCursor.getCount() > 0) {
@@ -829,14 +853,14 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         adapter.setPosition(position);
         adapter.notifyDataSetChanged();
 
-        if (playlist != null) {
-            int first = playlist.getFirstVisiblePosition();
-            int last = playlist.getLastVisiblePosition();
+        if (mPlaylistListView != null) {
+            int first = mPlaylistListView.getFirstVisiblePosition();
+            int last = mPlaylistListView.getLastVisiblePosition();
 
             if (position < first) {
-                playlist.setSelection(position);
+                mPlaylistListView.setSelection(position);
             } else if (position >= last) {
-                playlist.setSelection(1 + position - (last - first));
+                mPlaylistListView.setSelection(1 + position - (last - first));
             }
         }
 

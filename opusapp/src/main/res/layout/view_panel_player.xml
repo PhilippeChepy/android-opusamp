@@ -14,9 +14,9 @@
 
         <LinearLayout
             android:id="@+id/audio_player_header"
+            android:layout_width="0dp"
             android:layout_height="68.0dp"
-            android:layout_weight="25.0"
-            android:layout_width="fill_parent"
+            android:layout_weight="75"
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical" >
@@ -45,15 +45,29 @@
                 android:textSize="16.0dip" />
         </LinearLayout>
 
-        <net.opusapp.player.ui.views.CustomTextView
-            android:id="@+id/audio_player_time"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="75.0"
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="68.0dp"
+            android:layout_weight="25"
             android:gravity="center"
-            android:textColor="#ff33b5e5"
-            android:textIsSelectable="false"
-            android:textSize="23.0dip" />
+            android:orientation="vertical">
+
+            <net.opusapp.player.ui.views.CustomTextView
+                android:id="@+id/audio_player_time"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textIsSelectable="false"
+                android:textSize="23.0dip" />
+
+            <net.opusapp.player.ui.views.CustomTextView
+                android:id="@+id/audio_player_time_total"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textIsSelectable="false"
+                android:textSize="23.0dip" />
+        </LinearLayout>
     </LinearLayout>
 
     <RelativeLayout

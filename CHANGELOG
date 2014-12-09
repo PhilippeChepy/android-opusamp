@@ -4,8 +4,8 @@
 ! Bug quand on ajoute une bibliothèque on qu'on lis depuis celle ci.
 
 *** Planned updates ***
-- Affichage info codecs/bitrate/samplerate/durée totale du média en cours
-- Tag edditing from current playlist UI.
+- Affichage info codecs/bitrate/samplerate
+- Tag editing from current playlist UI.
 - Improved Bluetooth support.
 - Chromecast audio output.
 - Backup of library settings.
@@ -18,9 +18,11 @@
 
 Update 18:
 Added: Management of EQ presets.
+Added: Current media duration in player UI.
 Updated: Changed playlist icon to a more appropriate one.
 Updated: Moved playback options (like equalizer and auto pause) to global overflow menu.
-Fixed: refresh menu item not updated correctly.
+Fixed: Refresh menu item not updated correctly.
+Fixed: Force close on some device with Android <= 4.2 (API 17).
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).
