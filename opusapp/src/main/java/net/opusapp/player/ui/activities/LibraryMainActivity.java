@@ -130,10 +130,13 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         mSearchView.setOnQueryTextListener(searchViewOnQueryTextListener);
         mSearchView.setOnCloseListener(searchViewOnCloseListener);
 
+
+        super.onCreateOptionsMenu(menu);
+
         mSortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
         mSortMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
         MenuItemCompat.setShowAsAction(mSortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-        mSortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
+        mSortMenuItem.setOnMenuItemClickListener(mSortOptionMenuItemListener);
 
         mSearchMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_FILTER, 3, R.string.menuitem_label_filter);
         mSearchMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_search_black_48dp : R.drawable.ic_search_white_48dp);
@@ -144,14 +147,14 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         hiddenMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_visibility_black_48dp : R.drawable.ic_visibility_white_48dp);
         hiddenMenuItem.setCheckable(true);
         MenuItemCompat.setShowAsAction(hiddenMenuItem, MenuItemCompat.SHOW_AS_ACTION_NEVER);
-        hiddenMenuItem.setOnMenuItemClickListener(hiddenOnMenuItemClickListener);
+        hiddenMenuItem.setOnMenuItemClickListener(mSwitchHideMenuItemListener);
 
         doManageMenuitemVisibility(mLibraryAdapter, mLibraryPager.getCurrentItem());
 
         mReloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
+        //mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
         MenuItemCompat.setShowAsAction(mReloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-        mReloadMenuItem.setOnMenuItemClickListener(reloadOnMenuItemClickListener);
+        mReloadMenuItem.setOnMenuItemClickListener(mReloadMenuItemListener);
 
         updateReloadMenuItem();
 
@@ -225,9 +228,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         drawerList.addFooterView(footerView, null, true);
 
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
 
         initProvidersList();
         initCurrentProvider();
@@ -313,7 +313,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    protected void updateReloadMenuItem() {
+    protected synchronized void updateReloadMenuItem() {
         if (mReloadMenuItem != null) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
                 mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
@@ -571,7 +571,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     };
 
     //    Hidden Menuitem click listener
-    private final MenuItem.OnMenuItemClickListener hiddenOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
+    private final MenuItem.OnMenuItemClickListener mSwitchHideMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
@@ -586,7 +586,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
 
 
-    private final MenuItem.OnMenuItemClickListener reloadOnMenuItemClickListener = new MenuItem.OnMenuItemClickListener() {
+    private final MenuItem.OnMenuItemClickListener mReloadMenuItemListener = new MenuItem.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
             if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
@@ -599,7 +599,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
     };
 
-    private final MenuItem.OnMenuItemClickListener onSortOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+    private final MenuItem.OnMenuItemClickListener mSortOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {

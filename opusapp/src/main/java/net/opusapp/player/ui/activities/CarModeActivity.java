@@ -13,6 +13,7 @@
 package net.opusapp.player.ui.activities;
 
 import android.os.Bundle;
+import android.view.Menu;
 
 import net.opusapp.player.R;
 
@@ -23,5 +24,10 @@ public class CarModeActivity extends AbstractPlayerActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState, R.layout.activity_car_mode, null);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return true;
     }
 }

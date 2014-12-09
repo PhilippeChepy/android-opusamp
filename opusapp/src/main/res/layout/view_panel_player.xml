@@ -84,14 +84,15 @@
             android:layout_width="fill_parent"
             android:layout_height="@dimen/audio_controls_controls_height"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="@dimen/audio_controls_controls_height">
+            android:layout_marginBottom="@dimen/audio_controls_controls_height"
+            android:baselineAligned="false">
 
 
 
             <LinearLayout
                 android:layout_height="match_parent"
                 android:layout_width="fill_parent"
-                android:layout_weight="40.0"
+                android:layout_weight="20"
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="vertical" >
@@ -104,7 +105,7 @@
                     android:paddingBottom="2.0dip"
                     android:paddingLeft="10.0dip"
                     android:singleLine="true"
-                    android:gravity="left"
+                    android:gravity="start"
                     android:textColor="#ff000000"
                     android:textIsSelectable="false"
                     android:textSize="16.0dip" />
@@ -113,7 +114,7 @@
             <LinearLayout
                 android:layout_height="match_parent"
                 android:layout_width="fill_parent"
-                android:layout_weight="60.0"
+                android:layout_weight="80"
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="horizontal" >
@@ -122,13 +123,7 @@
                     android:id="@+id/playlist_show"
                     style="@style/PlayerButton"
                     android:contentDescription="@string/imageview_content_description_playlist"
-                    android:src="@drawable/ic_list_grey600_36dp" />
-
-                <ImageButton
-                    android:id="@+id/song_options"
-                    style="@style/PlayerButton"
-                    android:contentDescription="@string/imageview_content_description_option_menu"
-                    android:src="@drawable/ic_more_vert_grey600_24dp" />
+                    android:src="@drawable/ic_queue_music_grey600_36dp" />
             </LinearLayout>
         </LinearLayout>
 

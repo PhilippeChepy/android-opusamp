@@ -1,9 +1,10 @@
 *** Bugs ***
 ~ A tester : édition de tags supprime la pochette embarquée ???
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
+! Bug quand on ajoute une bibliothèque on qu'on lis depuis celle ci.
 
 *** Planned updates ***
-- Improved UI navigation.
+- Affichage info codecs/bitrate/samplerate/durée totale du média en cours
 - Tag edditing from current playlist UI.
 - Improved Bluetooth support.
 - Chromecast audio output.
@@ -17,6 +18,9 @@
 
 Update 18:
 Added: Management of EQ presets.
+Updated: Changed playlist icon to a more appropriate one.
+Updated: Moved playback options (like equalizer and auto pause) to global overflow menu.
+Fixed: refresh menu item not updated correctly.
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).

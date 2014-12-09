@@ -110,6 +110,8 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+
         final MenuItem sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
         sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
@@ -164,6 +166,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 throw new IllegalArgumentException();
         }
 
+        PlayerApplication.applyActionBar(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 

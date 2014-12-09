@@ -176,7 +176,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         setContentView(layout);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-
         // Actionbar
         PlayerApplication.applyActionBar(this);
 
@@ -269,16 +268,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         if (slidingUpPanelLayout != null) {
             slidingUpPanelLayout.setDragView(findViewById(R.id.upper_panel));
         }
-
-        final ImageButton songOptionsButton = (ImageButton) findViewById(R.id.song_options);
-        if (songOptionsButton != null) {
-            songOptionsButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    doShowOverflowMenu(v);
-                }
-            });
-        }
     }
 
     @Override
@@ -296,6 +285,39 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        final MenuItem share = menu.add(Menu.NONE, 1, 1, R.string.menuitem_label_share);
+        share.setOnMenuItemClickListener(mShareMenuItemListener);
+
+        final MenuItem audioEffectsMenuItem = menu.add(Menu.NONE, 2, 2, R.string.drawer_item_label_library_soundfx);
+        audioEffectsMenuItem.setOnMenuItemClickListener(mAudioFxMenuItemListener);
+
+        final MenuItem carMode = menu.add(Menu.NONE, 3, 3, R.string.menuitem_label_toggle_car_mode);
+        carMode.setOnMenuItemClickListener(mCarModeMenuItemListener);
+
+        if (MusicConnector.isPlaying()) {
+
+            long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
+            long remainingSecs = 0;
+            if (remaining > 0) {
+                remainingSecs = remaining / 1000;
+            }
+
+            final MenuItem autoPause = menu.add(Menu.NONE, 4, 4, remaining > 0 ?
+                    String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(remainingSecs)) : // format minutes (not secs)
+                    getString(R.string.menuitem_label_delayed_pause));
+            autoPause.setCheckable(true);
+            autoPause.setChecked(remaining > 0);
+            autoPause.setIcon(R.drawable.ic_alarm_grey600_48dp);
+            autoPause.setOnMenuItemClickListener(mAutoPauseMenuItemListener);
+        }
+
+        return true;
+    }
+
 
     // DragScrollProfile implementation
     @Override
@@ -701,100 +723,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
     }
 
-    protected void doShowOverflowMenu(final View v) {
-        final PopupMenu popupMenu = new PopupMenu(this, v);
-
-        final MenuItem share = popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.menuitem_label_share);
-        // share.setIcon(R.drawable.ic_action_share_dark);
-        share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-                sharingIntent.setType("text/plain");
-
-                final String mediaTitle = currentMediaTitle();
-                final String mediaArtist = currentMediaArtist();
-
-                if (!TextUtils.isEmpty(mediaTitle) && !TextUtils.isEmpty(mediaArtist)) {
-                    final String sharingText = String.format(PlayerApplication.context.getString(R.string.share_body), mediaTitle, mediaArtist);
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, sharingText);
-                    startActivity(Intent.createChooser(sharingIntent, PlayerApplication.context.getString(R.string.share_via)));
-                }
-                return true;
-            }
-        });
-
-
-
-        final MenuItem audioEffectsMenuItem = popupMenu.getMenu().add(Menu.NONE, 2, 2, R.string.drawer_item_label_library_soundfx);
-        audioEffectsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                startActivity(new Intent(PlayerApplication.context, EqualizerSettingsActivity.class));
-                return true;
-            }
-        });
-
-
-        final MenuItem carMode = popupMenu.getMenu().add(Menu.NONE, 3, 3, R.string.menuitem_label_toggle_car_mode);
-        // TODO: remove resources for "carMode.setIcon(R.drawable.ic_directions_car_grey600_48dp);"
-        carMode.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                final Intent carmodeIntent = new Intent(AbstractPlayerActivity.this, CarModeActivity.class);
-                startActivity(carmodeIntent);
-                return true;
-            }
-        });
-
-        if (MusicConnector.isPlaying()) {
-
-            long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
-            long remainingSecs = 0;
-            if (remaining > 0) {
-                remainingSecs = remaining / 1000;
-            }
-
-            final MenuItem autoPause = popupMenu.getMenu().add(Menu.NONE, 4, 4, remaining > 0 ?
-                    String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(remainingSecs)) : // format minutes (not secs)
-                    getString(R.string.menuitem_label_delayed_pause));
-            autoPause.setCheckable(true);
-            autoPause.setChecked(remaining > 0);
-            autoPause.setIcon(R.drawable.ic_alarm_grey600_48dp);
-            autoPause.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    if (autoPause.isChecked()) {
-                        if (PlayerApplication.playerService != null) {
-                            PlayerApplication.playerService.setAutoStopTimestamp(-1);
-                        }
-                    } else {
-                        final TimePickerDialog tpd = new TimePickerDialog(AbstractPlayerActivity.this,
-                                new TimePickerDialog.OnTimeSetListener() {
-
-                                    @Override
-                                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                                        if (PlayerApplication.playerService != null) {
-                                            PlayerApplication.playerService.setAutoStopTimestamp((hourOfDay * 60 + minute) * 60000);
-                                        }
-                                    }
-                                }, 0, 0, true
-                        );
-
-                        tpd.setTitle(R.string.label_autostop);
-                        tpd.show();
-
-                    }
-
-                    return true;
-                }
-            });
-        }
-
-        popupMenu.show();
-    }
-
     protected void doOnCreateContextMenu(Menu menu) {
         menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
         menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
@@ -916,4 +844,76 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             playlistCursor.moveToPosition(position);
         }
     }
+
+
+
+    // Menu item listeners
+    private final MenuItem.OnMenuItemClickListener mShareMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+
+            final String mediaTitle = currentMediaTitle();
+            final String mediaArtist = currentMediaArtist();
+
+            if (!TextUtils.isEmpty(mediaTitle) && !TextUtils.isEmpty(mediaArtist)) {
+                final String sharingText = String.format(PlayerApplication.context.getString(R.string.share_body), mediaTitle, mediaArtist);
+                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, sharingText);
+                startActivity(Intent.createChooser(sharingIntent, PlayerApplication.context.getString(R.string.share_via)));
+            }
+            return true;
+        }
+    };
+
+    private final MenuItem.OnMenuItemClickListener mAudioFxMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            startActivity(new Intent(PlayerApplication.context, EqualizerSettingsActivity.class));
+            return true;
+        }
+    };
+
+
+    private final MenuItem.OnMenuItemClickListener mCarModeMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final Intent carmodeIntent = new Intent(AbstractPlayerActivity.this, CarModeActivity.class);
+            startActivity(carmodeIntent);
+            return true;
+        }
+    };
+
+    private final MenuItem.OnMenuItemClickListener mAutoPauseMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            if (item.isChecked()) {
+                if (PlayerApplication.playerService != null) {
+                    PlayerApplication.playerService.setAutoStopTimestamp(-1);
+                }
+            }
+            else {
+                final TimePickerDialog tpd = new TimePickerDialog(AbstractPlayerActivity.this,
+                        new TimePickerDialog.OnTimeSetListener() {
+
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                if (PlayerApplication.playerService != null) {
+                                    PlayerApplication.playerService.setAutoStopTimestamp((hourOfDay * 60 + minute) * 60000);
+                                }
+                            }
+                        }, 0, 0, true
+                );
+
+                tpd.setTitle(R.string.label_autostop);
+                tpd.show();
+
+            }
+
+            return true;
+        }
+    };
 }

@@ -73,7 +73,7 @@
             android:layout_gravity="center_vertical"
             android:orientation="vertical"
             android:paddingLeft="@dimen/notification_info_container_padding_left"
-            android:paddingStart="@dimen/notification_info_container_padding_left"
+            android:paddingRight="@dimen/notification_info_container_padding_left"
             android:paddingTop="@dimen/notification_expanded_content_padding_top"
             android:gravity="center_vertical">
 

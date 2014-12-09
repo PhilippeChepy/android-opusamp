@@ -125,10 +125,12 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+
         final MenuItem sortMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_SORT, 2, R.string.menuitem_label_sort);
         sortMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_sort_black_48dp : R.drawable.ic_sort_white_48dp);
         MenuItemCompat.setShowAsAction(sortMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-        sortMenuItem.setOnMenuItemClickListener(onSortOptionMenuItemListener);
+        sortMenuItem.setOnMenuItemClickListener(mSortOptionMenuItemListener);
         return true;
     }
 
@@ -580,7 +582,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
 
 
-    private final MenuItem.OnMenuItemClickListener onSortOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
+    private final MenuItem.OnMenuItemClickListener mSortOptionMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
