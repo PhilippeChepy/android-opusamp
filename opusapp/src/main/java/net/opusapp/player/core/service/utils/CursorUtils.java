@@ -4,10 +4,10 @@ import android.database.Cursor;
 
 public class CursorUtils {
 
-    public static boolean validCursor(final Cursor cursor) {
+    public static boolean ifNotEmpty(final Cursor cursor) {
         if (cursor != null) {
             if (cursor.getCount() <= 0) {
-                freeCursor(cursor);
+                free(cursor);
                 return false;
             }
         }
@@ -15,7 +15,7 @@ public class CursorUtils {
         return true;
     }
 
-    public static Cursor freeCursor(final Cursor cursor) {
+    public static Cursor free(final Cursor cursor) {
         if (cursor != null) {
             cursor.close();
         }

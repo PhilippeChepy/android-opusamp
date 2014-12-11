@@ -47,6 +47,7 @@ import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
+import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.licensing.BuildSpecific;
 import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
@@ -72,7 +73,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static PlayerService playerService = null;
 
-    private static ArrayList<ServiceConnection> mServiceListenerList = new ArrayList<ServiceConnection>();
+    private static ArrayList<ServiceConnection> mServiceListenerList = new ArrayList<>();
 
 
 
@@ -209,8 +210,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
             final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-            Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
-            if (cursor != null && cursor.getCount() > 0) {
+            final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
+            if (CursorUtils.ifNotEmpty(cursor)) {
                 mediaManagers = new AbstractMediaManager[cursor.getCount()];
 
                 for (int index = 0 ; index < cursor.getCount() ; index++) {
@@ -238,7 +239,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
                     }
                 }
 
-                cursor.close();
+                CursorUtils.free(cursor);
             }
 
             if (currentProvider != null) {

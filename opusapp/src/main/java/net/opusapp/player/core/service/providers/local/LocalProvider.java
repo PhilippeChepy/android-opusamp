@@ -30,6 +30,7 @@ import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaMetadata;
 import net.opusapp.player.core.service.providers.local.database.Entities;
@@ -400,7 +401,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         final int COLUMN_SONG_ART_URI = 5;
 
-        Cursor cursor = buildCursor(
+        Cursor playlistCursor = buildCursor(
                 AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
                 requestedFields,
                 sortOrder,
@@ -408,23 +409,26 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
                 null);
 
-        if (cursor == null) {
-            return null;
-        }
+        AbstractMediaManager.Media[] playlist;
+        if (CursorUtils.ifNotEmpty(playlistCursor)) {
+            playlist = new LocalMedia[playlistCursor.getCount()];
 
-        LocalMedia[] playlist = new LocalMedia[cursor.getCount()];
+            int i = -1;
+            while (playlistCursor.moveToNext()) {
+                i++;
+                playlist[i] = new LocalMedia(player, playlistCursor.getString(COLUMN_SONG_URI));
+                playlist[i].name = playlistCursor.getString(COLUMN_SONG_TITLE);
+                playlist[i].album = playlistCursor.getString(COLUMN_SONG_ALBUM);
+                playlist[i].artist = playlistCursor.getString(COLUMN_SONG_ARTIST);
+                playlist[i].duration = playlistCursor.getLong(COLUMN_SONG_DURATION);
+                playlist[i].artUri = playlistCursor.getString(COLUMN_SONG_ART_URI);
+            }
 
-        int i = -1;
-        while (cursor.moveToNext()) {
-            i++;
-            playlist[i] = new LocalMedia(player, cursor.getString(COLUMN_SONG_URI));
-            playlist[i].name = cursor.getString(COLUMN_SONG_TITLE);
-            playlist[i].album = cursor.getString(COLUMN_SONG_ALBUM);
-            playlist[i].artist = cursor.getString(COLUMN_SONG_ARTIST);
-            playlist[i].duration = cursor.getLong(COLUMN_SONG_DURATION);
-            playlist[i].artUri = cursor.getString(COLUMN_SONG_ART_URI);
+            CursorUtils.free(playlistCursor);
         }
-        cursor.close();
+        else {
+            playlist = PlayerService.EMPTY_PLAYLIST;
+        }
 
         return playlist;
     }
@@ -479,13 +483,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         null,
                         null);
 
-                if (cursor != null && cursor.getCount() == 1) {
+                if (CursorUtils.ifNotEmpty(cursor)) {
                     cursor.moveToFirst();
                     position = cursor.getInt(0);
+                    CursorUtils.free(cursor);
                 }
-                if (cursor != null) {
-                    cursor.close();
-                }
+
                 LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
 
                 if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
@@ -784,11 +787,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 "WHERE " + Entities.Album._ID + " = ? ", albumSelectionArgs);
 
                 String albumName = "";
-                if (albumNameCursor != null) {
-                    if (albumNameCursor.moveToFirst()) {
-                        albumName = albumNameCursor.getString(0);
-                    }
-                    albumNameCursor.close();
+                if (CursorUtils.ifNotEmpty(albumNameCursor)) {
+                    albumNameCursor.moveToFirst();
+                    albumName = albumNameCursor.getString(0);
+                    CursorUtils.free(albumNameCursor);
                 }
 
                 // Track count
@@ -798,11 +800,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
 
                 long trackCount = 0;
-                if (trackCountCursor != null) {
-                    if (trackCountCursor.moveToFirst()) {
-                        trackCount = trackCountCursor.getInt(0);
-                    }
-                    trackCountCursor.close();
+                if (CursorUtils.ifNotEmpty(trackCountCursor)) {
+                    trackCountCursor.moveToFirst();
+                    trackCount = trackCountCursor.getInt(0);
+                    CursorUtils.free(trackCountCursor);
                 }
 
                 // Total duration
@@ -811,11 +812,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         "SELECT SUM(" + Entities.Media.COLUMN_FIELD_DURATION + ") " +
                                 "FROM " + Entities.Media.TABLE_NAME + " " +
                                 "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
-                if (totalCursor != null) {
-                    if (totalCursor.moveToFirst()) {
-                        totalDuration = PlayerApplication.formatSecs(totalCursor.getInt(0));
-                    }
-                    totalCursor.close();
+
+                if (CursorUtils.ifNotEmpty(totalCursor)) {
+                    totalCursor.moveToFirst();
+                    totalDuration = PlayerApplication.formatSecs(totalCursor.getInt(0));
+                    CursorUtils.free(totalCursor);
                 }
 
                 // Album artist
@@ -826,11 +827,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 final Cursor artistsCursor = database.query(Entities.Media.TABLE_NAME, artistsColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_ARTIST, null, Entities.Media.COLUMN_FIELD_ARTIST);
                 final ArrayList<String> artists = new ArrayList<>();
 
-                if (artistsCursor != null) {
-                    while (artistsCursor.moveToNext()) {
-                        artists.add(artistsCursor.getString(0));
-                    }
-                    artistsCursor.close();
+                if (CursorUtils.ifNotEmpty(artistsCursor)) {
+                    artistsCursor.moveToFirst();
+                    artists.add(artistsCursor.getString(0));
+                    CursorUtils.free(artistsCursor);
                 }
 
                 // Genre
@@ -841,16 +841,36 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 final Cursor genreCursor = database.query(Entities.Media.TABLE_NAME, genresColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_GENRE, null, Entities.Media.COLUMN_FIELD_GENRE);
                 final ArrayList<String> genres = new ArrayList<>();
 
-                if (genreCursor != null) {
-                    while (genreCursor.moveToNext()) {
-                        genres.add(genreCursor.getString(0));
+                if (CursorUtils.ifNotEmpty(genreCursor)) {
+                    genreCursor.moveToNext();
+                    genres.add(genreCursor.getString(0));
+                    CursorUtils.free(genreCursor);
+                }
+
+
+                final int requestedFields[] = new int[]{
+                        SONG_URI,
+                };
+
+                final int COLUMN_URI = 0;
+
+                final Cursor albumCursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_ALBUM, (String) target);
+                boolean albumIsWritable = true;
+
+                if (CursorUtils.ifNotEmpty(albumCursor)) {
+                    while (albumCursor.moveToNext()) {
+                        final File mediaFile = PlayerApplication.uriToFile(albumCursor.getString(COLUMN_URI));
+                        if (!checkIfFileIsWritable(mediaFile)) {
+                            albumIsWritable = false;
+                        }
                     }
-                    genreCursor.close();
+
+                    CursorUtils.free(albumCursor);
                 }
 
 
                 // Data compilation
-                mediaMetadataList.add(new MediaMetadata(ALBUM_NAME,resources.getString(R.string.label_metadata_album_title), albumName, MediaMetadata.EditType.TYPE_STRING));
+                mediaMetadataList.add(new MediaMetadata(ALBUM_NAME,resources.getString(R.string.label_metadata_album_title), albumName, albumIsWritable ? MediaMetadata.EditType.TYPE_STRING : MediaMetadata.EditType.TYPE_READONLY));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(R.string.label_metadata_album_track_count), String.valueOf(trackCount), MediaMetadata.EditType.TYPE_READONLY));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(R.string.label_metadata_album_duration), totalDuration, MediaMetadata.EditType.TYPE_READONLY));
                 mediaMetadataList.add(new MediaMetadata(-1, resources.getQuantityString(R.plurals.label_metadata_album_artists, artists.size()), TextUtils.join(", ", artists), MediaMetadata.EditType.TYPE_READONLY));
@@ -858,7 +878,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                 break;
             case CONTENT_TYPE_MEDIA:
-                final int requestedFields[] = new int[] {
+                final int mediaColumns[] = new int[] {
                         SONG_URI,
                         SONG_DURATION,
                         SONG_BITRATE,
@@ -897,25 +917,19 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         R.string.label_metadata_media_disc,
                 };
 
-                Cursor cursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_MEDIA, (String) target);
+                Cursor cursor = buildMediaCursor(mediaColumns, new int[]{}, "", ContentType.CONTENT_TYPE_MEDIA, (String) target);
 
                 if (cursor != null && cursor.getCount() > 0) {
                     cursor.moveToFirst();
 
                     final File mediaFile = PlayerApplication.uriToFile(cursor.getString(0));
-                    boolean fileIsWritable = true;
-                    try {
-                        FileOutputStream outputStream = new FileOutputStream(mediaFile, true);
-                        outputStream.close();
-                    } catch (final Exception exception) {
-                        fileIsWritable = false;
-                    }
+                    boolean fileIsWritable = checkIfFileIsWritable(mediaFile);
 
                     for (int columnIndex = 0; columnIndex < cursor.getColumnCount(); columnIndex++) {
                         if (!cursor.isNull(columnIndex)) {
                             MediaMetadata.EditType editType;
 
-                            switch (requestedFields[columnIndex]) {
+                            switch (mediaColumns[columnIndex]) {
                                 case SONG_TITLE:
                                 case SONG_ARTIST:
                                 case SONG_ALBUM_ARTIST:
@@ -938,16 +952,16 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             }
 
                             String value = cursor.getString(columnIndex);
-                            if (requestedFields[columnIndex] == SONG_DURATION) {
+                            if (mediaColumns[columnIndex] == SONG_DURATION) {
                                 value = PlayerApplication.formatSecs(cursor.getInt(columnIndex));
                             }
 
-                            if (requestedFields[columnIndex] == SONG_URI) {
+                            if (mediaColumns[columnIndex] == SONG_URI) {
                                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(fieldLabelIds[columnIndex]), mediaFile.getParentFile().getAbsolutePath(), editType));
                                 mediaMetadataList.add(new MediaMetadata(-1, resources.getString(fieldLabelIds[columnIndex + 1]), mediaFile.getName(), editType));
                             }
                             else {
-                                mediaMetadataList.add(new MediaMetadata(requestedFields[columnIndex], resources.getString(fieldLabelIds[columnIndex + 1]), value, editType));
+                                mediaMetadataList.add(new MediaMetadata(mediaColumns[columnIndex], resources.getString(fieldLabelIds[columnIndex + 1]), value, editType));
                             }
                         }
                     }
@@ -969,7 +983,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 boolean albumChanged = false;
                 final Cursor albumCursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_ALBUM, (String) target);
 
-                if (CursorUtils.validCursor(albumCursor)) {
+                if (CursorUtils.ifNotEmpty(albumCursor)) {
                     while (albumCursor.moveToNext()) {
                         final String mediaUri = albumCursor.getString(COLUMN_URI);
 
@@ -1007,14 +1021,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         scanStart();
                     }
 
-                    CursorUtils.freeCursor(albumCursor);
+                    CursorUtils.free(albumCursor);
                 }
 
                 break;
             case CONTENT_TYPE_MEDIA:
                 final Cursor mediaCursor = buildMediaCursor(requestedFields, new int[]{}, "", ContentType.CONTENT_TYPE_MEDIA, (String) target);
 
-                if (CursorUtils.validCursor(mediaCursor)) {
+                if (CursorUtils.ifNotEmpty(mediaCursor)) {
                     while (mediaCursor.moveToNext()) {
                         final String mediaUri = mediaCursor.getString(COLUMN_URI);
 
@@ -1091,7 +1105,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         }
                     }
 
-                    CursorUtils.freeCursor(mediaCursor);
+                    CursorUtils.free(mediaCursor);
                 }
                 break;
         }
@@ -2366,15 +2380,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String songArtUri = null;
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
-        if (cursor != null && cursor.getCount() > 0) {
+        if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
 
             songArtUri = cursor.getString(COLUMN_ART_URI);
             usesEmbeddedArt = cursor.getInt(COLUMN_ART_IS_EMBEDDED) != 0;
-        }
-
-        if (cursor != null) {
-            cursor.close();
+            CursorUtils.free(cursor);
         }
 
         if (!TextUtils.isEmpty(songArtUri)) {
@@ -2416,14 +2427,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         boolean isEmbedded = false;
 
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
-        if (cursor != null && cursor.getCount() > 0) {
+        if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             artUri = cursor.getString(COLUMN_ART_URI);
             isEmbedded = cursor.getInt(COLUMN_ART_IS_EMBEDDED) == 1;
-        }
 
-        if (cursor != null) {
-            cursor.close();
+            CursorUtils.free(cursor);
         }
 
         try {
@@ -2468,14 +2477,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         boolean isEmbedded = false;
 
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
-        if (cursor != null && cursor.getCount() > 0) {
+        if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             albumArtUri = cursor.getString(COLUMN_ART_URI);
             isEmbedded = cursor.getInt(COLUMN_ART_IS_EMBEDDED) == 1;
-        }
-
-        if (cursor != null) {
-            cursor.close();
+            CursorUtils.free(cursor);
         }
 
         try {
@@ -2518,13 +2524,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         String albumArtUri = null;
 
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
-        if (cursor != null && cursor.getCount() > 0) {
+        if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             albumArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_ART + "/" + PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/" + cursor.getString(COLUMN_ART_ID);
-        }
-
-        if (cursor != null) {
-            cursor.close();
+            CursorUtils.free(cursor);
         }
 
         return albumArtUri;
@@ -2545,9 +2548,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             Cursor cursor = database.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
 
-            if (cursor != null && cursor.getCount() > 0) {
+            if (CursorUtils.ifNotEmpty(cursor)) {
                 cursor.moveToFirst();
                 artId = cursor.getLong(0);
+                CursorUtils.free(cursor);
             }
             else {
                 ContentValues artData = new ContentValues();
@@ -2556,16 +2560,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 artId = database.insert(Entities.Art.TABLE_NAME, null, artData);
             }
 
-            if (cursor != null) {
-                cursor.close();
-            }
-
-
             final String whereAlbumId[] = new String[] {
                     albumId
             };
-
-
 
             ContentValues contentValues = new ContentValues();
             contentValues.put(Entities.Album.COLUMN_FIELD_ALBUM_ART_ID, artId);
@@ -2664,12 +2661,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             final int COLUMN_EXTENSION = 0;
 
             final Cursor cursor = database.query(Entities.FileExtensions.TABLE_NAME, columns, null, null, null, null, null, null);
-            if (CursorUtils.validCursor(cursor)) {
+            if (CursorUtils.ifNotEmpty(cursor)) {
                 while (cursor.moveToNext()) {
                     scanContext.audioFilesExtensions.add(cursor.getString(COLUMN_EXTENSION));
                 }
 
-                CursorUtils.freeCursor(cursor);
+                CursorUtils.free(cursor);
             }
         }
 
@@ -2701,12 +2698,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 null,
                 null);
 
-        boolean exists = (cursor != null) && (cursor.getCount() > 0);
-        if (cursor != null) {
-            cursor.close();
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            CursorUtils.free(cursor);
+            return true;
         }
 
-        return exists;
+        return false;
     }
 
 
@@ -2721,9 +2718,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         scanning = true;
         final SQLiteDatabase database = openHelper.getWritableDatabase();
-
-        Cursor acceptCursor = null;
-        Cursor discardCursor = null;
 
         try {
             if (database != null) {
@@ -2744,11 +2738,11 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                 ArrayList<File> acceptList = new ArrayList<>();
 
-                acceptCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
-                discardCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
+                Cursor acceptCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionAccept, null, null, null);
+                Cursor discardCursor = database.query(Entities.ScanDirectory.TABLE_NAME, pathProjection, selection, selectionDiscard, null, null, null);
 
                 Map<String, Boolean> discardMap = new HashMap<>();
-                if (discardCursor != null && discardCursor.getCount() > 0) {
+                if (CursorUtils.ifNotEmpty(discardCursor)) {
                     database.beginTransaction();
 
                     while (discardCursor.moveToNext()) {
@@ -2766,15 +2760,18 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                     database.setTransactionSuccessful();
                     database.endTransaction();
+                    CursorUtils.free(discardCursor);
                 }
 
-                if (acceptCursor != null && acceptCursor.getCount() > 0) {
+                if (CursorUtils.ifNotEmpty(acceptCursor)) {
                     while (acceptCursor.moveToNext()) {
                         final String currentPath = acceptCursor.getString(0);
                         if (currentPath != null) {
                             acceptList.add(new File(currentPath));
                         }
                     }
+
+                    CursorUtils.free(acceptCursor);
                 }
 
                 // checking accept/discard paths and deleted medias for already scanned medias.
@@ -2807,126 +2804,124 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 final int COLUMN_LYRICS = 11;
 
                 Cursor medias = database.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
-                if (medias != null) {
-                    if (medias.getCount() > 0) {
-                        while (medias.moveToNext()) {
-                            final File currentMediaFile = PlayerApplication.uriToFile(medias.getString(1));
-                            final long currentMediaId = medias.getLong(0);
+                if (CursorUtils.ifNotEmpty(medias)) {
+                    while (medias.moveToNext()) {
+                        final File currentMediaFile = PlayerApplication.uriToFile(medias.getString(1));
+                        final long currentMediaId = medias.getLong(0);
 
-                            if (currentMediaFile != null) {
-                                final String currentMediaPath = currentMediaFile.getAbsolutePath();
+                        if (currentMediaFile != null) {
+                            final String currentMediaPath = currentMediaFile.getAbsolutePath();
 
-                                boolean needDeletion = true;
-                                boolean needDbUpdate = false;
+                            boolean needDeletion = true;
+                            boolean needDbUpdate = false;
 
-                                if (currentMediaFile.exists()) {
-                                    needDeletion = false;
-                                }
+                            if (currentMediaFile.exists()) {
+                                needDeletion = false;
+                            }
 
-                                // Test for accept paths
-                                if (!needDeletion) {
-                                    needDeletion = true;
-                                    for (File acceptPath : acceptList) {
-                                        if (currentMediaPath.startsWith(acceptPath.getAbsolutePath())) {
-                                            needDeletion = false;
-                                            break;
-                                        }
+                            // Test for accept paths
+                            if (!needDeletion) {
+                                needDeletion = true;
+                                for (File acceptPath : acceptList) {
+                                    if (currentMediaPath.startsWith(acceptPath.getAbsolutePath())) {
+                                        needDeletion = false;
+                                        break;
                                     }
                                 }
+                            }
 
-                                // Test for discard paths
-                                if (!needDeletion) {
-                                    for (Map.Entry<String, Boolean> discardPath : discardMap.entrySet()) {
-                                        if (currentMediaPath.startsWith(discardPath.getKey()) && discardPath.getValue()) {
-                                            needDeletion = true;
-                                            break;
-                                        }
+                            // Test for discard paths
+                            if (!needDeletion) {
+                                for (Map.Entry<String, Boolean> discardPath : discardMap.entrySet()) {
+                                    if (currentMediaPath.startsWith(discardPath.getKey()) && discardPath.getValue()) {
+                                        needDeletion = true;
+                                        break;
                                     }
                                 }
+                            }
 
-                                if (!needDeletion && !isAudioFile(scanContext, currentMediaFile)) {
-                                    needDeletion = true;
+                            if (!needDeletion && !isAudioFile(scanContext, currentMediaFile)) {
+                                needDeletion = true;
+                            }
+
+                            ContentValues tags = new ContentValues();
+                            if (!needDeletion) {
+                                JniMediaLib.readTags(currentMediaFile, tags);
+
+                                String title = tags.getAsString(Entities.Media.COLUMN_FIELD_TITLE);
+                                if (title != null && !title.equals(medias.getString(COLUMN_TITLE))) {
+                                    needDbUpdate = true;
                                 }
 
-                                ContentValues tags = new ContentValues();
-                                if (!needDeletion) {
-                                    JniMediaLib.readTags(currentMediaFile, tags);
-
-                                    String title = tags.getAsString(Entities.Media.COLUMN_FIELD_TITLE);
-                                    if (title != null && !title.equals(medias.getString(COLUMN_TITLE))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String artist = tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST);
-                                    if (!needDbUpdate && artist != null && !artist.equals(medias.getString(COLUMN_ARTIST))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String albumArtist = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
-                                    if (!needDbUpdate && albumArtist != null && !albumArtist.equals(medias.getString(COLUMN_ALBUM_ARTIST))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String album = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM);
-                                    if (!needDbUpdate && album != null && !album.equals(medias.getString(COLUMN_ALBUM))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String genre = tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE);
-                                    if (!needDbUpdate && genre != null && !genre.equals(medias.getString(COLUMN_GENRE))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    int year = tags.getAsInteger(Entities.Media.COLUMN_FIELD_YEAR);
-                                    if (!needDbUpdate && year != medias.getInt(COLUMN_YEAR)) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    int track = tags.getAsInteger(Entities.Media.COLUMN_FIELD_TRACK);
-                                    if (!needDbUpdate && track != medias.getInt(COLUMN_TRACK)) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    int disc = tags.getAsInteger(Entities.Media.COLUMN_FIELD_DISC);
-                                    if (!needDbUpdate && disc != medias.getInt(COLUMN_DISC)) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String comment = tags.getAsString(Entities.Media.COLUMN_FIELD_COMMENT);
-                                    if (!needDbUpdate && comment != null && !comment.equals(medias.getString(COLUMN_COMMENT))) {
-                                        needDbUpdate = true;
-                                    }
-
-                                    String lyrics = tags.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
-                                    if (!needDbUpdate && lyrics != null && !lyrics.equals(medias.getString(COLUMN_LYRICS))) {
-                                        needDbUpdate = true;
-                                    }
+                                String artist = tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST);
+                                if (!needDbUpdate && artist != null && !artist.equals(medias.getString(COLUMN_ARTIST))) {
+                                    needDbUpdate = true;
                                 }
 
-                                if (needDeletion) {
-                                    LogUtils.LOGI(TAG, "!Media : " + currentMediaPath);
-                                    database.delete(Entities.Media.TABLE_NAME, "_ID = ?", new String[]{String.valueOf(currentMediaId)});
-                                    database.delete(Entities.Art.TABLE_NAME, Entities.Art.COLUMN_FIELD_URI + " LIKE ?", new String[]{currentMediaPath + "%"});
+                                String albumArtist = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST);
+                                if (!needDbUpdate && albumArtist != null && !albumArtist.equals(medias.getString(COLUMN_ALBUM_ARTIST))) {
+                                    needDbUpdate = true;
                                 }
-                                else if (needDbUpdate) {
-                                    LogUtils.LOGI(TAG, "~Media : " + currentMediaPath);
 
-                                    tags.put(Entities.Media.COLUMN_FIELD_ARTIST_ID, getArtistId(tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST), scanContext));
-                                    tags.put(Entities.Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM), scanContext));
-                                    tags.put(Entities.Media.COLUMN_FIELD_GENRE_ID, getGenreId(tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE), scanContext));
-
-                                    tags.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
-                                    database.update(Entities.Media.TABLE_NAME, tags, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
+                                String album = tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM);
+                                if (!needDbUpdate && album != null && !album.equals(medias.getString(COLUMN_ALBUM))) {
+                                    needDbUpdate = true;
                                 }
+
+                                String genre = tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE);
+                                if (!needDbUpdate && genre != null && !genre.equals(medias.getString(COLUMN_GENRE))) {
+                                    needDbUpdate = true;
+                                }
+
+                                int year = tags.getAsInteger(Entities.Media.COLUMN_FIELD_YEAR);
+                                if (!needDbUpdate && year != medias.getInt(COLUMN_YEAR)) {
+                                    needDbUpdate = true;
+                                }
+
+                                int track = tags.getAsInteger(Entities.Media.COLUMN_FIELD_TRACK);
+                                if (!needDbUpdate && track != medias.getInt(COLUMN_TRACK)) {
+                                    needDbUpdate = true;
+                                }
+
+                                int disc = tags.getAsInteger(Entities.Media.COLUMN_FIELD_DISC);
+                                if (!needDbUpdate && disc != medias.getInt(COLUMN_DISC)) {
+                                    needDbUpdate = true;
+                                }
+
+                                String comment = tags.getAsString(Entities.Media.COLUMN_FIELD_COMMENT);
+                                if (!needDbUpdate && comment != null && !comment.equals(medias.getString(COLUMN_COMMENT))) {
+                                    needDbUpdate = true;
+                                }
+
+                                String lyrics = tags.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
+                                if (!needDbUpdate && lyrics != null && !lyrics.equals(medias.getString(COLUMN_LYRICS))) {
+                                    needDbUpdate = true;
+                                }
+                            }
+
+                            if (needDeletion) {
+                                LogUtils.LOGI(TAG, "!Media : " + currentMediaPath);
+                                database.delete(Entities.Media.TABLE_NAME, "_ID = ?", new String[]{String.valueOf(currentMediaId)});
+                                database.delete(Entities.Art.TABLE_NAME, Entities.Art.COLUMN_FIELD_URI + " LIKE ?", new String[]{currentMediaPath + "%"});
+                            }
+                            else if (needDbUpdate) {
+                                LogUtils.LOGI(TAG, "~Media : " + currentMediaPath);
+
+                                tags.put(Entities.Media.COLUMN_FIELD_ARTIST_ID, getArtistId(tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST), scanContext));
+                                tags.put(Entities.Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM), scanContext));
+                                tags.put(Entities.Media.COLUMN_FIELD_GENRE_ID, getGenreId(tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE), scanContext));
+
+                                tags.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
+                                database.update(Entities.Media.TABLE_NAME, tags, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
                             }
                         }
                     }
 
-                    medias.close();
+                    CursorUtils.free(medias);
                 }
 
 
-                if (acceptCursor != null && acceptCursor.getCount() > 0) {
+                if (acceptList.size() > 0) {
                     // Updating from filesystem
                     doSyncDirectoryScan(acceptList, discardMap, scanContext);
                 }
@@ -3026,14 +3021,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             if (database != null && database.inTransaction()) {
                 database.endTransaction();
             }
-
-            if (acceptCursor != null) {
-                acceptCursor.close();
-            }
-
-            if (discardCursor != null) {
-                discardCursor.close();
-            }
         }
 
         scanning = false;
@@ -3056,9 +3043,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         if (id == null) {
             Cursor artistCursor = database.query(Entities.Artist.TABLE_NAME, new String[] {Entities.Artist._ID}, Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " = ?", new String[] { artist }, null, null, null);
 
-            if (artistCursor != null && artistCursor.getCount() > 0) {
+            if (CursorUtils.ifNotEmpty(artistCursor)) {
                 artistCursor.moveToPosition(0);
                 id = artistCursor.getLong(0);
+                CursorUtils.free(artistCursor);
             }
             else {
                 ContentValues artistValues = new ContentValues();
@@ -3070,10 +3058,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             if (scanContext.artistIdMap != null) {
                 scanContext.artistIdMap.put(artist, id);
-            }
-
-            if (artistCursor != null) {
-                artistCursor.close();
             }
         }
 
@@ -3092,9 +3076,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             Cursor albumCursor = database.query(Entities.Album.TABLE_NAME, new String[]{Entities.Album._ID}, Entities.Album.COLUMN_FIELD_ALBUM_NAME + " = ?", new String[]{album}, null, null, null);
 
-            if (albumCursor != null && albumCursor.getCount() > 0) {
-                albumCursor.moveToPosition(0);
+            if (CursorUtils.ifNotEmpty(albumCursor)) {
+                albumCursor.moveToFirst();
                 id = albumCursor.getLong(0);
+                CursorUtils.free(albumCursor);
             }
             else {
                 ContentValues albumValues = new ContentValues();
@@ -3105,10 +3090,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             if (scanContext.albumIdMap != null) {
                 scanContext.albumIdMap.put(album, id);
-            }
-
-            if (albumCursor != null) {
-                albumCursor.close();
             }
         }
 
@@ -3126,9 +3107,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             final SQLiteDatabase database = openHelper.getWritableDatabase();
             Cursor genreCursor = database.query(Entities.Genre.TABLE_NAME, new String[]{Entities.Genre._ID}, Entities.Genre.COLUMN_FIELD_GENRE_NAME + " = ?", new String[]{genre}, null, null, null);
 
-            if (genreCursor != null && genreCursor.getCount() > 0) {
+            if (CursorUtils.ifNotEmpty(genreCursor)) {
                 genreCursor.moveToPosition(0);
                 id = genreCursor.getLong(0);
+                CursorUtils.free(genreCursor);
             }
             else {
                 ContentValues genreValues = new ContentValues();
@@ -3140,10 +3122,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             if (scanContext.genreIdMap != null) {
                 scanContext.genreIdMap.put(genre, id);
-            }
-
-            if (genreCursor != null) {
-                genreCursor.close();
             }
         }
 
@@ -3173,13 +3151,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
             final SQLiteDatabase database = openHelper.getWritableDatabase();
             Cursor coverCursor = database.query(Entities.Art.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
-            if (coverCursor != null) {
-                if (coverCursor.getCount() > 0) {
-                    coverCursor.moveToFirst();
-
-                    embeddedCoverId = coverCursor.getLong(0);
-                }
-                coverCursor.close();
+            if (CursorUtils.ifNotEmpty(coverCursor)) {
+                coverCursor.moveToFirst();
+                embeddedCoverId = coverCursor.getLong(0);
+                CursorUtils.free(coverCursor);
             }
 
             if (embeddedCoverId <= 0) {
@@ -3615,19 +3590,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             int addedCount = 0;
             Cursor cursor = database.rawQuery("SELECT COUNT(*) AS CNT " + selectStatement, selectionArgs);
 
-            if (cursor != null) {
-                if (cursor.getCount() == 1) {
-                    cursor.moveToFirst();
-                    addedCount = cursor.getInt(0);
+            if (CursorUtils.ifNotEmpty(cursor)) {
+                cursor.moveToFirst();
+                addedCount = cursor.getInt(0);
 
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
-                                    Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
-                                    "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
-                                    "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
-                }
+                database.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
+                                Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
+                                "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
+                                "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
 
-                cursor.close();
+                CursorUtils.free(cursor);
             }
 
             final String updateStatement =
@@ -3953,6 +3926,19 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public int getActionDescription() {
             return R.string.ni_songs_hint;
+        }
+    }
+
+
+
+
+    protected boolean checkIfFileIsWritable(final File file) {
+        try {
+            FileOutputStream outputStream = new FileOutputStream(file, true);
+            outputStream.close();
+            return true;
+        } catch (final Exception exception) {
+            return false;
         }
     }
 }

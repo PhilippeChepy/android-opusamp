@@ -31,6 +31,7 @@ import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
+import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.dialogs.MetadataDialog;
 import net.opusapp.player.utils.LogUtils;
@@ -457,12 +458,11 @@ public class MusicConnector {
 
                     Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, null);
                     long count = 0;
-                    if (cursor != null) {
-                        if (cursor.getCount() > 0) {
-                            cursor.moveToFirst();
-                            count = cursor.getLong(0);
-                        }
-                        cursor.close();
+                    if (CursorUtils.ifNotEmpty(cursor)) {
+                        cursor.moveToFirst();
+                        count = cursor.getLong(0);
+
+                        CursorUtils.free(cursor);
                     }
 
                     ContentValues contentValues = new ContentValues();

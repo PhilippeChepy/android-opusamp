@@ -1,8 +1,8 @@
 *** Bugs ***
 ~ A tester : édition de tags supprime la pochette embarquée ???
+! Pochettes depuis media opus.
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
-! Album éditables alors que toutes les pistes sont en lecture seule.
 
 *** Planned updates ***
 - Affichage info codecs/bitrate/samplerate
@@ -24,6 +24,7 @@ Updated: Changed playlist icon to a more appropriate one.
 Updated: Moved playback options (like equalizer and auto pause) to global overflow menu.
 Fixed: Refresh menu item not updated correctly.
 Fixed: Force close on some device with Android <= 4.2 (API 17).
+Fixed: Titles of albums containing at least one readonly media file are not anymore "editable".
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).

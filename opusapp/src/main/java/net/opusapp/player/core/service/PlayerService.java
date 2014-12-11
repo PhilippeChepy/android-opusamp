@@ -62,6 +62,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
+
+    // Empty playlist
+    public static final AbstractMediaManager.Media[] EMPTY_PLAYLIST = new AbstractMediaManager.Media[0];
+
+
     // Command
     public static final String COMMAND_KEY = "net.opusapp.player.core.service.COMMAND_KEY";
 
