@@ -3,7 +3,6 @@
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
 ! Album éditables alors que toutes les pistes sont en lecture seule.
-! Force close branchement jack ?
 
 *** Planned updates ***
 - Affichage info codecs/bitrate/samplerate

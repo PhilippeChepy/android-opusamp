@@ -150,7 +150,7 @@
     <string name="drawer_section_label_media_management">Media management</string>
     <string name="drawer_section_label_label_settings">Settings</string>
     <string name="drawer_item_label_manage_libraries">Libraries management</string>
-    <string name="drawer_item_label_library_soundfx">Sound effects</string>
+    <string name="drawer_item_label_library_soundfx">Equalizer</string>
     <string name="drawer_item_label_library_settings">Library settings</string>
     <string name="drawer_item_label_application_settings">Global settings</string>
     <string name="drawer_item_label_settings">Settings</string>

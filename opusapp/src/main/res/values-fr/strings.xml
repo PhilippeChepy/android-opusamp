@@ -151,7 +151,7 @@
     <string name="drawer_section_label_media_management">Gestion des médias</string>
     <string name="drawer_section_label_label_settings">Paramètres</string>
     <string name="drawer_item_label_manage_libraries">Gestion des bibliothèques</string>
-    <string name="drawer_item_label_library_soundfx">Effets sonores</string>
+    <string name="drawer_item_label_library_soundfx">Egualiseur</string>
     <string name="drawer_item_label_library_settings">Paramètres de la bibliothèque</string>
     <string name="drawer_item_label_application_settings">Paramètres généraux</string>
     <string name="drawer_item_label_settings">Paramètres</string>
