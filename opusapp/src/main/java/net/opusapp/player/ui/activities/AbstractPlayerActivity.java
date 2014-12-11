@@ -52,6 +52,7 @@ import net.opusapp.player.ui.activities.settings.EqualizerSettingsActivity;
 import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
+import net.opusapp.player.ui.dialogs.MetadataDialog;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RepeatingImageButton;
@@ -535,16 +536,23 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 }
             }
             else {
-                // TODO: create Runnable once.
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mCoverImageView.setImageBitmap(bitmap);
-                        if (mBackgroundCoverImageView != null) {
-                            mBackgroundCoverImageView.setImageBitmap(bitmap);
-                        }
-                    }
-                });
+                coverUpdateRunnable.bitmap = bitmap;
+                runOnUiThread(coverUpdateRunnable);
+            }
+        }
+
+        private CoverUpdateRunnable coverUpdateRunnable = new CoverUpdateRunnable();
+
+        class CoverUpdateRunnable implements Runnable {
+
+            public Bitmap bitmap;
+
+            @Override
+            public void run() {
+                mCoverImageView.setImageBitmap(bitmap);
+                if (mBackgroundCoverImageView != null) {
+                    mBackgroundCoverImageView.setImageBitmap(bitmap);
+                }
             }
         }
 
@@ -754,6 +762,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.menuitem_label_add_to_playlist);
         menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_CLEAR, 5, R.string.menuitem_label_remove_all);
         menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_DELETE, 6, R.string.menuitem_label_remove);
+        menu.add(Menu.NONE, PlayerApplication.CONTEXT_MENUITEM_DETAIL, 6, R.string.menuitem_label_details);
     }
 
     protected boolean doOnContextItemSelected(int itemId) {
@@ -774,6 +783,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
         else if (itemId == PlayerApplication.CONTEXT_MENUITEM_DELETE) {
             return doDeleteAction();
+        }
+        else if (itemId == PlayerApplication.CONTEXT_MENUITEM_DETAIL) {
+            return doDetailsAction();
         }
 
         return false;
@@ -843,6 +855,29 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             LogUtils.LOGService(TAG, "doDeleteAction", 0);
         }
         return false;
+    }
+
+    protected boolean doDetailsAction() {
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+        final MetadataDialog metadataDialog = new MetadataDialog(
+                this,
+                R.string.alert_dialog_title_media_properties,
+                provider,
+                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
+                playlistCursor.getString(COLUMN_SONG_ID));
+
+        metadataDialog.setOnEditDoneListener(new MetadataDialog.OnEditDoneListener() {
+
+            @Override
+            public void onEditDone(MetadataDialog dialog) {
+                playerServiceListener.onQueueChanged();
+            }
+        });
+        metadataDialog.show();
+
+        return true;
     }
 
     protected void doSetPlaylistPosition(int position) {

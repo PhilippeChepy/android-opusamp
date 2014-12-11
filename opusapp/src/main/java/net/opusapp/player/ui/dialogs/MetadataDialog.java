@@ -5,6 +5,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -43,6 +45,8 @@ public class MetadataDialog extends Dialog {
 
     private List<MediaMetadata> mMetadataList;
 
+    private OnEditDoneListener mEditDoneListener;
+
 
 
     public MetadataDialog(Context context, int title, AbstractMediaManager.Provider provider, AbstractMediaManager.Provider.ContentType contentType, String contentId) {
@@ -77,6 +81,10 @@ public class MetadataDialog extends Dialog {
     @Override
     public void show() {
         super.show();
+
+        if (mIsReadOnly) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        }
     }
 
     @Override
@@ -154,6 +162,9 @@ public class MetadataDialog extends Dialog {
                     }
 
                     mProvider.setMetadataList(mContentType, mContentId, mMetadataList);
+                    if (mEditDoneListener != null) {
+                        mEditDoneListener.onEditDone(MetadataDialog.this);
+                    }
                     setReadOnly(true);
                 }
             });
@@ -172,7 +183,27 @@ public class MetadataDialog extends Dialog {
                     }
                 }
             });
+
+            for (ViewHolder holder : mEditMapping) {
+                if (holder.mMetadata.mEditable != MediaMetadata.EditType.TYPE_READONLY) {
+                    holder.valueView.setFocusableInTouchMode(true);
+                    holder.valueView.requestFocus();
+
+                    InputMethodManager inputMethodManager = (InputMethodManager) PlayerApplication.context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    inputMethodManager.showSoftInput(holder.valueView, 0);
+                    break;
+                }
+            }
         }
+    }
+
+    public void setOnEditDoneListener(OnEditDoneListener editDoneListener) {
+        mEditDoneListener = editDoneListener;
+    }
+
+    public interface OnEditDoneListener {
+
+        public void onEditDone(final MetadataDialog dialog);
     }
 
     class ViewHolder {
