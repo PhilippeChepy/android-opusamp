@@ -18,13 +18,14 @@
 
 Update 18:
 Added: Management of EQ presets.
-Added: Current media duration in player UI.
-Added: Tag editing from current playlist UI.
-Updated: Changed playlist icon to a more appropriate one.
-Updated: Moved playback options (like equalizer and auto pause) to global overflow menu.
-Fixed: Refresh menu item not updated correctly.
+Added: Media duration in player UI.
+Added: Media properties from player UI.
+Updated: New playlist icon.
+Updated: Moved playback options to the app main menu.
+Fixed: Editable Albums where there is no media file editable.
+Fixed: "Reload" button not updated correctly in some situations.
+Fixed: Wrong text color in (not expanded) notification with Android > 5.0 (API 21).
 Fixed: Force close on some device with Android <= 4.2 (API 17).
-Fixed: Titles of albums containing at least one readonly media file are not anymore "editable".
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).
