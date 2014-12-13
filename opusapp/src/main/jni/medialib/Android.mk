@@ -23,6 +23,7 @@ SRCS :=  audio_engine/outputs/safetrack.c \
 	audio_engine/utils/circular_buffer.c \
 	audio_engine/processor/equalizer.c \
 	audio_engine/engine.c \
+	Base64.cpp \
 	JniCodec.c \
 	TagProvider.cpp
 

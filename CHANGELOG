@@ -20,11 +20,12 @@ Update 18:
 Added: Management of EQ presets.
 Added: Media duration in player UI.
 Added: Media properties from player UI.
+Added: support for OGG embedded covers.
 Updated: New playlist icon.
 Updated: Moved playback options to the app main menu.
 Fixed: Editable Albums where there is no media file editable.
 Fixed: "Reload" button not updated correctly in some situations.
-Fixed: Wrong text color in (not expanded) notification with Android > 5.0 (API 21).
+Fixed: Wrong text color in (small) notification with Android > 5.0 (API 21).
 Fixed: Force close on some device with Android <= 4.2 (API 17).
 
 Update 16:

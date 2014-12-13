@@ -17,6 +17,10 @@
 #include <apefile.h>
 #include <asffile.h>
 #include <flacfile.h>
+#include <oggflacfile.h>
+#include <opusfile.h>
+#include <speexfile.h>
+#include <vorbisfile.h>
 #include <mpcfile.h>
 #include <mp4file.h>
 #include <mpegfile.h>
@@ -33,6 +37,8 @@
 #include <taglib.h>
 #include <textidentificationframe.h>
 #include <tstring.h>
+
+#include "Base64.h"
 
 
 #include <jni.h>
@@ -79,6 +85,36 @@ bool apeGetCover(TagLib::APE::Tag* tag, TagLib::ByteVector &target, bool getCove
 			}
 			return true;
 		}
+	}
+
+	return false;
+}
+
+
+bool oggGetCover(TagLib::Ogg::XiphComment* tag, TagLib::ByteVector &target, bool getCover) {
+	const TagLib::Ogg::FieldListMap& listMap = tag->fieldListMap();
+
+	if (tag->contains("METADATA_BLOCK_PICTURE")) {
+		TagLib::String item = listMap["METADATA_BLOCK_PICTURE"].front();
+
+        if (getCover) {
+            std::string data = base64_decode(item.to8Bit(false));
+
+            LOG_ERROR(LOG_TAG, "METADATA_BLOCK_PICTURE = %s", data.c_str());
+            target = TagLib::FLAC::Picture(TagLib::ByteVector(data.c_str(), data.length())).data();
+        }
+
+        return true;
+	}
+	else if (tag->contains("COVERART")) {
+	    TagLib::String item = listMap["COVERART"].front();
+
+        if (getCover) {
+            std::string data = base64_decode(item.to8Bit(false));
+            target = TagLib::FLAC::Picture(TagLib::ByteVector(data.c_str(), data.length())).data();
+        }
+
+        return true;
 	}
 
 	return false;
@@ -161,6 +197,26 @@ bool findCoverArt(TagLib::FileRef &fileRef, TagLib::ByteVector &target, bool get
 		if (!found && file->hasAPETag()) {
 			found = apeGetCover(file->APETag(), target, getCover);
 		}
+	}
+	else if (TagLib::Ogg::FLAC::File* file = dynamic_cast<TagLib::Ogg::FLAC::File*>(sourceFile)) {
+	    if (file->tag()) {
+	        found = oggGetCover(file->tag(), target, getCover);
+	    }
+	}
+	else if (TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(sourceFile)) {
+	    if (file->tag()) {
+	        found = oggGetCover(file->tag(), target, getCover);
+	    }
+	}
+	else if (TagLib::Ogg::Speex::File* file = dynamic_cast<TagLib::Ogg::Speex::File*>(sourceFile)) {
+	    if (file->tag()) {
+	        found = oggGetCover(file->tag(), target, getCover);
+	    }
+	}
+	else if (TagLib::Ogg::Opus::File* file = dynamic_cast<TagLib::Ogg::Opus::File*>(sourceFile)) {
+	    if (file->tag()) {
+	        found = oggGetCover(file->tag(), target, getCover);
+	    }
 	}
 	else if (TagLib::MP4::File* file = dynamic_cast<TagLib::MP4::File*>(sourceFile)) {
 		if (file->tag()) {

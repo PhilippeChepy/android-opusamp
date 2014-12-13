@@ -2790,6 +2790,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                         Entities.Media.COLUMN_FIELD_COMMENT,
                         Entities.Media.COLUMN_FIELD_LYRICS,
+                        Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID,
+                        Entities.Media.COLUMN_FIELD_ART_ID
                 };
 
                 final int COLUMN_TITLE = 2;
@@ -2802,6 +2804,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 final int COLUMN_DISC = 9;
                 final int COLUMN_COMMENT = 10;
                 final int COLUMN_LYRICS = 11;
+                final int COLUMN_ORIGINAL_ART_ID = 12;
+                final int COLUMN_ART_ID = 13;
 
                 Cursor medias = database.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
                 if (CursorUtils.ifNotEmpty(medias)) {
@@ -2897,6 +2901,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 if (!needDbUpdate && lyrics != null && !lyrics.equals(medias.getString(COLUMN_LYRICS))) {
                                     needDbUpdate = true;
                                 }
+
+                                boolean hasEmbeddedArt = tags.getAsBoolean(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
+                                if (!needDbUpdate && hasEmbeddedArt &&
+                                        (medias.getInt(COLUMN_ORIGINAL_ART_ID) == 0 || medias.isNull(COLUMN_ORIGINAL_ART_ID))) {
+                                    needDbUpdate = true;
+                                }
                             }
 
                             if (needDeletion) {
@@ -2910,6 +2920,20 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 tags.put(Entities.Media.COLUMN_FIELD_ARTIST_ID, getArtistId(tags.getAsString(Entities.Media.COLUMN_FIELD_ARTIST), scanContext));
                                 tags.put(Entities.Media.COLUMN_FIELD_ALBUM_ID, getAlbumId(tags.getAsString(Entities.Media.COLUMN_FIELD_ALBUM), scanContext));
                                 tags.put(Entities.Media.COLUMN_FIELD_GENRE_ID, getGenreId(tags.getAsString(Entities.Media.COLUMN_FIELD_GENRE), scanContext));
+
+
+                                boolean hasEmbeddedArt = tags.getAsBoolean(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
+                                if (hasEmbeddedArt) {
+                                    long coverId = getCoverForFile(currentMediaFile, scanContext, hasEmbeddedArt);
+
+                                    if (coverId != 0) {
+                                        if (medias.getInt(COLUMN_ART_ID) == 0 || medias.isNull(COLUMN_ART_ID)) {
+                                            tags.put(Entities.Media.COLUMN_FIELD_ART_ID, coverId);
+                                        }
+
+                                        tags.put(Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID, coverId);
+                                    }
+                                }
 
                                 tags.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
                                 database.update(Entities.Media.TABLE_NAME, tags, "_ID = ?", new String[] { String.valueOf(currentMediaId) });
