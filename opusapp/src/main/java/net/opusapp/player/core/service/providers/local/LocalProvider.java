@@ -42,7 +42,6 @@ import net.opusapp.player.core.service.providers.local.ui.activities.SettingsAct
 import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.Base64;
 import net.opusapp.player.utils.LogUtils;
@@ -720,7 +719,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     @Override
     public Object getProperty(ContentType contentType, Object target, ContentProperty key) {
         switch (key) {
-            case CONTENT_ART_STREAM:
+            case CONTENT_ART_URI:
                 switch (contentType) {
                     case CONTENT_TYPE_ART:
                         return getArt((String) target);
@@ -1431,12 +1430,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.ALBUM_ART_URI:
                     usesArtTable = true;
-
-                    final String uriBeginning = ProviderImageDownloader.SCHEME_URI_PREFIX +
-                            ProviderImageDownloader.SUBTYPE_ART + "/" +
-                            PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/";
-
-                    columnsList.add("'" + uriBeginning + "' || " + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " AS " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID);
+                    columnsList.add(Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI);
                     break;
                 case AbstractMediaManager.Provider.ALBUM_ARTIST:
                     columnsList.add(Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_ALBUM_ARTIST);
@@ -1739,6 +1733,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         boolean manageMissingTags = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), true);
 
 
+        boolean useArtTable = false;
         boolean usesSongTable = false;
         boolean usesPlaylistEntryTable = false;
 
@@ -1756,12 +1751,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                     break;
                 case AbstractMediaManager.Provider.SONG_ART_URI:
                     usesSongTable = true;
-
-                    final String uriBeginning = ProviderImageDownloader.SCHEME_URI_PREFIX +
-                        ProviderImageDownloader.SUBTYPE_ART + "/" +
-                        PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/";
-
-                    columnsList.add("'" + uriBeginning + "' || " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID + " AS " + Entities.Media.COLUMN_FIELD_ART_ID);
+                    useArtTable = true;
+                    columnsList.add(Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI);
                     break;
                 case AbstractMediaManager.Provider.SONG_DURATION:
                     usesSongTable = true;
@@ -2125,6 +2116,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             }
         }
 
+        if (useArtTable) {
+            tableDescription +=
+                    " JOIN " + Entities.Art.TABLE_NAME +
+                            " ON " +
+                            Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
+                            Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID;
+        }
+
         final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database != null) {
             return database.query(tableDescription, columns, selection, selectionArgs, null, null, orderBy);
@@ -2212,10 +2211,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             currentRow[columnIndex] = PlayerApplication.fileToUri(currentFile);
                             break;
                         case SONG_ART_URI:
-                            currentRow[columnIndex] = ProviderImageDownloader.SCHEME_URI_PREFIX +
-                                    ProviderImageDownloader.SUBTYPE_STORAGE + "/" +
-                                    PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/" +
-                                    Base64.encodeBytes(PlayerApplication.fileToUri(currentFile).getBytes());
+                            currentRow[columnIndex] = getStorageArt(currentFile.getAbsolutePath());
                             break;
                         case SONG_DURATION:
                         case SONG_BITRATE:
@@ -2336,18 +2332,15 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
 
-    protected InputStream getStorageArt(String media) {
-        String targetPath;
+    protected String getStorageArt(String media) {
+        File mediaFile = PlayerApplication.uriToFile(media);
+        File cacheFile = JniMediaLib.getCoverDumpFile(mediaFile);
 
-        try {
-            targetPath = new String(Base64.decode(media));
-        }
-        catch (final IOException ioException) {
-            return null;
+        if (cacheFile != null && !cacheFile.exists()) {
+            cacheFile = JniMediaLib.dumpCover(mediaFile);
         }
 
-        File mediaFile = PlayerApplication.uriToFile(targetPath);
-        return JniMediaLib.getCoverInputStream(mediaFile);
+        return cacheFile != null ? PlayerApplication.fileToUri(cacheFile) : null;
     }
 
     protected InputStream getSongArt(String songId) {
@@ -2362,8 +2355,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID;
 
         final String[] columns = new String[] {
-                Entities.Art.COLUMN_FIELD_URI,
-                Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED
+                Entities.Art.COLUMN_FIELD_URI
         };
 
         final String selection = Entities.Media.TABLE_NAME + "." + Entities.Media._ID + " = ? ";
@@ -2373,84 +2365,55 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         };
 
         final int COLUMN_ART_URI = 0;
-        final int COLUMN_ART_IS_EMBEDDED = 1;
-
-        boolean usesEmbeddedArt = false;
-
 
         String songArtUri = null;
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
-
             songArtUri = cursor.getString(COLUMN_ART_URI);
-            usesEmbeddedArt = cursor.getInt(COLUMN_ART_IS_EMBEDDED) != 0;
             CursorUtils.free(cursor);
         }
 
         if (!TextUtils.isEmpty(songArtUri)) {
-            if (usesEmbeddedArt) {
-                return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(songArtUri));
+            try {
+                return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(songArtUri));
             }
-            else {
-                try {
-                    return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(songArtUri));
-                }
-                catch (final FileNotFoundException fileNotFoundException) {
-                    return null;
-                }
+            catch (final FileNotFoundException fileNotFoundException) {
+                return null;
             }
         }
         return null;
     }
 
-    protected InputStream getArt(String artId) {
+    protected String getArt(String artId) {
         final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database == null) {
             return null;
         }
 
-        final String tableName = Entities.Art.TABLE_NAME;
-
         final String[] columns = new String[]{
-                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI,
-                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED
+                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI
         };
 
         final int COLUMN_ART_URI = 0;
-        final int COLUMN_ART_IS_EMBEDDED = 1;
 
         String selection = Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = ? ";
         final String[] selectionArgs = new String[]{ artId };
 
         String artUri = null;
-        boolean isEmbedded = false;
 
-        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             artUri = cursor.getString(COLUMN_ART_URI);
-            isEmbedded = cursor.getInt(COLUMN_ART_IS_EMBEDDED) == 1;
 
             CursorUtils.free(cursor);
         }
 
-        try {
-            if (!TextUtils.isEmpty(artUri)) {
-                if (isEmbedded) {
-                    return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(artUri));
-                }
-                else {
-                    return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(artUri));
-                }
-            }
-            return null;
-        } catch (final FileNotFoundException fileNotFoundException) {
-            return null;
-        }
+        return artUri;
     }
 
-    protected InputStream getAlbumArt(String albumId) {
+    protected String getAlbumArt(String albumId) {
         final SQLiteDatabase database = openHelper.getReadableDatabase();
         if (database == null) {
             return null;
@@ -2463,40 +2426,24 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
         final String[] columns = new String[]{
-                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI,
-                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED
+                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI
         };
 
         final int COLUMN_ART_URI = 0;
-        final int COLUMN_ART_IS_EMBEDDED = 1;
 
         String selection = Entities.Album.TABLE_NAME + "." + Entities.Album._ID + " = ? ";
         final String[] selectionArgs = new String[]{ albumId };
 
         String albumArtUri = null;
-        boolean isEmbedded = false;
 
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             albumArtUri = cursor.getString(COLUMN_ART_URI);
-            isEmbedded = cursor.getInt(COLUMN_ART_IS_EMBEDDED) == 1;
             CursorUtils.free(cursor);
         }
 
-        try {
-            if (!TextUtils.isEmpty(albumArtUri)) {
-                if (isEmbedded) {
-                    return JniMediaLib.getCoverInputStream(PlayerApplication.uriToFile(albumArtUri));
-                }
-                else {
-                    return PlayerApplication.context.getContentResolver().openInputStream(Uri.parse(albumArtUri));
-                }
-            }
-            return null;
-        } catch (final FileNotFoundException fileNotFoundException) {
-            return null;
-        }
+        return albumArtUri;
     }
 
     @Override
@@ -2513,10 +2460,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
         final String[] columns = new String[]{
-                Entities.Art.TABLE_NAME + "." + Entities.Art._ID,
+                Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI,
         };
 
-        final int COLUMN_ART_ID = 0;
+        final int COLUMN_ART_URI = 0;
 
         String selection = Entities.Album.TABLE_NAME + "." + Entities.Album._ID + " = ? ";
         final String[] selectionArgs = new String[]{ albumId };
@@ -2526,7 +2473,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
-            albumArtUri = ProviderImageDownloader.SCHEME_URI_PREFIX + ProviderImageDownloader.SUBTYPE_ART + "/" + PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId()) + "/" + cursor.getString(COLUMN_ART_ID);
+            albumArtUri = cursor.getString(COLUMN_ART_URI);
             CursorUtils.free(cursor);
         }
 
@@ -3163,6 +3110,12 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         long coverId = 0;
 
         if (hasEmbeddedTag) {
+            final File cacheFile = JniMediaLib.getCoverDumpFile(sourceFile);
+
+            if (cacheFile == null) {
+                return 0;
+            }
+
             final String projection[] = new String[] {
                     Entities.Art._ID
             };
@@ -3170,7 +3123,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             final String selection = Entities.Art.COLUMN_FIELD_URI + " = ? ";
 
             final String selectionArgs[] = new String[] {
-                    PlayerApplication.fileToUri(sourceFile)
+                    PlayerApplication.fileToUri(cacheFile)
             };
 
             final SQLiteDatabase database = openHelper.getWritableDatabase();
@@ -3182,10 +3135,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             }
 
             if (embeddedCoverId <= 0) {
-                mediaCover.clear();
-                mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(sourceFile));
-                mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
-                embeddedCoverId = database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+                final File coverFile = JniMediaLib.dumpCover(sourceFile);
+
+                if (coverFile != null) {
+                    mediaCover.clear();
+                    mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(coverFile));
+                    mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
+                    embeddedCoverId = database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+                }
             }
         }
 

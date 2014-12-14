@@ -66,7 +66,6 @@ public class NormalImageLoader extends ImageLoader {
                 .diskCacheFileNameGenerator(instance.fileNameGenerator)
                 .memoryCacheExtraOptions(500, 500)
                 .memoryCacheSizePercentage(20)
-                .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
                 .defaultDisplayImageOptions(displayImageOptions)
                 .build();
 

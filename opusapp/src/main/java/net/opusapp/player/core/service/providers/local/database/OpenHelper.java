@@ -27,7 +27,7 @@ public class OpenHelper extends SQLiteOpenHelper {
     public static final String TAG = OpenHelper.class.getSimpleName();
 
 
-    private final static int DATABASE_VERSION = 2;
+    private final static int DATABASE_VERSION = 3;
 
     private int mProviderId;
 
@@ -65,10 +65,8 @@ public class OpenHelper extends SQLiteOpenHelper {
         Entities.PlaylistEntry.createTable(database);
         Entities.Media.createTable(database);
         Entities.ScanDirectory.createTable(database);
+        Entities.FileExtensions.createTable(database);
 
-        if (DATABASE_VERSION >= 2) {
-            Entities.FileExtensions.createTable(database);
-        }
 
 
         /// Playlists
@@ -98,6 +96,8 @@ public class OpenHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         if (oldVersion == 1 && newVersion == 2) {
+            LogUtils.LOGE(TAG, "upgrading local provider database (version 1 -> 2)");
+
             Entities.FileExtensions.createTable(database);
 
             ContentValues contentValues = new ContentValues();
@@ -107,8 +107,48 @@ public class OpenHelper extends SQLiteOpenHelper {
                 database.insert(Entities.FileExtensions.TABLE_NAME, null, contentValues);
                 contentValues.clear();
             }
+            oldVersion = 2;
         }
-        else {
+
+        if (oldVersion == 2 && newVersion == 3) {
+            LogUtils.LOGE(TAG, "upgrading local provider database (version 2 -> 3)");
+
+            database.execSQL(
+                    "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
+                            Entities.Media.COLUMN_FIELD_ART_ID + " = NULL " +
+                            "WHERE " + Entities.Media.COLUMN_FIELD_ART_ID + " IN (" +
+                            " SELECT " + Entities.Art._ID +
+                            " FROM " + Entities.Art.TABLE_NAME +
+                            " WHERE " + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1)");
+
+            database.execSQL(
+                    "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
+                            Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = NULL " +
+                            "WHERE " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " IN (" +
+                            " SELECT " + Entities.Art._ID +
+                            " FROM " + Entities.Art.TABLE_NAME +
+                            " WHERE " + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1)");
+
+            database.execSQL(
+                    "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                            Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = NULL " +
+                            "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " IN (" +
+                            " SELECT " + Entities.Art._ID +
+                            " FROM " + Entities.Art.TABLE_NAME +
+                            " WHERE " + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1)");
+
+            database.execSQL(
+                    "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                            Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = NULL " +
+                            "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " IN (" +
+                            " SELECT " + Entities.Art._ID +
+                            " FROM " + Entities.Art.TABLE_NAME +
+                            " WHERE " + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1)");
+
+            oldVersion = 3;
+        }
+
+        if (oldVersion != newVersion) {
             Entities.Album.destroyTable(database);
             Entities.AlbumArtist.destroyTable(database);
             Entities.Artist.destroyTable(database);
@@ -120,9 +160,7 @@ public class OpenHelper extends SQLiteOpenHelper {
             Entities.Media.destroyTable(database);
             Entities.ScanDirectory.destroyTable(database);
 
-            if (DATABASE_VERSION >= 2) {
-                Entities.FileExtensions.destroyTable(database);
-            }
+            Entities.FileExtensions.destroyTable(database);
 
             onCreate(database);
         }

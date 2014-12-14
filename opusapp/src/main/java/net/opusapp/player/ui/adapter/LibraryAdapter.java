@@ -165,14 +165,10 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                 switch (source) {
                     case LibraryAdapterFactory.ADAPTER_SONG:
                     case LibraryAdapterFactory.ADAPTER_PLAYLIST_DETAILS:
-                        imageUri = cursor.getString(artUriColumn);
-                        break;
                     case LibraryAdapterFactory.ADAPTER_ALBUM:
                     case LibraryAdapterFactory.ADAPTER_ALBUM_SIMPLE:
-                        imageUri = cursor.getString(artUriColumn);
-                        break;
                     case LibraryAdapterFactory.ADAPTER_STORAGE:
-                        imageUri = cursor.getString(idColumn);
+                        imageUri = cursor.getString(artUriColumn);
                         break;
                 }
 

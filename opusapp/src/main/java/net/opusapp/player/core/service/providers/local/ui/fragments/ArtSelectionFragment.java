@@ -28,7 +28,6 @@ import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.ProviderImageDownloader;
 import net.opusapp.player.ui.views.CustomTextView;
 import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.LogUtils;
@@ -352,16 +351,11 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                 viewholder = (GridViewHolder)convertView.getTag();
             }
 
-            String imageName = cursor.getString(COLUMN_URI);
-            imageName = imageName.substring(imageName.lastIndexOf("/") + 1);
-
-            final String imageUri =
-                    ProviderImageDownloader.SCHEME_URI_PREFIX +
-                            ProviderImageDownloader.SUBTYPE_ART + "/" +
-                            PlayerApplication.getManagerIndex(providerId) + "/" +
-                            cursor.getString(COLUMN_ID);
+            final String imageUri = cursor.getString(COLUMN_URI);
+            final String imageName = imageUri.substring(imageUri.lastIndexOf("/") + 1);
 
             viewholder.lineOne.setText(imageName);
+
             PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewholder.image);
             viewholder.image.setImageResource(R.drawable.no_art_small);
             PlayerApplication.thumbnailImageLoader.displayImage(imageUri, viewholder.image);

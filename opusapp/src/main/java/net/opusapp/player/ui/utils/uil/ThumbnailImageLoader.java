@@ -66,7 +66,6 @@ public class ThumbnailImageLoader extends ImageLoader {
                 .diskCacheFileNameGenerator(instance.fileNameGenerator)
                 .memoryCacheExtraOptions(100, 100)
                 .memoryCacheSizePercentage(20)
-                .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
                 .defaultDisplayImageOptions(displayImageOptions)
                 .build();
 

@@ -15,19 +15,17 @@ package net.opusapp.player.utils.jni;
 import android.content.ContentValues;
 
 import net.opusapp.player.core.service.providers.local.database.Entities;
-import net.opusapp.player.core.service.providers.local.utils.CoverInputStream;
+import net.opusapp.player.ui.utils.PlayerApplication;
+import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
-import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public abstract class JniMediaLib {
 
     public static final String TAG = JniMediaLib.class.getSimpleName();
-
-
-    public static final int TSC_FORMAT_VORBIS = 1;
-
-
 
 	private static int tagDuration;
 	private static int tagBitrate;
@@ -51,6 +49,7 @@ public abstract class JniMediaLib {
 
 
     // Native engine context
+    @SuppressWarnings("unused")
     private long engineContext = 0;
 
 
@@ -91,17 +90,11 @@ public abstract class JniMediaLib {
 
     private native static void tagsRead(String path);
 
+    private native static int saveCover(String path, String savePath);
+
     private native static void tagsWrite(String path);
 
-    public native static long coverInputStreamOpen(String path);
 
-    public native static long coverInputStreamClose(long nativeContext);
-
-    public native static int coverInputStreamReadSingle(long nativeContext, int position);
-
-    public native static int coverInputStreamReadGetCount(long nativeContext);
-
-    public native static int coverInputStreamReadArray(long nativeContext, byte target[], int off, int len, int nativePos);
 
 
     @SuppressWarnings("unused")
@@ -148,7 +141,7 @@ public abstract class JniMediaLib {
             contentValues.put(Entities.Media.COLUMN_FIELD_SAMPLE_RATE, tagSamplerate);
             contentValues.put(Entities.Media.COLUMN_FIELD_TITLE, tagTitle);
             contentValues.put(Entities.Media.COLUMN_FIELD_ARTIST, tagArtist);
-            //contentValues.put(Media.COLUMN_FIELD_COMPOSER, tagComposer);
+            //contentValues.put(Entities.Media.COLUMN_FIELD_COMPOSER, tagComposer);
             contentValues.put(Entities.Media.COLUMN_FIELD_ALBUM_ARTIST, tagAlbumArtist);
             contentValues.put(Entities.Media.COLUMN_FIELD_ALBUM, tagAlbum);
             contentValues.put(Entities.Media.COLUMN_FIELD_GENRE, tagGenre);
@@ -161,6 +154,51 @@ public abstract class JniMediaLib {
             contentValues.put(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
         }
 	}
+
+    public static File dumpCover(File file) {
+        final File targetPath = getCoverDumpFile(file);
+
+        if (targetPath == null || (targetPath.exists() && targetPath.length() > 0)) {
+            return targetPath;
+        }
+
+        if (saveCover(file.getAbsolutePath(), targetPath.getAbsolutePath()) >= 0) {
+            return targetPath;
+        }
+
+        return null;
+    }
+
+    public static File getCoverDumpFile(File file) {
+        final int RADIX = 10 + 26; // 10 digits + 26 letters
+
+        byte[] md5 = getHash(file.getAbsolutePath().getBytes());
+        BigInteger bi = new BigInteger(md5).abs();
+
+        File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
+        if (!basePath.exists()) {
+            if (!basePath.mkdirs()) {
+                return null;
+            }
+        }
+
+        return new File(basePath + File.separator + bi.toString(RADIX));
+    }
+
+    private static byte[] getHash(byte[] data) {
+        final String HASH_ALGORITHM = "MD5";
+
+        byte[] hash = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
+            digest.update(data);
+            hash = digest.digest();
+        } catch (final NoSuchAlgorithmException exception) {
+            LogUtils.LOGException(TAG, "getHash", 0, exception);
+        }
+
+        return hash;
+    }
 
     public static void writeTags(File file, ContentValues contentValues) {
         synchronized (threadLocker) {
@@ -181,13 +219,5 @@ public abstract class JniMediaLib {
 
             tagsWrite(file.getAbsolutePath());
         }
-    }
-
-    public static InputStream getCoverInputStream(File file) {
-        if (file != null) {
-            return new CoverInputStream(file.getAbsolutePath());
-        }
-
-        return null;
     }
 }

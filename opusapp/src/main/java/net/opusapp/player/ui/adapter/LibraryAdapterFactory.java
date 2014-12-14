@@ -139,8 +139,8 @@ public class LibraryAdapterFactory {
                                 R.id.line_one,
                                 R.id.line_two
                         },
+                        columnIndexes[0],
                         columnIndexes[3],
-                        -1,
                         R.drawable.no_art_small,
                         R.id.image,
                         columnIndexes[4]);

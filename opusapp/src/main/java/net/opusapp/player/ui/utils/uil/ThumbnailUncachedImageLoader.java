@@ -37,7 +37,6 @@ public class ThumbnailUncachedImageLoader extends ImageLoader {
         ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
                 .threadPoolSize(1)
                 .threadPriority(Thread.MIN_PRIORITY)
-                .imageDownloader(new ProviderImageDownloader(PlayerApplication.context))
                 .defaultDisplayImageOptions(displayImageOptions)
                 .build();
 

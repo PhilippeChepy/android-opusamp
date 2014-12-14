@@ -213,14 +213,13 @@ public interface AbstractMediaManager {
 
         public enum ContentProperty {
             CONTENT_VISIBILITY_TOGGLE,          /* write only */
-            CONTENT_ART_URI,                    /* write only */
+            CONTENT_ART_URI,                    /* read/write */
             CONTENT_ART_ORIGINAL_URI,           /* write only */
-            CONTENT_ART_STREAM,                 /* read only */
 
             CONTENT_STORAGE_UPDATE_VIEW,        /* write only */
             CONTENT_STORAGE_HAS_PARENT,         /* read only */
             CONTENT_STORAGE_HAS_CHILD,          /* read only */
-            CONTENT_STORAGE_CURRENT_LOCATION,   /* read/write only */
+            CONTENT_STORAGE_CURRENT_LOCATION,   /* read/write */
             CONTENT_STORAGE_RESOURCE_POSITION,  /* read only */
         }
 
