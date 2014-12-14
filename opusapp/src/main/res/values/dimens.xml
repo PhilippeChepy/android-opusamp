@@ -10,6 +10,7 @@
     <dimen name="audio_controls_info_container_padding">16dip</dimen>
     <dimen name="audio_controls_artwork_padding">20dip</dimen>
     <dimen name="audio_controls_controls_height">56dip</dimen>
+    <dimen name="audio_controls_controls_and_seek_height">96dip</dimen>
     <dimen name="audio_controls_controls_height_2">112dip</dimen>
     <dimen name="audio_controls_seek_bar_padding">10dip</dimen>
     <dimen name="audio_controls_button_container_padding">2dip</dimen>

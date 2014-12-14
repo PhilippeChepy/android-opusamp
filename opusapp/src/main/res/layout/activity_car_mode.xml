@@ -26,75 +26,75 @@
             android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/upper_panel"
+                android:id="@+id/audio_player_header"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="68.0dp"
                 android:layout_margin="10dp"
-                android:orientation="horizontal" >
+                android:gravity="center"
+                android:orientation="vertical" >
 
-                <LinearLayout
-                    android:id="@+id/audio_player_header"
-                    android:layout_width="0dp"
-                    android:layout_height="68.0dp"
-                    android:layout_weight="75"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:orientation="horizontal" >
+                <net.opusapp.player.ui.views.CustomTextView
+                    android:id="@+id/audio_player_track_name"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:paddingBottom="2.0dip"
+                    android:singleLine="true"
+                    android:textColor="#ff000000"
+                    android:textIsSelectable="false"
+                    android:textSize="16.0dip" />
 
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_track_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:paddingBottom="2.0dip"
-                        android:singleLine="true"
-                        android:textColor="#ff000000"
-                        android:textIsSelectable="false"
-                        android:textSize="16.0dip" />
+                <net.opusapp.player.ui.views.CustomTextView
+                    android:id="@+id/audio_player_artist_name"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="#ff999999"
+                    android:textIsSelectable="false"
+                    android:textSize="16.0dip" />
 
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_artist_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:singleLine="true"
-                        android:textColor="#ff999999"
-                        android:textIsSelectable="false"
-                        android:textSize="16.0dip" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="68.0dp"
-                    android:layout_weight="25"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_time"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:textIsSelectable="false"
-                        android:textSize="23.0dip" />
-
-                    <net.opusapp.player.ui.views.CustomTextView
-                        android:id="@+id/audio_player_time_total"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:textIsSelectable="false"
-                        android:textSize="23.0dip" />
-                </LinearLayout>
             </LinearLayout>
 
-            <SeekBar
-                android:id="@+id/progress"
+            <RelativeLayout
                 android:layout_width="fill_parent"
-                android:layout_height="40dp"
-                android:minHeight="40dp"
-                android:maxHeight="40dp"
-                android:padding="0dp" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/audio_player_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="5dp" />
+
+                <TextView
+                    android:id="@+id/audio_player_time_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginEnd="5dp"/>
+
+                <SeekBar
+                    android:id="@+id/progress"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_toRightOf="@id/audio_player_time"
+                    android:layout_toEndOf="@id/audio_player_time"
+                    android:layout_toLeftOf="@id/audio_player_time_total"
+                    android:layout_toStartOf="@id/audio_player_time_total" />
+
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"

@@ -114,8 +114,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     /*
         Player Ui
      */
-    private View mCoverContainer;
-
     private View mPlaylistContainer;
 
 
@@ -190,7 +188,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         // Actionbar
         PlayerApplication.applyActionBar(this);
 
-        mCoverContainer = findViewById(R.id.square_view_container);
         mPlaylistContainer = findViewById(R.id.playlist_container);
 
         mCoverImageView = (ImageView) findViewById(R.id.player_art);
@@ -292,7 +289,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
 
         if (mTotalTimeTextView != null) {
-            mTotalTimeTextView.setTextColor(PlayerApplication.getBackgroundColor());
+            mTotalTimeTextView.setTextColor(PlayerApplication.getAccentColor());
         }
     }
 
@@ -707,8 +704,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && mPlaylistContainer != null) {
                 mPlaylistContainer.setVisibility(saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
-                if (mCoverContainer != null) {
-                    mCoverContainer.setVisibility(!saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
+                if (mCoverImageView != null) {
+                    mCoverImageView.setVisibility(!saved_state_playlist_is_visible ? View.VISIBLE : View.INVISIBLE);
                 }
             }
 
