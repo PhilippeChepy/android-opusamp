@@ -12,9 +12,7 @@
  */
 package net.opusapp.player.ui.utils.uil;
 
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.preference.PreferenceManager;
 
 import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -56,13 +54,13 @@ public class ThumbnailImageLoader extends ImageLoader {
                 .considerExifParams(false)
                 .build();
 
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+        int thumbnailedImageCacheSize = PlayerApplication.getIntPreference(R.string.preference_key_thumbnail_cache_size, 20);
 
         ImageLoaderConfiguration loaderConfiguration = new ImageLoaderConfiguration.Builder(PlayerApplication.context)
                 .threadPoolSize(1)
                 .threadPriority(Thread.MIN_PRIORITY)
                 .diskCacheExtraOptions(100, 100, null)
-                .diskCacheSize(Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_thumbnail_cache_size), "20")) * 1024 * 1024)
+                .diskCacheSize(thumbnailedImageCacheSize * 1024 * 1024)
                 .diskCacheFileNameGenerator(instance.fileNameGenerator)
                 .memoryCacheExtraOptions(100, 100)
                 .memoryCacheSizePercentage(20)

@@ -13,10 +13,8 @@
 package net.opusapp.player.ui.activities.settings;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -32,6 +30,7 @@ import net.opusapp.player.ui.utils.uil.NormalImageLoader;
 import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.views.ColorSchemeDialog;
 import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
+import net.opusapp.player.utils.jni.JniMediaLib;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -56,22 +55,9 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
         setOnlineHelpListener();
 		setOpenSourceLicensesListener();
 
-        final SharedPreferences sharedPrefs = getPreferences(Context.MODE_PRIVATE);
-
-        int cacheSize = sharedPrefs.getInt(getString(R.string.preference_key_cache_size), 30);
-        int thumbnailCacheSize = sharedPrefs.getInt(getString(R.string.preference_key_thumbnail_cache_size), 20);
-
-/*
-        boolean autoPlay = sharedPrefs.getBoolean(getString(R.string.preference_key_plug_auto_play), true);
-        boolean autoPause = sharedPrefs.getBoolean(getString(R.string.preference_key_pause_call), true);
-
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putInt(getString(R.string.preference_key_cache_size), cacheSize);
-        editor.putInt(getString(R.string.preference_key_thumbnail_cache_size), thumbnailCacheSize);
-        editor.putBoolean(getString(R.string.preference_key_plug_auto_play), autoPlay);
-        editor.putBoolean(getString(R.string.preference_key_pause_call), autoPause);
-        editor.apply();
-*/
+        int cacheSize = PlayerApplication.getIntPreference(R.string.preference_key_cache_size, 30);
+        int thumbnailCacheSize = PlayerApplication.getIntPreference(R.string.preference_key_thumbnail_cache_size, 20);
+        int embeddedArtCacheSize = PlayerApplication.getIntPreference(R.string.preference_key_embedded_art_cache_size, 100);
 
         final ColorPickerPreference primaryColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_primary_color));
         primaryColorPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -144,6 +130,17 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 thumbCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
                 ThumbnailImageLoader.init();
+                return true;
+            }
+        });
+
+        final Preference embeddedArtCacheSizePref = findPreference(getString(R.string.preference_key_embedded_art_cache_size));
+        embeddedArtCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), embeddedArtCacheSize));
+        embeddedArtCacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                embeddedArtCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
+                JniMediaLib.embeddedCoverCleanCache();
                 return true;
             }
         });
@@ -268,12 +265,18 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
         File normalCacheDirectory = NormalImageLoader.getInstance().getDiskCache().getDirectory();
         File thumbnailCacheDirectory = ThumbnailImageLoader.getInstance().getDiskCache().getDirectory();
 
-        final Double allocated = (double)(folderSize(normalCacheDirectory) + folderSize(thumbnailCacheDirectory))/ (double)(1048576);
+        double allocated;
+        if (normalCacheDirectory.getAbsolutePath().equals(thumbnailCacheDirectory.getAbsolutePath())) {
+            allocated = folderSize(normalCacheDirectory);
+        }
+        else {
+            allocated = folderSize(normalCacheDirectory) + folderSize(thumbnailCacheDirectory);
+        }
 
         final DecimalFormat decimalFormat = new DecimalFormat();
         decimalFormat.setMaximumFractionDigits(2);
         decimalFormat.setMinimumFractionDigits(2);
 
-        cacheCleanup.setSummary(String.format(getString(R.string.unit_MB), decimalFormat.format(allocated)));
+        cacheCleanup.setSummary(String.format(getString(R.string.unit_MB), decimalFormat.format(allocated / 1048576.0d)));
     }
 }

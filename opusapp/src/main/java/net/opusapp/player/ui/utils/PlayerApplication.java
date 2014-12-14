@@ -248,7 +248,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
                     currentProvider.getPlayer().playerStop();
                 }
 
-                // TODO: check if working...
                 if (currentProvider.getProvider().scanIsRunning()) {
                     currentProvider.getProvider().scanCancel();
                 }
@@ -995,4 +994,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
 	public static String getVariousArtists() {
         return PlayerApplication.context.getString(R.string.preference_default_various_artists);
 	}
+
+    public static int getIntPreference(final int preferenceKeyResId, int defaultValue) {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(preferenceKeyResId), String.valueOf(defaultValue)));
+    }
 }

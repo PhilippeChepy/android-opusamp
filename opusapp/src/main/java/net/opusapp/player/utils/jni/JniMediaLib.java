@@ -13,7 +13,10 @@
 package net.opusapp.player.utils.jni;
 
 import android.content.ContentValues;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
+import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
@@ -22,6 +25,8 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public abstract class JniMediaLib {
 
@@ -155,21 +160,22 @@ public abstract class JniMediaLib {
         }
 	}
 
-    public static File dumpCover(File file) {
-        final File targetPath = getCoverDumpFile(file);
+    public static File embeddedCoverDump(File file) {
+        final File targetPath = embeddedCoverCacheFile(file);
 
         if (targetPath == null || (targetPath.exists() && targetPath.length() > 0)) {
             return targetPath;
         }
 
         if (saveCover(file.getAbsolutePath(), targetPath.getAbsolutePath()) >= 0) {
+            embeddedCoverCleanCache();
             return targetPath;
         }
 
         return null;
     }
 
-    public static File getCoverDumpFile(File file) {
+    public static File embeddedCoverCacheFile(File file) {
         final int RADIX = 10 + 26; // 10 digits + 26 letters
 
         byte[] md5 = getHash(file.getAbsolutePath().getBytes());
@@ -183,6 +189,37 @@ public abstract class JniMediaLib {
         }
 
         return new File(basePath + File.separator + bi.toString(RADIX));
+    }
+
+    public static synchronized void embeddedCoverCleanCache() {
+        if (mCoverCacheCleanupThread != null) {
+            mCoverCacheCleanupThread.mTerminated = true;
+
+            while (true) {
+                try {
+                    mCoverCacheCleanupThread.join();
+                    mCoverCacheCleanupThread = null;
+                    break;
+                }
+                catch (final InterruptedException interruptedException) {
+                    LogUtils.LOGException(TAG, "embeddedCoverCleanCache", 0, interruptedException);
+                }
+            }
+        }
+
+        mCoverCacheCleanupThread = new CoverCacheCleanupThread();
+        mCoverCacheCleanupThread.start();
+    }
+
+    private static long folderSize(File directory) {
+        long length = 0;
+        for (File file : directory.listFiles()) {
+            if (file.isFile())
+                length += file.length();
+            else
+                length += folderSize(file);
+        }
+        return length;
     }
 
     private static byte[] getHash(byte[] data) {
@@ -218,6 +255,56 @@ public abstract class JniMediaLib {
             tagLyrics = contentValues.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
 
             tagsWrite(file.getAbsolutePath());
+        }
+    }
+
+
+    private static CoverCacheCleanupThread mCoverCacheCleanupThread;
+
+    static class CoverCacheCleanupThread extends Thread {
+
+        public boolean mTerminated;
+
+        @Override
+        public void run() {
+            mTerminated = false;
+
+            File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
+            final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+
+            int embeddedArtCacheSize = Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_embedded_art_cache_size), "20")) * 1024 * 1024;
+
+            if (folderSize(basePath) > embeddedArtCacheSize) {
+                final File[] fileList = basePath.listFiles();
+
+                Arrays.sort(fileList, new Comparator<File>() {
+
+                    @Override
+                    public int compare(File lhs, File rhs) {
+                        if (lhs.lastModified() == rhs.lastModified()) {
+                            return 0;
+                        }
+
+                        if (lhs.lastModified() > rhs.lastModified()) {
+                            return 1;
+                        }
+
+                        return -1;
+                    }
+                });
+
+                for (final File file : fileList) {
+                    if (mTerminated) {
+                        break;
+                    }
+
+                    if (file.delete()) {
+                        if (folderSize(basePath) < embeddedArtCacheSize) {
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 }

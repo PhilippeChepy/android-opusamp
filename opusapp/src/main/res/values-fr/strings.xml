@@ -58,6 +58,7 @@
     <string name="preference_category_title_cache_size">Taille du cache</string>
     <string name="preference_title_cache_size">Pochettes</string>
     <string name="preference_title_thumbnail_cache_size">Mignatures de pochettes</string>
+    <string name="preference_title_embedded_art_cache_size">Pochettes embarquées</string>
     <string name="preference_category_title_maintenance">Opérations de maintenance</string>
     <string name="preference_title_optimize_database">Optimiser la base de données</string>
     <string name="preference_title_clear_cache">Nettoyer la mémoire temporaire des image</string>

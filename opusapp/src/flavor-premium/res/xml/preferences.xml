@@ -4,7 +4,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_ui"
-        android:icon="@drawable/ic_apps_grey600_48dp" >
+        android:icon="@drawable/ic_apps_grey600_36dp" >
 
         <Preference
             android:key="@string/preference_key_color_presets"
@@ -40,7 +40,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_storage"
-        android:icon="@drawable/ic_storage_grey600_48dp" >
+        android:icon="@drawable/ic_storage_grey600_36dp" >
 
         <PreferenceCategory
             android:title="@string/preference_category_title_cache_size">
@@ -58,6 +58,13 @@
                 android:key="@string/preference_key_thumbnail_cache_size"
                 android:defaultValue="20"
                 android:title="@string/preference_title_thumbnail_cache_size" />
+
+            <EditTextPreference
+                android:digits="1234567890"
+                android:inputType="number"
+                android:key="@string/preference_key_embedded_art_cache_size"
+                android:defaultValue="100"
+                android:title="@string/preference_title_embedded_art_cache_size" />
         </PreferenceCategory>
 
         <PreferenceCategory
@@ -75,7 +82,7 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_headphones"
-        android:icon="@drawable/ic_headset_grey600_48dp">
+        android:icon="@drawable/ic_headset_grey600_36dp">
 
         <CheckBoxPreference
             android:key="@string/preference_key_plug_auto_play"
@@ -92,17 +99,17 @@
 
     <PreferenceScreen
         android:title="@string/preference_screen_title_about"
-        android:icon="@drawable/ic_help_grey600_48dp">
+        android:icon="@drawable/ic_help_grey600_36dp">
 
         <Preference
             android:key="@string/preference_key_privacy_policy"
             android:title="@string/preference_title_privacy_policy"
-            android:icon="@drawable/ic_info_grey600_48dp" />
+            android:icon="@drawable/ic_info_grey600_36dp" />
 
         <Preference
             android:key="@string/preference_key_opensource"
             android:title="@string/preference_title_opensource"
-            android:icon="@drawable/ic_info_grey600_48dp" />
+            android:icon="@drawable/ic_info_grey600_36dp" />
     </PreferenceScreen>
 
 </PreferenceScreen>

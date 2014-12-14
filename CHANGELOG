@@ -27,9 +27,13 @@ Updated: Improved player layouts.
 Updated: Moved playback options to the app main menu.
 Fixed: Media properties not accessible from player UI.
 Fixed: Editable Albums where there is no media file editable.
-Fixed: Wrong text color in (small) notification with Android > 5.0 (API 21).
+Fixed: Incorrect cache size displayed in Application settings.
 
-(not publicly announced) :
+(not announced on Play Store) :
+Updated: New cover management system.
+Fixed: Undeleted art from database when art files are deleted on FS.
+Fixed: Wrong text color in (small) notification with Android > 5.0 (API 21).
+Fixed: Wrong cache size indicator in Application Settings
 Fixed: "Reload" button not updated correctly in some situations.
 Fixed: Force close on some device with Android <= 4.2 (API 17).
 

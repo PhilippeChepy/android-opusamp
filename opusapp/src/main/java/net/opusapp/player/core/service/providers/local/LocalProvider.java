@@ -2334,10 +2334,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     protected String getStorageArt(String media) {
         File mediaFile = PlayerApplication.uriToFile(media);
-        File cacheFile = JniMediaLib.getCoverDumpFile(mediaFile);
+        File cacheFile = JniMediaLib.embeddedCoverCacheFile(mediaFile);
 
         if (cacheFile != null && !cacheFile.exists()) {
-            cacheFile = JniMediaLib.dumpCover(mediaFile);
+            cacheFile = JniMediaLib.embeddedCoverDump(mediaFile);
         }
 
         return cacheFile != null ? PlayerApplication.fileToUri(cacheFile) : null;
@@ -2720,6 +2720,60 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                     CursorUtils.free(acceptCursor);
                 }
+
+                final String artProjection[] = new String[] {
+                        Entities.Art._ID,
+                        Entities.Art.COLUMN_FIELD_URI,
+                };
+
+                final int COLUMN_ART_PKID = 0;
+                final int COLOMN_ART_URI = 1;
+
+                Cursor arts = database.query(Entities.Art.TABLE_NAME, artProjection, null, null, null, null, null);
+                if (CursorUtils.ifNotEmpty(arts)) {
+                    while (arts.moveToNext()) {
+                        final File artFile = PlayerApplication.uriToFile(arts.getString(COLOMN_ART_URI));
+
+                        if (!artFile.exists()) {
+                            final String whereClause = Entities.Art._ID + " = ? ";
+                            final String whereArgs[] = new String[] {
+                                    arts.getString(COLUMN_ART_PKID)
+                            };
+
+                            database.delete(Entities.Art.TABLE_NAME, whereClause, whereArgs);
+                        }
+                    }
+
+                    CursorUtils.free(arts);
+                }
+
+                database.execSQL(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
+                        Entities.Media.COLUMN_FIELD_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Media.COLUMN_FIELD_ART_ID + " NOT IN (" +
+                                " SELECT " + Entities.Art._ID +
+                                " FROM " + Entities.Art.TABLE_NAME + ")");
+
+                database.execSQL(
+                        "UPDATE " + Entities.Media.TABLE_NAME + " SET " +
+                        Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " NOT IN (" +
+                                " SELECT " + Entities.Art._ID +
+                                " FROM " + Entities.Art.TABLE_NAME + ")");
+
+                database.execSQL(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                        Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " NOT IN (" +
+                                " SELECT " + Entities.Art._ID +
+                                " FROM " + Entities.Art.TABLE_NAME + ")");
+
+                database.execSQL(
+                        "UPDATE " + Entities.Album.TABLE_NAME + " SET " +
+                        Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = NULL " +
+                        "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " NOT IN (" +
+                                " SELECT " + Entities.Art._ID +
+                                " FROM " + Entities.Art.TABLE_NAME + ")");
 
                 // checking accept/discard paths and deleted medias for already scanned medias.
                 final String mediaProjection[] = new String[]{
@@ -3110,7 +3164,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         long coverId = 0;
 
         if (hasEmbeddedTag) {
-            final File cacheFile = JniMediaLib.getCoverDumpFile(sourceFile);
+            final File cacheFile = JniMediaLib.embeddedCoverCacheFile(sourceFile);
 
             if (cacheFile == null) {
                 return 0;
@@ -3133,15 +3187,17 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 embeddedCoverId = coverCursor.getLong(0);
                 CursorUtils.free(coverCursor);
             }
-
-            if (embeddedCoverId <= 0) {
-                final File coverFile = JniMediaLib.dumpCover(sourceFile);
+            else {
+                final File coverFile = JniMediaLib.embeddedCoverDump(sourceFile);
 
                 if (coverFile != null) {
                     mediaCover.clear();
                     mediaCover.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(coverFile));
                     mediaCover.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, true);
                     embeddedCoverId = database.insert(Entities.Art.TABLE_NAME, null, mediaCover);
+                }
+                else {
+                    embeddedCoverId = 0;
                 }
             }
         }

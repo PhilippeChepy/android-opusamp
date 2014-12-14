@@ -14,6 +14,7 @@
 
     <string name="preference_key_cache_size">cache_size</string>
     <string name="preference_key_thumbnail_cache_size">thumbnail_cache_size</string>
+    <string name="preference_key_embedded_art_cache_size">embedded_art_cache_size</string>
     <string name="preference_key_optimize_database">optimize_database</string>
     <string name="preference_key_clear_cache">clear_cache</string>
     <string name="preference_key_plug_auto_play">plug_auto_play</string>
