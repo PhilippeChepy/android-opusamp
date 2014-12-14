@@ -595,6 +595,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else {
                 PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanStart();
             }
+
+            updateReloadMenuItem();
             return true;
         }
     };

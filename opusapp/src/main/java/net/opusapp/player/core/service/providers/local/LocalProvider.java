@@ -236,7 +236,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     @Override
-    public boolean scanStart() {
+    public synchronized boolean scanStart() {
         if (scanThread == null) {
             scanThread = new Thread() {
                 @Override

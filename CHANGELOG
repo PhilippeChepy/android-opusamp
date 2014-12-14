@@ -1,8 +1,11 @@
 *** Bugs ***
-~ A tester : édition de tags supprime la pochette embarquée ???
-! Pochettes depuis media opus.
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
+
+*** Optimisations ***
+! Fluidité onglé "albums"
+! Réponse du bouton "Recharger (a cause des prétraitements ?).
+! Utiliser EditTextDialog pour l'édition des noms des bibliothèques.
 
 *** Planned updates ***
 - Affichage info codecs/bitrate/samplerate
@@ -34,7 +37,7 @@ Updated: New cover management system.
 Fixed: Undeleted art from database when art files are deleted on FS.
 Fixed: Wrong text color in (small) notification with Android > 5.0 (API 21).
 Fixed: Wrong cache size indicator in Application Settings
-Fixed: "Reload" button not updated correctly in some situations.
+Fixed: "Reload" button not updated correctly in some situations. (x2)
 Fixed: Force close on some device with Android <= 4.2 (API 17).
 
 
