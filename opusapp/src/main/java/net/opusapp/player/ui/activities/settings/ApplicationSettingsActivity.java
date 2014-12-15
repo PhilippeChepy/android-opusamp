@@ -26,14 +26,9 @@ import android.preference.PreferenceActivity;
 import net.opusapp.player.R;
 import net.opusapp.player.licensing.BuildSpecific;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.ui.utils.uil.NormalImageLoader;
-import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
 import net.opusapp.player.ui.views.ColorSchemeDialog;
 import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
 import net.opusapp.player.utils.jni.JniMediaLib;
-
-import java.io.File;
-import java.text.DecimalFormat;
 
 public class ApplicationSettingsActivity extends PreferenceActivity {
 
@@ -49,14 +44,11 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		addPreferencesFromResource(R.xml.preferences);
 
-        setCacheCleanupListener();
         setDatabaseOptimizationListener();
 
         setOnlineHelpListener();
 		setOpenSourceLicensesListener();
 
-        int cacheSize = PlayerApplication.getIntPreference(R.string.preference_key_cache_size, 30);
-        int thumbnailCacheSize = PlayerApplication.getIntPreference(R.string.preference_key_thumbnail_cache_size, 20);
         int embeddedArtCacheSize = PlayerApplication.getIntPreference(R.string.preference_key_embedded_art_cache_size, 100);
 
         final ColorPickerPreference primaryColorPreference = (ColorPickerPreference) findPreference(getString(R.string.preference_key_primary_color));
@@ -112,28 +104,6 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
             }
         });
 
-        final Preference cacheSizePref = findPreference(getString(R.string.preference_key_cache_size));
-        cacheSizePref.setSummary(String.format(getString(R.string.unit_MB), cacheSize));
-        cacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                cacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
-                NormalImageLoader.init();
-                return true;
-            }
-        });
-
-        final Preference thumbCacheSizePref = findPreference(getString(R.string.preference_key_thumbnail_cache_size));
-        thumbCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), thumbnailCacheSize));
-        thumbCacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                thumbCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), newValue));
-                ThumbnailImageLoader.init();
-                return true;
-            }
-        });
-
         final Preference embeddedArtCacheSizePref = findPreference(getString(R.string.preference_key_embedded_art_cache_size));
         embeddedArtCacheSizePref.setSummary(String.format(getString(R.string.unit_MB), embeddedArtCacheSize));
         embeddedArtCacheSizePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -148,22 +118,6 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
         final Preference buyPremiumPreference = findPreference(getString(R.string.preference_key_premium));
         BuildSpecific.managePremiumPreference(this, buyPremiumPreference);
 	}
-
-    @SuppressWarnings("deprecation")
-	private void setCacheCleanupListener() {
-        final Preference cacheCleanup = findPreference(getString(R.string.preference_key_clear_cache));
-        setDiscCacheSummary(cacheCleanup);
-        cacheCleanup.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-
-            @Override
-            public boolean onPreferenceClick(final Preference preference) {
-                NormalImageLoader.getInstance().clearDiskCache();
-                ThumbnailImageLoader.getInstance().clearDiskCache();
-                setDiscCacheSummary(cacheCleanup);
-                return true;
-            }
-        });
-    }
 
     @SuppressWarnings("deprecation")
     private void setDatabaseOptimizationListener() {
@@ -248,35 +202,5 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
                 return true;
             }
         });
-    }
-
-    private static long folderSize(File directory) {
-        long length = 0;
-        for (File file : directory.listFiles()) {
-            if (file.isFile())
-                length += file.length();
-            else
-                length += folderSize(file);
-        }
-        return length;
-    }
-
-    private void setDiscCacheSummary(Preference cacheCleanup) {
-        File normalCacheDirectory = NormalImageLoader.getInstance().getDiskCache().getDirectory();
-        File thumbnailCacheDirectory = ThumbnailImageLoader.getInstance().getDiskCache().getDirectory();
-
-        double allocated;
-        if (normalCacheDirectory.getAbsolutePath().equals(thumbnailCacheDirectory.getAbsolutePath())) {
-            allocated = folderSize(normalCacheDirectory);
-        }
-        else {
-            allocated = folderSize(normalCacheDirectory) + folderSize(thumbnailCacheDirectory);
-        }
-
-        final DecimalFormat decimalFormat = new DecimalFormat();
-        decimalFormat.setMaximumFractionDigits(2);
-        decimalFormat.setMinimumFractionDigits(2);
-
-        cacheCleanup.setSummary(String.format(getString(R.string.unit_MB), decimalFormat.format(allocated / 1048576.0d)));
     }
 }

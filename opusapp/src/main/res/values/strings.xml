@@ -57,12 +57,9 @@
 
     <string name="preference_screen_title_storage">Storage</string>
     <string name="preference_category_title_cache_size">Cache size</string>
-    <string name="preference_title_cache_size">Covers</string>
-    <string name="preference_title_thumbnail_cache_size">Cover thumbnails</string>
     <string name="preference_title_embedded_art_cache_size">Embedded covers</string>
     <string name="preference_category_title_maintenance">Maintenance operations</string>
     <string name="preference_title_optimize_database">Optimize database</string>
-    <string name="preference_title_clear_cache">Clear cache memory</string>
     <string name="preference_default_various_artists">Various artists</string>
     <string name="preference_default_unknown_artist">Unknown artist</string>
     <string name="preference_dialog_title_database_optimization">Data optimization</string>

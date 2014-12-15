@@ -48,20 +48,6 @@
             <EditTextPreference
                 android:digits="1234567890"
                 android:inputType="number"
-                android:key="@string/preference_key_cache_size"
-                android:defaultValue="30"
-                android:title="@string/preference_title_cache_size" />
-
-            <EditTextPreference
-                android:digits="1234567890"
-                android:inputType="number"
-                android:key="@string/preference_key_thumbnail_cache_size"
-                android:defaultValue="20"
-                android:title="@string/preference_title_thumbnail_cache_size" />
-
-            <EditTextPreference
-                android:digits="1234567890"
-                android:inputType="number"
                 android:key="@string/preference_key_embedded_art_cache_size"
                 android:defaultValue="100"
                 android:title="@string/preference_title_embedded_art_cache_size" />
@@ -69,10 +55,6 @@
 
         <PreferenceCategory
             android:title="@string/preference_category_title_maintenance">
-
-            <Preference
-                android:key="@string/preference_key_clear_cache"
-                android:title="@string/preference_title_clear_cache" />
 
             <Preference
                 android:key="@string/preference_key_optimize_database"

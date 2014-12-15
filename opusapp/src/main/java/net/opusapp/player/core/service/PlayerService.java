@@ -25,18 +25,18 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.view.View;
 import android.widget.RemoteViews;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.RemoteControlClientHelper;
@@ -162,7 +162,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    private AbstractMediaManager.Media[] mPlaylist = null;
+    private AbstractMediaManager.Media[] mPlaylist = EMPTY_PLAYLIST;
 
     private List<Integer> mShuffledPlaylistIndexList;
 
@@ -281,7 +281,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         loadPlaylist();
 
-        if (mPlaylist != null && mPlaylist.length > 0) {
+        if (mPlaylist.length > 0) {
             queueSetPosition(position);
         }
 
@@ -459,6 +459,48 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
     }
 
+    RequestListener<String, Bitmap> mRequestListener = new RequestListener<String, Bitmap>() {
+        @Override
+        public boolean onException(Exception e, String model, Target<Bitmap> target, boolean isFirstResource) {
+            LogUtils.LOGException(TAG, "onException", 0, e);
+
+            return false;
+        }
+
+        @Override
+        public boolean onResourceReady(Bitmap resource, String model, Target<Bitmap> target, boolean isFromMemoryCache, boolean isFirstResource) {
+            LogUtils.LOGW(TAG, "onResourceReady");
+            if (resource.isRecycled()) {
+                loadCover();
+            }
+            else {
+                mMediaCover = resource;
+                updateExternalControlers(false, true);
+                notifyCoverLoaded();
+            }
+
+            return true;
+        }
+    };
+
+    protected void loadCover() {
+        final Handler mainHandler = new Handler(PlayerApplication.context.getMainLooper());
+        final Runnable loadBitmap = new Runnable() {
+
+            @Override
+            public void run() {
+                Glide.with(PlayerApplication.context)
+                        .load(mMediaCoverUri)
+                        .asBitmap()
+                        .centerCrop()
+                        .listener(mRequestListener)
+                        .into(500, 500);
+            }
+        };
+
+        mainHandler.post(loadBitmap);
+    }
+
     protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
 
         LogUtils.LOGW(TAG, "updateExternalControlers with {onlyPlaystate=" + onlyPlaystate + ", coverIsLoaded=" + coverIsLoaded + "}");
@@ -483,8 +525,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
                     if (mMediaCoverUri != null) {
                         LogUtils.LOGD(TAG, "updateExternalControlers: triggering cover loading");
+
                         mMediaCover = null;
-                        PlayerApplication.normalImageLoader.loadImage(mMediaCoverUri, (DisplayImageOptions) null, mImageLoaderListener);
+                        loadCover();
                     }
                     else {
                         mMediaCover = null;
@@ -545,14 +588,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         if (isPlaying()) {
                             pause(isNotificationControl);
                         } else {
-                            if (mPlaylist != null && mPlaylist.length > 0) {
+                            if (mPlaylist.length > 0) {
                                 play();
                             }
                         }
                         break;
                     case ACTION_PLAY:
                         if (!isPlaying()) {
-                            if (mPlaylist != null && mPlaylist.length > 0) {
+                            if (mPlaylist.length > 0) {
                                 play();
                             }
                         }
@@ -577,7 +620,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                                 LogUtils.LOGD(TAG, "telephony : ACTION_PLAY");
 
                                 if (!isPlaying()) {
-                                    if (mPlaylist != null && mPlaylist.length > 0) {
+                                    if (mPlaylist.length > 0) {
                                         play();
                                     }
                                 }
@@ -646,10 +689,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         mPlaylist = provider.getCurrentPlaylist(mediaManager.getPlayer());
 
-        int playlistLength = mPlaylist != null ? mPlaylist.length : 0;
-
         mShuffledPlaylistIndexList = new ArrayList<>();
-        for (int playlistIndex = 0 ; playlistIndex < playlistLength ; playlistIndex++) {
+        for (int playlistIndex = 0 ; playlistIndex < mPlaylist.length ; playlistIndex++) {
             mShuffledPlaylistIndexList.add(playlistIndex);
         }
 
@@ -664,42 +705,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     protected void setPausedByTelephony(boolean paused) {
         mPausedByTelephony = paused;
     }
-
-    private final ImageLoadingListener mImageLoaderListener = new ImageLoadingListener() {
-
-        @Override
-        public void onLoadingStarted(String imageUri, View view) {
-            LogUtils.LOGW(TAG, "starting cover update");
-        }
-
-        @Override
-        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            if (imageUri.equals(mMediaCoverUri)) {
-                if (loadedImage != null && loadedImage.isRecycled()) {
-                    PlayerApplication.normalImageLoader.loadImage(mMediaCoverUri, (DisplayImageOptions) null, mImageLoaderListener);
-                }
-                else {
-                    mMediaCover = loadedImage;
-                    applyUiUpdate();
-                }
-            }
-        }
-
-        @Override
-        public void onLoadingCancelled(String imageUri, View view) {
-        }
-
-        @Override
-        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            applyUiUpdate();
-        }
-
-        protected void applyUiUpdate() {
-            LogUtils.LOGW(TAG, "applying cover update");
-            updateExternalControlers(false, true);
-            notifyCoverLoaded();
-        }
-    };
 
     private final Runnable runnablePlay = new Runnable() {
 
@@ -780,12 +785,15 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             mMediaCoverUri = null;
-            if (mPlaylist != null) {
-                if (mPlaylistIndex < mPlaylist.length) {
-                    mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
-                    updateExternalControlers(false, false);
+            if (mPlaylist.length != 0) {
+                if (mPlaylist.length < mPlaylistIndex) {
+                    mPlaylistIndex = 0;
                 }
+
+                mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
             }
+
+            updateExternalControlers(false, false);
         }
     };
 
@@ -844,7 +852,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     // Public API helpers
     protected boolean hasPlaylist() {
-        return mPlaylist != null && mPlaylist.length > 0;
+        return mPlaylist.length > 0;
     }
 
 
@@ -1141,7 +1149,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mPlaylistIndex = 0;
         }
 
-        if (mPlaylist != null && mPlaylistIndex < mPlaylist.length) {
+        if (mPlaylistIndex < mPlaylist.length) {
             if (mPlaylist[mPlaylistIndex].getUri().equals(uri) && wasPlaying) {
                 player.playerPause(false);
             }
@@ -1156,7 +1164,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void queueSetPosition(int position) {
-        if (mPlaylist != null && mPlaylist.length > 0) {
+        if (mPlaylist.length > 0) {
             LogUtils.LOGD(TAG, "moving to position " + position);
 
             switch (mShuffleMode) {

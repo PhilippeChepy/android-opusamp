@@ -56,12 +56,9 @@
 
     <string name="preference_screen_title_storage">Stockage</string>
     <string name="preference_category_title_cache_size">Taille du cache</string>
-    <string name="preference_title_cache_size">Pochettes</string>
-    <string name="preference_title_thumbnail_cache_size">Mignatures de pochettes</string>
     <string name="preference_title_embedded_art_cache_size">Pochettes embarquées</string>
     <string name="preference_category_title_maintenance">Opérations de maintenance</string>
     <string name="preference_title_optimize_database">Optimiser la base de données</string>
-    <string name="preference_title_clear_cache">Nettoyer la mémoire temporaire des image</string>
     <string name="preference_default_various_artists">Artistes divers</string>
     <string name="preference_default_unknown_artist">Artistes inconnu</string>
     <string name="preference_dialog_title_database_optimization">Optimisation des données</string>

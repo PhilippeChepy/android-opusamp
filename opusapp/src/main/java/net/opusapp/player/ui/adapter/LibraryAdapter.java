@@ -23,6 +23,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import net.opusapp.player.R;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
@@ -157,7 +159,6 @@ public class LibraryAdapter extends SimpleCursorAdapter {
             }
 
             if (idColumn >= 0) {
-                PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewHolder.imageView);
                 viewHolder.imageView.setImageResource(imagePlaceHolder);
 
                 String imageUri = null;
@@ -173,7 +174,31 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                 }
 
                 if (imageUri != null) {
-                    PlayerApplication.thumbnailImageLoader.displayImage(imageUri, viewHolder.imageView);
+                    final String DRAWABLE_URI = "drawable://";
+                    if (imageUri.startsWith(DRAWABLE_URI)) {
+                        int resourceId = Integer.parseInt(imageUri.substring(DRAWABLE_URI.length()));
+
+                        Glide.with(PlayerApplication.context)
+                                .load(resourceId)
+                                .centerCrop()
+                                .crossFade()
+                                .into(viewHolder.imageView);
+                    }
+                    else {
+                        Glide.with(PlayerApplication.context)
+                                .load(imageUri)
+                                .centerCrop()
+                                .placeholder(imagePlaceHolder)
+                                .crossFade()
+                                .into(viewHolder.imageView);
+                    }
+                }
+                else {
+                    Glide.with(PlayerApplication.context)
+                            .load(imagePlaceHolder)
+                            .centerCrop()
+                            .crossFade()
+                            .into(viewHolder.imageView);
                 }
             }
 

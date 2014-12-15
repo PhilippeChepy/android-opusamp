@@ -21,6 +21,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import com.bumptech.glide.Glide;
+
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
@@ -342,23 +344,26 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
             final View view = super.getView(position, convertView, parent);
 
             Cursor cursor = (Cursor) getItem(position);
-            final GridViewHolder viewholder;
+            final GridViewHolder viewHolder;
 
             if (view != null) {
-                viewholder = new GridViewHolder(view);
-                view.setTag(viewholder);
+                viewHolder = new GridViewHolder(view);
+                view.setTag(viewHolder);
             } else {
-                viewholder = (GridViewHolder)convertView.getTag();
+                viewHolder = (GridViewHolder)convertView.getTag();
             }
 
             final String imageUri = cursor.getString(COLUMN_URI);
             final String imageName = imageUri.substring(imageUri.lastIndexOf("/") + 1);
 
-            viewholder.lineOne.setText(imageName);
+            viewHolder.lineOne.setText(imageName);
 
-            PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewholder.image);
-            viewholder.image.setImageResource(R.drawable.no_art_small);
-            PlayerApplication.thumbnailImageLoader.displayImage(imageUri, viewholder.image);
+            Glide.with(ArtSelectionFragment.this)
+                    .load(imageUri)
+                    .centerCrop()
+                    .placeholder(R.drawable.no_art_small)
+                    .crossFade()
+                    .into(viewHolder.image);
 
             return view;
         }

@@ -23,6 +23,7 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.bumptech.glide.Glide;
 import com.nineoldandroids.view.ViewHelper;
 
 import net.opusapp.player.R;
@@ -120,7 +121,13 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
         final AbstractMediaManager.Provider provider = manager.getProvider();
 
         contentArtUri = provider.getAlbumArtUri(contentSourceId);
-        PlayerApplication.normalImageLoader.displayImage(contentArtUri, placeHolderView);
+
+        Glide.with(this)
+                .load(contentArtUri)
+                .centerCrop()
+                .placeholder(R.drawable.no_art_normal)
+                .crossFade()
+                .into(placeHolderView);
     }
 
     @Override
@@ -254,7 +261,12 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
         placeHolderView = (ImageView) getLayoutInflater().inflate(R.layout.listview_header_details, contentList, false);
 
         if (!TextUtils.isEmpty(contentArtUri)) {
-            PlayerApplication.normalImageLoader.displayImage(contentArtUri, placeHolderView);
+            Glide.with(this)
+                    .load(contentArtUri)
+                    .centerCrop()
+                    .placeholder(R.drawable.no_art_normal)
+                    .crossFade()
+                    .into(placeHolderView);
         }
 
         contentList.addHeaderView(placeHolderView);
@@ -262,7 +274,6 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         contentList.setAdapter(adapter);
         contentList.setOnItemClickListener(contentListOnItemClickListener);
-        //contentList.setOnCreateContextMenuListener(this);
 
         registerForContextMenu(contentList);
 

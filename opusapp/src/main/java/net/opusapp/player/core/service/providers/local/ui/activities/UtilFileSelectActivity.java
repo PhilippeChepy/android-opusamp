@@ -30,6 +30,8 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
@@ -230,10 +232,12 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
                     viewHolder.lineTwo.setVisibility(View.VISIBLE);
                     viewHolder.lineTwo.setText(R.string.fs_directory);
 				} else {
-                    PlayerApplication.thumbnailImageLoader.cancelDisplayTask(viewHolder.image);
-                    viewHolder.image.setImageResource(R.drawable.ic_insert_drive_file_grey600_48dp);
-                    PlayerApplication.thumbnailImageLoader.displayImage(PlayerApplication.fileToUri(file), viewHolder.image);
-
+                    Glide.with(UtilFileSelectActivity.this)
+                            .load(PlayerApplication.fileToUri(file))
+                            .centerCrop()
+                            .placeholder(R.drawable.ic_insert_drive_file_grey600_48dp)
+                            .crossFade()
+                            .into(viewHolder.image);
                     viewHolder.lineTwo.setVisibility(View.GONE);
 				}
 			}

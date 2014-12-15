@@ -39,7 +39,6 @@ import android.view.View;
 import android.webkit.WebView;
 
 import com.astuetz.PagerSlidingTabStrip;
-import com.nostra13.universalimageloader.core.ImageLoader;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.PlayerService;
@@ -50,9 +49,6 @@ import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.licensing.BuildSpecific;
-import net.opusapp.player.ui.utils.uil.NormalImageLoader;
-import net.opusapp.player.ui.utils.uil.ThumbnailImageLoader;
-import net.opusapp.player.ui.utils.uil.ThumbnailUncachedImageLoader;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -92,12 +88,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
 
-    public static ImageLoader normalImageLoader;
-
-    public static ImageLoader thumbnailImageLoader;
-
-    public static ImageLoader thumbnailUncachedImageLoader;
-
     private static boolean connecting;
 
 
@@ -126,10 +116,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
         allocateMediaManagers();
         playerManagerIndex = getLibraryPlayerIndex();
         libraryManagerIndex = getLibraryLibraryIndex();
-
-        normalImageLoader = NormalImageLoader.getInstance();
-        thumbnailImageLoader = ThumbnailImageLoader.getInstance();
-        thumbnailUncachedImageLoader = ThumbnailUncachedImageLoader.getInstance();
 
         BuildSpecific.initApp();
     }
