@@ -177,6 +177,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Current song informations
+    private int mLoadingTry;
+
     private String mMediaCoverUri = null;
 
     private Bitmap mMediaCover = null;
@@ -484,6 +486,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     };
 
     protected void loadCover() {
+        if (mLoadingTry > 3) {
+            LogUtils.LOGW(TAG, "Exceeded loading tries");
+            return;
+        }
+
+        mLoadingTry++;
+
         final Handler mainHandler = new Handler(PlayerApplication.context.getMainLooper());
         final Runnable loadBitmap = new Runnable() {
 
@@ -504,6 +513,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
 
         LogUtils.LOGW(TAG, "updateExternalControlers with {onlyPlaystate=" + onlyPlaystate + ", coverIsLoaded=" + coverIsLoaded + "}");
+
+        mLoadingTry = 0;
 
         mMediaTitle = null;
         mMediaAuthor = null;

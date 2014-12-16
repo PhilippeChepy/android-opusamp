@@ -23,8 +23,7 @@ Added: Now displaying track number in lists with medias.
 Updated: Improved bitmap loading performances.
 Updated: Changed current track icon indicator.
 Fixed: Wrong anchor for Player Sliding panel in portrait mode.
-
-
+Fixed: Unlimited cover loading tries in playback service.
 
 Update 18:
 Added: Management of EQ presets.
@@ -44,7 +43,6 @@ Fixed: Wrong text color in (small) notification with Android > 5.0 (API 21).
 Fixed: Wrong cache size indicator in Application Settings
 Fixed: "Reload" button not updated correctly in some situations. (x2)
 Fixed: Force close on some device with Android <= 4.2 (API 17).
-
 
 Update 16:
 Added: Support for media tags edition (and improved tag viewer look and feel).
