@@ -34,62 +34,66 @@ import com.bumptech.glide.Glide;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
+import net.opusapp.player.core.service.providers.local.scanner.MediaScanner;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomTextView;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.Set;
 
-public class UtilFileSelectActivity extends ActionBarActivity implements OnItemClickListener {
-
-	private GridView gridView;
-
-    private TextView pathTextView;
-	
-	private FileSelectAdapter fileAdapter;
-
-	public static final String KEY_RESULT = "result";
-	
-	private File currentFolder;
-	
-	public static boolean isAtRootLevel;
-
-    private boolean doubleBackToExitPressedOnce = false;
-
-    private LocalProvider.SyncScanContext scanContext;
+public class LocalCoverFileSelectionActivity extends ActionBarActivity implements OnItemClickListener {
 
 
+
+    public static final String KEY_RESULT = "result";
 
     private static final int OPTION_MENUITEM_CANCEL = 2;
 
 
 
+    private GridView mGridView;
+
+    private TextView mPathTextView;
+
+    private FileSelectAdapter mFileAdapter;
+
+    private File mCurrentFolder;
+
+    private boolean mIsRoot;
+
+    private boolean mDoubleBackExit = false;
+
+    private Set<String> mCoverExtensions;
+
+
+
     @Override
-	protected void onCreate(Bundle bundle) {
-		super.onCreate(bundle);
-		
-		setContentView(R.layout.activity_directory_select);
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+
+        setContentView(R.layout.activity_directory_select);
 
         PlayerApplication.applyActionBar(this);
 
 
-		gridView = (GridView) findViewById(R.id.grid_view_base);
-        pathTextView = (TextView) findViewById(R.id.path);
+        mGridView = (GridView) findViewById(R.id.grid_view_base);
+        mPathTextView = (TextView) findViewById(R.id.path);
 
-        gridView.setEmptyView(findViewById(R.id.grid_view_empty));
+        mGridView.setEmptyView(findViewById(R.id.grid_view_empty));
         final CustomTextView emptyDescription = (CustomTextView) findViewById(R.id.empty_description);
         emptyDescription.setText(R.string.ni_files);
 
-        gridView.setOnItemClickListener(this);
+        mGridView.setOnItemClickListener(this);
         
-        gridView.setOnCreateContextMenuListener(this);
-        gridView.setNumColumns(PlayerApplication.getListColumns() / 2);
+        mGridView.setOnCreateContextMenuListener(this);
+        mGridView.setNumColumns(PlayerApplication.getListColumns() / 2);
 
-        scanContext = new LocalProvider.SyncScanContext();
+        mCoverExtensions = MediaScanner.getCoverExtensions();
 
         setFolder(Environment.getExternalStorageDirectory());
-	}
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -111,49 +115,51 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
         }
     };
 
-	@Override
-	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-		File selectedFile = fileAdapter.getItem(position);
+    @Override
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+        final File selectedFile = mFileAdapter.getItem(position);
 
-		if (selectedFile != null) {
-			if (selectedFile.isDirectory()) {
-				setFolder(selectedFile);
-			}
+        if (selectedFile != null) {
+            if (selectedFile.isDirectory()) {
+                setFolder(selectedFile);
+            }
             else {
-                if (LocalProvider.isArtFile(scanContext, selectedFile)) {
+                final Set<String> coverExtensions = MediaScanner.getCoverExtensions();
+
+                if (LocalProvider.fileHasValidExtension(selectedFile, coverExtensions)) {
                     Intent returnIntent = new Intent();
                     returnIntent.putExtra(KEY_RESULT, selectedFile.getAbsolutePath());
                     setResult(RESULT_OK, returnIntent);
                     finish();
                 }
             }
-		}
-	}
+        }
+    }
 
     @Override
     public void onBackPressed() {
         if (!handleBackButton()) {
-            if (doubleBackToExitPressedOnce) {
+            if (mDoubleBackExit) {
                 super.onBackPressed();
                 return;
             }
 
-            doubleBackToExitPressedOnce = true;
+            mDoubleBackExit = true;
             Toast.makeText(PlayerApplication.context, R.string.toast_press_back_again, Toast.LENGTH_SHORT).show();
 
             new Handler().postDelayed(new Runnable() {
 
                 @Override
                 public void run() {
-                    doubleBackToExitPressedOnce = false;
+                    mDoubleBackExit = false;
                 }
             }, 2000);
         }
     }
 
     protected boolean handleBackButton() {
-        if (currentFolder != null) {
-            final File parentFile = currentFolder.getParentFile();
+        if (mCurrentFolder != null) {
+            final File parentFile = mCurrentFolder.getParentFile();
             if (parentFile != null) {
                 setFolder(parentFile);
                 return true;
@@ -163,86 +169,83 @@ public class UtilFileSelectActivity extends ActionBarActivity implements OnItemC
         return false;
     }
 
-	
-	public void setFolder(File folder) {
-		currentFolder = folder;
-		File filesInFolder[] = folder.listFiles(directoryFileFilter);
-		
-		if (folder.getParentFile() != null) {
-			File[] fileList = new File[filesInFolder.length + 1];
-			System.arraycopy(filesInFolder, 0, fileList, 1, filesInFolder.length);
-			fileList[0] = folder.getParentFile();
-			filesInFolder = fileList;
-			isAtRootLevel = false;
-		}
-		else {
-			isAtRootLevel = true;
-		}
 
-        pathTextView.setText(folder.getAbsolutePath());
+    public void setFolder(File folder) {
+        mCurrentFolder = folder;
+        File filesInFolder[] = folder.listFiles(directoryFileFilter);
 
-		fileAdapter = new FileSelectAdapter(this, R.layout.view_item_double_line_thumbnailed, filesInFolder);
-        gridView.setAdapter(fileAdapter);
-	}
-	
-	protected final FileFilter directoryFileFilter = new FileFilter() {
-		
-		@Override
-		public boolean accept(File pathname) {
-			return (pathname.isDirectory() && pathname.canRead() || LocalProvider.isArtFile(scanContext, pathname));
-		}
-	};
+        if (folder.getParentFile() != null) {
+            File[] fileList = new File[filesInFolder.length + 1];
+            System.arraycopy(filesInFolder, 0, fileList, 1, filesInFolder.length);
+            fileList[0] = folder.getParentFile();
+            filesInFolder = fileList;
+            mIsRoot = false;
+        }
+        else {
+            mIsRoot = true;
+        }
 
-	public class FileSelectAdapter extends ArrayAdapter<File> {
-		
-		public static final String TAG = "FileSelectAdapter";
+        mPathTextView.setText(folder.getAbsolutePath());
 
+        mFileAdapter = new FileSelectAdapter(this, R.layout.view_item_double_line_thumbnailed, filesInFolder);
+        mGridView.setAdapter(mFileAdapter);
+    }
 
+    protected final FileFilter directoryFileFilter = new FileFilter() {
 
-		public FileSelectAdapter(Context context, int resource, File[] objects) {
-			super(context, resource, R.id.line_one, objects);
-		}
+        @Override
+        public boolean accept(File pathname) {
+        return (pathname.isDirectory() && pathname.canRead() || LocalProvider.fileHasValidExtension(pathname, mCoverExtensions));
+        }
+    };
 
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-	        View view = super.getView(position, convertView, parent);
-	        
-	        final GridViewHolder viewHolder;
+    public class FileSelectAdapter extends ArrayAdapter<File> {
 
-	        if (view != null) {
-	            viewHolder = new GridViewHolder(view);
-	            view.setTag(viewHolder);
+        public FileSelectAdapter(Context context, int resource, File[] objects) {
+            super(context, resource, R.id.line_one, objects);
+        }
 
-	        } else {
-	            viewHolder = (GridViewHolder)convertView.getTag();
-	        }
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
 
-			File file = getItem(position);
+            final GridViewHolder viewHolder;
 
-			if (!UtilFileSelectActivity.isAtRootLevel && position == 0) {
-				viewHolder.image.setImageResource(R.drawable.ic_arrow_drop_up_grey600_48dp);
-                viewHolder.lineOne.setText("Parent folder"); // TODO: translation @see UtilDirectorySelectActivity
+            if (view != null) {
+                viewHolder = new GridViewHolder(view);
+                view.setTag(viewHolder);
+
+            } else {
+                viewHolder = (GridViewHolder)convertView.getTag();
+            }
+
+            File file = getItem(position);
+
+            if (!mIsRoot && position == 0) {
+                viewHolder.image.setImageResource(R.drawable.ic_arrow_drop_up_grey600_48dp);
+                viewHolder.lineOne.setText(R.string.fs_parent_directory);
                 viewHolder.lineTwo.setVisibility(View.GONE);
-			}
-			else {
+            }
+            else {
                 viewHolder.lineOne.setText(file.getName());
-		
-				if (file.isDirectory()) {
+
+                if (file.isDirectory()) {
                     viewHolder.image.setImageResource(R.drawable.ic_folder_grey600_48dp);
                     viewHolder.lineTwo.setVisibility(View.VISIBLE);
                     viewHolder.lineTwo.setText(R.string.fs_directory);
-				} else {
-                    Glide.with(UtilFileSelectActivity.this)
+                }
+                else {
+                    Glide.with(LocalCoverFileSelectionActivity.this)
                             .load(PlayerApplication.fileToUri(file))
                             .centerCrop()
                             .placeholder(R.drawable.ic_insert_drive_file_grey600_48dp)
                             .crossFade()
                             .into(viewHolder.image);
                     viewHolder.lineTwo.setVisibility(View.GONE);
-				}
-			}
+                }
+            }
 
-			return view;
-		}
-	}
+            return view;
+        }
+    }
 }

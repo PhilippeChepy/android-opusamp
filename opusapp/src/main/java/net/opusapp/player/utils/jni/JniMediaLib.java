@@ -51,6 +51,8 @@ public abstract class JniMediaLib {
 
     private static final Object threadLocker = new Object();
 
+    private static final Object threadLocker2 = new Object();
+
 
 
     // Native engine context
@@ -161,15 +163,17 @@ public abstract class JniMediaLib {
 	}
 
     public static File embeddedCoverDump(File file) {
-        final File targetPath = embeddedCoverCacheFile(file);
+        synchronized (threadLocker2) {
+            final File targetPath = embeddedCoverCacheFile(file);
 
-        if (targetPath == null || (targetPath.exists() && targetPath.length() > 0)) {
-            return targetPath;
-        }
+            if (targetPath == null || (targetPath.exists() && targetPath.length() > 0)) {
+                return targetPath;
+            }
 
-        if (saveCover(file.getAbsolutePath(), targetPath.getAbsolutePath()) >= 0) {
-            embeddedCoverCleanCache();
-            return targetPath;
+            if (saveCover(file.getAbsolutePath(), targetPath.getAbsolutePath()) >= 0) {
+                embeddedCoverCleanCache();
+                return targetPath;
+            }
         }
 
         return null;
@@ -188,7 +192,7 @@ public abstract class JniMediaLib {
             }
         }
 
-        return new File(basePath + File.separator + bi.toString(RADIX));
+        return new File(basePath + File.separator + bi.toString(RADIX) + ".jpg");
     }
 
     public static synchronized void embeddedCoverCleanCache() {

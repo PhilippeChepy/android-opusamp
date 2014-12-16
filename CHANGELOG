@@ -1,9 +1,14 @@
 *** Bugs ***
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
+! Plus de menu pour choisir l'auto stop !
+
+! libellé "Nouvelle bibliotheque" (au lieu d'extension) dans les reglages des extensions pour provider local.
 
 *** Optimisations ***
 ! Fluidité onglé "albums"
+! is_embedded = 1 ? a tester.
+! optimisation :
 ! Utiliser EditTextDialog pour l'édition des noms des bibliothèques.
 
 *** Planned updates ***
@@ -20,8 +25,10 @@
 
 Update 19:
 Added: Now displaying track number in lists with medias.
-Updated: Improved bitmap loading performances.
+Updated: Improved image loading performances.
 Updated: Changed current track icon indicator.
+Fixed: !!! Important bug !!! in media scanner, slowing down library reloadings...
+Fixed: Bug preventing medias from beeing displayed from albums if there is no cover for this media.
 Fixed: Wrong anchor for Player Sliding panel in portrait mode.
 Fixed: Unlimited cover loading tries in playback service.
 

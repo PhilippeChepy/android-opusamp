@@ -124,11 +124,11 @@
             android:label="@string/activity_label_files_to_scan" >
         </activity>
         <activity
-            android:name=".core.service.providers.local.ui.activities.UtilFileSelectActivity"
+            android:name=".core.service.providers.local.ui.activities.LocalCoverFileSelectionActivity"
             android:label="@string/activity_label_art_selection" >
         </activity>
         <activity
-            android:name=".core.service.providers.local.ui.activities.ArtSelectActivity"
+            android:name=".core.service.providers.local.ui.activities.CoverSelectionActivity"
             android:label="@string/activity_label_art_selection" >
         </activity>
 

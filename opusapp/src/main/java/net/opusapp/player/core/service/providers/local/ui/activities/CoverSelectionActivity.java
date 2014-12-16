@@ -22,32 +22,31 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 
 import java.io.File;
 
-public class ArtSelectActivity extends ActionBarActivity {
+public class CoverSelectionActivity extends ActionBarActivity {
 
-    public static final String TAG = ArtSelectActivity.class.getSimpleName();
+    public static final String TAG = CoverSelectionActivity.class.getSimpleName();
 
 
-
-    private ViewPager viewPager;
 
     private final static int REQUEST_CODE_EMBEDDED_TAGS = 1;
 
     private final static int REQUEST_CODE_LOCAL_FILESYSTEM = 2;
 
-    private final static int REQUEST_CODE_INTERNET = 3;
 
-    private PagerAdapter pagerAdapter;
+    private ViewPager mViewPager;
 
-    private int providerId;
+    private PagerAdapter mPagerAdapter;
 
-    private long sourceId;
+    private int mProviderId;
+
+    private long mSourceId;
 
     private MenuItem addMenuItem;
 
 
 
     protected SQLiteDatabase getWritableDatabase() {
-        int index = PlayerApplication.getManagerIndex(providerId);
+        int index = PlayerApplication.getManagerIndex(mProviderId);
 
         final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
@@ -61,39 +60,38 @@ public class ArtSelectActivity extends ActionBarActivity {
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        providerId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
-        sourceId = getIntent().getLongExtra(AbstractMediaManager.Provider.KEY_SOURCE_ID, -1);
+        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mSourceId = getIntent().getLongExtra(AbstractMediaManager.Provider.KEY_SOURCE_ID, -1);
 
         setContentView(R.layout.activity_tabbed_grids);
         PlayerApplication.applyActionBar(this);
 
         Bundle fromEmbeddedTagsBundle = new Bundle();
         fromEmbeddedTagsBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_EMBEDDED_TAGS);
-        fromEmbeddedTagsBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
-        fromEmbeddedTagsBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
+        fromEmbeddedTagsBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromEmbeddedTagsBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
         Bundle fromLocalFileSystemBundle = new Bundle();
         fromLocalFileSystemBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_LOCAL_FILESYSTEM);
-        fromLocalFileSystemBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
-        fromLocalFileSystemBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
+        fromLocalFileSystemBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromLocalFileSystemBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
         Bundle fromInternetBundle = new Bundle();
         fromInternetBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_INTERNET);
-        fromInternetBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, sourceId);
-        fromInternetBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, providerId);
+        fromInternetBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromInternetBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
-        pagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
-        pagerAdapter.addFragment(new ArtSelectionFragment(), fromEmbeddedTagsBundle, R.string.tab_label_from_embedded_tag);
-        pagerAdapter.addFragment(new ArtSelectionFragment(), fromLocalFileSystemBundle, R.string.tab_label_from_local_filesystem);
-        // TODO: pagerAdapter.addFragment(new ArtSelectionFragment(), fromInternetBundle, R.string.tab_label_from_internet);
+        mPagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
+        mPagerAdapter.addFragment(new ArtSelectionFragment(), fromEmbeddedTagsBundle, R.string.tab_label_from_embedded_tag);
+        mPagerAdapter.addFragment(new ArtSelectionFragment(), fromLocalFileSystemBundle, R.string.tab_label_from_local_filesystem);
 
-        viewPager = (ViewPager)findViewById(R.id.pager_viewpager);
-        viewPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
-        viewPager.setOffscreenPageLimit(pagerAdapter.getCount());
-        viewPager.setAdapter(pagerAdapter);
+        mViewPager = (ViewPager)findViewById(R.id.pager_viewpager);
+        mViewPager.setPageMargin(getResources().getInteger(R.integer.viewpager_margin_width));
+        mViewPager.setOffscreenPageLimit(mPagerAdapter.getCount());
+        mViewPager.setAdapter(mPagerAdapter);
 
         final PagerSlidingTabStrip scrollingTabs = (PagerSlidingTabStrip) findViewById(R.id.pager_tabs);
-        scrollingTabs.setViewPager(viewPager);
+        scrollingTabs.setViewPager(mViewPager);
         scrollingTabs.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int i, float v, int i2) {
@@ -118,8 +116,8 @@ public class ArtSelectActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         addMenuItem = menu.add(Menu.NONE, 0, 0, R.string.menuitem_label_add);
-        addMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_add_black_48dp : R.drawable.ic_add_white_48dp);
-        addMenuItem.setVisible(viewPager != null && viewPager.getCurrentItem() == 1);
+        addMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_add_black_48dp : R.drawable.ic_add_white_48dp);
+        addMenuItem.setVisible(mViewPager != null && mViewPager.getCurrentItem() == 1);
         MenuItemCompat.setShowAsAction(addMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
         addMenuItem.setOnMenuItemClickListener(onAddMenuItemListener);
         return true;
@@ -127,14 +125,14 @@ public class ArtSelectActivity extends ActionBarActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (providerId < 0) {
+        if (mProviderId < 0) {
             return;
         }
 
         switch(requestCode) {
             case REQUEST_CODE_LOCAL_FILESYSTEM:
                 if (resultCode == RESULT_OK) {
-                    final String selectedFile = data.getStringExtra(UtilFileSelectActivity.KEY_RESULT);
+                    final String selectedFile = data.getStringExtra(LocalCoverFileSelectionActivity.KEY_RESULT);
                     final SQLiteDatabase database = getWritableDatabase();
 
                     ContentValues artData = new ContentValues();
@@ -144,23 +142,20 @@ public class ArtSelectActivity extends ActionBarActivity {
 
                     artData.clear();
                     artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ART_ID, artId);
-                    artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID, sourceId);
+                    artData.put(Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID, mSourceId);
                     database.insert(Entities.AlbumHasArts.TABLE_NAME, null, artData);
                 }
                 break;
-            case REQUEST_CODE_INTERNET:
-                //if (resultCode == RESULT_OK) {
-                //}
         }
-        pagerAdapter.refresh();
+        mPagerAdapter.refresh();
     }
 
     private final MenuItem.OnMenuItemClickListener onAddMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            Intent intent = new Intent(ArtSelectActivity.this, UtilFileSelectActivity.class);
-            startActivityForResult(intent, viewPager.getCurrentItem() == 0 ? REQUEST_CODE_EMBEDDED_TAGS : REQUEST_CODE_LOCAL_FILESYSTEM);
+            Intent intent = new Intent(CoverSelectionActivity.this, LocalCoverFileSelectionActivity.class);
+            startActivityForResult(intent, mViewPager.getCurrentItem() == 0 ? REQUEST_CODE_EMBEDDED_TAGS : REQUEST_CODE_LOCAL_FILESYSTEM);
             return false;
         }
     };

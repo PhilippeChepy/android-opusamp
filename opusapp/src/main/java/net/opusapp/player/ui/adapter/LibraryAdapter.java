@@ -158,7 +158,7 @@ public class LibraryAdapter extends SimpleCursorAdapter {
                 viewHolder.textViews[textIndex].setText(cursor.getString(textColumns[textIndex]));
             }
 
-            if (idColumn >= 0) {
+            if (artUriColumn >= 0) {
                 viewHolder.imageView.setImageResource(imagePlaceHolder);
 
                 String imageUri = null;
