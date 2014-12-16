@@ -62,6 +62,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
             AbstractMediaManager.Provider.SONG_ID,
             AbstractMediaManager.Provider.SONG_TITLE,
             AbstractMediaManager.Provider.SONG_ARTIST,
+            AbstractMediaManager.Provider.SONG_TRACK,
             AbstractMediaManager.Provider.SONG_VISIBLE,
     };
 
@@ -71,7 +72,10 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 
     public static final int COLUMN_SONG_ARTIST = 2;
 
-    public static final int COLUMN_SONG_VISIBLE = 3;
+    public static final int COLUMN_SONG_TRACK_NUMBER = 3;
+
+    public static final int COLUMN_SONG_VISIBLE = 4;
+
 
 
 
@@ -138,6 +142,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                         COLUMN_SONG_ID,
                         COLUMN_SONG_TITLE,
                         COLUMN_SONG_ARTIST,
+                        COLUMN_SONG_TRACK_NUMBER,
                         COLUMN_SONG_VISIBLE
                 });
         gridView.setOnCreateContextMenuListener(this);

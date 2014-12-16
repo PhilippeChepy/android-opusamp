@@ -92,39 +92,43 @@ public class LibraryAdapterFactory {
                         viewContainer,
                         adapterType,
                         managerIndex,
-                        R.layout.view_item_double_line,
+                        R.layout.view_item_double_line_indexed,
                         new int[] {
                                 columnIndexes[1],
-                                columnIndexes[2]
+                                columnIndexes[2],
+                                columnIndexes[3]
                         },
                         new int[] {
                                 R.id.line_one,
-                                R.id.line_two
+                                R.id.line_two,
+                                R.id.line_number
                         },
                         -1,
                         -1,
                         -1,
                         -1,
-                        columnIndexes[3]);
+                        columnIndexes[4]);
             case ADAPTER_SONG:
                 return new LibraryAdapter(
                         viewContainer,
                         adapterType,
                         managerIndex,
-                        R.layout.view_item_double_line_thumbnailed,
+                        R.layout.view_item_double_line_thumbnailed_indexed,
                         new int[] {
                                 columnIndexes[1],
-                                columnIndexes[2]
+                                columnIndexes[2],
+                                columnIndexes[3]
                         },
                         new int[] {
                                 R.id.line_one,
-                                R.id.line_two
+                                R.id.line_two,
+                                R.id.line_number
                         },
                         columnIndexes[0],
-                        columnIndexes[3],
+                        columnIndexes[4],
                         R.drawable.no_art_small,
                         R.id.image,
-                        columnIndexes[4]);
+                        columnIndexes[5]);
             case ADAPTER_STORAGE:
                 return new LibraryAdapter(
                         viewContainer,
@@ -149,17 +153,19 @@ public class LibraryAdapterFactory {
                         viewContainer,
                         adapterType,
                         managerIndex,
-                        R.layout.view_item_double_line_dragable_thumbnailed,
+                        R.layout.view_item_double_line_dragable_thumbnailed_indexed,
                         new int[] {
                                 columnIndexes[1],
-                                columnIndexes[2]
+                                columnIndexes[2],
+                                columnIndexes[3]
                         },
                         new int[] {
                                 R.id.line_one,
-                                R.id.line_two
+                                R.id.line_two,
+                                R.id.line_number
                         },
                         columnIndexes[0],
-                        columnIndexes[3],
+                        columnIndexes[4],
                         R.drawable.no_art_small,
                         R.id.image,
                         -1,

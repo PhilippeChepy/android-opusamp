@@ -87,6 +87,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             AbstractMediaManager.Provider.SONG_ARTIST,
             AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
             AbstractMediaManager.Provider.SONG_ART_URI,
+            AbstractMediaManager.Provider.SONG_TRACK,
             AbstractMediaManager.Provider.SONG_VISIBLE,
             AbstractMediaManager.Provider.SONG_DURATION
     };
@@ -105,9 +106,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     private static final int COLUMN_SONG_ART_URI = 4;
 
-    private static final int COLUMN_SONG_VISIBLE = 5;
+    private static final int COLUMN_SONG_TRACK_NUMBER = 5;
 
-    private static final int COLUMN_SONG_DURATION = 6;
+    private static final int COLUMN_SONG_VISIBLE = 6;
+
+    private static final int COLUMN_SONG_DURATION = 7;
 
 
 
@@ -247,6 +250,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                         COLUMN_SONG_ID,
                         COLUMN_SONG_TITLE,
                         COLUMN_SONG_ARTIST,
+                        COLUMN_SONG_TRACK_NUMBER,
                         COLUMN_SONG_ART_URI,
                         COLUMN_SONG_VISIBLE
                 });
@@ -275,7 +279,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         if (slidingUpPanelLayout != null) {
-            slidingUpPanelLayout.setDragView(findViewById(R.id.upper_panel));
+            slidingUpPanelLayout.setDragView(findViewById(R.id.audio_player_upper_panel));
         }
     }
 

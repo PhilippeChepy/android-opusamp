@@ -4,7 +4,6 @@
 
 *** Optimisations ***
 ! Fluidité onglé "albums"
-! Réponse du bouton "Recharger (a cause des prétraitements ?).
 ! Utiliser EditTextDialog pour l'édition des noms des bibliothèques.
 
 *** Planned updates ***
@@ -20,7 +19,10 @@
 *** Changelog ***
 
 Update 19:
-Updated: improved bitmap loading performances.
+Added: Now displaying track number in lists with medias.
+Updated: Improved bitmap loading performances.
+Updated: Changed current track icon indicator.
+Fixed: Wrong anchor for Player Sliding panel in portrait mode.
 
 
 

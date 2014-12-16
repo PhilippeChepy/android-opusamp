@@ -7,7 +7,7 @@
     
     <!-- Panel header-->
     <LinearLayout
-        android:id="@+id/upper_panel"
+        android:id="@+id/audio_player_upper_panel"
         android:layout_width="fill_parent"
         android:layout_height="68dp"
         android:orientation="horizontal"

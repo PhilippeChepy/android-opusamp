@@ -72,9 +72,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     private static final int COLUMN_SONG_ARTIST = 2;
 
-    private static final int COLUMN_SONG_ART_URI = 3;
+    private static final int COLUMN_SONG_TRACK_NUMBER = 3;
 
-    private static final int COLUMN_SONG_VISIBLE = 4;
+    private static final int COLUMN_SONG_ART_URI = 4;
+
+    private static final int COLUMN_SONG_VISIBLE = 5;
 
 
 
@@ -84,11 +86,13 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
     private static final int COLUMN_PLAYLIST_SONG_ARTIST = 2;
 
-    private static final int COLUMN_PLAYLIST_ENTRY_POSITION = 3;
+    private static final int COLUMN_PLAYLIST_TRACK_NUMBER = 3;
 
     private static final int COLUMN_PLAYLIST_SONG_ART_URI = 4;
 
     private static final int COLUMN_PLAYLIST_SONG_VISIBLE = 5;
+
+    private static final int COLUMN_PLAYLIST_ENTRY_POSITION = 6;
 
 
 
@@ -206,6 +210,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                 COLUMN_SONG_ID,
                                 COLUMN_SONG_TITLE,
                                 COLUMN_SONG_ARTIST,
+                                COLUMN_SONG_TRACK_NUMBER,
                                 COLUMN_SONG_ART_URI,
                                 COLUMN_SONG_VISIBLE
                         });
@@ -216,6 +221,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                                 COLUMN_PLAYLIST_SONG_ID,
                                 COLUMN_PLAYLIST_SONG_TITLE,
                                 COLUMN_PLAYLIST_SONG_ARTIST,
+                                COLUMN_PLAYLIST_TRACK_NUMBER,
                                 COLUMN_PLAYLIST_SONG_ART_URI,
                                 COLUMN_PLAYLIST_SONG_VISIBLE
                         });
@@ -326,6 +332,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
+                        AbstractMediaManager.Provider.SONG_TRACK,
                         AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
                 };
@@ -343,9 +350,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                         AbstractMediaManager.Provider.SONG_ID,
                         AbstractMediaManager.Provider.SONG_TITLE,
                         AbstractMediaManager.Provider.SONG_ARTIST,
-                        AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+                        AbstractMediaManager.Provider.SONG_TRACK,
                         AbstractMediaManager.Provider.SONG_ART_URI,
                         AbstractMediaManager.Provider.SONG_VISIBLE,
+                        AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
                 };
 
                 return PlayerApplication.buildMediaLoader(
