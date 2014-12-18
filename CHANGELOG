@@ -26,8 +26,9 @@
 Update 19:
 Added: Now displaying track number in lists with medias.
 Updated: Improved image loading performances.
+Updated: Improved media scanner performances.
 Updated: Changed current track icon indicator.
-Fixed: !!! Important bug !!! in media scanner, slowing down library reloadings...
+Fixed: Important bug in media scanner, slowing down library reloadings...
 Fixed: Bug preventing medias from beeing displayed from albums if there is no cover for this media.
 Fixed: Wrong anchor for Player Sliding panel in portrait mode.
 Fixed: Unlimited cover loading tries in playback service.
