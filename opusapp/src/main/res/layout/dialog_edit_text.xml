@@ -15,7 +15,8 @@
         android:layout_marginBottom="1dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:textAppearance="@android:style/TextAppearance.Large"/>
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:imeOptions="actionDone" />
 
     <LinearLayout
         android:layout_width="fill_parent"
