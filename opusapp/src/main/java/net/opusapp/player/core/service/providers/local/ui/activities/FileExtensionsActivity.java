@@ -1,9 +1,7 @@
 package net.opusapp.player.core.service.providers.local.ui.activities;
 
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -13,15 +11,13 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.PopupMenu;
-import android.text.Editable;
+import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.GridView;
 
 import net.opusapp.player.R;
@@ -30,6 +26,7 @@ import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
+import net.opusapp.player.ui.dialogs.EditTextDialog;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomTextView;
 import net.opusapp.player.ui.views.RefreshableView;
@@ -38,7 +35,7 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
 
     private GridView mGridView;
 
-    private CollectionScannerExtensionAdapter mAdapter;
+    private ExtensionAdapter mAdapter;
 
     private Cursor mCursor;
 
@@ -138,7 +135,7 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
         PlayerApplication.applyActionBar(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mAdapter = new CollectionScannerExtensionAdapter(this);
+        mAdapter = new ExtensionAdapter(this);
         mGridView.setOnCreateContextMenuListener(this);
         mGridView.setOnItemClickListener(this);
         mGridView.setAdapter(mAdapter);
@@ -218,54 +215,41 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            final EditText nameEditText = new EditText(FileExtensionsActivity.this);
-            final InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-
-            final DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
+            final EditTextDialog.ButtonClickListener extensionValidatoin = new EditTextDialog.ButtonClickListener() {
                 @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
+                public void click(EditTextDialog dialog) {
                     final SQLiteDatabase database = getWritableDatabase();
-                    final Editable collectionName = nameEditText.getText();
+                    final String extension = dialog.getText();
 
-                    if (database != null && collectionName != null) {
-                        ContentValues contentValues = new ContentValues();
-                        contentValues.put(Entities.FileExtensions.COLUMN_FIELD_EXTENSION, collectionName.toString());
+                    if (database != null && !TextUtils.isEmpty(extension)) {
+                        final ContentValues contentValues = new ContentValues();
+                        contentValues.put(Entities.FileExtensions.COLUMN_FIELD_EXTENSION, extension);
 
-                        try {
-                            database.insertOrThrow(Entities.FileExtensions.TABLE_NAME, null, contentValues);
-                            notifyLibraryChanges();
-                        } catch (final Exception exception) {
-                            // TODO: log error...
-                        }
+                        database.insert(Entities.FileExtensions.TABLE_NAME, null, contentValues);
+                        notifyLibraryChanges();
                     }
-
-                    inputManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
                 }
             };
 
-            final DialogInterface.OnClickListener negativeClickListener = new DialogInterface.OnClickListener() {
+            final EditTextDialog.ButtonClickListener extensionCancellation = new EditTextDialog.ButtonClickListener() {
                 @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    inputManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+                public void click(EditTextDialog dialog) {
+                    // Nothing to be done.
                 }
             };
 
-            new AlertDialog.Builder(FileExtensionsActivity.this)
-                    .setTitle(R.string.label_new_library)
-                    .setView(nameEditText)
-                    .setPositiveButton(android.R.string.ok, positiveClickListener)
-                    .setNegativeButton(android.R.string.cancel, negativeClickListener)
-                    .show();
+            final EditTextDialog editTextDialog = new EditTextDialog(FileExtensionsActivity.this, R.string.preference_title_settings_extensions);
+            editTextDialog.setNegativeButtonRunnable(extensionCancellation);
+            editTextDialog.setPositiveButtonRunnable(extensionValidatoin);
+            editTextDialog.show();
 
-            nameEditText.requestFocus();
-            inputManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
             return true;
         }
     };
 
-    public class CollectionScannerExtensionAdapter extends SimpleCursorAdapter {
+    public class ExtensionAdapter extends SimpleCursorAdapter {
 
-        public CollectionScannerExtensionAdapter(Context context) {
+        public ExtensionAdapter(Context context) {
             super(context, R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
         }
 
