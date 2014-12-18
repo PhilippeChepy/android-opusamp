@@ -95,14 +95,6 @@ public class MediaScanner {
         }
         else {
             mScannerThread.requestCancellation();
-
-            while (mScannerThread != null) {
-                try {
-                    mScannerThread.join();
-                } catch (final Exception exception) {
-                    LogUtils.LOGException(TAG, "requesting scan cancellation", 0, exception);
-                }
-            }
         }
     }
 

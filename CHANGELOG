@@ -1,7 +1,6 @@
 *** Bugs ***
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
-! scan cancelation
 ! libellé "Nouvelle bibliotheque" (au lieu d'extension) dans les reglages des extensions pour provider local.
 
 *** Planned updates ***
@@ -18,6 +17,7 @@
 
 Update 20:
 Updated: Improved media scanner performances if cover cache is full.
+Fixed: Scan cancellation causing freeze to the whole app.
 Fixed: Missing auto pause feature since Update 18.
 Fixed: Increased default embedded cover cache from 20MB to 100MB (~500 jpeg with res of 600x600 to ~2500).
 
