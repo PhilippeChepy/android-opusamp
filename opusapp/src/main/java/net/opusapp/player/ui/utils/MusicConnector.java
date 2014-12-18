@@ -21,8 +21,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -33,6 +33,7 @@ import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
+import net.opusapp.player.ui.dialogs.EditTextDialog;
 import net.opusapp.player.ui.dialogs.MetadataDialog;
 import net.opusapp.player.utils.LogUtils;
 
@@ -427,6 +428,8 @@ public class MusicConnector {
 
     //
     public static void addLibrary(final Activity parent, final Runnable completionRunnable) {
+        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+
         final ArrayList<Integer> managerItemIds = new ArrayList<>();
         final ArrayList<String> managerItemDescriptions = new ArrayList<>();
 
@@ -439,24 +442,19 @@ public class MusicConnector {
             }
         }
 
-        final EditText nameEditText = new EditText(parent);
-
-        final DialogInterface.OnClickListener newLibraryOnClickListener = new DialogInterface.OnClickListener() {
+        // Edit library name.
+        final EditTextDialog.ButtonClickListener editionDone = new EditTextDialog.ButtonClickListener() {
 
             @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                // nothing to be done.
-                SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
-                final Editable collectionName = nameEditText.getText();
+            public void click(EditTextDialog dialog) {
+                final String collectionName = dialog.getText();
 
-                int mediaProviderType = managerItemIds.get(which);
-
-                if (database != null && collectionName != null) {
-                    String columns[] = new String[] {
+                if (!TextUtils.isEmpty(collectionName)) {
+                    final String columns[] = new String[] {
                             "COUNT(*) AS " + Entities.Provider._COUNT
                     };
 
-                    Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, null);
+                    final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, null);
                     long count = 0;
                     if (CursorUtils.ifNotEmpty(cursor)) {
                         cursor.moveToFirst();
@@ -466,66 +464,113 @@ public class MusicConnector {
                     }
 
                     ContentValues contentValues = new ContentValues();
-                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
-                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName);
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, ((LibraryEditTextDialog) dialog).managerType);
                     contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION, count + 1);
 
                     long rowId = database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
                     if (rowId < 0) {
                         LogUtils.LOGW(TAG, "new library: database insertion failure.");
                     } else {
-                        configureLibrary(parent, (int) rowId, mediaProviderType);
+                        configureLibrary(parent, (int) rowId);
                         completionRunnable.run();
                     }
                 }
             }
         };
 
-        final DialogInterface.OnClickListener onMediaManagerTypeSelection = new DialogInterface.OnClickListener() {
+        final EditTextDialog.ButtonClickListener editionCancelled = new EditTextDialog.ButtonClickListener() {
 
             @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                editLibrary(parent, nameEditText, newLibraryOnClickListener, which);
+            public void click(EditTextDialog dialog) {
+                // nothing to be done.
+            }
+        };
+
+
+        // Choose library type.
+        final DialogInterface.OnClickListener managerTypeSelectionDone = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, final int which) {
+                final LibraryEditTextDialog editTextDialog = new LibraryEditTextDialog(parent, R.string.label_new_library);
+                editTextDialog.managerType = managerItemIds.get(which);
+                editTextDialog.setPositiveButtonRunnable(editionDone);
+                editTextDialog.setNegativeButtonRunnable(editionCancelled);
+                editTextDialog.show();
             }
         };
 
         new AlertDialog.Builder(parent)
                 .setTitle(R.string.alert_dialog_title_type_of_library)
-                .setItems(managerItemDescriptions.toArray(new String[managerItemDescriptions.size()]), onMediaManagerTypeSelection)
+                .setItems(managerItemDescriptions.toArray(new String[managerItemDescriptions.size()]), managerTypeSelectionDone)
                 .show();
     }
 
-    public static void editLibrary(Activity parent, final EditText nameEditText, final DialogInterface.OnClickListener newPlaylistPositiveOnClickListener, final int itemType) {
-        final InputMethodManager inputMethodManager = (InputMethodManager) parent.getSystemService(Context.INPUT_METHOD_SERVICE);
+    public static void editLibrary(final Activity parent, final int managerId, final String initialName, final Runnable completionRunnable) {
+        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
 
-        final DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
+        final EditTextDialog.ButtonClickListener editionDone = new EditTextDialog.ButtonClickListener() {
+
             @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                newPlaylistPositiveOnClickListener.onClick(dialogInterface, itemType);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            public void click(EditTextDialog dialog) {
+                final String collectionName = dialog.getText();
+
+                if (!TextUtils.isEmpty(collectionName)) {
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName);
+
+                    database.update(
+                            Entities.Provider.TABLE_NAME,
+                            contentValues,
+                            Entities.Provider._ID + " = ? ",
+                            new String[] {
+                                    String.valueOf(managerId)
+                            });
+
+                    if (managerId < 0) {
+                        LogUtils.LOGW(TAG, "edit library: database insertion failure.");
+                    } else {
+                        configureLibrary(parent, managerId);
+                        completionRunnable.run();
+                    }
+                }
             }
         };
 
-        final DialogInterface.OnClickListener negativeClickListener = new DialogInterface.OnClickListener() {
+        final EditTextDialog.ButtonClickListener editionCancelled = new EditTextDialog.ButtonClickListener() {
+
             @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            public void click(EditTextDialog dialog) {
+                // nothing to be done.
             }
         };
 
-        new AlertDialog.Builder(parent)
-                .setTitle(R.string.label_new_library)
-                .setView(nameEditText)
-                .setPositiveButton(android.R.string.ok, positiveClickListener)
-                .setNegativeButton(android.R.string.cancel, negativeClickListener)
-                .show();
 
-        nameEditText.requestFocus();
-        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+        final EditTextDialog editTextDialog = new EditTextDialog(parent, R.string.label_new_library);
+        editTextDialog.setText(initialName);
+        editTextDialog.setPositiveButtonRunnable(editionDone);
+        editTextDialog.setNegativeButtonRunnable(editionCancelled);
+        editTextDialog.show();
     }
 
-    public static void configureLibrary(Activity sourceActivity, int mediaProviderId, int mediaProviderType) {
-        LogUtils.LOGD(TAG, "providerId : " + mediaProviderId + " providerType : " + mediaProviderType);
+    public static void configureLibrary(Activity sourceActivity, int mediaProviderId) {
+        LogUtils.LOGD(TAG, "providerId : " + mediaProviderId);
+        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+
+        int mediaProviderType = 0;
+
+        final String columns[] = new String[] {
+                Entities.Provider._ID
+        };
+
+        final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, null);
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            cursor.moveToFirst();
+            mediaProviderType = cursor.getInt(0);
+
+            CursorUtils.free(cursor);
+        }
 
         final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
         final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
@@ -536,6 +581,18 @@ public class MusicConnector {
             /* launch activity */ providerAction.launch(sourceActivity);
         }
     }
+
+    static class LibraryEditTextDialog extends EditTextDialog {
+
+
+        int managerType = 0;
+
+        public LibraryEditTextDialog(Context context, int titleId) {
+            super(context, titleId);
+        }
+    }
+
+
 
 
     /*

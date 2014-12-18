@@ -12,8 +12,6 @@
  */
 package net.opusapp.player.ui.activities.settings;
 
-import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -22,13 +20,11 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
-import android.text.Editable;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.mobeta.android.dslv.DragSortListView;
@@ -209,38 +205,19 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
     @Override
     public boolean onContextItemSelected(android.view.MenuItem item) {
         final int providerId = mCursor.getInt(COLUMN_PROVIDER_ID);
+        final String providerName = mCursor.getString(COLUMN_PROVIDER_NAME);
 
         switch (item.getItemId()) {
             case CONTEXT_MENUITEM_EDIT:
-                final EditText nameEditText = new EditText(this);
-                nameEditText.setText(mCursor.getString(COLUMN_PROVIDER_NAME));
 
-                final DialogInterface.OnClickListener newLibraryOnClickListener = new DialogInterface.OnClickListener() {
-
+                final Runnable completionAction = new Runnable() {
                     @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
-                        final Editable collectionName = nameEditText.getText();
-
-                        if (database != null && collectionName != null) {
-                            int mediaProviderType = mCursor.getInt(COLUMN_PROVIDER_TYPE);
-
-                            ContentValues contentValues = new ContentValues();
-                            contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, collectionName.toString());
-                            contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, mediaProviderType);
-
-                            database.update(Entities.Provider.TABLE_NAME, contentValues, Entities.Provider._ID + " = ? ",
-                                    new String[] {
-                                            String.valueOf(providerId)
-                                    });
-
-                            MusicConnector.configureLibrary(GeneralSettingsActivity.this, providerId, mediaProviderType);
-                            refresh();
-                        }
+                    public void run() {
+                        refresh();
                     }
                 };
 
-                MusicConnector.editLibrary(this, nameEditText, newLibraryOnClickListener, 0);
+                MusicConnector.editLibrary(this, providerId, providerName, completionAction);
                 return true;
             case CONTEXT_MENUITEM_DELETE:
                 if (providerId != 1) {
@@ -269,7 +246,7 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        MusicConnector.configureLibrary(this, mCursor.getInt(COLUMN_PROVIDER_ID), mCursor.getInt(COLUMN_PROVIDER_TYPE));
+        MusicConnector.configureLibrary(this, mCursor.getInt(COLUMN_PROVIDER_ID));
     }
 
 

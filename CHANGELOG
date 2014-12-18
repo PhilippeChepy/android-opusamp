@@ -6,7 +6,6 @@
 
 *** Optimisations ***
 ! is_embedded = 1 ? a tester.
-! Utiliser EditTextDialog pour l'édition des noms des bibliothèques.
 
 *** Planned updates ***
 - Affichage info codecs/bitrate/samplerate
@@ -25,6 +24,8 @@ Fixed: Missing auto pause feature since Update 18.
 
 (not announced on Play Store) :
 Update: Added right ime option for text inputs.
+Update: Library edition code cleanup.
+Update: Now using EditTextDialog for library edition.
 
 Update 19:
 Added: Now displaying track number in lists with medias.

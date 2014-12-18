@@ -44,6 +44,10 @@ public class EditTextDialog extends Dialog {
         super.dismiss();
     }
 
+    public void setText(String text) {
+        mCustomFilteringEditText.setText(text);
+    }
+
     public String getText() {
         return mCustomFilteringEditText.getText().toString();
     }
