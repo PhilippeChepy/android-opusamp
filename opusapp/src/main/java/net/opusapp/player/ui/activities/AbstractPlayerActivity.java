@@ -135,6 +135,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     private TextView mTotalTimeTextView;
 
+
+
     // Actions & interactions
     private ImageButton mRepeatButton;
 
@@ -149,6 +151,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     private ImageButton mSwitchPlaylistButton;
 
     private TextView mPlaylistPositionTextView;
+
+    private MenuItem mAutoPause;
 
 
 
@@ -319,22 +323,14 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         final MenuItem carMode = menu.add(Menu.NONE, 3, 3, R.string.menuitem_label_toggle_car_mode);
         carMode.setOnMenuItemClickListener(mCarModeMenuItemListener);
 
-        if (MusicConnector.isPlaying()) {
 
-            long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
-            long remainingSecs = 0;
-            if (remaining > 0) {
-                remainingSecs = remaining / 1000;
-            }
+        mAutoPause = menu.add(Menu.NONE, 4, 4, null);
+        mAutoPause.setVisible(false);
+        mAutoPause.setCheckable(true);
+        mAutoPause.setIcon(R.drawable.ic_alarm_grey600_48dp);
+        mAutoPause.setOnMenuItemClickListener(mAutoPauseMenuItemListener);
 
-            final MenuItem autoPause = menu.add(Menu.NONE, 4, 4, remaining > 0 ?
-                    String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(remainingSecs)) : // format minutes (not secs)
-                    getString(R.string.menuitem_label_delayed_pause));
-            autoPause.setCheckable(true);
-            autoPause.setChecked(remaining > 0);
-            autoPause.setIcon(R.drawable.ic_alarm_grey600_48dp);
-            autoPause.setOnMenuItemClickListener(mAutoPauseMenuItemListener);
-        }
+        updateAutoPauseMenuItem();
 
         return true;
     }
@@ -476,6 +472,30 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
     }
 
+    private void updateAutoPauseMenuItem() {
+        if (mAutoPause != null) {
+            if (MusicConnector.isPlaying()) {
+                long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
+                long remainingSecs = 0;
+                if (remaining > 0) {
+                    remainingSecs = remaining / 1000;
+                }
+
+                String autoPauseText =
+                        remaining > 0 ?
+                                String.format(getString(R.string.menuitem_label_delayed_pause_in), PlayerApplication.formatSecs(remainingSecs)) :
+                                getString(R.string.menuitem_label_delayed_pause);
+
+                mAutoPause.setVisible(true);
+                mAutoPause.setTitle(autoPauseText);
+                mAutoPause.setChecked(remaining > 0);
+            }
+            else {
+                mAutoPause.setVisible(false);
+            }
+        }
+    }
+
     public boolean hasPlaylist() {
         return playlistCursor != null && playlistCursor.getCount() > 0;
     }
@@ -561,6 +581,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
             @Override
             public void run() {
+                updateAutoPauseMenuItem();
+
                 if (PlayerApplication.playerService != null) {
                     if (PlayerApplication.playerService.isPlaying()) {
                         mPlayButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
@@ -677,9 +699,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
 
 
-    /*
-        Seek bar helper classes
-     */
+    // Seek bar helper classes
     public class SeekbarRunnable implements Runnable {
         public int position;
 
@@ -953,6 +973,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             if (item.isChecked()) {
                 if (PlayerApplication.playerService != null) {
                     PlayerApplication.playerService.setAutoStopTimestamp(-1);
+                    updateAutoPauseMenuItem();
                 }
             }
             else {
@@ -963,6 +984,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                                 if (PlayerApplication.playerService != null) {
                                     PlayerApplication.playerService.setAutoStopTimestamp((hourOfDay * 60 + minute) * 60000);
+                                    updateAutoPauseMenuItem();
                                 }
                             }
                         }, 0, 0, true

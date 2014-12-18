@@ -1,14 +1,11 @@
 *** Bugs ***
 ! Désactivation de l'égaliseur quand on entre dans les paramètres d'une bibliothèque
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
-! Plus de menu pour choisir l'auto stop !
-
+! scan cancelation
 ! libellé "Nouvelle bibliotheque" (au lieu d'extension) dans les reglages des extensions pour provider local.
 
 *** Optimisations ***
-! Fluidité onglé "albums"
 ! is_embedded = 1 ? a tester.
-! optimisation :
 ! Utiliser EditTextDialog pour l'édition des noms des bibliothèques.
 
 *** Planned updates ***
@@ -22,6 +19,9 @@
 - Maybe support for webradios (streaming through HTTP and PLS support).	
 
 *** Changelog ***
+
+Update 20:
+Fixed: Missing auto pause feature since Update 18.
 
 Update 19:
 Added: Now displaying track number in lists with medias.
