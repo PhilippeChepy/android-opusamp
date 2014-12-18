@@ -276,7 +276,7 @@ public abstract class JniMediaLib {
             File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
             final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
 
-            int embeddedArtCacheSize = Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_embedded_art_cache_size), "20")) * 1024 * 1024;
+            int embeddedArtCacheSize = Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_embedded_art_cache_size), "100")) * 1024 * 1024;
 
             if (folderSize(basePath) > embeddedArtCacheSize) {
                 final File[] fileList = basePath.listFiles();

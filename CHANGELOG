@@ -4,9 +4,6 @@
 ! scan cancelation
 ! libellé "Nouvelle bibliotheque" (au lieu d'extension) dans les reglages des extensions pour provider local.
 
-*** Optimisations ***
-! is_embedded = 1 ? a tester.
-
 *** Planned updates ***
 - Affichage info codecs/bitrate/samplerate
 - Improved Bluetooth support.
@@ -21,6 +18,7 @@
 
 Update 20:
 Fixed: Missing auto pause feature since Update 18.
+Fixed: Increased default embedded cover cache from 20MB to 100MB (~500 jpeg with res of 600x600 to ~2500).
 
 (not announced on Play Store) :
 Update: Added right ime option for text inputs.
