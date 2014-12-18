@@ -240,6 +240,7 @@ public class ScannerThread extends Thread {
         final int COLUMN_ART_ID = 13;
 
         int refreshThreshold = 0;
+        boolean checkEmbeddedArts = true;
 
         final ContentValues tags = new ContentValues();
         final Cursor cursor = mDatabase.query(Entities.Media.TABLE_NAME, mediaProjection, null, null, null, null, null);
@@ -335,10 +336,20 @@ public class ScannerThread extends Thread {
                     needDbUpdate = true;
                 }
 
-                boolean hasEmbeddedArt = tags.getAsBoolean(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
-                if (!needDbUpdate && hasEmbeddedArt &&
-                        (cursor.getInt(COLUMN_ORIGINAL_ART_ID) == 0 || cursor.isNull(COLUMN_ORIGINAL_ART_ID))) {
-                    needDbUpdate = true;
+                boolean hasEmbeddedArt = false;
+
+                if (!needDbUpdate && checkEmbeddedArts) {
+                    if (JniMediaLib.embeddedCoverCacheNeedCleanup()) {
+                        checkEmbeddedArts = false;
+                    }
+                    else {
+                        hasEmbeddedArt = tags.getAsBoolean(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
+
+                        if (hasEmbeddedArt &&
+                                (cursor.getInt(COLUMN_ORIGINAL_ART_ID) == 0 || cursor.isNull(COLUMN_ORIGINAL_ART_ID))) {
+                            needDbUpdate = true;
+                        }
+                    }
                 }
 
                 if (needDbUpdate) {

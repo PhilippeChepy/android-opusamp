@@ -17,13 +17,14 @@
 *** Changelog ***
 
 Update 20:
+Updated: Improved media scanner performances if cover cache is full.
 Fixed: Missing auto pause feature since Update 18.
 Fixed: Increased default embedded cover cache from 20MB to 100MB (~500 jpeg with res of 600x600 to ~2500).
 
 (not announced on Play Store) :
-Update: Added right ime option for text inputs.
-Update: Library edition code cleanup.
-Update: Now using EditTextDialog for library edition.
+Updated: Added right ime option for text inputs.
+Updated: Library edition code cleanup.
+Updated: Now using EditTextDialog for library edition.
 
 Update 19:
 Added: Now displaying track number in lists with medias.

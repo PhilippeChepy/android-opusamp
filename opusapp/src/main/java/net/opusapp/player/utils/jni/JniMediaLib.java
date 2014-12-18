@@ -51,7 +51,7 @@ public abstract class JniMediaLib {
 
     private static final Object threadLocker = new Object();
 
-    private static final Object threadLocker2 = new Object();
+    private static long mCoverCache = -1;
 
 
 
@@ -138,6 +138,13 @@ public abstract class JniMediaLib {
 
 	public static void readTags(final File file, final ContentValues contentValues) {
         synchronized (threadLocker) {
+            boolean hideEmbeddedTags = false;
+
+            if (embeddedCoverCacheNeedCleanup()) {
+                //embeddedCoverCleanCache();
+                hideEmbeddedTags = true;
+            }
+
             resetTags();
             tagsRead(file.getAbsolutePath());
 
@@ -158,12 +165,12 @@ public abstract class JniMediaLib {
             contentValues.put(Entities.Media.COLUMN_FIELD_BPM, tagBpm);
             contentValues.put(Entities.Media.COLUMN_FIELD_COMMENT, tagComment);
             contentValues.put(Entities.Media.COLUMN_FIELD_LYRICS, tagLyrics);
-            contentValues.put(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt);
+            contentValues.put(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART, hasEmbeddedArt && !hideEmbeddedTags);
         }
 	}
 
     public static File embeddedCoverDump(File file) {
-        synchronized (threadLocker2) {
+        synchronized (threadLocker) {
             final File targetPath = embeddedCoverCacheFile(file);
 
             if (targetPath == null || (targetPath.exists() && targetPath.length() > 0)) {
@@ -171,7 +178,7 @@ public abstract class JniMediaLib {
             }
 
             if (saveCover(file.getAbsolutePath(), targetPath.getAbsolutePath()) >= 0) {
-                embeddedCoverCleanCache();
+                getCoverCacheSize();
                 return targetPath;
             }
         }
@@ -196,6 +203,8 @@ public abstract class JniMediaLib {
     }
 
     public static synchronized void embeddedCoverCleanCache() {
+        LogUtils.LOGE(TAG, "launching covers \"garbage collection\"");
+
         if (mCoverCacheCleanupThread != null) {
             mCoverCacheCleanupThread.mTerminated = true;
 
@@ -216,6 +225,10 @@ public abstract class JniMediaLib {
     }
 
     private static long folderSize(File directory) {
+        if (directory == null || directory.listFiles() == null) {
+            return 0;
+        }
+
         long length = 0;
         for (File file : directory.listFiles()) {
             if (file.isFile())
@@ -263,6 +276,22 @@ public abstract class JniMediaLib {
     }
 
 
+    public static boolean embeddedCoverCacheNeedCleanup() {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+
+        if (mCoverCache < 0) {
+            getCoverCacheSize();
+        }
+
+        long embeddedArtCacheSize = Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_embedded_art_cache_size), "100")) * 1024 * 1024;
+        return mCoverCache > embeddedArtCacheSize;
+    }
+
+    private static void getCoverCacheSize() {
+        final File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
+        mCoverCache = folderSize(basePath);
+    }
+
     private static CoverCacheCleanupThread mCoverCacheCleanupThread;
 
     static class CoverCacheCleanupThread extends Thread {
@@ -273,40 +302,34 @@ public abstract class JniMediaLib {
         public void run() {
             mTerminated = false;
 
-            File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
-            final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(PlayerApplication.context);
+            final File basePath = PlayerApplication.getDiskCacheDir("embedded-src");
+            final File[] fileList = basePath.listFiles();
 
-            int embeddedArtCacheSize = Integer.parseInt(sharedPrefs.getString(PlayerApplication.context.getString(R.string.preference_key_embedded_art_cache_size), "100")) * 1024 * 1024;
+            Arrays.sort(fileList, new Comparator<File>() {
 
-            if (folderSize(basePath) > embeddedArtCacheSize) {
-                final File[] fileList = basePath.listFiles();
-
-                Arrays.sort(fileList, new Comparator<File>() {
-
-                    @Override
-                    public int compare(File lhs, File rhs) {
-                        if (lhs.lastModified() == rhs.lastModified()) {
-                            return 0;
-                        }
-
-                        if (lhs.lastModified() > rhs.lastModified()) {
-                            return 1;
-                        }
-
-                        return -1;
-                    }
-                });
-
-                for (final File file : fileList) {
-                    if (mTerminated) {
-                        break;
+                @Override
+                public int compare(File lhs, File rhs) {
+                    if (lhs.lastModified() == rhs.lastModified()) {
+                        return 0;
                     }
 
-                    if (file.delete()) {
-                        if (folderSize(basePath) < embeddedArtCacheSize) {
-                            break;
-                        }
+                    if (lhs.lastModified() > rhs.lastModified()) {
+                        return 1;
                     }
+
+                    return -1;
+                }
+            });
+
+            for (final File file : fileList) {
+                if (mTerminated) {
+                    break;
+                }
+
+                file.delete();
+
+                if (!embeddedCoverCacheNeedCleanup()) {
+                    break;
                 }
             }
         }
