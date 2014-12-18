@@ -3,12 +3,11 @@
 ! Ajout d'une bibliothèque on qu'on lis depuis celle ci.
 
 *** Planned updates ***
-- Affichage info codecs/bitrate/samplerate
-- Improved Bluetooth support.
 - Chromecast audio output.
 - Backup of library settings.
-- Neon and SSE optimizations for equalizer and resampling.
+- Improved Bluetooth support.
 - UPnP/DLNA audio output.
+- Neon and SSE optimizations for equalizer and resampling.
 - Container specific tags support (e.g. WMA star rating, embedded pictures, etc.).
 - Maybe support for webradios (streaming through HTTP and PLS support).	
 
@@ -26,6 +25,8 @@ Updated: Library edition code cleanup.
 Updated: Now using EditTextDialog for library edition.
 Updated: Now using EditTextDialog for extension edition.
 Fixed: Wrong title for extension edition dialog.
+
+Temp: Disabled updates while scanning for lyrics and comments.
 
 Update 19:
 Added: Now displaying track number in lists with medias.

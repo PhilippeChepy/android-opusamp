@@ -123,6 +123,9 @@ public class ScannerThread extends Thread {
         catch (final CancellingException exception) {
             LogUtils.LOGI(TAG, "scan canceled by user");
         }
+        //catch (final Exception exception) {
+        //    LogUtils.LOGException(TAG, "scan error", 0, exception);
+        //}
 
         mMediaScanner.notifyScannerHasFinished();
     }
@@ -217,9 +220,8 @@ public class ScannerThread extends Thread {
                 Entities.Media.COLUMN_FIELD_YEAR,
                 Entities.Media.COLUMN_FIELD_TRACK,
                 Entities.Media.COLUMN_FIELD_DISC,
-
-                Entities.Media.COLUMN_FIELD_COMMENT,
-                Entities.Media.COLUMN_FIELD_LYRICS,
+//                Entities.Media.COLUMN_FIELD_COMMENT,
+//                Entities.Media.COLUMN_FIELD_LYRICS,
                 Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID,
                 Entities.Media.COLUMN_FIELD_ART_ID
         };
@@ -234,10 +236,10 @@ public class ScannerThread extends Thread {
         final int COLUMN_YEAR = 7;
         final int COLUMN_TRACK = 8;
         final int COLUMN_DISC = 9;
-        final int COLUMN_COMMENT = 10;
-        final int COLUMN_LYRICS = 11;
-        final int COLUMN_ORIGINAL_ART_ID = 12;
-        final int COLUMN_ART_ID = 13;
+//TODO:        final int COLUMN_COMMENT = 10;
+//        final int COLUMN_LYRICS = 11;
+        final int COLUMN_ORIGINAL_ART_ID = 10;
+        final int COLUMN_ART_ID = 11;
 
         int refreshThreshold = 0;
         boolean checkEmbeddedArts = true;
@@ -326,6 +328,7 @@ public class ScannerThread extends Thread {
                     needDbUpdate = true;
                 }
 
+                /*
                 String comment = tags.getAsString(Entities.Media.COLUMN_FIELD_COMMENT);
                 if (!needDbUpdate && comment != null && !comment.equals(cursor.getString(COLUMN_COMMENT))) {
                     needDbUpdate = true;
@@ -334,7 +337,7 @@ public class ScannerThread extends Thread {
                 String lyrics = tags.getAsString(Entities.Media.COLUMN_FIELD_LYRICS);
                 if (!needDbUpdate && lyrics != null && !lyrics.equals(cursor.getString(COLUMN_LYRICS))) {
                     needDbUpdate = true;
-                }
+                }*/
 
                 boolean hasEmbeddedArt = false;
 

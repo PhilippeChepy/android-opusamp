@@ -12,7 +12,7 @@ public class CursorUtils {
             }
         }
 
-        return true;
+        return cursor != null;
     }
 
     public static Cursor free(final Cursor cursor) {
