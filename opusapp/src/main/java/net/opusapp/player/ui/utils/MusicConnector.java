@@ -194,28 +194,28 @@ public class MusicConnector {
     public static boolean doContextActionPlay(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder, int position) {
         doPrepareProviderSwitch();
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.play(sourceType, sourceId, sortOrder, position, PlayerApplication.lastSearchFilter);
     }
 
     public static boolean doContextActionPlayNext(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.playNext(sourceType, sourceId, sortOrder, PlayerApplication.lastSearchFilter);
     }
 
     public static boolean doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.playlistAdd(null, sourceType, sourceId, sortOrder, PlayerApplication.lastSearchFilter);
     }
 
     public static boolean doContextActionAddToPlaylist(Activity hostActivity, final AbstractMediaManager.Provider.ContentType sourceType, final String sourceId, final int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         showPlaylistManagementDialog(hostActivity, new PlaylistManagementRunnable() {
@@ -228,7 +228,7 @@ public class MusicConnector {
     }
 
     public static boolean doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType sourceType, String sourceId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         provider.setProperty(sourceType, sourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_VISIBILITY_TOGGLE, null, null);
@@ -237,7 +237,7 @@ public class MusicConnector {
     }
 
     public static boolean doContextActionMediaRemoveFromQueue(String playlistId, int position) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         provider.playlistRemove(playlistId, position);
@@ -245,7 +245,7 @@ public class MusicConnector {
     }
 
     public static boolean doContextActionPlaylistClear(String playlistId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         provider.playlistClear(playlistId);
@@ -253,7 +253,7 @@ public class MusicConnector {
     }
 
     public static boolean doContextActionDetail(Activity hostActivity, AbstractMediaManager.Provider.ContentType contentType, String contentId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         int titleResId = R.string.alert_dialog_title_media_properties;
@@ -270,7 +270,7 @@ public class MusicConnector {
     }
 
     public static boolean doContextActionPlaylistDelete(final Activity hostActivity, final String playlistId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         final DialogInterface.OnClickListener newPlaylistPositiveOnClickListener = new DialogInterface.OnClickListener() {
@@ -307,20 +307,16 @@ public class MusicConnector {
 
 
     private static void doPrepareProviderSwitch() {
-        if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
+        if (PlayerApplication.libraryMediaManager().getMediaManagerId() != PlayerApplication.playerMediaManager().getMediaManagerId()) {
             boolean playing = PlayerApplication.playerService.isPlaying();
 
             if (playing) {
                 PlayerApplication.playerService.stop();
             }
 
-            PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
+            PlayerApplication.setPlayerManager(PlayerApplication.libraryMediaManager().getMediaManagerId());
             PlayerApplication.saveLibraryIndexes();
             PlayerApplication.playerService.queueReload();
-
-            if (playing) {
-                PlayerApplication.playerService.play();
-            }
         }
     }
 
@@ -336,7 +332,7 @@ public class MusicConnector {
 
 
     protected static void showPlaylistManagementDialog(final Activity hostActivity, final PlaylistManagementRunnable runnable) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         final Cursor playlistCursor = provider.buildCursor(
@@ -369,7 +365,7 @@ public class MusicConnector {
             }
 
             final DialogInterface.OnClickListener dialogOnClickListener = new DialogInterface.OnClickListener() {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+                final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
                 final AbstractMediaManager.Provider mediaProvider = mediaManager.getProvider();
 
                 final EditText nameEditText = new EditText(hostActivity);
@@ -572,7 +568,7 @@ public class MusicConnector {
             CursorUtils.free(cursor);
         }
 
-        final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId);
+        final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId, null);
         final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
 
         final AbstractMediaManager.ProviderAction providerAction = provider.getAction(AbstractMediaManager.Provider.ACTION_INDEX_SETTINGS);

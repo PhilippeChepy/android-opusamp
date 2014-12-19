@@ -174,12 +174,10 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected void doEraseProviderData() {
-        int playerIndex = PlayerApplication.getLibraryPlayerIndex();
-        int currentIndex = PlayerApplication.getManagerIndex(mediaManager.getMediaManagerId());
+        final AbstractMediaManager playerMediaManager = PlayerApplication.playerMediaManager();
 
-        if (playerIndex == currentIndex) {
-            PlayerApplication.mediaManagers[playerIndex].getPlayer().playerStop();
-            PlayerApplication.playerManagerIndex = 0;
+        if (mediaManager.getMediaManagerId() == playerMediaManager.getMediaManagerId()) {
+            playerMediaManager.getPlayer().playerStop();
         }
 
         mDatabaseOpenHelper.deleteDatabaseFile();
@@ -1126,7 +1124,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     @Override
     public void changeAlbumArt(final Activity sourceActivity, final RefreshableView sourceRefreshable, final String albumId, boolean restore) {
         if (restore) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+            final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
             final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
             final DialogInterface.OnClickListener artUpdateSongPositiveOnClickListener = new DialogInterface.OnClickListener() {

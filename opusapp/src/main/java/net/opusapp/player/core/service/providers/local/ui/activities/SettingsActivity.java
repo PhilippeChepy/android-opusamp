@@ -82,7 +82,7 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
                 if (provider instanceof LocalProvider) {
@@ -100,7 +100,7 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
                 if (provider instanceof LocalProvider) {

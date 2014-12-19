@@ -85,7 +85,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST));
     }
@@ -152,7 +152,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         final int[] sortFields = new int[] { MusicConnector.playlists_sort_order };
 
-        return PlayerApplication.buildPlaylistLoader(PlayerApplication.libraryManagerIndex,
+        return PlayerApplication.buildPlaylistLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter);
 	}
 

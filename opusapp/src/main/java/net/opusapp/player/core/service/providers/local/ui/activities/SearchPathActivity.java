@@ -169,9 +169,10 @@ public class SearchPathActivity extends ActionBarActivity {
     protected void notifyLibraryChanges() {
         mPagerAdapter.refresh();
 
-        AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(mProviderId)].getProvider();
-        if (localProvider != null) {
-            localProvider.scanStart();
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        if (provider != null) {
+            provider.scanStart();
         }
     }
 	

@@ -83,7 +83,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST));
     }
@@ -150,7 +150,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         final int[] sortFields = new int[] { MusicConnector.artists_sort_order };
 
-        return PlayerApplication.buildArtistLoader(PlayerApplication.libraryManagerIndex,
+        return PlayerApplication.buildArtistLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter);
     }
 

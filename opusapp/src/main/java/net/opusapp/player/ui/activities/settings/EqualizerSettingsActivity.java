@@ -141,7 +141,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (mCursor != null && mCursor.getCount() > position) {
-                    final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+                    final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
                     mCursor.moveToPosition(position);
 
                     int preamp = mCursor.getInt(COLUMN_PREAMP);
@@ -171,16 +171,8 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
     protected void onPause() {
         super.onPause();
 
-        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+        final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
         PlayerApplication.saveEqualizerSettings(player);
-
-        for (int managerIndex = 0 ; managerIndex < PlayerApplication.mediaManagers.length ; managerIndex++) {
-            if (managerIndex != PlayerApplication.playerManagerIndex) {
-                final AbstractMediaManager.Player otherPlayer = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
-                PlayerApplication.restoreEqualizerSettings(otherPlayer);
-                otherPlayer.equalizerApplyProperties();
-            }
-        }
     }
 
     @Override
@@ -189,7 +181,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
 
         mEqualizerIsActiveView = (CheckBox) findViewById(R.id.equalizer_enabled);
 
-        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+        final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
 
         final LinearLayout bandContainerLayout = (LinearLayout) findViewById(R.id.equalizer_bands);
         for (int bandIndex = 0 ; bandIndex < 11 ; bandIndex++) {
@@ -255,7 +247,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
 
 
     protected void pushToPlayer() {
-        final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+        final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
 
         if (mEqualizerIsActiveView.isChecked() && !player.equalizerIsEnabled()) {
             player.equalizerSetEnabled(true);
@@ -426,7 +418,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+            final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
             player.equalizerBandSetGain(bandIndex, progress);
             player.equalizerBandSetGain(bandIndex + 11, progress);
         }
@@ -440,7 +432,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
         public void onStopTrackingTouch(SeekBar seekBar) {
             LogUtils.LOGW("SoundEffectActivity", "Applying gain");
 
-            final AbstractMediaManager.Player player = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex].getPlayer();
+            final AbstractMediaManager.Player player = PlayerApplication.playerMediaManager().getPlayer();
             player.equalizerApplyProperties();
         }
     }

@@ -87,7 +87,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE));
     }
@@ -136,7 +136,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
         final int[] sortFields = new int[] { MusicConnector.storage_sort_order };
 
         return PlayerApplication.buildStorageLoader(
-                PlayerApplication.libraryManagerIndex,
+                PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields,
                 sortFields,
                 PlayerApplication.lastSearchFilter);
@@ -181,7 +181,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         boolean hasChild = (Boolean) provider.getProperty(
@@ -205,7 +205,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     }
 
     public boolean handleBackButton() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         boolean hasParent = (Boolean) provider.getProperty(
@@ -228,7 +228,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     }
 
     protected void doLocationUpdate() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         String currentPath = (String) provider.getProperty(
@@ -239,7 +239,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
     }
 
     protected void doOnCreateContextMenu(Menu menu, int position) {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         boolean hasChild = (Boolean) provider.getProperty(

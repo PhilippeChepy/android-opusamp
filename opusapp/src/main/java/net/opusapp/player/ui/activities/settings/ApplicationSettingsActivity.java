@@ -12,12 +12,10 @@
  */
 package net.opusapp.player.ui.activities.settings;
 
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
@@ -126,51 +124,7 @@ public class ApplicationSettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final ProgressDialog progressDialog = new ProgressDialog(ApplicationSettingsActivity.this);
-
-                final AsyncTask<Void, Integer, Void> optimizationTask = new AsyncTask<Void, Integer, Void>() {
-
-                    @Override
-                    protected void onPreExecute() {
-                        super.onPreExecute();
-                        progressDialog.setTitle(R.string.preference_dialog_title_database_optimization);
-                        progressDialog.setIndeterminate(true);
-                        progressDialog.show();
-                    }
-
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        publishProgress(0);
-                        PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
-
-                        for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
-                            publishProgress(index + 1);
-                            PlayerApplication.mediaManagers[index].getProvider().databaseMaintain();
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    protected void onProgressUpdate(Integer... values) {
-                        super.onProgressUpdate(values);
-
-                        if (values[0] == 0) {
-                            progressDialog.setMessage(getString(R.string.progress_dialog_label_global_database));
-                        }
-                        else {
-                            progressDialog.setMessage(String.format(getString(R.string.progress_dialog_label_current_database), values[0], PlayerApplication.mediaManagers.length));
-                        }
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        super.onPostExecute(aVoid);
-                        progressDialog.dismiss();
-                    }
-                };
-
-                optimizationTask.execute();
+                PlayerApplication.optimizeDatabases(ApplicationSettingsActivity.this);
 
                 return true;
             }

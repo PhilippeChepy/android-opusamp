@@ -33,6 +33,10 @@ public interface AbstractMediaManager {
 
     public int getMediaManagerId();
 
+    public String getName();
+
+    public String getDescription();
+
     public Provider getProvider();
 
     public Player getPlayer();

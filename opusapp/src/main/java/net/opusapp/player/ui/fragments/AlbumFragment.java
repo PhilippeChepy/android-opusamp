@@ -90,7 +90,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM));
     }
@@ -159,7 +159,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         final int[] sortFields = new int[] { MusicConnector.albums_sort_order };
 
-        return PlayerApplication.buildAlbumLoader(PlayerApplication.libraryManagerIndex,
+        return PlayerApplication.buildAlbumLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
     }
 

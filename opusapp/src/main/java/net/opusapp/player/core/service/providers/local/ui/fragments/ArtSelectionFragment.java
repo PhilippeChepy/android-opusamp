@@ -44,7 +44,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
     private ArtSelectionAdapter adapter;
 
-    private int providerId;
+    private int mProviderId;
 
     private long sourceId;
 
@@ -77,9 +77,9 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
 
     protected SQLiteDatabase getReadableDatabase() {
-        int index = PlayerApplication.getManagerIndex(providerId);
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
             return ((LocalProvider) provider).getReadableDatabase();
         }
@@ -88,9 +88,9 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
     }
 
     protected SQLiteDatabase getWritableDatabase() {
-        int index = PlayerApplication.getManagerIndex(providerId);
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
             return ((LocalProvider) provider).getWritableDatabase();
         }
@@ -132,7 +132,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            providerId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
+            mProviderId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
             contentType = arguments.getInt(CONTENT_TYPE_KEY);
             sourceId = arguments.getLong(AbstractMediaManager.Provider.KEY_SOURCE_ID);
         }
@@ -259,9 +259,10 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                 database.delete(Entities.AlbumHasArts.TABLE_NAME, Entities.AlbumHasArts.COLUMN_FIELD_ART_ID + " = ? ", selectionArgs);
                 database.setTransactionSuccessful();
 
-                AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)].getProvider();
-                if (localProvider instanceof LocalProvider) {
-                    ((LocalProvider) localProvider).notifyLibraryChanges();
+                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                if (provider instanceof LocalProvider) {
+                    ((LocalProvider) provider).notifyLibraryChanges();
 
                     Cursor artCursor = database.rawQuery(
                             "SELECT " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + ", " + Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI + " " +
@@ -297,7 +298,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
         cursor.moveToPosition(position);
         final String selectedUri = cursor.getString(COLUMN_URI);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(providerId)];
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         final Activity activity = getActivity();

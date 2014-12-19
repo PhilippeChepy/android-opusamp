@@ -53,9 +53,9 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
 
 
     protected SQLiteDatabase getReadableDatabase() {
-        int index = PlayerApplication.getManagerIndex(mProviderId);
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
             return ((LocalProvider) provider).getReadableDatabase();
         }
@@ -64,9 +64,9 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
     }
 
     protected SQLiteDatabase getWritableDatabase() {
-        int index = PlayerApplication.getManagerIndex(mProviderId);
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
             return ((LocalProvider) provider).getWritableDatabase();
         }
@@ -205,9 +205,11 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
     protected void notifyLibraryChanges() {
         refresh();
 
-        AbstractMediaManager.Provider localProvider = PlayerApplication.mediaManagers[PlayerApplication.getManagerIndex(mProviderId)].getProvider();
-        if (localProvider != null) {
-            localProvider.scanStart();
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+
+        if (provider != null) {
+            provider.scanStart();
         }
     }
 

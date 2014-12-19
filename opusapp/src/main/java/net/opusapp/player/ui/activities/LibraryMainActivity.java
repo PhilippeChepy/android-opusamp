@@ -31,7 +31,6 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.ui.activities.settings.GeneralSettingsActivity;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
@@ -235,47 +234,41 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         final String action = intent.getAction();
 
         if(Intent.ACTION_VIEW.equals(action)){
-            for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[index];
+            MusicConnector.sendStopIntent();
 
-                if (mediaManager.getMediaManagerType() == AbstractMediaManager.LOCAL_MEDIA_MANAGER) {
-                    if (PlayerApplication.libraryManagerIndex != PlayerApplication.playerManagerIndex) {
-                        MusicConnector.sendStopIntent();
-                        PlayerApplication.playerManagerIndex = PlayerApplication.libraryManagerIndex;
-                        PlayerApplication.saveLibraryIndexes();
+            AbstractMediaManager manager = PlayerApplication.mediaManager(1);
+            PlayerApplication.setLibraryManager(1);
+            PlayerApplication.setPlayerManager(1);
+            PlayerApplication.saveLibraryIndexes();
 
-                        PlayerApplication.playerService.queueReload();
-                    }
-
-                    final Uri dataUri = intent.getData();
-                    String path = dataUri.getPath();
-                    final File pathFile = new File(path);
-                    if (!pathFile.isDirectory()) {
-                        path = pathFile.getParent();
-                    }
-
-                    mediaManager.getProvider().setProperty(
-                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
-                            path,
-                            AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
-                            null,
-                            null);
-                    int position = (Integer) mediaManager.getProvider().getProperty(
-                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
-                            dataUri.getPath(),
-                            AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
-
-                    mLibraryAdapter.refresh();
-
-                    MusicConnector.doContextActionPlay(
-                            AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
-                            String.valueOf(position),
-                            MusicConnector.storage_sort_order,
-                            position);
-
-                    getSlidingPanel().expandPanel();
-                }
+            final Uri dataUri = intent.getData();
+            String path = dataUri.getPath();
+            final File pathFile = new File(path);
+            if (!pathFile.isDirectory()) {
+                path = pathFile.getParent();
             }
+
+            manager.getProvider().setProperty(
+                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    path,
+                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
+                    null,
+                    null);
+
+            int position = (Integer) manager.getProvider().getProperty(
+                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    dataUri.getPath(),
+                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
+
+            mLibraryAdapter.refresh();
+
+            MusicConnector.doContextActionPlay(
+                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    String.valueOf(position),
+                    MusicConnector.storage_sort_order,
+                    position);
+
+            getSlidingPanel().expandPanel();
         }
     }
 
@@ -315,7 +308,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     protected synchronized void updateReloadMenuItem() {
         if (mReloadMenuItem != null) {
-            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
+            if (PlayerApplication.libraryMediaManager().getProvider().scanIsRunning()) {
                 mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
                 mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
             } else {
@@ -329,9 +322,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     protected void onDestroy() {
         getSupportLoaderManager().destroyLoader(0);
 
-        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
-            mediaManager.getProvider().removeLibraryChangeListener(libraryChangeListener);
-        }
+        PlayerApplication.unregisterLibraryChangeListener(libraryChangeListener);
 
         super.onDestroy();
     }
@@ -397,7 +388,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     protected void initLibraryView() {
         mLibraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         // Only show tabs that were set in preferences
@@ -456,12 +447,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     protected void initCurrentProvider() {
         initLibraryView();
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex].getProvider();
+        final AbstractMediaManager.Provider provider = PlayerApplication.libraryMediaManager().getProvider();
 
         //    Launching scan.
-        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
-            mediaManager.getProvider().addLibraryChangeListener(libraryChangeListener);
-        }
+        PlayerApplication.registerLibraryChangeListener(libraryChangeListener);
 
         if (provider.scanIsRunning()) {
             libraryChangeListener.libraryScanStarted();
@@ -472,10 +461,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         if (mNavigationCursor != null) {
             try {
-                mNavigationCursor.moveToPosition(PlayerApplication.libraryManagerIndex);
+                final AbstractMediaManager manager = PlayerApplication.libraryMediaManager();
 
-                getSupportActionBar().setTitle(mNavigationCursor.getString(1));
-                getSupportActionBar().setSubtitle(MediaManagerFactory.getDescriptionFromType(mNavigationCursor.getInt(2)));
+                getSupportActionBar().setTitle(manager.getName());
+                getSupportActionBar().setSubtitle(manager.getDescription());
             } catch (final Exception exception) {
                 LogUtils.LOGException(TAG, "initCurrentProvider", 0, exception);
             }
@@ -589,11 +578,11 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     private final MenuItem.OnMenuItemClickListener mReloadMenuItemListener = new MenuItem.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
-            if (PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanIsRunning()) {
-                PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanCancel();
+            if (PlayerApplication.libraryMediaManager().getProvider().scanIsRunning()) {
+                PlayerApplication.libraryMediaManager().getProvider().scanCancel();
             }
             else {
-                PlayerApplication.mediaManagers[PlayerApplication.getLibraryLibraryIndex()].getProvider().scanStart();
+                PlayerApplication.libraryMediaManager().getProvider().scanStart();
             }
 
             updateReloadMenuItem();
@@ -800,17 +789,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            PlayerApplication.setLibraryManager((int) id);
 
-            for (int searchIndex = 0 ; searchIndex < PlayerApplication.mediaManagers.length ; searchIndex++) {
-                int currentId = PlayerApplication.mediaManagers[searchIndex].getMediaManagerId();
-
-                if (currentId == id) {
-                    id = searchIndex;
-                    break;
-                }
-            }
-
-            PlayerApplication.libraryManagerIndex = (int) id;
             initCurrentProvider();
             PlayerApplication.saveLibraryIndexes();
 

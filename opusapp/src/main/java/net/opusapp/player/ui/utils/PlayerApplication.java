@@ -16,6 +16,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,6 +27,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
@@ -77,11 +79,12 @@ public class PlayerApplication extends Application implements ServiceConnection 
     //
     private static SQLiteOpenHelper databaseHelper;
 
-    public static int playerManagerIndex = 0;
+    private static AbstractMediaManager mediaManagers[] = null;
 
-    public static int libraryManagerIndex = 0;
+    private static int playerMediaManagerIndex = 0;
 
-    public static AbstractMediaManager mediaManagers[] = null;
+    private static int libraryMediaManagerIndex = 0;
+
 
     public static SQLiteOpenHelper getDatabaseOpenHelper() {
         return databaseHelper;
@@ -114,8 +117,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
         databaseHelper = new OpenHelper();
         allocateMediaManagers();
-        playerManagerIndex = getLibraryPlayerIndex();
-        libraryManagerIndex = getLibraryLibraryIndex();
+
+        playerMediaManagerIndex = getLibraryPlayerIndex();
+        libraryMediaManagerIndex = getLibraryLibraryIndex();
 
         BuildSpecific.initApp();
     }
@@ -167,92 +171,68 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     public static void allocateMediaManagers() {
-        AbstractMediaManager currentProvider = null;
-        int currentProviderId = -1;
-        int currentProviderType = AbstractMediaManager.INVALID_MEDIA_MANAGER;
 
-        if (mediaManagers != null) {
-            currentProvider = mediaManagers[playerManagerIndex];
-            if (!currentProvider.getPlayer().playerIsPlaying()) {
-                // ensure media player is completly stopped if paused.
-                currentProvider.getPlayer().playerStop();
-                currentProvider = null;
-            }
-            else {
-                currentProviderId = currentProvider.getMediaManagerId();
-                currentProviderType = currentProvider.getMediaManagerType();
-            }
-        }
+        final SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        final AbstractMediaManager playerProvider = playerMediaManager();
 
-        SQLiteDatabase database = databaseHelper.getReadableDatabase();
-        if (database != null) {
-            final String[] columns = new String[]{
-                    Entities.Provider._ID,
-                    Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE
-            };
+        final String[] columns = new String[] {
+                Entities.Provider._ID,
+                Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE,
+                Entities.Provider.COLUMN_FIELD_PROVIDER_NAME
+        };
 
-            final int COLUMN_ID = 0;
+        final int COLUMN_ID = 0;
 
-            final int COLUMN_TYPE = 1;
+        final int COLUMN_TYPE = 1;
 
-            final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
+        final int COLUMN_NAME = 2;
 
-            final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
-            if (CursorUtils.ifNotEmpty(cursor)) {
-                mediaManagers = new AbstractMediaManager[cursor.getCount()];
+        final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-                for (int index = 0 ; index < cursor.getCount() ; index++) {
-                    cursor.moveToNext();
-                    int providerType = cursor.getInt(COLUMN_TYPE);
-                    int providerId = cursor.getInt(COLUMN_ID);
+        final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
 
-                    if (providerId == currentProviderId && providerType == currentProviderType) {
-                        mediaManagers[index] = currentProvider;
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            mediaManagers = new AbstractMediaManager[cursor.getCount()];
 
-                        currentProvider = null;
-                        currentProviderId = -1;
-                        currentProviderType = AbstractMediaManager.INVALID_MEDIA_MANAGER;
+            if (playerProvider != null && playerProvider.getPlayer().playerIsPlaying()) {
+                while (cursor.moveToNext()) {
+                    int newProviderId = cursor.getInt(COLUMN_ID);
+                    int newProviderType = cursor.getInt(COLUMN_TYPE);
+                    final String newProviderName = cursor.getString(COLUMN_NAME);
 
-                        playerManagerIndex = index;
+                    if (newProviderId == playerProvider.getMediaManagerId()) {
+                        mediaManagers[cursor.getPosition()] = playerProvider;
                     }
                     else {
-                        mediaManagers[index] = MediaManagerFactory.buildMediaManager(providerType, providerId);
+                        final AbstractMediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
+                        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+
+                        mediaManagers[cursor.getPosition()] = mediaManager;
 
                         // load equalizer settings
-                        AbstractMediaManager.Player player = mediaManagers[index].getPlayer();
-
                         restoreEqualizerSettings(player);
                         player.equalizerApplyProperties();
                     }
                 }
-
-                CursorUtils.free(cursor);
-            }
-
-            if (currentProvider != null) {
-                if (currentProvider.getPlayer().playerIsPlaying()) {
-                    currentProvider.getPlayer().playerStop();
-                }
-
-                if (currentProvider.getProvider().scanIsRunning()) {
-                    currentProvider.getProvider().scanCancel();
-                }
-                currentProvider.getProvider().erase();
-            }
-
-            if (mediaManagers == null) {
-                libraryManagerIndex = -1;
-                playerManagerIndex = -1;
             }
             else {
-                if (libraryManagerIndex >= mediaManagers.length) {
-                    libraryManagerIndex = 0;
-                }
+                while (cursor.moveToNext()) {
+                    int newProviderId = cursor.getInt(COLUMN_ID);
+                    int newProviderType = cursor.getInt(COLUMN_TYPE);
+                    final String newProviderName = cursor.getString(COLUMN_NAME);
 
-                if (playerManagerIndex >= mediaManagers.length) {
-                    playerManagerIndex = 0;
+                    final AbstractMediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
+                    final AbstractMediaManager.Player player = mediaManager.getPlayer();
+
+                    mediaManagers[cursor.getPosition()] = mediaManager;
+
+                    // load equalizer settings
+                    restoreEqualizerSettings(player);
+                    player.equalizerApplyProperties();
                 }
             }
+
+            CursorUtils.free(cursor);
         }
 
         if (playerService != null) {
@@ -260,65 +240,181 @@ public class PlayerApplication extends Application implements ServiceConnection 
         }
     }
 
-    public static Loader<Cursor> buildAlbumArtistLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static void registerPlaybackStatusListener(final AbstractMediaManager.Player.PlaybackStatusListener listener) {
+        for (AbstractMediaManager manager : mediaManagers) {
+            final AbstractMediaManager.Player player = manager.getPlayer();
+            player.clearPlaybackStatusListeners();
+            player.addPlaybackStatusListener(listener);
+        }
+    }
+
+    public static void registerLibraryChangeListener(final AbstractMediaManager.Provider.OnLibraryChangeListener listener) {
+        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
+            mediaManager.getProvider().addLibraryChangeListener(listener);
+        }
+    }
+
+    public static void unregisterLibraryChangeListener(final AbstractMediaManager.Provider.OnLibraryChangeListener listener) {
+        for (AbstractMediaManager mediaManager : PlayerApplication.mediaManagers) {
+            mediaManager.getProvider().removeLibraryChangeListener(listener);
+        }
+    }
+
+    public static AbstractMediaManager playerMediaManager() {
+        if (mediaManagers == null || playerMediaManagerIndex >= mediaManagers.length) {
+            return null;
+        }
+
+        return mediaManagers[playerMediaManagerIndex];
+    }
+
+    public static AbstractMediaManager libraryMediaManager() {
+        if (mediaManagers == null || libraryMediaManagerIndex >= mediaManagers.length) {
+            return null;
+        }
+
+        return mediaManagers[libraryMediaManagerIndex];
+    }
+
+    public static void setPlayerManager(int id) {
+        for (int managerIndex = 0 ; managerIndex < mediaManagers.length ; managerIndex++) {
+            if (mediaManagers[managerIndex].getMediaManagerId() == id) {
+                playerMediaManagerIndex = managerIndex;
+                return;
+            }
+        }
+
+        // TODO: throw exception ?
+    }
+
+    public static void setLibraryManager(int id) {
+        for (int managerIndex = 0 ; managerIndex < mediaManagers.length ; managerIndex++) {
+            if (mediaManagers[managerIndex].getMediaManagerId() == id) {
+                libraryMediaManagerIndex = managerIndex;
+                return;
+            }
+        }
+
+        // TODO: throw exception ?
+    }
+
+    public static AbstractMediaManager mediaManager(int id) {
+        for (final AbstractMediaManager mediaManager : mediaManagers) {
+            if (mediaManager.getMediaManagerId() == id) {
+                return mediaManager;
+            }
+        }
+
+        return null;
+    }
+
+    public static void optimizeDatabases(final Activity parent) {
+        final ProgressDialog progressDialog = new ProgressDialog(parent);
+
+        final AsyncTask<Void, Integer, Void> optimizationTask = new AsyncTask<Void, Integer, Void>() {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressDialog.setTitle(R.string.preference_dialog_title_database_optimization);
+                progressDialog.setIndeterminate(true);
+                progressDialog.show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                publishProgress(0);
+                PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
+
+                for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
+                    publishProgress(index + 1);
+                    PlayerApplication.mediaManagers[index].getProvider().databaseMaintain();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+
+                if (values[0] == 0) {
+                    progressDialog.setMessage(parent.getString(R.string.progress_dialog_label_global_database));
+                }
+                else {
+                    progressDialog.setMessage(String.format(parent.getString(R.string.progress_dialog_label_current_database), values[0], PlayerApplication.mediaManagers.length));
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                progressDialog.dismiss();
+            }
+        };
+
+        optimizationTask.execute();
+    }
+
+    public static Loader<Cursor> buildAlbumArtistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildAlbumLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
+    public static Loader<Cursor> buildAlbumLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, requestedFields, sortFields, filter, contentType, sourceId);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, requestedFields, sortFields, filter, contentType, sourceId);
             }
         };
     }
 
-    public static Loader<Cursor> buildArtistLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildArtistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildGenreLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildGenreLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildPlaylistLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildPlaylistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildMediaLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
+    public static Loader<Cursor> buildMediaLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, requestedFields, sortFields, filter, contentType, sourceId);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, requestedFields, sortFields, filter, contentType, sourceId);
             }
         };
     }
 
-    public static Loader<Cursor> buildStorageLoader(final int managerIndex, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildStorageLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return  mediaManagers[managerIndex].getProvider().buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -370,10 +466,12 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createSongContextMenu(Menu menu, int groupId, boolean visible, boolean isPlaylistDetails) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
+
         menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.menuitem_label_add_to_playlist);
 
         if (isPlaylistDetails) {
@@ -418,7 +516,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createPlaylistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
@@ -471,15 +569,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createGenreContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
+
         menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_PLAYLIST, 4, R.string.menuitem_label_add_to_playlist);
         menu.add(groupId, CONTEXT_MENUITEM_HIDE, 5, visible ? R.string.menuitem_label_hide : R.string.menuitem_label_show);
     }
 
-    public static boolean genreDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String genreId, int sortOrder, int position, String albumId) {
+    public static boolean genreDetailContextItemSelected(FragmentActivity hostActivity, int itemId, int sortOrder, int position, String albumId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
                 return MusicConnector.doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
@@ -515,7 +615,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createArtistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
@@ -559,7 +660,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createAlbumContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
@@ -610,7 +712,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createAlbumArtistContextMenu(Menu menu, int groupId, boolean visible) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
@@ -654,7 +757,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void createStorageContextMenu(Menu menu, int groupId) {
         menu.add(groupId, CONTEXT_MENUITEM_PLAY, 1, R.string.menuitem_label_play);
-        if (PlayerApplication.libraryManagerIndex == PlayerApplication.playerManagerIndex) {
+
+        if (playerMediaManagerIndex == libraryMediaManagerIndex) {
             menu.add(groupId, CONTEXT_MENUITEM_PLAY_NEXT, 2, R.string.menuitem_label_play_next);
             menu.add(groupId, CONTEXT_MENUITEM_ADD_TO_QUEUE, 3, R.string.menuitem_label_add_to_queue);
         }
@@ -714,8 +818,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        editor.putInt(PREFERENCE_LIBRARY_PLAYER_INDEX, playerManagerIndex);
-        editor.putInt(PREFERENCE_LIBRARY_LIBRARY_INDEX, libraryManagerIndex);
+        editor.putInt(PREFERENCE_LIBRARY_PLAYER_INDEX, playerMediaManagerIndex);
+        editor.putInt(PREFERENCE_LIBRARY_LIBRARY_INDEX, libraryMediaManagerIndex);
         editor.apply();
     }
 

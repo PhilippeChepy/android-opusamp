@@ -225,14 +225,14 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
                     final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
 
                     if (database != null && itemIndex >= 0) {
-                        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[itemIndex];
                         // Delete database registration
                         database.delete(Entities.Provider.TABLE_NAME, Entities.Provider._ID + " = ? ",
                                 new String[] {
-                                        String.valueOf(mediaManager.getMediaManagerId())
+                                        String.valueOf(providerId)
                                 });
 
                         // Delete provider specific content
+                        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
                         mediaManager.getProvider().erase();
                         refresh();
                     }

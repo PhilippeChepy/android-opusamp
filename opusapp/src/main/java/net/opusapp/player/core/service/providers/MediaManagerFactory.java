@@ -61,10 +61,10 @@ public class MediaManagerFactory {
         }
     }
 
-    public static AbstractMediaManager buildMediaManager(int mediaManagerType, int providerId) {
+    public static AbstractMediaManager buildMediaManager(int mediaManagerType, int providerId, String name) {
         switch (mediaManagerType) {
             case AbstractMediaManager.LOCAL_MEDIA_MANAGER:
-                return new LocalMediaManager(providerId);
+                return new LocalMediaManager(providerId, name);
             /*
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:
                 return new DlnaMediaManager(providerId);

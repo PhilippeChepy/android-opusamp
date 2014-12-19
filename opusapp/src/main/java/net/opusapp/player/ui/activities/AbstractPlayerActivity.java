@@ -358,7 +358,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return PlayerApplication.buildMediaLoader(
-                PlayerApplication.playerManagerIndex,
+                PlayerApplication.playerMediaManager().getProvider(),
                 requestedFields,
                 sortFields,
                 null,
@@ -879,7 +879,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     }
 
     protected boolean doDetailsAction() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.playerManagerIndex];
+        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
         final MetadataDialog metadataDialog = new MetadataDialog(

@@ -46,9 +46,9 @@ public class CoverSelectionActivity extends ActionBarActivity {
 
 
     protected SQLiteDatabase getWritableDatabase() {
-        int index = PlayerApplication.getManagerIndex(mProviderId);
+        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
-        final AbstractMediaManager.Provider provider = PlayerApplication.mediaManagers[index].getProvider();
         if (provider instanceof LocalProvider) {
             return ((LocalProvider) provider).getWritableDatabase();
         }

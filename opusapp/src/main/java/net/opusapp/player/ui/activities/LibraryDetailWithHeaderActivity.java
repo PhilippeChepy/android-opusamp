@@ -125,7 +125,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
     public void refresh() {
         getSupportLoaderManager().restartLoader(1, null, this);
 
-        final AbstractMediaManager manager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+        final AbstractMediaManager manager = PlayerApplication.libraryMediaManager();
         final AbstractMediaManager.Provider provider = manager.getProvider();
 
         contentArtUri = provider.getAlbumArtUri(contentSourceId);
@@ -191,7 +191,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
         Bundle parameters = getIntent().getExtras();
         if (parameters != null) {
-            final AbstractMediaManager manager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+            final AbstractMediaManager manager = PlayerApplication.libraryMediaManager();
             final AbstractMediaManager.Provider provider = manager.getProvider();
 
             contentType = (AbstractMediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
@@ -336,7 +336,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 };
 
                 return PlayerApplication.buildMediaLoader(
-                        PlayerApplication.libraryManagerIndex,
+                        PlayerApplication.libraryMediaManager().getProvider(),
                         requestedFields,
                         new int[] { MusicConnector.details_songs_sort_order },
                         null,
@@ -356,7 +356,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 };
 
                 return PlayerApplication.buildMediaLoader(
-                        PlayerApplication.libraryManagerIndex,
+                        PlayerApplication.libraryMediaManager().getProvider(),
                         requestedFields,
                         new int[]{ MusicConnector.details_songs_sort_order },
                         null,
@@ -374,7 +374,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 };
 
                 return PlayerApplication.buildAlbumLoader(
-                        PlayerApplication.libraryManagerIndex,
+                        PlayerApplication.libraryMediaManager().getProvider(),
                         requestedFields,
                         new int[]{ MusicConnector.details_albums_sort_order },
                         null,
@@ -535,7 +535,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
             case CONTENT_TYPE_PLAYLIST:
                 return PlayerApplication.playlistDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, contentSourceId, MusicConnector.details_songs_sort_order, cursor.getPosition(), cursor.getString(COLUMN_SONG_ID));
             case CONTENT_TYPE_GENRE:
-                return PlayerApplication.genreDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, contentSourceId, MusicConnector.details_albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
+                return PlayerApplication.genreDetailContextItemSelected(this, PlayerApplication.CONTEXT_MENUITEM_PLAY, MusicConnector.details_albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
             default:
                 throw new IllegalArgumentException();
         }
@@ -577,7 +577,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
                 return PlayerApplication.albumArtistDetailContextItemSelected(this, itemId, MusicConnector.details_albums_sort_order, cursor.getString(COLUMN_ALBUM_ID));
             case CONTENT_TYPE_ALBUM:
                 if (position == -1) {
-                    final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[PlayerApplication.libraryManagerIndex];
+                    final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
                     final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
                     provider.changeAlbumArt(this, this, contentSourceId, itemId == CONTEXT_MENUITEM_RESTORE_ART);
@@ -598,7 +598,7 @@ public class LibraryDetailWithHeaderActivity extends AbstractPlayerActivity impl
 
                 return playlistActionResult;
             case CONTENT_TYPE_GENRE:
-                return PlayerApplication.genreDetailContextItemSelected(this, itemId, contentSourceId, MusicConnector.details_albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
+                return PlayerApplication.genreDetailContextItemSelected(this, itemId, MusicConnector.details_albums_sort_order, cursor.getPosition(), cursor.getString(COLUMN_ALBUM_ID));
             default:
                 throw new IllegalArgumentException();
         }
