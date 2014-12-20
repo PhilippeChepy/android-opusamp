@@ -35,7 +35,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -122,7 +121,7 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                         cursor.moveToPosition(position);
-                        return PlayerApplication.albumArtistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ALBUM_ARTIST_ID), MusicConnector.album_artists_sort_order, 0);
+                        return PlayerApplication.albumArtistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ALBUM_ARTIST_ID), PlayerApplication.library_album_artists_sort_order, 0);
                     }
                 };
             }
@@ -150,7 +149,7 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        final int[] sortFields = new int[] { MusicConnector.album_artists_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_album_artists_sort_order};
 
         return PlayerApplication.buildAlbumArtistLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter);
@@ -190,7 +189,7 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
             return false;
         }
 
-        PlayerApplication.albumArtistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ALBUM_ARTIST_ID), MusicConnector.album_artists_sort_order, 0);
+        PlayerApplication.albumArtistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ALBUM_ARTIST_ID), PlayerApplication.library_album_artists_sort_order, 0);
         return super.onContextItemSelected(item);
     }
 	

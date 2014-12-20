@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
@@ -44,16 +45,24 @@ import android.widget.TimePicker;
 
 import com.mobeta.android.dslv.DragSortListView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+import com.squareup.otto.Subscribe;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerEventBus;
 import net.opusapp.player.core.service.PlayerService;
+import net.opusapp.player.core.service.event.MediaChangedEvent;
+import net.opusapp.player.core.service.event.MediaCoverChangedEvent;
+import net.opusapp.player.core.service.event.PlayStateChangedEvent;
+import net.opusapp.player.core.service.event.PlaylistChangedEvent;
+import net.opusapp.player.core.service.event.RepeatModeChangedEvent;
+import net.opusapp.player.core.service.event.ShuffleModeChangedEvent;
+import net.opusapp.player.core.service.event.TimestampChangedEvent;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.settings.EqualizerSettingsActivity;
 import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.dialogs.MetadataDialog;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RepeatingImageButton;
 import net.opusapp.player.utils.LogUtils;
@@ -88,8 +97,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
             AbstractMediaManager.Provider.SONG_ART_URI,
             AbstractMediaManager.Provider.SONG_TRACK,
-            AbstractMediaManager.Provider.SONG_VISIBLE,
-            AbstractMediaManager.Provider.SONG_DURATION
+            AbstractMediaManager.Provider.SONG_VISIBLE
     };
 
     private int[] sortFields = new int[] {
@@ -109,8 +117,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     private static final int COLUMN_SONG_TRACK_NUMBER = 5;
 
     private static final int COLUMN_SONG_VISIBLE = 6;
-
-    private static final int COLUMN_SONG_DURATION = 7;
 
 
 
@@ -163,6 +169,18 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     protected boolean isFirstRun = false;
 
+    // Current media
+    private int mCurrentRepeatMode;
+
+    private int mCurrentShuffleMode;
+
+    private String mCurrentTitle;
+
+    private String mCurrentArtist;
+
+    private int mCurrentQueuePosition;
+
+    private int mCurrentPlayState;
 
 
     protected void onCreate(Bundle savedInstanceState, int layout, int windowFeatures[]) {
@@ -208,19 +226,19 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         mPlaylistPositionTextView = (TextView) findViewById(R.id.playlist_track_count);
 
         mRepeatButton = (ImageButton) findViewById(R.id.audio_player_repeat);
-        mRepeatButton.setOnClickListener(MusicConnector.repeatClickListener);
+        mRepeatButton.setOnClickListener(mRepeatButtonClickListener);
 
         final RepeatingImageButton prevButton = (RepeatingImageButton) findViewById(R.id.audio_player_prev);
-        prevButton.setOnClickListener(MusicConnector.prevClickListener);
+        prevButton.setOnClickListener(mPrevButtonClickListener);
 
         mPlayButton = (ImageButton) findViewById(R.id.audio_player_play);
-        mPlayButton.setOnClickListener(new MusicConnector.PlayClickListenerImpl(this));
+        mPlayButton.setOnClickListener(mPlayButtonClickListener);
 
         final RepeatingImageButton nextButton = (RepeatingImageButton) findViewById(R.id.audio_player_next);
-        nextButton.setOnClickListener(MusicConnector.nextClickListener);
+        nextButton.setOnClickListener(mNextButtonClickListener);
 
         mShuffleButton = (ImageButton) findViewById(R.id.audio_player_shuffle);
-        mShuffleButton.setOnClickListener(MusicConnector.shuffleClickListener);
+        mShuffleButton.setOnClickListener(mShuffleButtonClickListener);
 
         mProgressSeekBar = (SeekBar) findViewById(R.id.progress);
         mProgressSeekBar.setOnSeekBarChangeListener(progressBarOnChangeListener);
@@ -299,16 +317,18 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         if (mTotalTimeTextView != null) {
             mTotalTimeTextView.setTextColor(PlayerApplication.getAccentColor());
         }
+
+        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
+        PlayerEventBus.getInstance().register(mEventListener);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
+        PlayerEventBus.getInstance().unregister(mEventListener);
+
         PlayerApplication.disconnectService(this);
-        if (PlayerApplication.playerService != null) { // Avoid NPE while killing process (in dev only).
-            PlayerApplication.playerService.unregisterPlayerCallback(playerServiceListener);
-        }
     }
 
     @Override
@@ -424,13 +444,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
         getSupportLoaderManager().restartLoader(0, null, this);
-
-        PlayerApplication.playerService.registerPlayerCallback(playerServiceListener);
-
-        playerServiceListener.playButtonUpdateRunnable.run();
-        playerServiceListener.repeatButtonUpdateRunnable.run();
-        playerServiceListener.shuffleButtonUpdateRunnable.run();
-        playerServiceListener.onCoverLoaded(PlayerApplication.playerService.getCurrentCover());
         playlistButtonUpdateRunnable.run();
     }
 
@@ -444,23 +457,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         return slidingUpPanelLayout;
     }
 
-    public String currentMediaTitle() {
-        if (playlistCursor == null || playlistCursor.getCount() == 0) {
-            return null;
-        }
-
-        playlistCursor.moveToPosition(MusicConnector.getCurrentPlaylistPosition());
-        return playlistCursor.getString(COLUMN_SONG_TITLE);
-    }
-
-    public String currentMediaArtist() {
-        if (playlistCursor == null || playlistCursor.getCount() == 0) {
-            return null;
-        }
-
-        playlistCursor.moveToPosition(MusicConnector.getCurrentPlaylistPosition());
-        return playlistCursor.getString(COLUMN_SONG_ARTIST);
-    }
 
     @Override
     public void onBackPressed() {
@@ -474,7 +470,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
     private void updateAutoPauseMenuItem() {
         if (mAutoPause != null) {
-            if (MusicConnector.isPlaying()) {
+            if (mCurrentPlayState == PlayerService.PLAYSTATE_PLAYING) {
                 long remaining = PlayerApplication.playerService != null ? PlayerApplication.playerService.getAutostopTimestamp() : -1;
                 long remainingSecs = 0;
                 if (remaining > 0) {
@@ -501,217 +497,111 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     }
 
 
+    private Object mEventListener = new Object() {
 
-    // Player service listener
-    private PlayerServiceStateListenerImpl playerServiceListener = new PlayerServiceStateListenerImpl();
+        // Player service listener
+        @SuppressWarnings("unused")
+        @Subscribe public void mediaCoverChanged(MediaCoverChangedEvent mediaCoverChangedEvent) {
+            final Bitmap bitmap = mediaCoverChangedEvent.getBitmap();
 
-    public final class PlayerServiceStateListenerImpl implements PlayerService.PlayerServiceStateListener {
-
-        @Override
-        public void onPlay() {
-            runOnUiThread(playButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onPause() {
-            runOnUiThread(playButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onStop() {
-            runOnUiThread(playButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onSeek(final long position) {
-            seekbarRunnable.position = (int) position;
-            runOnUiThread(seekbarRunnable);
-        }
-
-        @Override
-        public void onShuffleModeChanged() {
-            runOnUiThread(shuffleButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onRepeatModeChanged() {
-            runOnUiThread(repeatButtonUpdateRunnable);
-        }
-
-        @Override
-        public void onQueueChanged() {
-            getSupportLoaderManager().restartLoader(0, null, AbstractPlayerActivity.this);
-        }
-
-        @Override
-        public void onQueuePositionChanged() {
-            runOnUiThread(songUpdateRunnable);
-        }
-
-        @Override
-        public void onCoverLoaded(final Bitmap bitmap) {
-            if (bitmap == null) {
-                mCoverImageView.setImageResource(R.drawable.no_art_normal);
-                if (mBackgroundCoverImageView != null) {
-                    mBackgroundCoverImageView.setImageResource(R.drawable.no_art_normal);
-                }
-            }
-            else {
-                coverUpdateRunnable.bitmap = bitmap;
-                runOnUiThread(coverUpdateRunnable);
-            }
-        }
-
-        private CoverUpdateRunnable coverUpdateRunnable = new CoverUpdateRunnable();
-
-        class CoverUpdateRunnable implements Runnable {
-
-            public Bitmap bitmap;
-
-            @Override
-            public void run() {
+            if (mediaCoverChangedEvent.isAvailable()) {
                 mCoverImageView.setImageBitmap(bitmap);
                 if (mBackgroundCoverImageView != null) {
                     mBackgroundCoverImageView.setImageBitmap(bitmap);
                 }
             }
+            else {
+                mCoverImageView.setImageResource(R.drawable.no_art_normal);
+                if (mBackgroundCoverImageView != null) {
+                    mBackgroundCoverImageView.setImageResource(R.drawable.no_art_normal);
+                }
+            }
         }
 
-        private Runnable playButtonUpdateRunnable = new Runnable() {
 
-            @Override
-            public void run() {
-                updateAutoPauseMenuItem();
+        @SuppressWarnings("unused")
+        @Subscribe public void playStateChanged(PlayStateChangedEvent playStateChangedEvent) {
+            mCurrentPlayState = playStateChangedEvent.getPlayState();
 
-                if (PlayerApplication.playerService != null) {
-                    if (PlayerApplication.playerService.isPlaying()) {
-                        mPlayButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
-                        mElapsedTimeTextView.clearAnimation();
-                    }
-                    else {
-                        mPlayButton.setImageResource(R.drawable.ic_play_arrow_grey600_48dp);
-                        Animation animation = new AlphaAnimation(0.0f, 1.0f);
-                        animation.setDuration(100);
-                        animation.setStartOffset(400);
-                        animation.setRepeatMode(Animation.REVERSE);
-                        animation.setRepeatCount(Animation.INFINITE);
-                        mElapsedTimeTextView.startAnimation(animation);
-                    }
+            updateAutoPauseMenuItem();
 
-                    long currentPosition = PlayerApplication.playerService.getPosition();
-
-                    if (currentPosition == 0) {
-                        onSeek(0);
-                    }
-
-                    mProgressSeekBar.setMax((int) PlayerApplication.playerService.getDuration());
-                }
-                else {
-                    LogUtils.LOGService(TAG, "doPlayButtonUpdate()", 0);
-                }
+            if (mCurrentPlayState == PlayerService.PLAYSTATE_PLAYING) {
+                mPlayButton.setImageResource(R.drawable.ic_pause_grey600_48dp);
+                mElapsedTimeTextView.clearAnimation();
             }
-        };
-
-        private Runnable shuffleButtonUpdateRunnable = new Runnable() {
-
-            @Override
-            public void run() {
-                if (PlayerApplication.playerService != null) {
-                    switch (PlayerApplication.playerService.getShuffleMode()) {
-                        case PlayerService.SHUFFLE_AUTO:
-                            mShuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
-                            mShuffleButton.setColorFilter(PlayerApplication.getBackgroundColor());
-                            break;
-                        case PlayerService.SHUFFLE_NONE:
-                            mShuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
-                            mShuffleButton.setColorFilter(null);
-                            break;
-                    }
-                }
-                else {
-                    LogUtils.LOGService(TAG, "doShuffleButtonUpdate", 0);
-                }
+            else {
+                mPlayButton.setImageResource(R.drawable.ic_play_arrow_grey600_48dp);
+                Animation animation = new AlphaAnimation(0.0f, 1.0f);
+                animation.setDuration(100);
+                animation.setStartOffset(400);
+                animation.setRepeatMode(Animation.REVERSE);
+                animation.setRepeatCount(Animation.INFINITE);
+                mElapsedTimeTextView.startAnimation(animation);
             }
-        };
+        }
 
-        private Runnable repeatButtonUpdateRunnable = new Runnable() {
-
-            @Override
-            public void run() {
-                if (PlayerApplication.playerService != null) {
-                    switch (PlayerApplication.playerService.getRepeatMode()) {
-                        case PlayerService.REPEAT_ALL:
-                            mRepeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
-                            mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
-                            break;
-                        case PlayerService.REPEAT_CURRENT:
-                            mRepeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
-                            mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
-                            break;
-                        case PlayerService.REPEAT_NONE:
-                            mRepeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
-                            mRepeatButton.setColorFilter(null);
-                            break;
-                    }
-                }
-                else {
-                    LogUtils.LOGService(TAG, "doRepeatButtonUpdate", 0);
-                }
-            }
-        };
-
-        private Runnable songUpdateRunnable = new Runnable() {
-
-            @Override
-            public void run() {
-                int queuePosition = MusicConnector.getCurrentPlaylistPosition();
-                long position = 0;
-
-                if (playlistCursor != null && queuePosition < playlistCursor.getCount()) {
-                    doSetPlaylistPosition(queuePosition);
-                    mMediaTitleTextView.setText(playlistCursor.getString(COLUMN_SONG_TITLE));
-                    mMediaArtistTextView.setText(playlistCursor.getString(COLUMN_SONG_ARTIST));
-                    mTotalTimeTextView.setText(PlayerApplication.formatSecs(playlistCursor.getLong(COLUMN_SONG_DURATION)));
-                }
-                else {
-                    mMediaTitleTextView.setText("");
-                    mMediaArtistTextView.setText("");
-                    mTotalTimeTextView.setText(PlayerApplication.formatMSecs(0));
-                }
-
-                if (PlayerApplication.playerService != null) {
-                    mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(PlayerApplication.playerService.getPosition()));
-                }
-                else {
-                    mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(0));
-                }
-
-
-
-
-                seekbarRunnable.position = (int) position;
-                runOnUiThread(seekbarRunnable);
-            }
-        };
-
-        private SeekbarRunnable seekbarRunnable = new SeekbarRunnable();
-    }
-
-
-
-    // Seek bar helper classes
-    public class SeekbarRunnable implements Runnable {
-        public int position;
-
-        @Override
-        public void run() {
+        @SuppressWarnings("unused")
+        @Subscribe public void timestampChanged(TimestampChangedEvent timestampChangedEvent) {
             if (updateSeekBar) {
-                mProgressSeekBar.setProgress(position);
+                mProgressSeekBar.setProgress((int) (timestampChangedEvent.getTimestamp() / 100));
             }
-
-            mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(position));
+            mElapsedTimeTextView.setText(PlayerApplication.formatMSecs(timestampChangedEvent.getTimestamp()));
         }
-    }
+
+        @SuppressWarnings("unused")
+        @Subscribe public void mediaChanged(MediaChangedEvent mediaChangedEvent) {
+            mCurrentQueuePosition = mediaChangedEvent.getQueuePosition();
+            mCurrentTitle = mediaChangedEvent.getTitle();
+            mCurrentArtist = mediaChangedEvent.getArtist();
+
+            doSetPlaylistPosition(mCurrentQueuePosition);
+            mMediaTitleTextView.setText(mCurrentTitle);
+            mMediaArtistTextView.setText(mCurrentArtist);
+            mTotalTimeTextView.setText(PlayerApplication.formatSecs(mediaChangedEvent.getDuration()));
+            mProgressSeekBar.setMax((int) (mediaChangedEvent.getDuration() * 10));
+        }
+
+        @SuppressWarnings("unused")
+        @Subscribe public void repeatModeChanged(RepeatModeChangedEvent repeatModeChangedEvent) {
+            mCurrentRepeatMode = repeatModeChangedEvent.getNewMode();
+
+            switch (mCurrentShuffleMode) {
+                case PlayerService.REPEAT_ALL:
+                    mRepeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
+                    mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                    break;
+                case PlayerService.REPEAT_CURRENT:
+                    mRepeatButton.setImageResource(R.drawable.ic_repeat_one_black_48dp);
+                    mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                    break;
+                case PlayerService.REPEAT_NONE:
+                    mRepeatButton.setImageResource(R.drawable.ic_repeat_grey600_48dp);
+                    mRepeatButton.setColorFilter(null);
+                    break;
+            }
+        }
+
+        @SuppressWarnings("unused")
+        @Subscribe public void shuffleModeChanged(ShuffleModeChangedEvent shuffleModeChangedEvent) {
+            mCurrentShuffleMode = shuffleModeChangedEvent.getNewMode();
+
+            switch (mCurrentShuffleMode) {
+                case PlayerService.SHUFFLE_AUTO:
+                    mShuffleButton.setImageResource(R.drawable.ic_shuffle_black_48dp);
+                    mShuffleButton.setColorFilter(PlayerApplication.getBackgroundColor());
+                    break;
+                case PlayerService.SHUFFLE_NONE:
+                    mShuffleButton.setImageResource(R.drawable.ic_shuffle_grey600_48dp);
+                    mShuffleButton.setColorFilter(null);
+                    break;
+            }
+        }
+
+        @SuppressWarnings("unused")
+        @Subscribe public void playlistChangedEvent(PlaylistChangedEvent playlistChangedEvent) {
+            getSupportLoaderManager().restartLoader(0, null, AbstractPlayerActivity.this);
+        }
+    };
 
     private Runnable playlistButtonUpdateRunnable = new Runnable() {
         @Override
@@ -733,8 +623,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 }
             }
 
-            int queuePosition = MusicConnector.getCurrentPlaylistPosition();
-            doSetPlaylistPosition(queuePosition);
+            doSetPlaylistPosition(mCurrentQueuePosition);
         }
     };
 
@@ -744,11 +633,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onStopTrackingTouch(SeekBar seekBar) {
             if (PlayerApplication.playerService.isPlaying()) {
                 PlayerApplication.playerService.pause(true);
-                PlayerApplication.playerService.setPosition(seekBar.getProgress());
+                PlayerApplication.playerService.setPosition(seekBar.getProgress() * 100);
                 PlayerApplication.playerService.play();
             }
             else {
-                PlayerApplication.playerService.setPosition(seekBar.getProgress());
+                PlayerApplication.playerService.setPosition(seekBar.getProgress() * 100);
             }
             updateSeekBar = true;
         }
@@ -768,10 +657,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             adapter.changeCursor(playlistCursor);
             if (mPlaylistListView != null) {
                 mPlaylistListView.invalidateViews();
-            }
-
-            if (playlistCursor != null && playlistCursor.getCount() > 0) {
-                playerServiceListener.songUpdateRunnable.run();
             }
         }
     }
@@ -851,7 +736,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     }
 
     protected boolean doAddToPlaylistAction() {
-        return MusicConnector.doContextActionAddToPlaylist(this, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), MusicConnector.songs_sort_order);
+        return PlayerApplication.doContextActionAddToPlaylist(this, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), PlayerApplication.library_songs_sort_order);
     }
 
     protected boolean doClearAction() {
@@ -879,25 +764,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     }
 
     protected boolean doDetailsAction() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        final MetadataDialog metadataDialog = new MetadataDialog(
-                this,
-                R.string.alert_dialog_title_media_properties,
-                provider,
+        final MetadataDialog metadataDialog = new MetadataDialog(this, R.string.alert_dialog_title_media_properties,
+                PlayerApplication.playerMediaManager().getProvider(),
                 AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
                 playlistCursor.getString(COLUMN_SONG_ID));
-
-        metadataDialog.setOnEditDoneListener(new MetadataDialog.OnEditDoneListener() {
-
-            @Override
-            public void onEditDone(MetadataDialog dialog) {
-                playerServiceListener.onQueueChanged();
-            }
-        });
         metadataDialog.show();
-
         return true;
     }
 
@@ -927,6 +798,69 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
 
 
 
+    // Player UI actions
+    public View.OnClickListener mRepeatButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            switch (mCurrentRepeatMode) {
+                case PlayerService.REPEAT_NONE:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_CURRENT);
+                    break;
+                case PlayerService.REPEAT_CURRENT:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_ALL);
+                    break;
+                case PlayerService.REPEAT_ALL:
+                    PlayerApplication.playerService.setRepeatMode(PlayerService.REPEAT_NONE);
+                    break;
+            }
+        }
+    };
+
+    public View.OnClickListener mPrevButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+            localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PREVIOUS_INTENT);
+        }
+    };
+
+    public View.OnClickListener mNextButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+            localBroadcastManager.sendBroadcast(PlayerService.CLIENT_NEXT_INTENT);
+        }
+    };
+
+    public View.OnClickListener mShuffleButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            switch (mCurrentShuffleMode) {
+                case PlayerService.SHUFFLE_AUTO:
+                    PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_NONE);
+                    break;
+                case PlayerService.SHUFFLE_NONE:
+                    PlayerApplication.playerService.setShuffleMode(PlayerService.SHUFFLE_AUTO);
+                    break;
+            }
+        }
+    };
+
+    public View.OnClickListener mPlayButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+            localBroadcastManager.sendBroadcast(PlayerService.CLIENT_TOGGLE_PLAY_INTENT);
+        }
+    };
+
+
+
     // Menu item listeners
     private final MenuItem.OnMenuItemClickListener mShareMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
@@ -935,11 +869,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
             sharingIntent.setType("text/plain");
 
-            final String mediaTitle = currentMediaTitle();
-            final String mediaArtist = currentMediaArtist();
-
-            if (!TextUtils.isEmpty(mediaTitle) && !TextUtils.isEmpty(mediaArtist)) {
-                final String sharingText = String.format(PlayerApplication.context.getString(R.string.share_body), mediaTitle, mediaArtist);
+            if (!TextUtils.isEmpty(mCurrentTitle) && !TextUtils.isEmpty(mCurrentArtist)) {
+                final String sharingText = String.format(PlayerApplication.context.getString(R.string.share_body), mCurrentTitle, mCurrentArtist);
                 sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, sharingText);
                 startActivity(Intent.createChooser(sharingIntent, PlayerApplication.context.getString(R.string.share_via)));
             }

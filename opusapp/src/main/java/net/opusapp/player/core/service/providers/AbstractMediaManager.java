@@ -31,7 +31,7 @@ public interface AbstractMediaManager {
 
     public int getMediaManagerType();
 
-    public int getMediaManagerId();
+    public int getId();
 
     public String getName();
 
@@ -93,10 +93,6 @@ public interface AbstractMediaManager {
         public boolean scanStart();
         public boolean scanCancel();
         public boolean scanIsRunning();
-
-
-        public void addLibraryChangeListener(OnLibraryChangeListener libraryChangeListener);
-        public void removeLibraryChangeListener(OnLibraryChangeListener libraryChangeListener);
 
 
         public static final int ALBUM_ARTIST_ID = 1;
@@ -248,13 +244,6 @@ public interface AbstractMediaManager {
             CONTENT_TYPE_GENRE,
             CONTENT_TYPE_STORAGE,
             CONTENT_TYPE_ART,
-        }
-
-
-        public interface OnLibraryChangeListener {
-            public void libraryChanged();
-            public void libraryScanStarted();
-            public void libraryScanFinished();
         }
     }
 

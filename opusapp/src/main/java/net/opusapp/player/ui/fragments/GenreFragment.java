@@ -35,7 +35,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -122,7 +121,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                     cursor.moveToPosition(position);
-                    return PlayerApplication.genreContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_GENRE_ID), MusicConnector.genres_sort_order, 0);
+                    return PlayerApplication.genreContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_GENRE_ID), PlayerApplication.library_genres_sort_order, 0);
                     }
                 };
             }
@@ -150,7 +149,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        final int[] sortFields = new int[] { MusicConnector.genres_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_genres_sort_order};
 
         return PlayerApplication.buildGenreLoader(PlayerApplication.libraryMediaManager().getProvider(), requestedFields, sortFields, PlayerApplication.lastSearchFilter);
 	}
@@ -189,7 +188,7 @@ public class GenreFragment extends AbstractRefreshableFragment implements Loader
             return false;
         }
 
-        PlayerApplication.genreContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_GENRE_ID), MusicConnector.genres_sort_order, 0);
+        PlayerApplication.genreContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_GENRE_ID), PlayerApplication.library_genres_sort_order, 0);
         return super.onContextItemSelected(item);
 	}
 

@@ -53,8 +53,6 @@
 
 -dontwarn com.google.**
 
-
-
 -keepattributes *Annotation*
 -keepclassmembers class ** {
     @com.squareup.otto.Subscribe public *;

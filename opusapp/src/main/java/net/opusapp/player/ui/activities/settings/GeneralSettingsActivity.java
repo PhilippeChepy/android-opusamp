@@ -34,7 +34,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
 
@@ -210,14 +209,14 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
         switch (item.getItemId()) {
             case CONTEXT_MENUITEM_EDIT:
 
+                // TODO: replace next line by otto event and remove completion argument.
                 final Runnable completionAction = new Runnable() {
                     @Override
                     public void run() {
                         refresh();
                     }
                 };
-
-                MusicConnector.editLibrary(this, providerId, providerName, completionAction);
+                PlayerApplication.editLibrary(this, providerId, providerName, completionAction);
                 return true;
             case CONTEXT_MENUITEM_DELETE:
                 if (providerId != 1) {
@@ -246,7 +245,7 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        MusicConnector.configureLibrary(this, mCursor.getInt(COLUMN_PROVIDER_ID));
+        PlayerApplication.configureLibrary(this, mCursor.getInt(COLUMN_PROVIDER_ID));
     }
 
 
@@ -343,7 +342,8 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
         @Override
         public void onClick(View v) {
             LogUtils.LOGW(TAG, "footer view");
-            MusicConnector.addLibrary(GeneralSettingsActivity.this, new Runnable() {
+            // TODO: use event and remove completion event.
+            PlayerApplication.addLibrary(GeneralSettingsActivity.this, new Runnable() {
                 @Override
                 public void run() {
                     refresh();

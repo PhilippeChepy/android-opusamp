@@ -71,8 +71,6 @@ public class SettingsActivity extends PreferenceActivity {
 
         final Preference genreDetails = findPreference(getString(R.string.preference_key_genre_display));
         genreDetails.setSummary(sharedPrefs.getString(getString(R.string.preference_key_genre_display), getString(R.string.preference_list_value_genre_show_albums)));
-
-        // TODO: on localArts, invalidate cache.
     }
 
     @SuppressWarnings("deprecation")
@@ -111,6 +109,7 @@ public class SettingsActivity extends PreferenceActivity {
         });
     }
 
+    @SuppressWarnings("deprecation")
     private void setGenreHandler() {
         final Preference genreDetails = findPreference(getString(R.string.preference_key_genre_display));
         genreDetails.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {

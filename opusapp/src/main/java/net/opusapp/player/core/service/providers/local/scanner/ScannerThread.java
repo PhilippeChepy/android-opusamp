@@ -10,6 +10,9 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerEventBus;
+import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
+import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.utils.CursorUtils;
@@ -37,6 +40,8 @@ public class ScannerThread extends Thread {
 
 
 
+    private boolean mIsRunning;
+
     private boolean mCancelling;
 
     private Set<String> mMediaExtensionSet;
@@ -53,14 +58,20 @@ public class ScannerThread extends Thread {
     public ScannerThread(final MediaScanner mediaScanner) {
         mMediaScanner = mediaScanner;
         mDatabase = mediaScanner.getDatabaseOpenHelper().getWritableDatabase();
-        mMediaManagerId = mediaScanner.getManager().getMediaManagerId();
+        mMediaManagerId = mediaScanner.getManager().getId();
         mCancelling = false;
+        mIsRunning = true;
+    }
+
+    public boolean isRunning() {
+        return mIsRunning;
     }
 
     @Override
     public void run() {
-        mMediaScanner.notifyScannerHasStarted();
-        //setPriority(MIN_PRIORITY); // Don't burn our poor phone's CPU... to quickly
+        LogUtils.LOGI(TAG, "scan started");
+        PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(LibraryScanStatusChangedEvent.STATUS_STARTED));
+        setPriority(MIN_PRIORITY); // Don't burn our poor phone's CPU... to quickly
 
         // construction of extension set.
         mMediaExtensionSet = MediaScanner.getMediaExtensions(mMediaManagerId);
@@ -121,13 +132,15 @@ public class ScannerThread extends Thread {
             updateAllCategories();
         }
         catch (final CancellingException exception) {
-            LogUtils.LOGI(TAG, "scan canceled by user");
+            LogUtils.LOGI(TAG, "scan terminated (by user)");
+            PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(true));
+            mMediaScanner.scannerHasTerminated();
+            return;
         }
-        //catch (final Exception exception) {
-        //    LogUtils.LOGException(TAG, "scan error", 0, exception);
-        //}
 
-        mMediaScanner.notifyScannerHasFinished();
+        LogUtils.LOGI(TAG, "scan terminated");
+        PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(false));
+        mMediaScanner.scannerHasTerminated();
     }
 
     public void requestCancellation() {
@@ -138,25 +151,18 @@ public class ScannerThread extends Thread {
 
 
     protected void removeForbiddenMedias() throws CancellingException {
-        try {
-            mDatabase.beginTransaction();
-
-            for (File path : mDiscardList) {
-                if (mCancelling) {
-                    throw new CancellingException();
-                }
-
-                mDatabase.delete(Entities.Media.TABLE_NAME,
-                        Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
-                        new String[]{
-                                "file://" + path.getAbsolutePath() + File.separator + "%"
-                        }
-                );
+        for (File path : mDiscardList) {
+            if (mCancelling) {
+                throw new CancellingException();
             }
-            mDatabase.setTransactionSuccessful();
-        }
-        finally {
-            mDatabase.endTransaction();
+
+            // TODO: use deleteMediaById();
+            mDatabase.delete(Entities.Media.TABLE_NAME,
+                    Entities.Media.COLUMN_FIELD_URI + " LIKE ?",
+                    new String[]{
+                            "file://" + path.getAbsolutePath() + File.separator + "%"
+                    }
+            );
         }
     }
 
@@ -174,36 +180,28 @@ public class ScannerThread extends Thread {
 
         final Cursor cursor = mDatabase.query(Entities.Art.TABLE_NAME, artProjection, selection, null, null, null, null);
 
-        try {
-            mDatabase.beginTransaction();
-
-            if (CursorUtils.ifNotEmpty(cursor)) {
-                while (cursor.moveToNext()) {
-                    if (mCancelling) {
-                        throw new CancellingException();
-                    }
-
-                    final File artFile = PlayerApplication.uriToFile(cursor.getString(COLUMN_ART_URI));
-
-                    if (!artFile.exists()) {
-                        final String whereClause = Entities.Art._ID + " = ? ";
-                        final String whereArgs[] = new String[] {
-                                cursor.getString(COLUMN_ART_ID)
-                        };
-
-                        LogUtils.LOGI(TAG, "!Cover: " + artFile.getAbsolutePath());
-                        mDatabase.delete(Entities.Art.TABLE_NAME, whereClause, whereArgs);
-                    }
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            while (cursor.moveToNext()) {
+                if (mCancelling) {
+                    throw new CancellingException();
                 }
 
-                CursorUtils.free(cursor);
+                final File artFile = PlayerApplication.uriToFile(cursor.getString(COLUMN_ART_URI));
 
-                updateCovers();
+                if (!artFile.exists()) {
+                    final String whereClause = Entities.Art._ID + " = ? ";
+                    final String whereArgs[] = new String[] {
+                            cursor.getString(COLUMN_ART_ID)
+                    };
+
+                    LogUtils.LOGI(TAG, "!Cover: " + artFile.getAbsolutePath());
+                    mDatabase.delete(Entities.Art.TABLE_NAME, whereClause, whereArgs);
+                }
             }
-            mDatabase.setTransactionSuccessful();
-        }
-        finally {
-            mDatabase.endTransaction();
+
+            CursorUtils.free(cursor);
+
+            updateCovers();
         }
     }
 
@@ -609,6 +607,8 @@ public class ScannerThread extends Thread {
                     if (coverId == 0) {
                         coverId = lastInsertedCoverId;
                     }
+
+                    // TODO: add to Entities.AlbumHasArts.TABLE_NAME
                 }
             }
         }
@@ -697,7 +697,7 @@ public class ScannerThread extends Thread {
 
         updateCovers();
 
-        mMediaScanner.notifyScannerHasUpdated();
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
     }
 
     protected void updateAlbums() {

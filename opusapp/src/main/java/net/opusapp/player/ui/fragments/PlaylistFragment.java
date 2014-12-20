@@ -35,7 +35,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -122,7 +121,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                         cursor.moveToPosition(position);
-                        return PlayerApplication.playlistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_PLAYLIST_ID), MusicConnector.playlists_sort_order, 0);
+                        return PlayerApplication.playlistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_PLAYLIST_ID), PlayerApplication.library_playlists_sort_order, 0);
                     }
                 };
             }
@@ -150,7 +149,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        final int[] sortFields = new int[] { MusicConnector.playlists_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_playlists_sort_order};
 
         return PlayerApplication.buildPlaylistLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter);
@@ -190,7 +189,7 @@ public class PlaylistFragment extends AbstractRefreshableFragment implements Loa
             return false;
         }
 
-        PlayerApplication.playlistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_PLAYLIST_ID), MusicConnector.playlists_sort_order, 0);
+        PlayerApplication.playlistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_PLAYLIST_ID), PlayerApplication.library_playlists_sort_order, 0);
         return super.onContextItemSelected(item);
 	}
 

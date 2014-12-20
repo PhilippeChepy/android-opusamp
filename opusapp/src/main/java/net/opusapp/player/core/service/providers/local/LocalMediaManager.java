@@ -36,7 +36,7 @@ public class LocalMediaManager implements AbstractMediaManager {
     }
 
     @Override
-    public int getMediaManagerId() {
+    public int getId() {
         return mProviderId;
     }
 

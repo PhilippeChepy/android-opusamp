@@ -35,7 +35,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailWithHeaderActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -95,8 +94,8 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
         setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM));
     }
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
         if (rootView != null) {
             gridView = (GridView) rootView.findViewById(R.id.grid_view_base);
@@ -107,12 +106,12 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
             setEmptyAction(emptyDescription, emptyAction);
         }
 
-		return rootView;
-	}
-	
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+        return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
         final Activity hostActivity = getActivity();
         final LibraryAdapter.LibraryAdapterContainer container = new LibraryAdapter.LibraryAdapterContainer() {
@@ -127,7 +126,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                         cursor.moveToPosition(position);
-                        return PlayerApplication.albumContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ALBUM_ID), MusicConnector.songs_sort_order, 0);
+                        return PlayerApplication.albumContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ALBUM_ID), PlayerApplication.library_songs_sort_order, 0);
                     }
                 };
             }
@@ -147,17 +146,17 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
                         COLUMN_ALBUM_ART_URI,
                         COLUMN_ALBUM_VISIBLE
                 });
-		gridView.setOnCreateContextMenuListener(this);
-		gridView.setOnItemClickListener(this);
-		gridView.setAdapter(adapter);
-		gridView.setNumColumns(PlayerApplication.getListColumns());
+        gridView.setOnCreateContextMenuListener(this);
+        gridView.setOnItemClickListener(this);
+        gridView.setAdapter(adapter);
+        gridView.setNumColumns(PlayerApplication.getListColumns());
 
-		getLoaderManager().initLoader(0, null, this);
+        getLoaderManager().initLoader(0, null, this);
 	}
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        final int[] sortFields = new int[] { MusicConnector.albums_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_albums_sort_order};
 
         return PlayerApplication.buildAlbumLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
@@ -197,7 +196,7 @@ public class AlbumFragment extends AbstractRefreshableFragment implements Loader
             return false;
         }
 
-        PlayerApplication.albumContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ALBUM_ID), MusicConnector.songs_sort_order, 0);
+        PlayerApplication.albumContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ALBUM_ID), PlayerApplication.library_songs_sort_order, 0);
         return super.onContextItemSelected(item);
     }
 	

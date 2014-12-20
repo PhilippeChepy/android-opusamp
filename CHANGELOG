@@ -13,13 +13,15 @@
 *** Changelog ***
 
 Update 20:
-Updated: Improved media scanner performances if cover cache is full.
+Updated: Improved global performances (using event bus).
 Fixed: Scan cancellation causing freeze to the whole app.
 Fixed: Missing auto pause feature since Update 18.
 Fixed: Increased default embedded cover cache from 20MB to 100MB (~500 jpeg with res of 600x600 to ~2500).
 Fixed: Force close when using a new library right after creating it.
 
 (not announced on Play Store) :
+Updated: Improved global performances (using event bus).
+Updated: Improved media scanner performances if cover cache is full.
 Updated: Added right ime option for text inputs.
 Updated: Library edition code cleanup.
 Updated: Now using EditTextDialog for library edition.

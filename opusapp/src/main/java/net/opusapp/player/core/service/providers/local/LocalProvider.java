@@ -29,9 +29,11 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerEventBus;
 import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.MediaMetadata;
+import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.scanner.MediaScanner;
@@ -40,7 +42,6 @@ import net.opusapp.player.core.service.providers.local.ui.activities.FileExtensi
 import net.opusapp.player.core.service.providers.local.ui.activities.SearchPathActivity;
 import net.opusapp.player.core.service.providers.local.ui.activities.SettingsActivity;
 import net.opusapp.player.core.service.utils.CursorUtils;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.Base64;
@@ -72,8 +73,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
     // Internal content & media scanner
-    private ArrayList<AbstractMediaManager.Provider.OnLibraryChangeListener> mScannerListeners;
-
     private MediaScanner mMediaScanner;
 
     private OpenHelper mDatabaseOpenHelper;
@@ -122,15 +121,14 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public LocalProvider(LocalMediaManager mediaManager) {
         this.mediaManager = mediaManager;
 
-        mScannerListeners = new ArrayList<>();
-        mDatabaseOpenHelper = new OpenHelper(mediaManager.getMediaManagerId());
+        mDatabaseOpenHelper = new OpenHelper(mediaManager.getId());
         mMediaScanner = new MediaScanner(mediaManager, mDatabaseOpenHelper);
 
         mStorageCurrentDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         mStorageIsRoot = true;
 
         final Resources resources = PlayerApplication.context.getResources();
-        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getId(), Context.MODE_PRIVATE);
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
@@ -176,7 +174,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     protected void doEraseProviderData() {
         final AbstractMediaManager playerMediaManager = PlayerApplication.playerMediaManager();
 
-        if (mediaManager.getMediaManagerId() == playerMediaManager.getMediaManagerId()) {
+        if (mediaManager.getId() == playerMediaManager.getId()) {
             playerMediaManager.getPlayer().playerStop();
         }
 
@@ -184,9 +182,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         File filePath = PlayerApplication.context.getFilesDir();
         if (filePath != null) {
-            File providerPrefs = new File(filePath.getPath() + "/shared_prefs/provider-" + mediaManager.getMediaManagerId() + ".xml");
+            File providerPrefs = new File(filePath.getPath() + "/shared_prefs/provider-" + mediaManager.getId() + ".xml");
             if (!providerPrefs.delete()) {
-                LogUtils.LOGE(TAG, "deleting provider-" + mediaManager.getMediaManagerId() + " preferences failed");
+                LogUtils.LOGE(TAG, "deleting provider-" + mediaManager.getId() + " preferences failed");
             }
         }
     }
@@ -212,18 +210,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     @Override
     public boolean scanIsRunning() {
         return mMediaScanner.isRunning();
-    }
-
-    @Override
-    public void addLibraryChangeListener(OnLibraryChangeListener libraryChangeListener) {
-        if (mScannerListeners.indexOf(libraryChangeListener) < 0) {
-            mScannerListeners.add(libraryChangeListener);
-        }
-    }
-
-    @Override
-    public void removeLibraryChangeListener(OnLibraryChangeListener libraryChangeListener) {
-        mScannerListeners.remove(libraryChangeListener);
     }
 
     @Override
@@ -1063,7 +1049,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     @Override
     public boolean hasContentType(ContentType contentType) {
         final Resources resources = PlayerApplication.context.getResources();
-        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getId(), Context.MODE_PRIVATE);
 
         final String[] tabTitles = resources.getStringArray(R.array.preference_values_tab_visibility);
 
@@ -1166,27 +1152,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
         else {
             final Intent intent = new Intent(sourceActivity, CoverSelectionActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getId());
             intent.putExtra(KEY_SOURCE_ID, Long.parseLong(albumId));
             sourceActivity.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
-        }
-    }
-
-    public void notifyLibraryChanges() {
-        for (OnLibraryChangeListener libraryChangeListener : mScannerListeners) {
-            libraryChangeListener.libraryChanged();
-        }
-    }
-
-    public void notifyLibraryScanStarted() {
-        for (OnLibraryChangeListener libraryChangeListener : mScannerListeners) {
-            libraryChangeListener.libraryScanStarted();
-        }
-    }
-
-    public void notifyLibraryScanStopped() {
-        for (OnLibraryChangeListener libraryChangeListener : mScannerListeners) {
-            libraryChangeListener.libraryScanFinished();
         }
     }
 
@@ -1200,7 +1168,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Album._ID + " = " + albumId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1217,7 +1185,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.AlbumArtist._ID + " = " + albumArtistId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1234,7 +1202,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Artist._ID + " = " + artistId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1252,7 +1220,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Genre._ID + " = " + genreId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1269,7 +1237,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Media._ID + " = " + mediaId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1286,7 +1254,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             "WHERE " + Entities.Playlist._ID + " = " + playlistId
             );
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
             return true;
         }
 
@@ -1356,7 +1324,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             orderBy = Entities.AlbumArtist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
         }
 
-        String where = MusicConnector.show_hidden ? null : "(" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
+        String where = PlayerApplication.library_show_hidden ? null : "(" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (where != null) {
@@ -1441,7 +1409,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // setting details arguments
-        String selection = MusicConnector.show_hidden ? "" : "(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
+        String selection = PlayerApplication.library_show_hidden ? "" : "(" + Entities.Album.TABLE_NAME + "." + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = 0) ";
         String[] selectionArgs = null;
         String groupBy = null;
 
@@ -1541,7 +1509,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             orderBy = Entities.Artist.COLUMN_FIELD_ARTIST_NAME + " COLLATE NOCASE ASC";
         }
 
-        String selection = MusicConnector.show_hidden ? null : Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
+        String selection = PlayerApplication.library_show_hidden ? null : Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (selection != null) {
@@ -1605,7 +1573,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             orderBy = Entities.Genre.COLUMN_FIELD_GENRE_NAME + " COLLATE NOCASE ASC";
         }
 
-        String selection = MusicConnector.show_hidden ? null : Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
+        String selection = PlayerApplication.library_show_hidden ? null : Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = 0 ";
 
         if (!TextUtils.isEmpty(filter)) {
             if (selection != null) {
@@ -1670,7 +1638,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             orderBy = Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME + " COLLATE NOCASE ASC";
         }
 
-        String selection = MusicConnector.show_hidden ?
+        String selection = PlayerApplication.library_show_hidden ?
                 "(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Playlist._ID + " <> 0)" :
                 "(" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " = 0) AND " +
                         "(" + Entities.Playlist.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Playlist._ID + " <> 0)";
@@ -1690,7 +1658,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     protected Cursor buildMediaCursor(int[] requestedFields, int[] sortFields, String filter, ContentType contentType, String sourceId) {
         final Resources resources = PlayerApplication.context.getResources();
-        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getMediaManagerId(), Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = PlayerApplication.context.getSharedPreferences("provider-" + mediaManager.getId(), Context.MODE_PRIVATE);
 
         boolean manageMissingTags = sharedPrefs.getBoolean(resources.getString(R.string.preference_key_display_source_if_no_tags), true);
 
@@ -1987,7 +1955,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String showFiles = usesPlaylistEntryTable ? " OR (" + Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY + " <> 0)" : "";
 
-        String selection = MusicConnector.show_hidden ?
+        String selection = PlayerApplication.library_show_hidden ?
                 "((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " + showFiles + ")" :
                 "(((" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0))" + showFiles + ")";
         String[] selectionArgs = null;
@@ -2484,7 +2452,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 database.update(Entities.Media.TABLE_NAME, contentValues, Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
             }
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
         }
     }
 
@@ -2509,7 +2477,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                                 "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
             }
 
-            notifyLibraryChanges();
+            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
         }
     }
 
@@ -2561,7 +2529,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                 selectStatement = "FROM " + Entities.Media.TABLE_NAME + " ";
 
-                selectStatement = selectStatement + (MusicConnector.show_hidden ?
+                selectStatement = selectStatement + (PlayerApplication.library_show_hidden ?
                         "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " :
                         "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0) ");
 
@@ -2726,7 +2694,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         if (database != null && fileList != null && fileList.size() > 0) {
-            final Set<String> audioExtensions = MediaScanner.getMediaExtensions(mediaManager.getMediaManagerId());
+            final Set<String> audioExtensions = MediaScanner.getMediaExtensions(mediaManager.getId());
 
             int addedCount = fileList.size();
 
@@ -2796,7 +2764,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         ArrayList<File> queryedFileList = new ArrayList<>();
 
         if (sourceFileList != null) {
-            final Set<String> audioExtensions = MediaScanner.getMediaExtensions(mediaManager.getMediaManagerId());
+            final Set<String> audioExtensions = MediaScanner.getMediaExtensions(mediaManager.getId());
 
             storageSortOrder = sortFields;
             Arrays.sort(sourceFileList, filenameComparator);
@@ -2835,7 +2803,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 if (storageSortOrder[0] == AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME) {
                     return lhsName.compareTo(rhsName);
                 }
-                else // if (MusicConnector.storage_sort_order == MusicConnector.SORT_Z_A)  {
+                else // if (MusicConnector.library_storage_sort_order == MusicConnector.SORT_Z_A)  {
                     return -lhsName.compareTo(rhsName);
                 //}
             }
@@ -2865,7 +2833,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         @Override
         public boolean accept(File pathname) {
-            if (MusicConnector.show_hidden) {
+            if (PlayerApplication.library_show_hidden) {
                 return pathname.canRead();
             }
             else {
@@ -2890,7 +2858,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public void launch(Activity source) {
             final Intent intent = new Intent(PlayerApplication.context, SettingsActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }
@@ -2911,7 +2879,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public void launch(Activity source) {
             final Intent intent = new Intent(PlayerApplication.context, SearchPathActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }
@@ -2932,7 +2900,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         @Override
         public void launch(Activity source) {
             final Intent intent = new Intent(PlayerApplication.context, FileExtensionsActivity.class);
-            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getMediaManagerId());
+            intent.putExtra(KEY_PROVIDER_ID, mediaManager.getId());
 
             source.startActivityForResult(intent, ACTIVITY_NEED_UI_REFRESH);
         }

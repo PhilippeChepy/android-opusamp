@@ -33,7 +33,6 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -155,7 +154,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-        final int[] sortFields = new int[] { MusicConnector.songs_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_songs_sort_order};
 
         return PlayerApplication.buildMediaLoader(
                 PlayerApplication.libraryMediaManager().getProvider(),

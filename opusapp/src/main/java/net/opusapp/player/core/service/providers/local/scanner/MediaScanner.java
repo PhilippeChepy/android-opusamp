@@ -8,12 +8,10 @@ import android.preference.PreferenceManager;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.local.LocalMediaManager;
-import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.utils.PlayerApplication;
-import net.opusapp.player.utils.LogUtils;
 import net.opusapp.player.utils.backport.android.content.SharedPreferencesCompat;
 
 import java.util.Arrays;
@@ -26,8 +24,6 @@ public class MediaScanner {
 
 
 
-    private boolean mIsRunning;
-
     private ScannerThread mScannerThread;
 
 
@@ -39,7 +35,6 @@ public class MediaScanner {
 
 
     public MediaScanner(final LocalMediaManager parent, final OpenHelper databaseOpenHelper) {
-        mIsRunning = false;
         mScannerThread = null;
         mManager = parent;
         mDatabaseOpenHelper = databaseOpenHelper;
@@ -90,10 +85,7 @@ public class MediaScanner {
     }
 
     public synchronized void stop() {
-        if (mScannerThread == null) {
-            mIsRunning = false;
-        }
-        else {
+        if (mScannerThread != null) {
             mScannerThread.requestCancellation();
         }
     }
@@ -107,32 +99,10 @@ public class MediaScanner {
     }
 
     public synchronized boolean isRunning() {
-        return mIsRunning;
+        return mScannerThread != null && mScannerThread.isRunning();
     }
 
-    public synchronized void notifyScannerHasStarted() {
-        LogUtils.LOGI(TAG, "scan started");
-
-        mIsRunning = true;
-
-        final LocalProvider provider = (LocalProvider) mManager.getProvider();
-        provider.notifyLibraryScanStarted();
-    }
-
-    public synchronized void notifyScannerHasUpdated() {
-        LogUtils.LOGI(TAG, "scan update");
-
-        final LocalProvider provider = (LocalProvider) mManager.getProvider();
-        provider.notifyLibraryChanges();
-    }
-
-    public synchronized void notifyScannerHasFinished() {
-        LogUtils.LOGI(TAG, "scan finished");
-
+    public synchronized void scannerHasTerminated() {
         mScannerThread = null;
-        mIsRunning = false;
-
-        final LocalProvider provider = (LocalProvider) mManager.getProvider();
-        provider.notifyLibraryScanStopped();
     }
 }

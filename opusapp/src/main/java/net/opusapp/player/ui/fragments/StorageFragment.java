@@ -30,7 +30,6 @@ import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -133,7 +132,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-        final int[] sortFields = new int[] { MusicConnector.storage_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_storage_sort_order};
 
         return PlayerApplication.buildStorageLoader(
                 PlayerApplication.libraryMediaManager().getProvider(),
@@ -175,7 +174,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
             return false;
         }
 
-        PlayerApplication.storageContextItemSelected(item.getItemId(), cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, cursor.getPosition());
+        PlayerApplication.storageContextItemSelected(item.getItemId(), cursor.getString(COLUMN_STORAGE_ID), PlayerApplication.library_storage_sort_order, cursor.getPosition());
         return super.onContextItemSelected(item);
     }
 
@@ -200,7 +199,7 @@ public class StorageFragment extends AbstractRefreshableFragment implements Load
             refresh();
         }
         else {
-            PlayerApplication.storageContextItemSelected(PlayerApplication.CONTEXT_MENUITEM_PLAY, cursor.getString(COLUMN_STORAGE_ID), MusicConnector.storage_sort_order, position);
+            PlayerApplication.storageContextItemSelected(PlayerApplication.CONTEXT_MENUITEM_PLAY, cursor.getString(COLUMN_STORAGE_ID), PlayerApplication.library_storage_sort_order, position);
         }
     }
 

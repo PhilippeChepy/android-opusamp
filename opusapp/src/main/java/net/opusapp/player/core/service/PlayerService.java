@@ -37,9 +37,17 @@ import android.widget.RemoteViews;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.squareup.otto.Produce;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.RemoteControlClientHelper;
+import net.opusapp.player.core.service.event.MediaChangedEvent;
+import net.opusapp.player.core.service.event.MediaCoverChangedEvent;
+import net.opusapp.player.core.service.event.PlayStateChangedEvent;
+import net.opusapp.player.core.service.event.PlaylistChangedEvent;
+import net.opusapp.player.core.service.event.RepeatModeChangedEvent;
+import net.opusapp.player.core.service.event.ShuffleModeChangedEvent;
+import net.opusapp.player.core.service.event.TimestampChangedEvent;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -111,6 +119,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public static final int REPEAT_ALL = 2;
 
 
+    // Playstate
+    public static final int PLAYSTATE_PLAYING = 0;
+
+    public static final int PLAYSTATE_PAUSED = 1;
+
+    public static final int PLAYSTATE_STOPPED = 2;
+
+
 
     // Notification
     private static final int NOTIFICATION_ID = 1;
@@ -160,6 +176,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     private int mShuffleMode = SHUFFLE_NONE;
 
+    private int mPlayState = PLAYSTATE_STOPPED;
+
 
 
     private AbstractMediaManager.Media[] mPlaylist = EMPTY_PLAYLIST;
@@ -179,16 +197,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     // Current song informations
     private int mLoadingTry;
 
+    private TimestampChangedEvent mTimestampChangedEvent = new TimestampChangedEvent();
+
+    private MediaChangedEvent mMedia;
+
     private String mMediaCoverUri = null;
 
     private Bitmap mMediaCover = null;
-
-    private String mMediaTitle = null;
-
-    private String mMediaAuthor = null;
-
-    private String mMediaGroup = null;
-
 
 
     @Override
@@ -237,7 +252,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void onCreate() {
         super.onCreate();
 
-        PlayerEventBus.INSTANCE.getBus().register(this);
+        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
+        PlayerEventBus.getInstance().register(this);
 
         mBinder = new PlayerBinder();
 
@@ -340,6 +356,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     @Override
     public void onDestroy() {
+        PlayerEventBus.getInstance().unregister(this);
+
         unregisterReceiver(mCommandbroadcastReceiver);
         unregisterReceiver(mHeadsetBroadcastReceiver);
 
@@ -375,7 +393,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         AbstractAppWidget.setHasPlaylist(hasPlaylist());
         AbstractAppWidget.setPlaying(isPlaying());
 
-        AbstractAppWidget.setMetadata(mMediaTitle, mMediaAuthor, mMediaGroup, mMediaCover);
+        AbstractAppWidget.setMetadata(mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), mMediaCover);
 
         mWidgetLarge.applyUpdate(this);
         mWidgetMedium.applyUpdate(this);
@@ -480,7 +498,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             else {
                 mMediaCover = resource;
                 updateExternalControlers(false, true);
-                notifyCoverLoaded();
             }
 
             return true;
@@ -513,38 +530,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected synchronized void updateExternalControlers(boolean onlyPlaystate, boolean coverIsLoaded) {
-
         LogUtils.LOGW(TAG, "updateExternalControlers with {onlyPlaystate=" + onlyPlaystate + ", coverIsLoaded=" + coverIsLoaded + "}");
 
         mLoadingTry = 0;
 
-        mMediaTitle = null;
-        mMediaAuthor = null;
-        mMediaGroup = null;
-        long mediaDuration = 0;
-
         if (mPlaylist.length > 0) {
-            if (mPlaylistIndex < mPlaylist.length) {
-                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
-                mMediaTitle = media.name;
-                mMediaAuthor = media.artist;
-                mMediaGroup = media.album;
-                mediaDuration = media.duration;
-            }
-
             if (!onlyPlaystate) {
                 if (!coverIsLoaded) {
                     LogUtils.LOGD(TAG, "updateExternalControlers -> querying for cover loading with mMediaCoverUri = " + mMediaCoverUri);
 
                     if (mMediaCoverUri != null) {
                         LogUtils.LOGD(TAG, "updateExternalControlers: triggering cover loading");
-
-                        mMediaCover = null;
                         loadCover();
-                    }
-                    else {
-                        mMediaCover = null;
-                        notifyCoverLoaded();
                     }
                 }
             }
@@ -554,10 +551,12 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         updateWidgets();
 
         // Updating remote client
-        mRemoteControlClient.updateMetadata(mMediaCover, mMediaTitle, mMediaAuthor, mMediaGroup, mediaDuration);
+        mRemoteControlClient.updateMetadata(mMediaCover, mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), mMedia.getDuration());
 
         // Updating notification
-        updateNotification(mMediaGroup, mMediaAuthor, mMediaTitle, mMediaCover);
+        updateNotification(mMedia.getAlbum(), mMedia.getArtist(), mMedia.getTitle(), mMediaCover);
+
+        notifyCoverLoaded();
     }
 
     protected void doManageCommandIntent(final Intent intent) {
@@ -797,15 +796,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 LogUtils.LOGException(TAG, "refreshData", 0, interruptException);
             }
 
-            mMediaCoverUri = null;
-            if (mPlaylist.length != 0) {
-                if (mPlaylist.length < mPlaylistIndex) {
-                    mPlaylistIndex = 0;
-                }
-
-                mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
-            }
-
             updateExternalControlers(false, false);
         }
     };
@@ -887,23 +877,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Public API
-    public interface PlayerServiceStateListener {
-        void onPlay();
-        void onPause();
-        void onStop();
-        void onSeek(long position);
-
-        void onShuffleModeChanged();
-        void onRepeatModeChanged();
-
-        void onQueueChanged();
-        void onQueuePositionChanged();
-
-        void onCoverLoaded(final Bitmap bitmap);
-    }
-
-    private List<PlayerServiceStateListener> mServiceListenerList = new ArrayList<>();
-
     public void play() {
         final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
         final AbstractMediaManager.Player player = mediaManager.getPlayer();
@@ -1002,10 +975,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
         return player.playerGetPosition();
-    }
-
-    public Bitmap getCurrentCover() {
-        return mMediaCover;
     }
 
     public void setPosition(long position) {
@@ -1258,53 +1227,39 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         return remaining;
     }
 
-    public void registerPlayerCallback(PlayerServiceStateListener serviceListener) {
-        mServiceListenerList.add(serviceListener);
-    }
-
-    public void unregisterPlayerCallback(PlayerServiceStateListener serviceListener) {
-        mServiceListenerList.remove(serviceListener);
-    }
-
     public void notifyProviderChanged() {
         PlayerApplication.registerPlaybackStatusListener(this);
     }
 
     public void notifyTimestampUpdate(long timestamp) {
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onSeek(timestamp);
-        }
+        mTimestampChangedEvent.setTimestamp(timestamp);
+        PlayerEventBus.getInstance().post(produceTimestampChangedEvent());
     }
 
     public void notifyPlay() {
         mUiUpdateExecutor.submit(runnablePlay);
 
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onPlay();
-        }
+        mPlayState = PLAYSTATE_PLAYING;
+        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     public void notifyPause(boolean keepNotification) {
         Runnable runnablePause = keepNotification ? runnablePauseKeepingNotification : runnablePauseNotKeepingNotification;
         mUiUpdateExecutor.submit(runnablePause);
 
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onPause();
-        }
+        mPlayState = PLAYSTATE_PAUSED;
+        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     public void notifyStop() {
         mUiUpdateExecutor.submit(runnableStop);
 
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onStop();
-        }
+        mPlayState = PLAYSTATE_STOPPED;
+        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     private void notifyQueueChanged() {
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onQueueChanged();
-        }
+        PlayerEventBus.getInstance().post(producePlaylistChangedEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1313,9 +1268,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyShuffleChange() {
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onShuffleModeChanged();
-        }
+        PlayerEventBus.getInstance().post(produceShuffleModeEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1324,9 +1277,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyRepeatChange() {
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onRepeatModeChanged();
-        }
+        PlayerEventBus.getInstance().post(produceRepeatModeEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1335,11 +1286,33 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifySetQueuePosition() {
-        mUiUpdateExecutor.submit(runnableRefreshSongData);
+        mMediaCoverUri = null;
 
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onQueuePositionChanged();
+        String mediaTitle = null;
+        String mediaArtist = null;
+        String mediaAlbum = null;
+        long mediaDuration = 0;
+
+        if (mPlaylist.length > 0) {
+            if (mPlaylist.length < mPlaylistIndex) {
+                mPlaylistIndex = 0;
+            }
+
+            if (mPlaylistIndex < mPlaylist.length) {
+                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
+
+                mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
+                mediaTitle = media.name;
+                mediaArtist = media.artist;
+                mediaAlbum = media.album;
+                mediaDuration = media.duration;
+            }
         }
+
+        mMedia = new MediaChangedEvent(mediaTitle, mediaArtist, mediaAlbum, mediaDuration, mPlaylistIndex);
+        PlayerEventBus.getInstance().post(produceMediaChangedEvent());
+
+        mUiUpdateExecutor.submit(runnableRefreshSongData);
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1348,9 +1321,37 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyCoverLoaded() {
-        for (PlayerServiceStateListener serviceListener : mServiceListenerList) {
-            serviceListener.onCoverLoaded(mMediaCover);
-        }
+        PlayerEventBus.getInstance().post(produceMediaCoverChangedEvent());
+    }
+
+
+    @Produce public MediaCoverChangedEvent produceMediaCoverChangedEvent() {
+        return new MediaCoverChangedEvent(mMediaCover);
+    }
+
+
+    @Produce public ShuffleModeChangedEvent produceShuffleModeEvent() {
+        return new ShuffleModeChangedEvent(mShuffleMode);
+    }
+
+    @Produce public RepeatModeChangedEvent produceRepeatModeEvent() {
+        return new RepeatModeChangedEvent(mRepeatMode);
+    }
+
+    @Produce public TimestampChangedEvent produceTimestampChangedEvent() {
+        return mTimestampChangedEvent;
+    }
+
+    @Produce public MediaChangedEvent produceMediaChangedEvent() {
+        return mMedia;
+    }
+
+    @Produce public PlayStateChangedEvent producePlaystateChangedEvent() {
+        return new PlayStateChangedEvent(mPlayState);
+    }
+
+    @Produce public PlaylistChangedEvent producePlaylistChangedEvent() {
+        return new PlaylistChangedEvent(PlayerApplication.playerMediaManager().getId(), 0);
     }
 
 
@@ -1375,9 +1376,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public static final Intent TELEPHONY_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_TELEPHONY, PlayerService.ACTION_PAUSE);
 
-    public static final Intent CLIENT_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_PLAY);
-
-    public static final Intent CLIENT_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_PAUSE);
+    public static final Intent CLIENT_TOGGLE_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_TOGGLEPAUSE);
 
     public static final Intent CLIENT_NEXT_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_CLIENT_APP, PlayerService.ACTION_NEXT);
 

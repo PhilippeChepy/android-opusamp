@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.internal.view.SupportMenuItem;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -28,9 +29,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
+import com.squareup.otto.Subscribe;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerEventBus;
+import net.opusapp.player.core.service.PlayerService;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
+import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.ui.activities.settings.GeneralSettingsActivity;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
@@ -42,7 +48,6 @@ import net.opusapp.player.ui.fragments.GenreFragment;
 import net.opusapp.player.ui.fragments.PlaylistFragment;
 import net.opusapp.player.ui.fragments.SongFragment;
 import net.opusapp.player.ui.fragments.StorageFragment;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.RefreshableView;
 import net.opusapp.player.utils.LogUtils;
@@ -151,11 +156,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         doManageMenuitemVisibility(mLibraryAdapter, mLibraryPager.getCurrentItem());
 
         mReloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
-        //mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ? R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
         MenuItemCompat.setShowAsAction(mReloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         mReloadMenuItem.setOnMenuItemClickListener(mReloadMenuItemListener);
-
-        updateReloadMenuItem();
 
         final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, 7, R.string.drawer_item_label_settings);
         settingsMenuItem.setIcon(R.drawable.ic_settings_grey600_48dp);
@@ -175,7 +177,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState, R.layout.activity_library_main, null);
 
         // Pager & Tabs
@@ -211,7 +213,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         footerView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MusicConnector.addLibrary(LibraryMainActivity.this, new Runnable() {
+                PlayerApplication.addLibrary(LibraryMainActivity.this, new Runnable() {
+
                     @Override
                     public void run() {
                         PlayerApplication.allocateMediaManagers();
@@ -234,7 +237,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         final String action = intent.getAction();
 
         if(Intent.ACTION_VIEW.equals(action)){
-            MusicConnector.sendStopIntent();
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
+            localBroadcastManager.sendBroadcast(PlayerService.CLIENT_STOP_INTENT);
 
             AbstractMediaManager manager = PlayerApplication.mediaManager(1);
             PlayerApplication.setLibraryManager(1);
@@ -262,14 +266,24 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
             mLibraryAdapter.refresh();
 
-            MusicConnector.doContextActionPlay(
+            PlayerApplication.doContextActionPlay(
                     AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     String.valueOf(position),
-                    MusicConnector.storage_sort_order,
+                    PlayerApplication.library_storage_sort_order,
                     position);
 
             getSlidingPanel().expandPanel();
         }
+
+        PlayerEventBus.getInstance().register(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        PlayerEventBus.getInstance().unregister(this);
+
+        getSupportLoaderManager().destroyLoader(0);
+        super.onDestroy();
     }
 
     @Override
@@ -304,27 +318,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
-    }
-
-    protected synchronized void updateReloadMenuItem() {
-        if (mReloadMenuItem != null) {
-            if (PlayerApplication.libraryMediaManager().getProvider().scanIsRunning()) {
-                mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
-            } else {
-                mReloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        getSupportLoaderManager().destroyLoader(0);
-
-        PlayerApplication.unregisterLibraryChangeListener(libraryChangeListener);
-
-        super.onDestroy();
     }
 
     @Override
@@ -450,12 +443,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         final AbstractMediaManager.Provider provider = PlayerApplication.libraryMediaManager().getProvider();
 
         //    Launching scan.
-        PlayerApplication.registerLibraryChangeListener(libraryChangeListener);
-
-        if (provider.scanIsRunning()) {
-            libraryChangeListener.libraryScanStarted();
-        }
-        else {
+        if (!provider.scanIsRunning()) {
             provider.scanStart();
         }
 
@@ -567,7 +555,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             boolean show_hidden = !item.isChecked();
 
             item.setChecked(show_hidden);
-            MusicConnector.show_hidden = show_hidden;
+            PlayerApplication.library_show_hidden = show_hidden;
             mLibraryAdapter.refresh();
             return true;
         }
@@ -584,8 +572,6 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else {
                 PlayerApplication.libraryMediaManager().getProvider().scanStart();
             }
-
-            updateReloadMenuItem();
             return true;
         }
     };
@@ -600,7 +586,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
             if (currentItemClass.equals(PlaylistFragment.class)) {
                 int sortIndex = 0;
-                switch (MusicConnector.playlists_sort_order) {
+                switch (PlayerApplication.library_playlists_sort_order) {
                     case +AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 1;  break;
                 }
@@ -609,7 +595,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(ArtistFragment.class)) {
                 int sortIndex = 0;
-                switch (MusicConnector.artists_sort_order) {
+                switch (PlayerApplication.library_artists_sort_order) {
                     case +AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 1;  break;
                 }
@@ -618,7 +604,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(AlbumArtistFragment.class)) {
                 int sortIndex = 0;
-                switch (MusicConnector.album_artists_sort_order) {
+                switch (PlayerApplication.library_album_artists_sort_order) {
                     case +AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 1;  break;
                 }
@@ -627,7 +613,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(AlbumFragment.class)) {
                 int sortIndex = 0;
-                switch (MusicConnector.albums_sort_order) {
+                switch (PlayerApplication.library_albums_sort_order) {
                     case +AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
                     case +AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
@@ -638,7 +624,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(SongFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
-                switch (MusicConnector.songs_sort_order) {
+                switch (PlayerApplication.library_songs_sort_order) {
                     case +AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 1;  break;
                     case +AbstractMediaManager.Provider.SONG_TRACK:   sortIndex = 2;  break;
@@ -655,7 +641,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(GenreFragment.class)) {
                 int sortIndex = 0;
-                switch (MusicConnector.genres_sort_order) {
+                switch (PlayerApplication.library_genres_sort_order) {
                     case +AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 1;  break;
                 }
@@ -664,7 +650,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
             else if (currentItemClass.equals(StorageFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
-                switch (MusicConnector.storage_sort_order) {
+                switch (PlayerApplication.library_storage_sort_order) {
                     case AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:               sortIndex = 0;  break;
                     case -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:              sortIndex = 1;  break;
                 }
@@ -682,8 +668,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.playlists_sort_order = AbstractMediaManager.Provider.PLAYLIST_NAME; break;
-                case 1:  MusicConnector.playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
+                case 0:  PlayerApplication.library_playlists_sort_order = AbstractMediaManager.Provider.PLAYLIST_NAME; break;
+                case 1:  PlayerApplication.library_playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -696,8 +682,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.artists_sort_order = AbstractMediaManager.Provider.ARTIST_NAME; break;
-                case 1:  MusicConnector.artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
+                case 0:  PlayerApplication.library_artists_sort_order = AbstractMediaManager.Provider.ARTIST_NAME; break;
+                case 1:  PlayerApplication.library_artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -710,8 +696,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.album_artists_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
-                case 1:  MusicConnector.album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
+                case 0:  PlayerApplication.library_album_artists_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
+                case 1:  PlayerApplication.library_album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -724,10 +710,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME; break;
-                case 1:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_NAME;  break;
-                case 2:  MusicConnector.albums_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST;  break;
-                case 3:  MusicConnector.albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
+                case 0:  PlayerApplication.library_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME; break;
+                case 1:  PlayerApplication.library_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_NAME;  break;
+                case 2:  PlayerApplication.library_albums_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST;  break;
+                case 3:  PlayerApplication.library_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
             }
 
             mLibraryAdapter.refresh();
@@ -740,16 +726,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 1:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 2:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 3:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 4:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
-                case 5:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
-                case 6:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 7:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 8:  MusicConnector.songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
-                case 9:  MusicConnector.songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 0:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 1:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
+                case 2:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 3:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
+                case 4:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
+                case 5:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
+                case 6:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 7:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
+                case 8:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 9:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
             }
 
             mLibraryAdapter.refresh();
@@ -762,8 +748,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.genres_sort_order = AbstractMediaManager.Provider.GENRE_NAME; break;
-                case 1:  MusicConnector.genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
+                case 0:  PlayerApplication.library_genres_sort_order = AbstractMediaManager.Provider.GENRE_NAME; break;
+                case 1:  PlayerApplication.library_genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -776,8 +762,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  MusicConnector.storage_sort_order = AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
-                case 1:  MusicConnector.storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
+                case 0:  PlayerApplication.library_storage_sort_order = AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
+                case 1:  PlayerApplication.library_storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -798,37 +784,21 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
     };
 
-
-    private AbstractMediaManager.Provider.OnLibraryChangeListener libraryChangeListener = new AbstractMediaManager.Provider.OnLibraryChangeListener() {
-
-        @Override
-        public void libraryChanged() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mLibraryAdapter.refresh();
-                }
-            });
+    @SuppressWarnings("unused")
+    @Subscribe public void libraryScanStatusChanged(LibraryScanStatusChangedEvent libraryScanStatusChangedEvent) {
+        if (mReloadMenuItem != null) {
+            if (PlayerApplication.libraryMediaManager().getProvider().scanIsRunning()) {
+                mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
+                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
+            } else {
+                mReloadMenuItem.setTitle(R.string.menuitem_label_reload);
+                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
+            }
         }
+    }
 
-        @Override
-        public void libraryScanStarted() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateReloadMenuItem();
-                }
-            });
-        }
-
-        @Override
-        public void libraryScanFinished() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateReloadMenuItem();
-                }
-            });
-        }
-    };
+    @SuppressWarnings("unused")
+    @Subscribe public void libraryContentChangedEvent(LibraryContentChangedEvent libraryContentChangedEvent) {
+        mLibraryAdapter.refresh();
+    }
 }

@@ -24,7 +24,9 @@ import android.widget.GridView;
 import com.bumptech.glide.Glide;
 
 import net.opusapp.player.R;
+import net.opusapp.player.core.service.PlayerEventBus;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
@@ -262,7 +264,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
                 if (provider instanceof LocalProvider) {
-                    ((LocalProvider) provider).notifyLibraryChanges();
+                    PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
 
                     Cursor artCursor = database.rawQuery(
                             "SELECT " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + ", " + Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI + " " +

@@ -22,7 +22,7 @@ public class CarModeActivity extends AbstractPlayerActivity {
     public static final String TAG = CarModeActivity.class.getSimpleName();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState, R.layout.activity_car_mode, null);
     }
 

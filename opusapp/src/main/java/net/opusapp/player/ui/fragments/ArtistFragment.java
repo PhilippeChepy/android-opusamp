@@ -35,7 +35,6 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
-import net.opusapp.player.ui.utils.MusicConnector;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -120,7 +119,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
                         cursor.moveToPosition(position);
-                        return PlayerApplication.artistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ARTIST_ID), MusicConnector.artists_sort_order, 0);
+                        return PlayerApplication.artistContextItemSelected(getActivity(), menuItem.getItemId(), cursor.getString(COLUMN_ARTIST_ID), PlayerApplication.library_artists_sort_order, 0);
                     }
                 };
             }
@@ -148,7 +147,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        final int[] sortFields = new int[] { MusicConnector.artists_sort_order };
+        final int[] sortFields = new int[] { PlayerApplication.library_artists_sort_order};
 
         return PlayerApplication.buildArtistLoader(PlayerApplication.libraryMediaManager().getProvider(),
                 requestedFields, sortFields, PlayerApplication.lastSearchFilter);
@@ -188,7 +187,7 @@ public class ArtistFragment extends AbstractRefreshableFragment implements Loade
             return false;
         }
 
-        PlayerApplication.artistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ARTIST_ID), MusicConnector.artists_sort_order, 0);
+        PlayerApplication.artistContextItemSelected(getActivity(), item.getItemId(), cursor.getString(COLUMN_ARTIST_ID), PlayerApplication.library_artists_sort_order, 0);
         return super.onContextItemSelected(item);
     }
 	
