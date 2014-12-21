@@ -23,9 +23,9 @@ import android.preference.PreferenceActivity;
 
 import net.opusapp.player.R;
 import net.opusapp.player.licensing.BuildSpecific;
+import net.opusapp.player.ui.preference.ColorPickerPreference;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.ColorSchemeDialog;
-import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
 import net.opusapp.player.utils.jni.JniMediaLib;
 
 public class ApplicationSettingsActivity extends PreferenceActivity {

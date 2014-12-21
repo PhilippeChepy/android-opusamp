@@ -6,10 +6,13 @@ public class PlaylistChangedEvent {
 
     private int mPlaylistId;
 
+    private int mPlaylistLength;
 
-    public PlaylistChangedEvent(int providerId, int playlistId) {
+
+    public PlaylistChangedEvent(int providerId, int playlistId, int playlistLength) {
         mProviderId = providerId;
         mPlaylistId = playlistId;
+        mPlaylistLength = playlistLength;
     }
 
     public int getProviderId() {
@@ -18,5 +21,9 @@ public class PlaylistChangedEvent {
 
     public int getPlaylistId() {
         return mPlaylistId;
+    }
+
+    public int getPlaylistLength() {
+        return mPlaylistLength;
     }
 }

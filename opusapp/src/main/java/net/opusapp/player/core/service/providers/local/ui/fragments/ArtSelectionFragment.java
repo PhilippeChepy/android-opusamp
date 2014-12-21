@@ -29,6 +29,7 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
+import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -75,31 +76,6 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
     public final static int CONTENT_INTERNET = 3;
 
     public static final String CONTENT_TYPE_KEY = "type_key";
-
-
-
-    protected SQLiteDatabase getReadableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getReadableDatabase();
-        }
-
-        return null;
-    }
-
-    protected SQLiteDatabase getWritableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getWritableDatabase();
-        }
-
-        return null;
-    }
-
 
     @Override
     public void refresh() {
@@ -156,34 +132,28 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                 return new AbstractSimpleCursorLoader(getActivity()) {
                     @Override
                     public Cursor loadInBackground() {
-                        SQLiteDatabase database = getReadableDatabase();
-                        if (database != null) {
-                            final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.Media.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID;
-                            final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1) AND (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ?)";
-                            final String selectionArgs[] = new String[] {
-                                    String.valueOf(sourceId)
-                            };
+                        final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
+                        final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.Media.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID;
+                        final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " = 1) AND (" + Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ?)";
+                        final String selectionArgs[] = new String[] {
+                                String.valueOf(sourceId)
+                        };
 
-                            return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
-                        }
-                        return null;
+                        return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
                     }
                 };
             case CONTENT_LOCAL_FILESYSTEM:
                 return new AbstractSimpleCursorLoader(getActivity()) {
                     @Override
                     public Cursor loadInBackground() {
-                        SQLiteDatabase database = getReadableDatabase();
-                        if (database != null) {
-                            final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.AlbumHasArts.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ART_ID;
-                            final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " <> 1) AND (" + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID + " = ?)";
-                            final String selectionArgs[] = new String[] {
-                                    String.valueOf(sourceId)
-                            };
+                        final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getReadableDatabase();
+                        final String table = Entities.Art.TABLE_NAME + " LEFT JOIN " + Entities.AlbumHasArts.TABLE_NAME + " ON " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ART_ID;
+                        final String selection = "(" + Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED + " <> 1) AND (" + Entities.AlbumHasArts.TABLE_NAME + "." + Entities.AlbumHasArts.COLUMN_FIELD_ALBUM_ID + " = ?)";
+                        final String selectionArgs[] = new String[] {
+                                String.valueOf(sourceId)
+                        };
 
-                            return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
-                        }
-                        return null;
+                        return database.query(table, projection, selection, selectionArgs, null, null, sortOrder);
                     }
                 };
         }
@@ -236,9 +206,9 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                     cursor.getString(COLUMN_ID)
             };
 
-            SQLiteDatabase database = getWritableDatabase();
-            database.beginTransaction();
+            final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
             try {
+                database.beginTransaction();
                 database.execSQL(
                         "UPDATE " + Entities.Album.TABLE_NAME + " SET " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = 0 " +
                                 "WHERE " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " = ?", selectionArgs);
@@ -259,7 +229,6 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
                 database.delete(Entities.Art.TABLE_NAME, Entities.Art._ID + " = ? ", selectionArgs);
                 database.delete(Entities.AlbumHasArts.TABLE_NAME, Entities.AlbumHasArts.COLUMN_FIELD_ART_ID + " = ? ", selectionArgs);
-                database.setTransactionSuccessful();
 
                 final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
                 final AbstractMediaManager.Provider provider = mediaManager.getProvider();
@@ -281,6 +250,8 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                         activity.setResult(Activity.RESULT_OK, resultIntent);
                     }
                 }
+
+                database.setTransactionSuccessful();
             }
             catch (final Exception exception) {
                 LogUtils.LOGException(TAG, "onContextItemSelected", 0, exception);

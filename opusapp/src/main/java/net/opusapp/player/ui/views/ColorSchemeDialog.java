@@ -9,7 +9,7 @@ import android.view.View;
 import android.widget.Button;
 
 import net.opusapp.player.R;
-import net.opusapp.player.ui.views.colorpicker.ColorPickerPreference;
+import net.opusapp.player.ui.preference.ColorPickerPreference;
 
 public class ColorSchemeDialog extends AlertDialog {
 

@@ -21,6 +21,7 @@ import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
 
 import java.io.File;
+import java.util.HashMap;
 
 public class OpenHelper extends SQLiteOpenHelper {
 
@@ -37,9 +38,19 @@ public class OpenHelper extends SQLiteOpenHelper {
             "opus", "tta", "wav", "wave", "wma", "wmv", "wv"
     };
 
-    public OpenHelper(int providerId) {
+    private final static HashMap<Integer, OpenHelper> instanceList = new HashMap<>();
+
+    private OpenHelper(int providerId) {
         super(PlayerApplication.context, "provider-" + providerId + ".db", null, DATABASE_VERSION);
         mProviderId = providerId;
+    }
+
+    public static synchronized OpenHelper getInstance(int providerId) {
+        if (!instanceList.containsKey(providerId)) {
+            instanceList.put(providerId, new OpenHelper(providerId));
+        }
+
+        return instanceList.get(providerId);
     }
 
     public void deleteDatabaseFile() {
@@ -52,9 +63,9 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase database) {
-		/*
-		 * Library tables
-		 */
+        /*
+         * Library tables
+         */
         Entities.Album.createTable(database);
         Entities.AlbumArtist.createTable(database);
         Entities.Artist.createTable(database);
@@ -70,7 +81,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 
 
         /// Playlists
-		// Current queue
+        // Current queue
         ContentValues contentValues = new ContentValues();
         contentValues.put(Entities.Playlist._ID, 0);
         contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, "");
@@ -95,7 +106,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-        if (oldVersion == 1 && newVersion == 2) {
+        if (oldVersion == 1 && newVersion <= 3) {
             LogUtils.LOGE(TAG, "upgrading local provider database (version 1 -> 2)");
 
             Entities.FileExtensions.createTable(database);
@@ -160,7 +171,12 @@ public class OpenHelper extends SQLiteOpenHelper {
             Entities.Media.destroyTable(database);
             Entities.ScanDirectory.destroyTable(database);
 
-            Entities.FileExtensions.destroyTable(database);
+            try {
+                Entities.FileExtensions.destroyTable(database);
+            }
+            catch (final Exception exception) {
+                LogUtils.LOGException(TAG, "on upgrade", 0, exception);
+            }
 
             onCreate(database);
         }

@@ -73,9 +73,9 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
 
     // Internal content & media scanner
-    private MediaScanner mMediaScanner;
+    private SQLiteDatabase mDatabase;
 
-    private OpenHelper mDatabaseOpenHelper;
+    private MediaScanner mMediaScanner;
 
     private LocalMediaManager mediaManager;
 
@@ -121,8 +121,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     public LocalProvider(LocalMediaManager mediaManager) {
         this.mediaManager = mediaManager;
 
-        mDatabaseOpenHelper = new OpenHelper(mediaManager.getId());
-        mMediaScanner = new MediaScanner(mediaManager, mDatabaseOpenHelper);
+        mDatabase = OpenHelper.getInstance(mediaManager.getId()).getWritableDatabase();
+        mMediaScanner = new MediaScanner(mediaManager);
 
         mStorageCurrentDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         mStorageIsRoot = true;
@@ -150,16 +150,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
     }
 
-    public SQLiteDatabase getWritableDatabase() {
-        return mDatabaseOpenHelper.getWritableDatabase();
-    }
-
-    public SQLiteDatabase getReadableDatabase() {
-        return mDatabaseOpenHelper.getReadableDatabase();
-    }
-
     public void setLastPlayed(String mediaUri) {
-        SQLiteDatabase database = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(Entities.Media.COLUMN_FIELD_LAST_PLAYED, new Date().getTime());
 
@@ -168,7 +159,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 mediaUri
         };
 
-        database.update(Entities.Media.TABLE_NAME, values, where, whereArgs);
+        mDatabase.update(Entities.Media.TABLE_NAME, values, where, whereArgs);
     }
 
     protected void doEraseProviderData() {
@@ -178,7 +169,8 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             playerMediaManager.getPlayer().playerStop();
         }
 
-        mDatabaseOpenHelper.deleteDatabaseFile();
+        OpenHelper databaseOpenHelper = OpenHelper.getInstance(mediaManager.getId());
+        databaseOpenHelper.deleteDatabaseFile();
 
         File filePath = PlayerApplication.context.getFilesDir();
         if (filePath != null) {
@@ -240,35 +232,31 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public boolean play(ContentType contentType, String sourceId, int sortOrder, int position, String filter) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
-        if (database != null) {
-            if (PlayerApplication.playerService != null) {
-                database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
-                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                    if (mStorageCurrentDir.getParentFile() != null) {
-                        position--; // bypass position[0] (parent file).
-                    }
-
-                    if (!doPlaylistAddContent(null, 0, fileList, true)) {
-                        return false;
-                    }
+        if (PlayerApplication.playerService != null) {
+            mDatabase.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?", new String[]{"0"});
+            if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                if (mStorageCurrentDir.getParentFile() != null) {
+                    position--; // bypass position[0] (parent file).
                 }
-                else if (!doPlaylistAddContent(null, 0, contentType, sourceId, sortOrder, filter)) {
+
+                if (!doPlaylistAddContent(null, 0, fileList, true)) {
                     return false;
                 }
-
-                PlayerApplication.playerService.queueReload();
-
-                if (PlayerApplication.playerService.queueGetSize() > position) {
-                    PlayerApplication.playerService.queueSetPosition(position);
-
-                    if (!PlayerApplication.playerService.isPlaying()) {
-                        PlayerApplication.playerService.play();
-                    }
-                }
-                return true;
             }
+            else if (!doPlaylistAddContent(null, 0, contentType, sourceId, sortOrder, filter)) {
+                return false;
+            }
+
+            PlayerApplication.playerService.queueReload();
+
+            if (PlayerApplication.playerService.queueGetSize() > position) {
+                PlayerApplication.playerService.queueSetPosition(position);
+
+                if (!PlayerApplication.playerService.isPlaying()) {
+                    PlayerApplication.playerService.play();
+                }
+            }
+            return true;
         }
 
         return false;
@@ -276,33 +264,29 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public boolean playNext(ContentType contentType, String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        if (PlayerApplication.playerService != null) {
+            int position = PlayerApplication.playerService.queueGetPosition();
 
-        if (database != null) {
-            if (PlayerApplication.playerService != null) {
-                int position = PlayerApplication.playerService.queueGetPosition();
+            if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                try {
+                    final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                    final List<File> filePlaylist = new ArrayList<>();
+                    filePlaylist.add(selection);
 
-                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                    try {
-                        final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                        final List<File> filePlaylist = new ArrayList<>();
-                        filePlaylist.add(selection);
-
-                        if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
-                            return false;
-                        }
-                    }
-                    catch (final IOException exception) {
-                        LogUtils.LOGException(TAG, "playNext", 0, exception);
+                    if (!doPlaylistAddContent(null, position + 1, filePlaylist, false)) {
+                        return false;
                     }
                 }
-                if (!doPlaylistAddContent(null, position + 1, contentType, sourceId, sortOrder, filter)) {
-                    return false;
+                catch (final IOException exception) {
+                    LogUtils.LOGException(TAG, "playNext", 0, exception);
                 }
-
-                PlayerApplication.playerService.queueReload();
-                return true;
             }
+            if (!doPlaylistAddContent(null, position + 1, contentType, sourceId, sortOrder, filter)) {
+                return false;
+            }
+
+            PlayerApplication.playerService.queueReload();
+            return true;
         }
 
         return false;
@@ -370,83 +354,70 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public String playlistNew(String playlistName) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, playlistName);
+        contentValues.put(Entities.Playlist.COLUMN_FIELD_VISIBLE, true);
+        contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
 
-        if (database != null) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(Entities.Playlist.COLUMN_FIELD_PLAYLIST_NAME, playlistName);
-            contentValues.put(Entities.Playlist.COLUMN_FIELD_VISIBLE, true);
-            contentValues.put(Entities.Playlist.COLUMN_FIELD_USER_HIDDEN, false);
-
-            return String.valueOf(database.insert(Entities.Playlist.TABLE_NAME, null, contentValues));
-        }
-
-        return null;
+        return String.valueOf(mDatabase.insert(Entities.Playlist.TABLE_NAME, null, contentValues));
     }
 
     @Override
     public boolean playlistDelete(String playlistId) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        return database != null &&
-                database.delete(Entities.Playlist.TABLE_NAME, Entities.Playlist._ID + " = ?", new String[] { playlistId}) > 0 &&
-                database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[] { playlistId}) > 0;
+        return mDatabase.delete(Entities.Playlist.TABLE_NAME, Entities.Playlist._ID + " = ?", new String[] { playlistId}) > 0 &&
+                mDatabase.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[] { playlistId}) > 0;
     }
 
     @Override
     public boolean playlistAdd(String playlistId, ContentType contentType, String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        if (database != null) {
-            if (PlayerApplication.playerService != null) {
-                int position = 0;
+        if (PlayerApplication.playerService != null) {
+            int position = 0;
 
-                Cursor cursor = database.query(
-                        Entities.PlaylistEntry.TABLE_NAME,
-                        new String[] { "COUNT(*) AS CNT" },
-                        Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
-                        new String[] {playlistId},
-                        null,
-                        null,
-                        null);
+            Cursor cursor = mDatabase.query(
+                    Entities.PlaylistEntry.TABLE_NAME,
+                    new String[] { "COUNT(*) AS CNT" },
+                    Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ",
+                    new String[] {playlistId},
+                    null,
+                    null,
+                    null);
 
-                if (CursorUtils.ifNotEmpty(cursor)) {
-                    cursor.moveToFirst();
-                    position = cursor.getInt(0);
-                    CursorUtils.free(cursor);
-                }
-
-                LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
-
-                if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
-                    try {
-                        final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
-                        final List<File> filePlaylist = new ArrayList<>();
-                        filePlaylist.add(selection);
-
-                        if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
-                            return false;
-                        }
-                    }
-                    catch (final IOException exception) {
-                        LogUtils.LOGException(TAG, "playlistAdd", 0, exception);
-                    }
-                }
-                else if (!doPlaylistAddContent(playlistId, position, contentType, sourceId, sortOrder, filter)) {
-                    return false;
-                }
-
-                PlayerApplication.playerService.queueReload();
-                return true;
+            if (CursorUtils.ifNotEmpty(cursor)) {
+                cursor.moveToFirst();
+                position = cursor.getInt(0);
+                CursorUtils.free(cursor);
             }
+
+            LogUtils.LOGW(TAG, "playlistAdd : position = " + position);
+
+            if (contentType == ContentType.CONTENT_TYPE_STORAGE) {
+                try {
+                    final File selection = PlayerApplication.uriToFile(new String(Base64.decode(sourceId)));
+                    final List<File> filePlaylist = new ArrayList<>();
+                    filePlaylist.add(selection);
+
+                    if (!doPlaylistAddContent(null, position, filePlaylist, false)) {
+                        return false;
+                    }
+                }
+                catch (final IOException exception) {
+                    LogUtils.LOGException(TAG, "playlistAdd", 0, exception);
+                }
+            }
+            else if (!doPlaylistAddContent(playlistId, position, contentType, sourceId, sortOrder, filter)) {
+                return false;
+            }
+
+            PlayerApplication.playerService.queueReload();
+            return true;
         }
 
         return false;
@@ -462,128 +433,117 @@ public class LocalProvider implements AbstractMediaManager.Provider {
             playlistId = "0";
         }
 
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-        if (database != null) {
-            database.beginTransaction();
-            try {
-                if (moveFrom < moveTo) {
-                    int lowerIndex = Math.min(moveFrom, moveTo);
-                    int upperIndex = Math.max(moveFrom, moveTo);
+        try {
+            mDatabase.beginTransaction();
+            if (moveFrom < moveTo) {
+                int lowerIndex = Math.min(moveFrom, moveTo);
+                int upperIndex = Math.max(moveFrom, moveTo);
 
-                    // Playlist is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + ")"
-                    );
+                // Playlist is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + ")"
+                );
 
-                    // Playlist is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
-                    );
+                // Playlist is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
+                );
 
 
-                    // Playlist is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + " " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
-                    );
-                } else {
-                    int lowerIndex = Math.min(moveFrom, moveTo);
-                    int upperIndex = Math.max(moveFrom, moveTo);
+                // Playlist is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + " " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
+                );
+            } else {
+                int lowerIndex = Math.min(moveFrom, moveTo);
+                int upperIndex = Math.max(moveFrom, moveTo);
 
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + ")"
-                    );
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1 " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + upperIndex + ")"
+                );
 
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + 1 " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
-                    );
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + 1 " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " BETWEEN " + lowerIndex + " AND " + upperIndex + ")"
+                );
 
-                    database.execSQL(
-                            "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
-                                    "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + " " +
-                                    "WHERE " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
-                                    "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
-                    );
-                }
-                database.setTransactionSuccessful();
+                mDatabase.execSQL(
+                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                                "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + lowerIndex + " " +
+                                "WHERE " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") AND " +
+                                "(" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = -1)"
+                );
             }
-            catch (final SQLException sqlException) {
-                LogUtils.LOGException(TAG, "playlistMove", 0, sqlException);
-            }
-            finally {
-                database.endTransaction();
-            }
+            mDatabase.setTransactionSuccessful();
+        }
+        catch (final SQLException sqlException) {
+            LogUtils.LOGException(TAG, "playlistMove", 0, sqlException);
+        }
+        finally {
+            mDatabase.endTransaction();
         }
     }
 
     @Override
     public void playlistRemove(String playlistId, int position) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        if (database != null) {
-            database.beginTransaction();
-            try {
-                database.delete(
-                        Entities.PlaylistEntry.TABLE_NAME,
-                        Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? AND " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = ? ",
-                        new String[]{
-                                playlistId,
-                                String.valueOf(position),
-                        }
-                );
+        try {
+            mDatabase.beginTransaction();
+            mDatabase.delete(
+                    Entities.PlaylistEntry.TABLE_NAME,
+                    Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? AND " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = ? ",
+                    new String[]{
+                            playlistId,
+                            String.valueOf(position),
+                    }
+            );
 
-                database.execSQL(
-                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
-                                "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
-                                "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) AND (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= ?) ",
-                        new String[]{
-                                playlistId,
-                                String.valueOf(position),
-                        }
-                );
-                database.setTransactionSuccessful();
-            }
-            catch (final SQLException sqlException) {
-                LogUtils.LOGException(TAG, "playlistRemove", 0, sqlException);
-            }
-            finally {
-                database.endTransaction();
-            }
+            mDatabase.execSQL(
+                    "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                            "SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " - 1 " +
+                            "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ?) AND (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= ?) ",
+                    new String[]{
+                            playlistId,
+                            String.valueOf(position),
+                    }
+            );
+            mDatabase.setTransactionSuccessful();
+        }
+        catch (final SQLException sqlException) {
+            LogUtils.LOGException(TAG, "playlistRemove", 0, sqlException);
+        }
+        finally {
+            mDatabase.endTransaction();
         }
     }
 
     @Override
     public void playlistClear(String playlistId) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        if (database != null) {
-            database.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[]{playlistId});
-        }
+        mDatabase.delete(Entities.PlaylistEntry.TABLE_NAME, Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = ? ", new String[]{playlistId});
     }
 
     @Override
@@ -707,8 +667,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         switch (contentType) {
             case CONTENT_TYPE_ALBUM:
-                final SQLiteDatabase database = getReadableDatabase();
-
                 final String albumSelection = Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ";
 
                 final String albumSelectionArgs[] = new String[] {
@@ -716,7 +674,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 };
 
                 // Album Name
-                final Cursor albumNameCursor = database.rawQuery(
+                final Cursor albumNameCursor = mDatabase.rawQuery(
                         "SELECT " + Entities.Album.COLUMN_FIELD_ALBUM_NAME + " " +
                                 "FROM " + Entities.Album.TABLE_NAME + " " +
                                 "WHERE " + Entities.Album._ID + " = ? ", albumSelectionArgs);
@@ -729,7 +687,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                 }
 
                 // Track count
-                final Cursor trackCountCursor = database.rawQuery(
+                final Cursor trackCountCursor = mDatabase.rawQuery(
                         "SELECT COUNT(*) " +
                                 "FROM " + Entities.Media.TABLE_NAME + " " +
                                 "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
@@ -743,7 +701,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
                 // Total duration
                 String totalDuration = PlayerApplication.context.getString(R.string.label_metadata_unknown);
-                final Cursor totalCursor = database.rawQuery(
+                final Cursor totalCursor = mDatabase.rawQuery(
                         "SELECT SUM(" + Entities.Media.COLUMN_FIELD_DURATION + ") " +
                                 "FROM " + Entities.Media.TABLE_NAME + " " +
                                 "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", albumSelectionArgs);
@@ -759,7 +717,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         Entities.Media.COLUMN_FIELD_ARTIST
                 };
 
-                final Cursor artistsCursor = database.query(Entities.Media.TABLE_NAME, artistsColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_ARTIST, null, Entities.Media.COLUMN_FIELD_ARTIST);
+                final Cursor artistsCursor = mDatabase.query(Entities.Media.TABLE_NAME, artistsColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_ARTIST, null, Entities.Media.COLUMN_FIELD_ARTIST);
                 final ArrayList<String> artists = new ArrayList<>();
 
                 if (CursorUtils.ifNotEmpty(artistsCursor)) {
@@ -773,7 +731,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         Entities.Media.COLUMN_FIELD_GENRE
                 };
 
-                final Cursor genreCursor = database.query(Entities.Media.TABLE_NAME, genresColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_GENRE, null, Entities.Media.COLUMN_FIELD_GENRE);
+                final Cursor genreCursor = mDatabase.query(Entities.Media.TABLE_NAME, genresColumns, albumSelection, albumSelectionArgs, Entities.Media.COLUMN_FIELD_GENRE, null, Entities.Media.COLUMN_FIELD_GENRE);
                 final ArrayList<String> genres = new ArrayList<>();
 
                 if (CursorUtils.ifNotEmpty(genreCursor)) {
@@ -1159,106 +1117,69 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected boolean doToggleAlbumVisibility(String albumId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME +
+                        "   SET " + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.Album._ID + " = " + albumId
+        );
 
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.Album.TABLE_NAME +
-                            "   SET " + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Album.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.Album._ID + " = " + albumId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doToggleAlbumArtistVisibility(String albumArtistId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        mDatabase.execSQL(
+                "UPDATE " + Entities.AlbumArtist.TABLE_NAME +
+                        "   SET " + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.AlbumArtist._ID + " = " + albumArtistId
+        );
 
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.AlbumArtist.TABLE_NAME +
-                            "   SET " + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.AlbumArtist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.AlbumArtist._ID + " = " + albumArtistId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doToggleArtistVisibility(String artistId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Artist.TABLE_NAME +
+                        "   SET " + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.Artist._ID + " = " + artistId
+        );
 
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.Artist.TABLE_NAME +
-                            "   SET " + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Artist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.Artist._ID + " = " + artistId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doToggleGenreVisibility(String genreId) {
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Genre.TABLE_NAME +
+                        "   SET " + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.Genre._ID + " = " + genreId
+        );
 
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.Genre.TABLE_NAME +
-                            "   SET " + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Genre.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.Genre._ID + " = " + genreId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doToggleMediaVisibility(String mediaId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Media.TABLE_NAME +
+                        "   SET " + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.Media._ID + " = " + mediaId
+        );
 
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.Media.TABLE_NAME +
-                            "   SET " + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.Media._ID + " = " + mediaId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doTogglePlaylistVisibility(String playlistId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Playlist.TABLE_NAME +
+                        "   SET " + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " " +
+                        "WHERE " + Entities.Playlist._ID + " = " + playlistId
+        );
 
-        if (database != null) {
-            database.execSQL(
-                    "UPDATE " + Entities.Playlist.TABLE_NAME +
-                            "   SET " + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " = ~" + Entities.Playlist.COLUMN_FIELD_USER_HIDDEN + " " +
-                            "WHERE " + Entities.Playlist._ID + " = " + playlistId
-            );
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
-            return true;
-        }
-
-        return false;
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        return true;
     }
 
     protected boolean doToggleVisibility(ContentType source, String sourceId) {
@@ -1338,11 +1259,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // query.
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(Entities.AlbumArtist.TABLE_NAME, columns, where, null, null, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(Entities.AlbumArtist.TABLE_NAME, columns, where, null, null, null, orderBy);
     }
 
     protected Cursor buildAlbumCursor(final int[] requestedFields, final int[] sortFields, String filter, final ContentType source, final String sourceId) {
@@ -1460,11 +1377,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // query.
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(tableDescription, columns, selection, selectionArgs, groupBy, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(tableDescription, columns, selection, selectionArgs, groupBy, null, orderBy);
     }
 
     protected Cursor buildArtistCursor(final int[] requestedFields, final int[] sortFields, String filter) {
@@ -1524,11 +1437,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // query.
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(Entities.Artist.TABLE_NAME, columns, selection, null, null, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(Entities.Artist.TABLE_NAME, columns, selection, null, null, null, orderBy);
     }
 
     protected Cursor buildGenreCursor(final int[] requestedFields, final int[] sortFields, String filter) {
@@ -1588,11 +1497,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // query.
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(Entities.Genre.TABLE_NAME, columns, selection, null, null, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(Entities.Genre.TABLE_NAME, columns, selection, null, null, null, orderBy);
     }
 
     protected Cursor buildPlaylistCursor(int[] requestedFields, int[] sortFields, String filter) {
@@ -1649,11 +1554,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         }
 
         // query.
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(Entities.Playlist.TABLE_NAME, columns, selection, null, null, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(Entities.Playlist.TABLE_NAME, columns, selection, null, null, null, orderBy);
     }
 
     protected Cursor buildMediaCursor(int[] requestedFields, int[] sortFields, String filter, ContentType contentType, String sourceId) {
@@ -2054,11 +1955,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             Entities.Media.TABLE_NAME + "." + Entities.Media.COLUMN_FIELD_ART_ID;
         }
 
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database != null) {
-            return database.query(tableDescription, columns, selection, selectionArgs, null, null, orderBy);
-        }
-        return null;
+        return mDatabase.query(tableDescription, columns, selection, selectionArgs, null, null, orderBy);
     }
 
     protected Cursor buildStorageCursor(int[] requestedFields, int[] sortFields, String filter) {
@@ -2273,11 +2170,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected InputStream getSongArt(String songId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database == null) {
-            return null;
-        }
-
         final String tableName =
                 Entities.Media.TABLE_NAME + " LEFT JOIN " + Entities.Art.TABLE_NAME + " ON " +
                         Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
@@ -2296,7 +2188,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         final int COLUMN_ART_URI = 0;
 
         String songArtUri = null;
-        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = mDatabase.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             songArtUri = cursor.getString(COLUMN_ART_URI);
@@ -2315,11 +2207,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected String getArt(String artId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database == null) {
-            return null;
-        }
-
         final String[] columns = new String[]{
                 Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI
         };
@@ -2331,7 +2218,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String artUri = null;
 
-        Cursor cursor = database.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = mDatabase.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             artUri = cursor.getString(COLUMN_ART_URI);
@@ -2343,11 +2230,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected String getAlbumArt(String albumId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database == null) {
-            return null;
-        }
-
         final String tableName =
                 Entities.Album.TABLE_NAME + " LEFT JOIN " + Entities.Art.TABLE_NAME + " ON " +
                         Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
@@ -2365,7 +2247,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String albumArtUri = null;
 
-        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = mDatabase.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             albumArtUri = cursor.getString(COLUMN_ART_URI);
@@ -2377,11 +2259,6 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public String getAlbumArtUri(String albumId) {
-        final SQLiteDatabase database = mDatabaseOpenHelper.getReadableDatabase();
-        if (database == null) {
-            return null;
-        }
-
         final String tableName =
                 Entities.Album.TABLE_NAME + " LEFT JOIN " + Entities.Art.TABLE_NAME + " ON " +
                         Entities.Art.TABLE_NAME + "." + Entities.Art._ID + " = " +
@@ -2399,7 +2276,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
         String albumArtUri = null;
 
-        Cursor cursor = database.query(tableName, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = mDatabase.query(tableName, columns, selection, selectionArgs, null, null, null);
         if (CursorUtils.ifNotEmpty(cursor)) {
             cursor.moveToFirst();
             albumArtUri = cursor.getString(COLUMN_ART_URI);
@@ -2410,75 +2287,68 @@ public class LocalProvider implements AbstractMediaManager.Provider {
     }
 
     protected void doUpdateAlbumCover(String albumId, String uri, boolean updateTracks) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
         long artId;
 
-        if (database != null) {
-            final String columns[] = new String[] {
-                Entities.Art._ID
-            };
-            final String selection = Entities.Art.COLUMN_FIELD_URI + " = ? ";
-            final String selectionArgs[] = new String[] {
-                uri
-            };
+        final String columns[] = new String[] {
+            Entities.Art._ID
+        };
+        final String selection = Entities.Art.COLUMN_FIELD_URI + " = ? ";
+        final String selectionArgs[] = new String[] {
+            uri
+        };
 
-            Cursor cursor = database.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = mDatabase.query(Entities.Art.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
 
-            if (CursorUtils.ifNotEmpty(cursor)) {
-                cursor.moveToFirst();
-                artId = cursor.getLong(0);
-                CursorUtils.free(cursor);
-            }
-            else {
-                ContentValues artData = new ContentValues();
-                artData.put(Entities.Art.COLUMN_FIELD_URI, uri);
-                artData.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, false);
-                artId = database.insert(Entities.Art.TABLE_NAME, null, artData);
-            }
-
-            final String whereAlbumId[] = new String[] {
-                    albumId
-            };
-
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(Entities.Album.COLUMN_FIELD_ALBUM_ART_ID, artId);
-
-            database.update(Entities.Album.TABLE_NAME, contentValues, Entities.Album._ID + " = ? ", whereAlbumId);
-
-            if (updateTracks) {
-                contentValues.clear();
-                contentValues.put(Entities.Media.COLUMN_FIELD_ART_ID, artId);
-
-                database.update(Entities.Media.TABLE_NAME, contentValues, Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
-            }
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            cursor.moveToFirst();
+            artId = cursor.getLong(0);
+            CursorUtils.free(cursor);
         }
+        else {
+            ContentValues artData = new ContentValues();
+            artData.put(Entities.Art.COLUMN_FIELD_URI, uri);
+            artData.put(Entities.Art.COLUMN_FIELD_URI_IS_EMBEDDED, false);
+            artId = mDatabase.insert(Entities.Art.TABLE_NAME, null, artData);
+        }
+
+        final String whereAlbumId[] = new String[] {
+                albumId
+        };
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Entities.Album.COLUMN_FIELD_ALBUM_ART_ID, artId);
+
+        mDatabase.update(Entities.Album.TABLE_NAME, contentValues, Entities.Album._ID + " = ? ", whereAlbumId);
+
+        if (updateTracks) {
+            contentValues.clear();
+            contentValues.put(Entities.Media.COLUMN_FIELD_ART_ID, artId);
+
+            mDatabase.update(Entities.Media.TABLE_NAME, contentValues, Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
+        }
+
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
     }
 
     protected void doRestoreAlbumCover(String albumId, boolean updateTracks) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
+        final String whereAlbumId[] = new String[] {
+                albumId
+        };
 
-        if (database != null) {
-            final String whereAlbumId[] = new String[] {
-                    albumId
-            };
-
-            database.execSQL(
-                    "UPDATE " + Entities.Album.TABLE_NAME + " " +
-                    "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " " +
-                    "WHERE " + Entities.Album._ID + " = ? ", whereAlbumId);
+        mDatabase.execSQL(
+                "UPDATE " + Entities.Album.TABLE_NAME + " " +
+                        "SET " + Entities.Album.COLUMN_FIELD_ALBUM_ART_ID + " = " + Entities.Album.COLUMN_FIELD_ORIGINAL_ALBUM_ART_ID + " " +
+                        "WHERE " + Entities.Album._ID + " = ? ", whereAlbumId);
 
 
-            if (updateTracks) {
-                database.execSQL(
-                        "UPDATE " + Entities.Media.TABLE_NAME + " " +
-                                "SET " + Entities.Media.COLUMN_FIELD_ART_ID + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " " +
-                                "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
-            }
-
-            PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        if (updateTracks) {
+            mDatabase.execSQL(
+                    "UPDATE " + Entities.Media.TABLE_NAME + " " +
+                            "SET " + Entities.Media.COLUMN_FIELD_ART_ID + " = " + Entities.Media.COLUMN_FIELD_ORIGINAL_ART_ID + " " +
+                            "WHERE " + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = ? ", whereAlbumId);
         }
+
+        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
     }
 
     public static boolean fileHasValidExtension(File file, Set<String> extensionSet) {
@@ -2497,210 +2367,202 @@ public class LocalProvider implements AbstractMediaManager.Provider {
         return false;
     }
     protected boolean doPlaylistAddContent(String playlistId, int position, ContentType contentType, final String sourceId, int sortOrder, String filter) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        if (database != null) {
-            String selectStatement;
-            String selectionArgs[] = null;
+        String selectStatement;
+        String selectionArgs[] = null;
 
-            String insertStatement =
-                    "INSERT INTO " + Entities.PlaylistEntry.TABLE_NAME + " (" +
-                            Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + ", " +
-                            Entities.PlaylistEntry.COLUMN_FIELD_POSITION + ", " +
-                            Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID +
-                            ") ";
+        String insertStatement =
+                "INSERT INTO " + Entities.PlaylistEntry.TABLE_NAME + " (" +
+                        Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + ", " +
+                        Entities.PlaylistEntry.COLUMN_FIELD_POSITION + ", " +
+                        Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID +
+                        ") ";
 
-            if (contentType == ContentType.CONTENT_TYPE_PLAYLIST) {
-                insertStatement = insertStatement +
-                        "SELECT " + playlistId + ", NULL, " + Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID + " ";
+        if (contentType == ContentType.CONTENT_TYPE_PLAYLIST) {
+            insertStatement = insertStatement +
+                    "SELECT " + playlistId + ", NULL, " + Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID + " ";
 
-                selectStatement =
-                        "FROM " + Entities.PlaylistEntry.TABLE_NAME + " " +
-                                "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + sourceId + " " +
-                                "ORDER BY " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION;
-            }
-            else {
-                insertStatement = insertStatement +
-                        "SELECT " + playlistId + ", NULL, " + Entities.Media._ID + " ";
+            selectStatement =
+                    "FROM " + Entities.PlaylistEntry.TABLE_NAME + " " +
+                            "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + sourceId + " " +
+                            "ORDER BY " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION;
+        }
+        else {
+            insertStatement = insertStatement +
+                    "SELECT " + playlistId + ", NULL, " + Entities.Media._ID + " ";
 
-                selectStatement = "FROM " + Entities.Media.TABLE_NAME + " ";
+            selectStatement = "FROM " + Entities.Media.TABLE_NAME + " ";
 
-                selectStatement = selectStatement + (PlayerApplication.library_show_hidden ?
-                        "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " :
-                        "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0) ");
+            selectStatement = selectStatement + (PlayerApplication.library_show_hidden ?
+                    "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) " :
+                    "WHERE (" + Entities.Media.COLUMN_FIELD_VISIBLE + " <> 0) AND (" + Entities.Media.COLUMN_FIELD_USER_HIDDEN + " = 0) ");
 
-                switch (contentType) {
-                    case CONTENT_TYPE_DEFAULT:
-                        if (!TextUtils.isEmpty(filter)) {
-                            selectStatement = selectStatement + " AND (" +
-                                    "(" + Entities.Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Entities.Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Entities.Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
-                                    "(" + Entities.Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
-                        }
+            switch (contentType) {
+                case CONTENT_TYPE_DEFAULT:
+                    if (!TextUtils.isEmpty(filter)) {
+                        selectStatement = selectStatement + " AND (" +
+                                "(" + Entities.Media.COLUMN_FIELD_ARTIST + " LIKE '%" + filter + "%') OR " +
+                                "(" + Entities.Media.COLUMN_FIELD_ALBUM + " LIKE '%" + filter + "%') OR " +
+                                "(" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " LIKE '%" + filter + "%') OR " +
+                                "(" + Entities.Media.COLUMN_FIELD_GENRE + " LIKE '%" + filter + "%') OR " +
+                                "(" + Entities.Media.COLUMN_FIELD_TITLE + " LIKE '%" + filter + "%') " + ")";
+                    }
 
-                        break;
-                    case CONTENT_TYPE_MEDIA:
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media._ID + " = " + sourceId + ") ";
-                        break;
-                    case CONTENT_TYPE_GENRE:
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media.COLUMN_FIELD_GENRE_ID + " = " + sourceId + ") ";
-                        break;
-                    case CONTENT_TYPE_ARTIST:
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media.COLUMN_FIELD_ARTIST_ID + " = " + sourceId + ") ";
-                        break;
-                    case CONTENT_TYPE_ALBUM:
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + sourceId + ") ";
-                        break;
-                    case CONTENT_TYPE_ALBUM_ARTIST:
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = " + sourceId + ") ";
-                        break;
-                    case CONTENT_TYPE_STORAGE:
-                        String decodedSourceId;
-                        try {
-                            decodedSourceId = new String(Base64.decode(sourceId));
-                        }
-                        catch (final IOException exception) {
-                            return false;
-                        }
-                        selectStatement = selectStatement +
-                                "AND (" + Entities.Media.COLUMN_FIELD_URI + " = ?) ";
-
-                        selectionArgs = new String[] {
-                                decodedSourceId
-                        };
-                        break;
-                    default:
+                    break;
+                case CONTENT_TYPE_MEDIA:
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media._ID + " = " + sourceId + ") ";
+                    break;
+                case CONTENT_TYPE_GENRE:
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media.COLUMN_FIELD_GENRE_ID + " = " + sourceId + ") ";
+                    break;
+                case CONTENT_TYPE_ARTIST:
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media.COLUMN_FIELD_ARTIST_ID + " = " + sourceId + ") ";
+                    break;
+                case CONTENT_TYPE_ALBUM:
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ID + " = " + sourceId + ") ";
+                    break;
+                case CONTENT_TYPE_ALBUM_ARTIST:
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST_ID + " = " + sourceId + ") ";
+                    break;
+                case CONTENT_TYPE_STORAGE:
+                    String decodedSourceId;
+                    try {
+                        decodedSourceId = new String(Base64.decode(sourceId));
+                    }
+                    catch (final IOException exception) {
                         return false;
-                }
+                    }
+                    selectStatement = selectStatement +
+                            "AND (" + Entities.Media.COLUMN_FIELD_URI + " = ?) ";
 
-                switch (sortOrder) {
-                    case SONG_URI:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_URI:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_FIRST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_FIRST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_LAST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_LAST_PLAYED:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_TITLE:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_TITLE:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_ALBUM_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_ALBUM_ARTIST:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_ALBUM:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_ALBUM:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_TRACK:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_TRACK:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
-                        break;
-                    case SONG_DISC:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
-                        break;
-                    case -SONG_DISC:
-                        selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
-                        break;
-                }
+                    selectionArgs = new String[] {
+                            decodedSourceId
+                    };
+                    break;
+                default:
+                    return false;
             }
 
-            int addedCount = 0;
-            Cursor cursor = database.rawQuery("SELECT COUNT(*) AS CNT " + selectStatement, selectionArgs);
-
-            if (CursorUtils.ifNotEmpty(cursor)) {
-                cursor.moveToFirst();
-                addedCount = cursor.getInt(0);
-
-                database.execSQL(
-                        "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
-                                Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
-                                "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
-                                "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
-
-                CursorUtils.free(cursor);
+            switch (sortOrder) {
+                case SONG_URI:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_URI:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_URI + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_FIRST_PLAYED:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_FIRST_PLAYED:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_FIRST_PLAYED + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_LAST_PLAYED:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_LAST_PLAYED:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_LAST_PLAYED + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_TITLE:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_TITLE:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TITLE + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_ARTIST:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_ARTIST:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ARTIST + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_ALBUM_ARTIST:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_ALBUM_ARTIST:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM_ARTIST + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_ALBUM:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_ALBUM:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_ALBUM + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_TRACK:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_TRACK:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_TRACK + " COLLATE NOCASE DESC";
+                    break;
+                case SONG_DISC:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE ASC";
+                    break;
+                case -SONG_DISC:
+                    selectStatement = selectStatement + "ORDER BY " + Entities.Media.COLUMN_FIELD_DISC + " COLLATE NOCASE DESC";
+                    break;
             }
-
-            final String updateStatement =
-                    "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = (" +
-                            "SELECT COUNT(*)" + " FROM " + Entities.PlaylistEntry.TABLE_NAME + " T1 " +
-                            "WHERE (T1." + Entities.PlaylistEntry._ID + " < " + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID + ") " +
-                            "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " < " + (position + addedCount) +") " +
-                            "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") " +
-                            ") " +
-                            "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " IS NULL) " +
-                            "AND (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") ";
-
-            database.beginTransaction();
-            try {
-                database.execSQL(insertStatement + selectStatement);
-                database.execSQL(updateStatement);
-                database.setTransactionSuccessful();
-            }
-            catch (final SQLException sqlException) {
-                LogUtils.LOGException(TAG, "doPlaylistAddContent", 0, sqlException);
-            }
-            finally {
-                database.endTransaction();
-            }
-            return true;
         }
 
-        return false;
+        int addedCount = 0;
+        Cursor cursor = mDatabase.rawQuery("SELECT COUNT(*) AS CNT " + selectStatement, selectionArgs);
+
+        if (CursorUtils.ifNotEmpty(cursor)) {
+            cursor.moveToFirst();
+            addedCount = cursor.getInt(0);
+
+            mDatabase.execSQL(
+                    "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
+                            Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
+                            "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
+                            "AND " + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId);
+
+            CursorUtils.free(cursor);
+        }
+
+        final String updateStatement =
+                "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = (" +
+                        "SELECT COUNT(*)" + " FROM " + Entities.PlaylistEntry.TABLE_NAME + " T1 " +
+                        "WHERE (T1." + Entities.PlaylistEntry._ID + " < " + Entities.PlaylistEntry.TABLE_NAME + "." + Entities.PlaylistEntry._ID + ") " +
+                        "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " < " + (position + addedCount) +") " +
+                        "AND (T1." + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") " +
+                        ") " +
+                        "WHERE (" + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " IS NULL) " +
+                        "AND (" + Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID + " = " + playlistId + ") ";
+
+        try {
+            mDatabase.beginTransaction();
+            mDatabase.execSQL(insertStatement + selectStatement);
+            mDatabase.execSQL(updateStatement);
+            mDatabase.setTransactionSuccessful();
+        }
+        catch (final SQLException sqlException) {
+            LogUtils.LOGException(TAG, "doPlaylistAddContent", 0, sqlException);
+        }
+        finally {
+            mDatabase.endTransaction();
+        }
+        return true;
     }
 
     protected boolean doPlaylistAddContent(String playlistId, int position, List<File> fileList, boolean deleteFileMedias) {
-        SQLiteDatabase database = mDatabaseOpenHelper.getWritableDatabase();
-
         if (playlistId == null) {
             playlistId = "0";
         }
 
-        if (database != null && fileList != null && fileList.size() > 0) {
+        if (fileList != null && fileList.size() > 0) {
             final Set<String> audioExtensions = MediaScanner.getMediaExtensions(mediaManager.getId());
 
             int addedCount = fileList.size();
 
-            database.beginTransaction();
             try {
-                database.execSQL(
+                mDatabase.beginTransaction();
+                mDatabase.execSQL(
                         "UPDATE " + Entities.PlaylistEntry.TABLE_NAME + " SET " +
                                 Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " = " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " + " + addedCount + " " +
                                 "WHERE " + Entities.PlaylistEntry.COLUMN_FIELD_POSITION + " >= " + position + " " +
@@ -2713,7 +2575,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                             String.valueOf(1)
                     };
 
-                    database.delete(Entities.Media.TABLE_NAME, where, whereArgs);
+                    mDatabase.delete(Entities.Media.TABLE_NAME, where, whereArgs);
                 }
 
                 ContentValues contentValues = new ContentValues();
@@ -2724,24 +2586,24 @@ public class LocalProvider implements AbstractMediaManager.Provider {
                         contentValues.put(Entities.Media.COLUMN_FIELD_VISIBLE, 0);
                         contentValues.put(Entities.Media.COLUMN_FIELD_IS_QUEUE_FILE_ENTRY, 1);
                         contentValues.remove(Entities.Media.NOT_PERSISTANT_COLUMN_FIELD_HAS_EMBEDDED_ART);
-                        long insertId = database.insert(Entities.Media.TABLE_NAME, null, contentValues);
+                        long insertId = mDatabase.insert(Entities.Media.TABLE_NAME, null, contentValues);
 
                         contentValues.clear();
                         contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_PLAYLIST_ID, playlistId);
                         contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_POSITION, position);
                         contentValues.put(Entities.PlaylistEntry.COLUMN_FIELD_SONG_ID, insertId);
-                        database.insert(Entities.PlaylistEntry.TABLE_NAME, null, contentValues);
+                        mDatabase.insert(Entities.PlaylistEntry.TABLE_NAME, null, contentValues);
                         position++;
                     }
                 }
 
-                database.setTransactionSuccessful();
+                mDatabase.setTransactionSuccessful();
             }
             catch (final SQLException sqlException) {
                 LogUtils.LOGException(TAG, "doPlaylistAddContent", 0, sqlException);
             }
             finally {
-                database.endTransaction();
+                mDatabase.endTransaction();
             }
 
             return true;
@@ -2752,7 +2614,7 @@ public class LocalProvider implements AbstractMediaManager.Provider {
 
     @Override
     public void databaseMaintain() {
-        getWritableDatabase().rawQuery("VACUUM;", null);
+        mDatabase.rawQuery("VACUUM;", null);
     }
 
     protected List<File> getStorageFileList(String filter, int[] sortFields) {

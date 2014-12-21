@@ -46,10 +46,17 @@ public class OpenHelper extends SQLiteOpenHelper {
             new EqualizerPreset("Techno", 13.0f, new float[] { 8.0f, 5.6f, -1.11022e-15f, -5.6f, -4.8f, -1.11022e-15f, 8.0f, 9.6f, 9.6f, 8.8f })
     };
 
+    private static class SingletonHolder {
+        private final static OpenHelper instance = new OpenHelper();
+    }
 
 
-    public OpenHelper() {
+    private OpenHelper() {
         super(PlayerApplication.context, "provider-index.db", null, DATABASE_VERSION);
+    }
+
+    public static OpenHelper getInstance() {
+        return SingletonHolder.instance;
     }
 
     @Override

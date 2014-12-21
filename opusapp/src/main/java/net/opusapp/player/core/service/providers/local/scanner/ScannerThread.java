@@ -15,6 +15,7 @@ import net.opusapp.player.core.service.providers.event.LibraryContentChangedEven
 import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
+import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.CursorUtils;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.utils.LogUtils;
@@ -57,7 +58,7 @@ public class ScannerThread extends Thread {
 
     public ScannerThread(final MediaScanner mediaScanner) {
         mMediaScanner = mediaScanner;
-        mDatabase = mediaScanner.getDatabaseOpenHelper().getWritableDatabase();
+        mDatabase = OpenHelper.getInstance(mediaScanner.getManager().getId()).getWritableDatabase();
         mMediaManagerId = mediaScanner.getManager().getId();
         mCancelling = false;
         mIsRunning = true;
@@ -379,7 +380,6 @@ public class ScannerThread extends Thread {
                 }
             }
 
-            // TODO: faire des transactions COURTES dans toute cette classe !
             CursorUtils.free(cursor);
             updateCovers();
         }

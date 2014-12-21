@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.opusapp.player.ui.views.colorpicker;
+package net.opusapp.player.ui.preference;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -29,6 +29,9 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import net.opusapp.player.ui.dialogs.ColorPickerDialog;
+import net.opusapp.player.ui.views.colorpicker.AlphaPatternDrawable;
 
 /**
  * A preference type that allows a user to choose a time

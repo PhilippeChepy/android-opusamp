@@ -26,18 +26,11 @@ public class MediaScanner {
 
     private ScannerThread mScannerThread;
 
-
-
     private LocalMediaManager mManager;
 
-    private OpenHelper mDatabaseOpenHelper;
-
-
-
-    public MediaScanner(final LocalMediaManager parent, final OpenHelper databaseOpenHelper) {
+    public MediaScanner(final LocalMediaManager parent) {
         mScannerThread = null;
         mManager = parent;
-        mDatabaseOpenHelper = databaseOpenHelper;
     }
 
     public static Set<String> getCoverExtensions() {
@@ -54,10 +47,9 @@ public class MediaScanner {
     }
 
     public static Set<String> getMediaExtensions(int providerId) {
-        final OpenHelper databaseOpenHelper = new OpenHelper(providerId);
-        final SQLiteDatabase database = databaseOpenHelper.getReadableDatabase();
-
         final Set<String> audioFilesExtensions = new HashSet<>();
+
+        final SQLiteDatabase database = OpenHelper.getInstance(providerId).getWritableDatabase();
 
         final String[] columns = new String[] {
                 Entities.FileExtensions.COLUMN_FIELD_EXTENSION
@@ -92,10 +84,6 @@ public class MediaScanner {
 
     public AbstractMediaManager getManager() {
         return mManager;
-    }
-
-    public OpenHelper getDatabaseOpenHelper() {
-        return mDatabaseOpenHelper;
     }
 
     public synchronized boolean isRunning() {

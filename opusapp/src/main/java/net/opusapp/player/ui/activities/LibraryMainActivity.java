@@ -38,6 +38,7 @@ import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.index.database.Entities;
+import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.ui.activities.settings.GeneralSettingsActivity;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
@@ -419,7 +420,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
 
     protected void initProvidersList() {
-        SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
+        SQLiteDatabase database = OpenHelper.getInstance().getReadableDatabase();
 
         if (database != null) {
             Cursor cursor = database.query(

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.opusapp.player.ui.views.colorpicker;
+package net.opusapp.player.ui.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -35,6 +35,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.opusapp.player.R;
+import net.opusapp.player.ui.preference.ColorPickerPreference;
+import net.opusapp.player.ui.views.colorpicker.ColorPickerPanelView;
+import net.opusapp.player.ui.views.colorpicker.ColorPickerView;
 
 import java.util.Locale;
 

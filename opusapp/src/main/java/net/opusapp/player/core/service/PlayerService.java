@@ -195,11 +195,13 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Current song informations
+    private long mTimeStamp;
+
     private int mLoadingTry;
 
     private TimestampChangedEvent mTimestampChangedEvent = new TimestampChangedEvent();
 
-    private MediaChangedEvent mMedia;
+    private MediaChangedEvent mMedia = new MediaChangedEvent(null, null, null, 0, -1);
 
     private String mMediaCoverUri = null;
 
@@ -240,6 +242,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     public void onPlaybackTimestampUpdate(long newPosition) {
         /* Playing, request for timestamp update */
         notifyTimestampUpdate(newPosition);
+        mTimeStamp = newPosition;
 
         if (getAutostopTimestamp() == 0) {
             LogUtils.LOGD(TAG, "autostop timestamp reached : " + getAutostopTimestamp());
@@ -251,9 +254,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     @Override
     public void onCreate() {
         super.onCreate();
-
-        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
-        PlayerEventBus.getInstance().register(this);
 
         mBinder = new PlayerBinder();
 
@@ -299,7 +299,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mShuffleMode = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_SHUFFLE_MODE, SHUFFLE_NONE);
         int position = sharedPreferences.getInt(PlayerApplication.PREFERENCE_PLAYER_LAST_PLAYLIST_POSITION, 0);
 
-        loadPlaylist();
+        loadPlaylist(true);
 
         if (mPlaylist.length > 0) {
             queueSetPosition(position);
@@ -343,6 +343,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         final IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(mHeadsetBroadcastReceiver, filter);
+
+        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
+        PlayerEventBus.getInstance().register(this);
     }
 
     @Override
@@ -574,13 +577,25 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                 if (isRemoteControl) {
                     switch (action) {
                     case ACTION_PREVIOUS:
-                        if (isPlaying()) {
-                            pause(true);
-                            setPosition(0);
-                            prev();
-                            play();
-                        } else {
-                            prev();
+                        if (mTimeStamp > 4000) {
+                            if (isPlaying()) {
+                                pause(true);
+                                setPosition(0);
+                                play();
+                            }
+                            else {
+                                setPosition(0);
+                            }
+                        }
+                        else {
+                            if (isPlaying()) {
+                                pause(true);
+                                setPosition(0);
+                                prev();
+                                play();
+                            } else {
+                                prev();
+                            }
                         }
                         break;
                     case ACTION_NEXT:
@@ -695,7 +710,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         return looped;
     }
 
-    protected void loadPlaylist() {
+    protected void loadPlaylist(boolean notify) {
         final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
 
@@ -708,6 +723,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         Collections.shuffle(mShuffledPlaylistIndexList);
         mShuffledPlaylistIndex = 0;
+
+        if (notify) {
+            notifyQueueChanged();
+
+        }
     }
 
     protected boolean pausedByTelephopny() {
@@ -978,9 +998,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void setPosition(long position) {
+        if (!hasPlaylist()) {
+            return;
+        }
+
         final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
         final AbstractMediaManager.Player player = mediaManager.getPlayer();
 
+        mTimeStamp = position;
         player.playerSeek(mPlaylist[mPlaylistIndex], position);
         notifyTimestampUpdate(position);
     }
@@ -1020,7 +1045,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistAdd(null, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
 
-        loadPlaylist();
+        loadPlaylist(true);
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = mPlaylist.length - 1;
@@ -1030,7 +1055,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             play();
         }
 
-        notifyQueueChanged();
         mMediaManagementExecutor.submit(runnableRefreshSongData);
     }
 
@@ -1053,7 +1077,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final AbstractMediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistMove(null, indexFrom, indexTo);
 
-        loadPlaylist();
+        loadPlaylist(true);
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = mPlaylist.length - 1;
@@ -1079,7 +1103,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             pause(true);
         }
 
-        loadPlaylist();
+        loadPlaylist(true);
 
         if (mPlaylist.length != 0) {
             if (mPlaylistIndex >= mPlaylist.length) {
@@ -1092,7 +1116,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         notifySetQueuePosition();
-        notifyQueueChanged();
     }
 
     public void queueClear() {
@@ -1105,9 +1128,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         provider.playlistClear(null);
         mPlaylistIndex = 0;
-        loadPlaylist();
-
-        notifyQueueChanged();
+        loadPlaylist(true);
 
         // Widgets are always displayed, even if not playing so we need to update them if playlist is now empty.
         updateWidgets();
@@ -1125,7 +1146,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         final String uri = mPlaylistIndex < mPlaylist.length ? mPlaylist[mPlaylistIndex].getUri() : null;
 
-        loadPlaylist();
+        loadPlaylist(true);
 
         if (mPlaylistIndex >= mPlaylist.length) {
             mPlaylistIndex = 0;
@@ -1141,7 +1162,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
         }
 
-        notifyQueueChanged();
         mMediaManagementExecutor.submit(runnableRefreshSongData);
     }
 
@@ -1351,7 +1371,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     @Produce public PlaylistChangedEvent producePlaylistChangedEvent() {
-        return new PlaylistChangedEvent(PlayerApplication.playerMediaManager().getId(), 0);
+        return new PlaylistChangedEvent(PlayerApplication.playerMediaManager().getId(), 0, mPlaylist.length);
     }
 
 

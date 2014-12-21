@@ -14,8 +14,8 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
+import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.fragments.ArtSelectionFragment;
 import net.opusapp.player.ui.adapter.ux.PagerAdapter;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -42,19 +42,6 @@ public class CoverSelectionActivity extends ActionBarActivity {
     private long mSourceId;
 
     private MenuItem addMenuItem;
-
-
-
-    protected SQLiteDatabase getWritableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getWritableDatabase();
-        }
-
-        return null;
-    }
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -133,7 +120,7 @@ public class CoverSelectionActivity extends ActionBarActivity {
             case REQUEST_CODE_LOCAL_FILESYSTEM:
                 if (resultCode == RESULT_OK) {
                     final String selectedFile = data.getStringExtra(LocalCoverFileSelectionActivity.KEY_RESULT);
-                    final SQLiteDatabase database = getWritableDatabase();
+                    final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
 
                     ContentValues artData = new ContentValues();
                     artData.put(Entities.Art.COLUMN_FIELD_URI, PlayerApplication.fileToUri(new File(selectedFile)));

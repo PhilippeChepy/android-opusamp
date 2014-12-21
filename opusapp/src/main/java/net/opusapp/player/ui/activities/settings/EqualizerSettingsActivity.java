@@ -18,7 +18,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -267,11 +266,8 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
         return new AbstractSimpleCursorLoader(this) {
             @Override
             public Cursor loadInBackground() {
-                final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
-                if (database != null) {
-                    return database.query(Entities.EqualizerPresets.TABLE_NAME, mRequestedFields, null, null, null, null, null);
-                }
-                return null;
+                final SQLiteDatabase database = OpenHelper.getInstance().getReadableDatabase();
+                return database.query(Entities.EqualizerPresets.TABLE_NAME, mRequestedFields, null, null, null, null, null);
             }
         };
     }
@@ -317,8 +313,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
             textDialog.setPositiveButtonRunnable(new EditTextDialog.ButtonClickListener() {
                 @Override
                 public void click(EditTextDialog dialog) {
-                    final SQLiteOpenHelper openHelper = PlayerApplication.getDatabaseOpenHelper();
-                    final SQLiteDatabase database = openHelper.getWritableDatabase();
+                    final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
                     final ContentValues values = new ContentValues();
                     values.put(Entities.EqualizerPresets.COLUMN_FIELD_PRESET_NAME, dialog.getText());
@@ -362,8 +357,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            final SQLiteOpenHelper openHelper = PlayerApplication.getDatabaseOpenHelper();
-                            final SQLiteDatabase database = openHelper.getWritableDatabase();
+                            final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
                             Entities.EqualizerPresets.destroyTable(database);
                             Entities.EqualizerPresets.createTable(database);
@@ -384,8 +378,7 @@ public class EqualizerSettingsActivity extends ActionBarActivity implements Load
     };
 
     protected void deletePathMenuItemClick(int id) {
-        final SQLiteOpenHelper openHelper = PlayerApplication.getDatabaseOpenHelper();
-        final SQLiteDatabase database = openHelper.getWritableDatabase();
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
         final String selection = Entities.EqualizerPresets._ID + " = ? ";
 

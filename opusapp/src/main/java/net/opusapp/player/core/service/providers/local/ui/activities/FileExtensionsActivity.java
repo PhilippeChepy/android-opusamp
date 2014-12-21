@@ -22,8 +22,8 @@ import android.widget.GridView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
+import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
 import net.opusapp.player.ui.dialogs.EditTextDialog;
@@ -51,29 +51,6 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
 
     private static final int COLUMN_EXTENSION = 1;
 
-
-    protected SQLiteDatabase getReadableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getReadableDatabase();
-        }
-
-        return null;
-    }
-
-    protected SQLiteDatabase getWritableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getWritableDatabase();
-        }
-
-        return null;
-    }
-
     @Override
     public void refresh() {
         if( mGridView != null ) {
@@ -91,11 +68,8 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
         return new AbstractSimpleCursorLoader(this) {
             @Override
             public Cursor loadInBackground() {
-                SQLiteDatabase database = getReadableDatabase();
-                if (database != null) {
-                    return database.query(Entities.FileExtensions.TABLE_NAME, projection, null, null, null, null, Entities.FileExtensions.COLUMN_FIELD_EXTENSION);
-                }
-                return null;
+                final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getReadableDatabase();
+                return database.query(Entities.FileExtensions.TABLE_NAME, projection, null, null, null, null, Entities.FileExtensions.COLUMN_FIELD_EXTENSION);
             }
         };
     }
@@ -195,10 +169,9 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
                 String.valueOf(id)
         };
 
-        SQLiteDatabase database = getWritableDatabase();
-        if (database != null) {
-            database.delete(Entities.FileExtensions.TABLE_NAME, selection, selectionArgs);
-        }
+        final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
+        database.delete(Entities.FileExtensions.TABLE_NAME, selection, selectionArgs);
+
         getSupportLoaderManager().restartLoader(0, null, this);
     }
 
@@ -220,13 +193,13 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
             final EditTextDialog.ButtonClickListener extensionValidatoin = new EditTextDialog.ButtonClickListener() {
                 @Override
                 public void click(EditTextDialog dialog) {
-                    final SQLiteDatabase database = getWritableDatabase();
                     final String extension = dialog.getText();
 
-                    if (database != null && !TextUtils.isEmpty(extension)) {
+                    if (!TextUtils.isEmpty(extension)) {
                         final ContentValues contentValues = new ContentValues();
                         contentValues.put(Entities.FileExtensions.COLUMN_FIELD_EXTENSION, extension);
 
+                        final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
                         database.insert(Entities.FileExtensions.TABLE_NAME, null, contentValues);
                         notifyLibraryChanges();
                     }

@@ -32,6 +32,7 @@ import com.mobeta.android.dslv.DragSortListView;
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
 import net.opusapp.player.core.service.providers.index.database.Entities;
+import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.ProviderAdapter;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -162,13 +163,10 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
         return new AbstractSimpleCursorLoader(this) {
             @Override
             public Cursor loadInBackground() {
-                final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getReadableDatabase();
-                if (database != null) {
-                    final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
+                final SQLiteDatabase database = OpenHelper.getInstance().getReadableDatabase();
+                final String orderBy = Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION;
 
-                    return database.query(Entities.Provider.TABLE_NAME, mRequestedFields, null, null, null, null, orderBy);
-                }
-                return null;
+                return database.query(Entities.Provider.TABLE_NAME, mRequestedFields, null, null, null, null, orderBy);
             }
         };
     }
@@ -221,7 +219,7 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
             case CONTEXT_MENUITEM_DELETE:
                 if (providerId != 1) {
                     int itemIndex = PlayerApplication.getManagerIndex(providerId);
-                    final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+                    final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
                     if (database != null && itemIndex >= 0) {
                         // Delete database registration
@@ -261,72 +259,71 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
             return; // done.
         }
 
-        SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
-        if (database != null) {
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
+
+        try {
             database.beginTransaction();
-            try {
-                if (indexFrom < indexTo) {
-                    int lowerIndex = Math.min(indexFrom, indexTo);
-                    int upperIndex = Math.max(indexFrom, indexTo);
+            if (indexFrom < indexTo) {
+                int lowerIndex = Math.min(indexFrom, indexTo);
+                int upperIndex = Math.max(indexFrom, indexTo);
 
-                    // Provider is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex)
-                    );
+                // Provider is 0, 1, 2, 3, 4, ..., indexFrom, indexFrom + 1, indexFrom + 2, ..., indexTo, ...
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex)
+                );
 
-                    // Provider is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " - 1 " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
-                                " BETWEEN " + String.valueOf(lowerIndex) +
-                                    " AND " + String.valueOf(upperIndex)
-                    );
+                // Provider is -1, 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ...
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " - 1 " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
+                            " BETWEEN " + String.valueOf(lowerIndex) +
+                                " AND " + String.valueOf(upperIndex)
+                );
 
 
-                    // Provider is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex) + " " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
-                    );
-                } else {
-                    int lowerIndex = Math.min(indexFrom, indexTo);
-                    int upperIndex = Math.max(indexFrom, indexTo);
+                // Provider is 0, 1, 2, 3, 4, ..., indexFrom + 1, indexFrom + 2, ..., indexTo - 1, indexTo, ...
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex) + " " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
+                );
+            } else {
+                int lowerIndex = Math.min(indexFrom, indexTo);
+                int upperIndex = Math.max(indexFrom, indexTo);
 
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex)
-                    );
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1 " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(upperIndex)
+                );
 
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " + 1 " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
-                                " BETWEEN " + String.valueOf(lowerIndex) +
-                                    " AND " + String.valueOf(upperIndex)
-                    );
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " + 1 " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION +
+                            " BETWEEN " + String.valueOf(lowerIndex) +
+                                " AND " + String.valueOf(upperIndex)
+                );
 
-                    database.execSQL(
-                            "UPDATE " + Entities.Provider.TABLE_NAME + " " +
-                            "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex) + " " +
-                            "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
-                    );
-                }
-                database.setTransactionSuccessful();
+                database.execSQL(
+                        "UPDATE " + Entities.Provider.TABLE_NAME + " " +
+                        "SET " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = " + String.valueOf(lowerIndex) + " " +
+                        "WHERE " + Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION + " = -1"
+                );
             }
-            catch (final SQLException sqlException) {
-                LogUtils.LOGException(TAG, "doMoveProviders", 0, sqlException);
-            }
-            finally {
-                database.endTransaction();
-            }
-
-            refresh();
+            database.setTransactionSuccessful();
         }
+        catch (final SQLException sqlException) {
+            LogUtils.LOGException(TAG, "doMoveProviders", 0, sqlException);
+        }
+        finally {
+            database.endTransaction();
+        }
+
+        refresh();
     }
 
     private View.OnClickListener mHeaderViewClickListener = new View.OnClickListener() {

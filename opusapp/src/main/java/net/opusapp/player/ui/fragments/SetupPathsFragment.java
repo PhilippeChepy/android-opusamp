@@ -65,25 +65,21 @@ public class SetupPathsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 final ContentValues contentValues = new ContentValues();
-                final OpenHelper localOpenHelper = new OpenHelper(1);
-                final SQLiteDatabase localDatabase = localOpenHelper.getWritableDatabase();
+                final SQLiteDatabase database = OpenHelper.getInstance(1).getWritableDatabase();
                 final String[] directories = StorageOptions.getStorageDirectories();
 
-                if (localDatabase != null) {
-                    for (String directory : directories) {
-                        contentValues.clear();
 
-                        if (radioIntended.isChecked()) {
-                            directory = directory + File.separator + "Music";
-                        }
+                for (String directory : directories) {
+                    contentValues.clear();
 
-                        contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, directory);
-                        contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
-                        localDatabase.insert(Entities.ScanDirectory.TABLE_NAME, null, contentValues);
+                    if (radioIntended.isChecked()) {
+                        directory = directory + File.separator + "Music";
                     }
-                }
-                localOpenHelper.close();
 
+                    contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME, directory);
+                    contentValues.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 0);
+                    database.insert(Entities.ScanDirectory.TABLE_NAME, null, contentValues);
+                }
 
                 final Activity activity = getActivity();
                 if (activity != null) {

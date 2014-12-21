@@ -27,7 +27,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
@@ -86,18 +85,11 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     //
-    private static SQLiteOpenHelper databaseHelper;
-
     private static AbstractMediaManager mediaManagers[] = null;
 
     private static int playerMediaManagerIndex = 0;
 
     private static int libraryMediaManagerIndex = 0;
-
-
-    public static SQLiteOpenHelper getDatabaseOpenHelper() {
-        return databaseHelper;
-    }
 
 
     private static boolean connecting;
@@ -148,7 +140,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
         context = getApplicationContext();
         instance = this;
 
-        databaseHelper = new OpenHelper();
         allocateMediaManagers();
 
         playerMediaManagerIndex = getLibraryPlayerIndex();
@@ -205,7 +196,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void allocateMediaManagers() {
 
-        final SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
         final AbstractMediaManager playerProvider = playerMediaManager();
 
         final String[] columns = new String[] {
@@ -355,7 +346,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
             @Override
             protected Void doInBackground(Void... params) {
                 publishProgress(0);
-                PlayerApplication.getDatabaseOpenHelper().getWritableDatabase().rawQuery("VACUUM;", null);
+                final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
+                database.rawQuery("VACUUM;", null);
 
                 for (int index = 0 ; index < PlayerApplication.mediaManagers.length ; index++) {
                     publishProgress(index + 1);
@@ -1041,7 +1033,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     public static void addLibrary(final Activity parent, final Runnable completionRunnable) {
-        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
         final ArrayList<Integer> managerItemIds = new ArrayList<>();
         final ArrayList<String> managerItemDescriptions = new ArrayList<>();
@@ -1121,7 +1113,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     public static void editLibrary(final Activity parent, final int managerId, final String initialName, final Runnable completionRunnable) {
-        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
         final EditTextDialog.ButtonClickListener editionDone = new EditTextDialog.ButtonClickListener() {
 
@@ -1169,7 +1161,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
     public static void configureLibrary(Activity sourceActivity, int mediaProviderId) {
         LogUtils.LOGD(TAG, "providerId : " + mediaProviderId);
-        final SQLiteDatabase database = PlayerApplication.getDatabaseOpenHelper().getWritableDatabase();
+        final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
 
         int mediaProviderType = 0;
 

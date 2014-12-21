@@ -229,13 +229,15 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         mRepeatButton.setOnClickListener(mRepeatButtonClickListener);
 
         final RepeatingImageButton prevButton = (RepeatingImageButton) findViewById(R.id.audio_player_prev);
-        prevButton.setOnClickListener(mPrevButtonClickListener);
+        prevButton.setOnClickListener(mPreviousButtonClickListener);
+        prevButton.setRepeatListener(mPreviousButtonRepeatListener, 250);
 
         mPlayButton = (ImageButton) findViewById(R.id.audio_player_play);
         mPlayButton.setOnClickListener(mPlayButtonClickListener);
 
         final RepeatingImageButton nextButton = (RepeatingImageButton) findViewById(R.id.audio_player_next);
         nextButton.setOnClickListener(mNextButtonClickListener);
+        nextButton.setRepeatListener(mNextButtonRepeatListener, 250);
 
         mShuffleButton = (ImageButton) findViewById(R.id.audio_player_shuffle);
         mShuffleButton.setOnClickListener(mShuffleButtonClickListener);
@@ -394,16 +396,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         if (cursor == null) {
             return;
-        }
-
-        if (slidingUpPanelLayout != null) {
-            if (cursor.getCount() <= 0) {
-                slidingUpPanelLayout.collapsePanel();
-                slidingUpPanelLayout.hidePanel();
-            }
-            else if (canShowPanel()) {
-                slidingUpPanelLayout.showPanel();
-            }
         }
 
         playlistCursor = cursor;
@@ -598,8 +590,22 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
 
         @SuppressWarnings("unused")
-        @Subscribe public void playlistChangedEvent(PlaylistChangedEvent playlistChangedEvent) {
-            getSupportLoaderManager().restartLoader(0, null, AbstractPlayerActivity.this);
+        @Subscribe public synchronized void playlistChangedEvent(PlaylistChangedEvent playlistChangedEvent) {
+            if (playlistChangedEvent.getProviderId() == PlayerApplication.playerMediaManager().getId() && playlistChangedEvent.getPlaylistId() == 0) {
+                LogUtils.LOGW(TAG, "playlist length = " + playlistChangedEvent.getPlaylistLength());
+
+                if (slidingUpPanelLayout != null) {
+                    if (playlistChangedEvent.getPlaylistLength() <= 0) {
+                        slidingUpPanelLayout.collapsePanel();
+                        slidingUpPanelLayout.hidePanel();
+                    }
+                    else if (canShowPanel()) {
+                        slidingUpPanelLayout.showPanel();
+                    }
+                }
+
+                getSupportLoaderManager().restartLoader(0, null, AbstractPlayerActivity.this);
+            }
         }
     };
 
@@ -817,12 +823,41 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         }
     };
 
-    public View.OnClickListener mPrevButtonClickListener = new View.OnClickListener() {
+    public View.OnClickListener mPreviousButtonClickListener = new View.OnClickListener() {
 
         @Override
         public void onClick(View view) {
             final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
             localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PREVIOUS_INTENT);
+        }
+    };
+
+    public RepeatingImageButton.RepeatListener mPreviousButtonRepeatListener = new RepeatingImageButton.RepeatListener() {
+        @Override
+        public void onRepeat(View v, long duration, int repeatcount) {
+            LogUtils.LOGW(TAG, "PREV duration = " + duration + " repeatcount = " + repeatcount);
+
+            float multiplier;
+            if (repeatcount > 0) {
+                multiplier = (float) repeatcount;
+            }
+            else if (repeatcount > 10) {
+                multiplier = 10.0f;
+            }
+            else {
+                multiplier = 1.0f;
+            }
+
+            long newPosition = mProgressSeekBar.getProgress() * 100 + (int) ((float) 2000 * multiplier);
+
+            if (PlayerApplication.playerService.isPlaying()) {
+                PlayerApplication.playerService.pause(true);
+                PlayerApplication.playerService.setPosition(newPosition);
+                PlayerApplication.playerService.play();
+            }
+            else {
+                PlayerApplication.playerService.setPosition(newPosition);
+            }
         }
     };
 
@@ -832,6 +867,35 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onClick(View view) {
             final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
             localBroadcastManager.sendBroadcast(PlayerService.CLIENT_NEXT_INTENT);
+        }
+    };
+
+    public RepeatingImageButton.RepeatListener mNextButtonRepeatListener = new RepeatingImageButton.RepeatListener() {
+        @Override
+        public void onRepeat(View v, long duration, int repeatcount) {
+            LogUtils.LOGW(TAG, "NEXT duration = " + duration + " repeatcount = " + repeatcount);
+
+            float multiplier;
+            if (repeatcount > 0) {
+                multiplier = (float) repeatcount;
+            }
+            else if (repeatcount > 10) {
+                multiplier = 10.0f;
+            }
+            else {
+                multiplier = 1.0f;
+            }
+
+            long newPosition = mProgressSeekBar.getProgress() * 100 - (int) ((float) 2000 * multiplier);
+
+            if (PlayerApplication.playerService.isPlaying()) {
+                PlayerApplication.playerService.pause(true);
+                PlayerApplication.playerService.setPosition(newPosition);
+                PlayerApplication.playerService.play();
+            }
+            else {
+                PlayerApplication.playerService.setPosition(newPosition);
+            }
         }
     };
 

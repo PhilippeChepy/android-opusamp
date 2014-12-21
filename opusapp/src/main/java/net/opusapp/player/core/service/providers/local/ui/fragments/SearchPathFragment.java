@@ -34,8 +34,8 @@ import android.widget.GridView;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.providers.AbstractMediaManager;
-import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
+import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
 import net.opusapp.player.ui.adapter.holder.GridViewHolder;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -71,39 +71,16 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 
 
 
-    protected SQLiteDatabase getReadableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getReadableDatabase();
-        }
-
-        return null;
-    }
-
-    protected SQLiteDatabase getWritableDatabase() {
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-
-        if (provider instanceof LocalProvider) {
-            return ((LocalProvider) provider).getWritableDatabase();
-        }
-
-        return null;
-    }
-
-	
-	@Override
-	public void refresh() {
+    @Override
+    public void refresh() {
         if( mGridView != null ) {
             getLoaderManager().restartLoader(0, null, this);
         }
-	}
-        
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.view_list_gridview, container, false);
         if (rootView != null) {
             mGridView = (GridView) rootView.findViewById(R.id.grid_view_base);
             mGridView.setEmptyView(rootView.findViewById(R.id.grid_view_empty));
@@ -113,10 +90,10 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
         }
 
         return rootView;
-	}
-	
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         mAdapter = new CollectionScannerPathAdapter(getActivity(), R.layout.view_item_single_line, null, new String[] {}, new int[] {}, 0);
@@ -131,43 +108,40 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
         }
 
         getLoaderManager().initLoader(0, null, this);
-	}
-	
-	@Override
-	public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
         final String[] projection = new String[] {
                 Entities.ScanDirectory._ID,
                 Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME
         };
-        
-		int pathType = CONTENT_SEARCH_PATH;
+
+        int pathType = CONTENT_SEARCH_PATH;
         Bundle arguments = getArguments();
         if (arguments != null) {
             pathType = arguments.getInt(CONTENT_TYPE_KEY, CONTENT_SEARCH_PATH);
         }
 
-		final String selection = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ?";
-		
-		final String[] selectionArgs = new String[] {
-			String.valueOf(pathType == CONTENT_SEARCH_PATH ? 0 : 1)	
-		};
-		
-		final String sortOrder = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME;
+        final String selection = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED + " = ?";
+
+        final String[] selectionArgs = new String[] {
+            String.valueOf(pathType == CONTENT_SEARCH_PATH ? 0 : 1)
+        };
+
+        final String sortOrder = Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_NAME;
 
         return new AbstractSimpleCursorLoader(getActivity()) {
             @Override
             public Cursor loadInBackground() {
-                SQLiteDatabase database = getReadableDatabase();
-                if (database != null) {
-                    return database.query(Entities.ScanDirectory.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
-                }
-                return null;
+                final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
+                return database.query(Entities.ScanDirectory.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
             }
         };
-	}
+    }
 
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data == null) {
             return;
         }
@@ -175,39 +149,39 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
         mAdapter.changeCursor(data);
         mGridView.invalidateViews();
         mCursor = data;
-	}
-	
-	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
         if (mAdapter != null) {
-        	mAdapter.changeCursor(null);
+            mAdapter.changeCursor(null);
         }
-	}
-	
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
 
         menu.add(Menu.NONE, MENUITEM_DELETE, 1, R.string.menuitem_label_delete);
-	}
-	
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		if (!getUserVisibleHint()) {
-			return false;
-		}
+    }
 
-		if (item.getItemId() == MENUITEM_DELETE) {
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (!getUserVisibleHint()) {
+            return false;
+        }
+
+        if (item.getItemId() == MENUITEM_DELETE) {
             deletePathMenuItemClick(mCursor.getInt(COLUMN_ID));
-		}
+        }
 
-		return super.onContextItemSelected(item);
-	}
+        return super.onContextItemSelected(item);
+    }
 
-	@Override
-	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+    @Override
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         getActivity().openContextMenu(mGridView);
-	}
+    }
 
     protected void deletePathMenuItemClick(int id) {
         final String selection = Entities.ScanDirectory._ID + " = ? ";
@@ -216,34 +190,32 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
                 String.valueOf(id)
         };
 
-        SQLiteDatabase database = getWritableDatabase();
-        if (database != null) {
-            database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
-        }
+        final SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
+        database.delete(Entities.ScanDirectory.TABLE_NAME, selection, selectionArgs);
         getLoaderManager().restartLoader(0, null, this);
     }
-	
-	public class CollectionScannerPathAdapter extends SimpleCursorAdapter {
 
-	    public CollectionScannerPathAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
-	        super(context, layout, c, from, to, flags);
-	    }
+    public class CollectionScannerPathAdapter extends SimpleCursorAdapter {
 
-	    @Override
-	    public View getView(final int position, View convertView, ViewGroup parent) {
-	        final View view = super.getView(position, convertView, parent);
+        public CollectionScannerPathAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
+            super(context, layout, c, from, to, flags);
+        }
 
-	        final Cursor cursor = (Cursor) getItem(position);
-	        final GridViewHolder viewholder;
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            final View view = super.getView(position, convertView, parent);
 
-	        if (view != null) {
-	            viewholder = new GridViewHolder(view);
-	            viewholder.customView = view.findViewById(R.id.card_layout);
+            final Cursor cursor = (Cursor) getItem(position);
+            final GridViewHolder viewholder;
+
+            if (view != null) {
+                viewholder = new GridViewHolder(view);
+                viewholder.customView = view.findViewById(R.id.card_layout);
                 viewholder.contextMenuHandle = view.findViewById(R.id.context_menu_handle);
-	            view.setTag(viewholder);
-	        } else {
-	            viewholder = (GridViewHolder)convertView.getTag();
-	        }
+                view.setTag(viewholder);
+            } else {
+                viewholder = (GridViewHolder)convertView.getTag();
+            }
 
 
 
@@ -269,7 +241,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
             });
 
             viewholder.lineOne.setText(cursor.getString(COLUMN_NAME));
-	        return view;
-	    }
-	}
+            return view;
+        }
+    }
 }

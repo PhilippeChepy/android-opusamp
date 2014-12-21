@@ -108,15 +108,15 @@ public class SearchPathActivity extends ActionBarActivity {
     }
 
     @Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (mProviderId < 0) {
             return;
         }
 
-		switch(requestCode) {
-		case REQUEST_CODE_SEARCH_PATH:
-			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(mProviderId);
+        switch(requestCode) {
+        case REQUEST_CODE_SEARCH_PATH:
+            if (resultCode == RESULT_OK) {
+                OpenHelper openHelper = OpenHelper.getInstance(mProviderId);
 
                 SQLiteDatabase database = openHelper.getWritableDatabase();
                 if (database != null) {
@@ -136,13 +136,11 @@ public class SearchPathActivity extends ActionBarActivity {
                                 .show();
                     }
                 }
-			}
-			break;
-		case REQUEST_CODE_EXCLUDE_PATH:
-			if (resultCode == RESULT_OK) {
-                OpenHelper openHelper = new OpenHelper(mProviderId);
-
-                SQLiteDatabase database = openHelper.getWritableDatabase();
+            }
+            break;
+        case REQUEST_CODE_EXCLUDE_PATH:
+            if (resultCode == RESULT_OK) {
+                SQLiteDatabase database = OpenHelper.getInstance(mProviderId).getWritableDatabase();
                 if (database != null) {
                     final ContentValues values = new ContentValues();
                     values.put(Entities.ScanDirectory.COLUMN_FIELD_SCAN_DIRECTORY_IS_EXCLUDED, 1);
@@ -160,9 +158,9 @@ public class SearchPathActivity extends ActionBarActivity {
                                 .show();
                     }
                 }
-			}
-			break;
-		}
+            }
+            break;
+        }
         mPagerAdapter.refresh();
 	}
 

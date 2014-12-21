@@ -13,7 +13,9 @@
 *** Changelog ***
 
 Update 20:
-Updated: Improved global performances (using event bus).
+Added: Click on previous button now reset playback position to 0s if > 4s and switch to previous track otherwise.
+Added: Long click on previous or next button now do a fast seeking backward/forward.
+Updated: Improved global performances.
 Fixed: Scan cancellation causing freeze to the whole app.
 Fixed: Missing auto pause feature since Update 18.
 Fixed: Increased default embedded cover cache from 20MB to 100MB (~500 jpeg with res of 600x600 to ~2500).
@@ -26,6 +28,8 @@ Updated: Added right ime option for text inputs.
 Updated: Library edition code cleanup.
 Updated: Now using EditTextDialog for library edition.
 Updated: Now using EditTextDialog for extension edition.
+Fixed: Enforced database integrity (open helper uniqueness now guaranted).
+Fixed: Force close on database upgrade (with oldVersion = 1 and newVersion = 3).
 Fixed: Wrong title for extension edition dialog.
 
 Temp: Disabled updates while scanning for lyrics and comments.
