@@ -942,6 +942,7 @@ public class PlayerService extends Service {
         final MediaManager.Player player = mediaManager.getPlayer();
 
         player.playerStop();
+        mTimeStamp = 0;
 
         notifyStop();
         if (mPlaybackWakeLock.isHeld()) {
@@ -1390,8 +1391,6 @@ public class PlayerService extends Service {
 
 
 
-
-    public static final Intent MEDIABUTTON_TOGGLE_PAUSE_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_NOTIFICATION, PlayerService.ACTION_TOGGLEPAUSE);
 
     public static final Intent TELEPHONY_PLAY_INTENT = PlayerService.buildBroadcastIntent(PlayerService.COMMAND_SOURCE_TELEPHONY, PlayerService.ACTION_PLAY);
 

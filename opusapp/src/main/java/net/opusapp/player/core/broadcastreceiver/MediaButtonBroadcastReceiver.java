@@ -15,11 +15,10 @@ package net.opusapp.player.core.broadcastreceiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.KeyEvent;
 
 import net.opusapp.player.core.service.PlayerService;
-import net.opusapp.player.ui.utils.PlayerApplication;
+import net.opusapp.player.utils.LogUtils;
 
 public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
 
@@ -30,16 +29,21 @@ public class MediaButtonBroadcastReceiver extends BroadcastReceiver {
         if (intent.getAction().equals(Intent.ACTION_MEDIA_BUTTON)) {
             final KeyEvent event = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
             if (event != null && event.getAction() == KeyEvent.ACTION_UP) {
-                final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
-
-                if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
-                    localBroadcastManager.sendBroadcast(PlayerService.MEDIABUTTON_TOGGLE_PAUSE_INTENT);
+                try {
+                    if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+                        PlayerService.NOTIFICATION_PAUSE_INTENT.send();
+                    } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PAUSE) {
+                        PlayerService.NOTIFICATION_PAUSE_INTENT.send();
+                    } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY) {
+                        PlayerService.NOTIFICATION_PAUSE_INTENT.send();
+                    } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
+                        PlayerService.NOTIFICATION_NEXT_INTENT.send();
+                    } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
+                        PlayerService.NOTIFICATION_PREV_INTENT.send();
+                    }
                 }
-                else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
-                    localBroadcastManager.sendBroadcast(PlayerService.CLIENT_NEXT_INTENT);
-                }
-                else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
-                    localBroadcastManager.sendBroadcast(PlayerService.CLIENT_PREVIOUS_INTENT);
+                catch (final Exception exception) {
+                    LogUtils.LOGException(TAG, "onReceive", 0, exception);
                 }
             }
         }
