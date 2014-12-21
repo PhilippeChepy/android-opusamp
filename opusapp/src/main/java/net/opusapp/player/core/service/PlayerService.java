@@ -403,7 +403,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     @SuppressWarnings("NewApi")
-    public void updateNotification(final String albumName, final String artistName, final String trackName, final Bitmap albumArt) {
+    //updateNotification(mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), onlyPlaystate, mMediaCover);
+    public void updateNotification(final String trackName, final String artistName, final String albumName, final Bitmap albumArt) {
         final Intent intent = new Intent(PlayerApplication.context, LibraryMainActivity.class);
         final PendingIntent pendingIntent = PendingIntent.getActivity(PlayerApplication.context, 0, intent, 0);
 
@@ -554,10 +555,10 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         updateWidgets();
 
         // Updating remote client
-        mRemoteControlClient.updateMetadata(mMediaCover, mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), mMedia.getDuration());
+        mRemoteControlClient.updateMetadata(mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), mMedia.getDuration(), mMediaCover);
 
         // Updating notification
-        updateNotification(mMedia.getAlbum(), mMedia.getArtist(), mMedia.getTitle(), mMediaCover);
+        updateNotification(mMedia.getTitle(), mMedia.getArtist(), mMedia.getAlbum(), mMediaCover);
 
         notifyCoverLoaded();
     }

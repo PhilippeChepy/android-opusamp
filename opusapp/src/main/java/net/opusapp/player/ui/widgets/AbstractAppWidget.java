@@ -83,6 +83,7 @@ public abstract class AbstractAppWidget extends AppWidgetProvider {
         track = trackName;
         artist = artistName;
         album = albumName;
+
         albumImage = art;
     }
 

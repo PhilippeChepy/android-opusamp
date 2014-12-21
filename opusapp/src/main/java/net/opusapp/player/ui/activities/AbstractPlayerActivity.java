@@ -837,6 +837,16 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onRepeat(View v, long duration, int repeatcount) {
             LogUtils.LOGW(TAG, "PREV duration = " + duration + " repeatcount = " + repeatcount);
 
+            if (!PlayerApplication.playerService.isPlaying()) {
+                return;
+            }
+
+            long currentPosition = mProgressSeekBar.getProgress() * 100;
+
+            if (currentPosition < 2000 || currentPosition > (mProgressSeekBar.getMax() * 100) - 2000) {
+                return;
+            }
+
             float multiplier;
             if (repeatcount > 0) {
                 multiplier = (float) repeatcount;
@@ -848,16 +858,10 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 multiplier = 1.0f;
             }
 
-            long newPosition = mProgressSeekBar.getProgress() * 100 + (int) ((float) 2000 * multiplier);
+            long newPosition = currentPosition + (int) ((float) 2000 * multiplier);
 
-            if (PlayerApplication.playerService.isPlaying()) {
-                PlayerApplication.playerService.pause(true);
-                PlayerApplication.playerService.setPosition(newPosition);
-                PlayerApplication.playerService.play();
-            }
-            else {
-                PlayerApplication.playerService.setPosition(newPosition);
-            }
+
+            PlayerApplication.playerService.setPosition(newPosition);
         }
     };
 
@@ -875,6 +879,16 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         public void onRepeat(View v, long duration, int repeatcount) {
             LogUtils.LOGW(TAG, "NEXT duration = " + duration + " repeatcount = " + repeatcount);
 
+            if (!PlayerApplication.playerService.isPlaying()) {
+                return;
+            }
+
+            long currentPosition = mProgressSeekBar.getProgress() * 100;
+
+            if (currentPosition < 2000 || currentPosition > (mProgressSeekBar.getMax() * 100) - 2000) {
+                return;
+            }
+
             float multiplier;
             if (repeatcount > 0) {
                 multiplier = (float) repeatcount;
@@ -886,16 +900,9 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 multiplier = 1.0f;
             }
 
-            long newPosition = mProgressSeekBar.getProgress() * 100 - (int) ((float) 2000 * multiplier);
+            long newPosition = currentPosition + (int) ((float) 2000 * multiplier);
 
-            if (PlayerApplication.playerService.isPlaying()) {
-                PlayerApplication.playerService.pause(true);
-                PlayerApplication.playerService.setPosition(newPosition);
-                PlayerApplication.playerService.play();
-            }
-            else {
-                PlayerApplication.playerService.setPosition(newPosition);
-            }
+            PlayerApplication.playerService.setPosition(newPosition);
         }
     };
 

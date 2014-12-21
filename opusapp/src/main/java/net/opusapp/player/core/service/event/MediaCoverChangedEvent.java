@@ -14,7 +14,7 @@ public class MediaCoverChangedEvent {
 
 
     public boolean isAvailable() {
-        return mBitmap != null;
+        return mBitmap != null && !mBitmap.isRecycled();
     }
 
     public Bitmap getBitmap() {

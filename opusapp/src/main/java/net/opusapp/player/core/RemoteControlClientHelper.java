@@ -74,11 +74,10 @@ public class RemoteControlClientHelper {
     }
 
     @TargetApi(14)
-    public void updateMetadata(Bitmap bitmap, String title, String artist, String album, long duration) {
+    public void updateMetadata(String title, String artist, String album, long duration, Bitmap bitmap) {
         if (PlayerApplication.hasICS()) {
             if (remoteControlClient != null) {
                 MetadataEditor editor = remoteControlClient.editMetadata(true);
-
                 editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, bitmap);
                 editor.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, duration);
                 editor.putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, artist);
