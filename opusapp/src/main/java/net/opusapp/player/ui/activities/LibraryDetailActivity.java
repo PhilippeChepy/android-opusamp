@@ -20,7 +20,7 @@ import android.widget.ListView;
 import com.mobeta.android.dslv.DragSortListView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -46,7 +46,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
     /*
         ContentType management
      */
-    private AbstractMediaManager.Provider.ContentType contentType;
+    private MediaManager.Provider.ContentType contentType;
 
     private String contentSourceId;
 
@@ -145,11 +145,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
         Bundle parameters = getIntent().getExtras();
         if (parameters != null) {
-            contentType = (AbstractMediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
+            contentType = (MediaManager.Provider.ContentType) parameters.getSerializable(PlayerApplication.CONTENT_TYPE_KEY);
             contentSourceId = parameters.getString(PlayerApplication.CONTENT_SOURCE_ID_KEY);
         }
         else {
-            contentType = AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST;
+            contentType = MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST;
             contentSourceId = null;
         }
 
@@ -261,8 +261,8 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 DragSortListView.DropListener dragListener = new DragSortListView.DropListener() {
                     @Override
                     public void drop(int from, int to) {
-                        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-                        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+                        final MediaManager.Provider provider = mediaManager.getProvider();
                         provider.playlistMove(contentSourceId, from, to);
                         getSupportLoaderManager().restartLoader(1, null, LibraryDetailActivity.this);
                     }
@@ -326,12 +326,12 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             case CONTENT_TYPE_ARTIST:
             case CONTENT_TYPE_ALBUM:
                 requestedFields = new int[] {
-                        AbstractMediaManager.Provider.SONG_ID,
-                        AbstractMediaManager.Provider.SONG_TITLE,
-                        AbstractMediaManager.Provider.SONG_ARTIST,
-                        AbstractMediaManager.Provider.SONG_TRACK,
-                        AbstractMediaManager.Provider.SONG_ART_URI,
-                        AbstractMediaManager.Provider.SONG_VISIBLE,
+                        MediaManager.Provider.SONG_ID,
+                        MediaManager.Provider.SONG_TITLE,
+                        MediaManager.Provider.SONG_ARTIST,
+                        MediaManager.Provider.SONG_TRACK,
+                        MediaManager.Provider.SONG_ART_URI,
+                        MediaManager.Provider.SONG_VISIBLE,
                 };
 
                 return PlayerApplication.buildMediaLoader(
@@ -344,13 +344,13 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
 
             case CONTENT_TYPE_PLAYLIST:
                 requestedFields = new int[] {
-                        AbstractMediaManager.Provider.SONG_ID,
-                        AbstractMediaManager.Provider.SONG_TITLE,
-                        AbstractMediaManager.Provider.SONG_ARTIST,
-                        AbstractMediaManager.Provider.SONG_TRACK,
-                        AbstractMediaManager.Provider.SONG_ART_URI,
-                        AbstractMediaManager.Provider.SONG_VISIBLE,
-                        AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+                        MediaManager.Provider.SONG_ID,
+                        MediaManager.Provider.SONG_TITLE,
+                        MediaManager.Provider.SONG_ARTIST,
+                        MediaManager.Provider.SONG_TRACK,
+                        MediaManager.Provider.SONG_ART_URI,
+                        MediaManager.Provider.SONG_VISIBLE,
+                        MediaManager.Provider.PLAYLIST_ENTRY_POSITION,
                 };
 
                 return PlayerApplication.buildMediaLoader(
@@ -363,11 +363,11 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
             case CONTENT_TYPE_ALBUM_ARTIST:
             case CONTENT_TYPE_GENRE:
                 requestedFields = new int[] {
-                        AbstractMediaManager.Provider.ALBUM_ID,
-                        AbstractMediaManager.Provider.ALBUM_NAME,
-                        AbstractMediaManager.Provider.ALBUM_ARTIST,
-                        AbstractMediaManager.Provider.ALBUM_ART_URI,
-                        AbstractMediaManager.Provider.ALBUM_VISIBLE,
+                        MediaManager.Provider.ALBUM_ID,
+                        MediaManager.Provider.ALBUM_NAME,
+                        MediaManager.Provider.ALBUM_ARTIST,
+                        MediaManager.Provider.ALBUM_ART_URI,
+                        MediaManager.Provider.ALBUM_VISIBLE,
                 };
 
                 return PlayerApplication.buildAlbumLoader(
@@ -430,7 +430,7 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
                     final Intent intent = new Intent(LibraryDetailActivity.this, LibraryDetailWithHeaderActivity.class);
-                    intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);
+                    intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM);
                     intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ALBUM_ID));
                     intent.putExtra(PlayerApplication.CONTENT_SOURCE_DESCRIPTION_KEY, cursor.getString(COLUMN_ALBUM_NAME));
                     startActivity(intent);
@@ -520,34 +520,34 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 case CONTENT_TYPE_ARTIST:
                 case CONTENT_TYPE_ALBUM:
                     switch (PlayerApplication.library_details_songs_sort_order) {
-                        case +AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
-                        case -AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
-                        case +AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 2; break;
-                        case -AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 3; break;
-                        case +AbstractMediaManager.Provider.SONG_URI:    sortIndex = 4; break;
-                        case -AbstractMediaManager.Provider.SONG_URI:    sortIndex = 5; break;
-                        case +AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 6; break;
-                        case -AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 7; break;
-                        case +AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 8; break;
-                        case -AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 9; break;
+                        case +MediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
+                        case -MediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
+                        case +MediaManager.Provider.SONG_TRACK:  sortIndex = 2; break;
+                        case -MediaManager.Provider.SONG_TRACK:  sortIndex = 3; break;
+                        case +MediaManager.Provider.SONG_URI:    sortIndex = 4; break;
+                        case -MediaManager.Provider.SONG_URI:    sortIndex = 5; break;
+                        case +MediaManager.Provider.SONG_ARTIST: sortIndex = 6; break;
+                        case -MediaManager.Provider.SONG_ARTIST: sortIndex = 7; break;
+                        case +MediaManager.Provider.SONG_ALBUM:  sortIndex = 8; break;
+                        case -MediaManager.Provider.SONG_ALBUM:  sortIndex = 9; break;
                     }
 
                     alertDialogBuilder.setSingleChoiceItems(R.array.sort_songs, sortIndex, songFragmentAlertDialogClickListener);
                     break;
                 case CONTENT_TYPE_PLAYLIST:
                     switch (PlayerApplication.library_details_playlist_sort_order) {
-                        case +AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
-                        case -AbstractMediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
-                        case +AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 2; break;
-                        case -AbstractMediaManager.Provider.SONG_TRACK:  sortIndex = 3; break;
-                        case +AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 4; break;
-                        case -AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 5; break;
-                        case +AbstractMediaManager.Provider.SONG_URI:    sortIndex = 6; break;
-                        case -AbstractMediaManager.Provider.SONG_URI:    sortIndex = 7; break;
-                        case +AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 8; break;
-                        case -AbstractMediaManager.Provider.SONG_ARTIST: sortIndex = 9; break;
-                        case +AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 10; break;
-                        case -AbstractMediaManager.Provider.SONG_ALBUM:  sortIndex = 11; break;
+                        case +MediaManager.Provider.SONG_TITLE:  sortIndex = 0; break;
+                        case -MediaManager.Provider.SONG_TITLE:  sortIndex = 1; break;
+                        case +MediaManager.Provider.SONG_TRACK:  sortIndex = 2; break;
+                        case -MediaManager.Provider.SONG_TRACK:  sortIndex = 3; break;
+                        case +MediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 4; break;
+                        case -MediaManager.Provider.PLAYLIST_ENTRY_POSITION:  sortIndex = 5; break;
+                        case +MediaManager.Provider.SONG_URI:    sortIndex = 6; break;
+                        case -MediaManager.Provider.SONG_URI:    sortIndex = 7; break;
+                        case +MediaManager.Provider.SONG_ARTIST: sortIndex = 8; break;
+                        case -MediaManager.Provider.SONG_ARTIST: sortIndex = 9; break;
+                        case +MediaManager.Provider.SONG_ALBUM:  sortIndex = 10; break;
+                        case -MediaManager.Provider.SONG_ALBUM:  sortIndex = 11; break;
                     }
 
                     alertDialogBuilder.setSingleChoiceItems(R.array.sort_playlist_entries, sortIndex, playlistFragmentAlertDialogClickListener);
@@ -555,10 +555,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
                 case CONTENT_TYPE_ALBUM_ARTIST:
                 case CONTENT_TYPE_GENRE:
                     switch (PlayerApplication.library_details_albums_sort_order) {
-                        case +AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
-                        case -AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
-                        case +AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
-                        case -AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 3;  break;
+                        case +MediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
+                        case -MediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
+                        case +MediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
+                        case -MediaManager.Provider.ALBUM_ARTIST: sortIndex = 3;  break;
                     }
 
                     alertDialogBuilder.setSingleChoiceItems(R.array.sort_albums, sortIndex, albumFragmentAlertDialogClickListener);
@@ -577,16 +577,16 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 1:  PlayerApplication.library_details_songs_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 2:  PlayerApplication.library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 3:  PlayerApplication.library_details_songs_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 4:  PlayerApplication.library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
-                case 5:  PlayerApplication.library_details_songs_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
-                case 6:  PlayerApplication.library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 7:  PlayerApplication.library_details_songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 8:  PlayerApplication.library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
-                case 9:  PlayerApplication.library_details_songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 0:  PlayerApplication.library_details_songs_sort_order = MediaManager.Provider.SONG_TITLE; break;
+                case 1:  PlayerApplication.library_details_songs_sort_order = -MediaManager.Provider.SONG_TITLE; break;
+                case 2:  PlayerApplication.library_details_songs_sort_order = MediaManager.Provider.SONG_TRACK; break;
+                case 3:  PlayerApplication.library_details_songs_sort_order = -MediaManager.Provider.SONG_TRACK; break;
+                case 4:  PlayerApplication.library_details_songs_sort_order = MediaManager.Provider.SONG_URI; break;
+                case 5:  PlayerApplication.library_details_songs_sort_order = -MediaManager.Provider.SONG_URI; break;
+                case 6:  PlayerApplication.library_details_songs_sort_order = MediaManager.Provider.SONG_ARTIST; break;
+                case 7:  PlayerApplication.library_details_songs_sort_order = -MediaManager.Provider.SONG_ARTIST; break;
+                case 8:  PlayerApplication.library_details_songs_sort_order = MediaManager.Provider.SONG_ALBUM; break;
+                case 9:  PlayerApplication.library_details_songs_sort_order = -MediaManager.Provider.SONG_ALBUM; break;
             }
 
             doRefresh();
@@ -599,18 +599,18 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 1:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 2:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 3:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 4:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
-                case 5:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
-                case 6:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
-                case 7:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
-                case 8:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 9:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 10:  PlayerApplication.library_details_playlist_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
-                case 11:  PlayerApplication.library_details_playlist_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 0:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.SONG_TITLE; break;
+                case 1:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.SONG_TITLE; break;
+                case 2:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.SONG_TRACK; break;
+                case 3:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.SONG_TRACK; break;
+                case 4:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
+                case 5:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.PLAYLIST_ENTRY_POSITION; break;
+                case 6:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.SONG_URI; break;
+                case 7:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.SONG_URI; break;
+                case 8:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.SONG_ARTIST; break;
+                case 9:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.SONG_ARTIST; break;
+                case 10:  PlayerApplication.library_details_playlist_sort_order = MediaManager.Provider.SONG_ALBUM; break;
+                case 11:  PlayerApplication.library_details_playlist_sort_order = -MediaManager.Provider.SONG_ALBUM; break;
             }
 
             doRefresh();
@@ -623,10 +623,10 @@ public class LibraryDetailActivity extends AbstractPlayerActivity implements Loa
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_details_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME; break;
-                case 1:  PlayerApplication.library_details_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_NAME;  break;
-                case 2:  PlayerApplication.library_details_albums_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST;  break;
-                case 3:  PlayerApplication.library_details_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
+                case 0:  PlayerApplication.library_details_albums_sort_order = MediaManager.Provider.ALBUM_NAME; break;
+                case 1:  PlayerApplication.library_details_albums_sort_order = -MediaManager.Provider.ALBUM_NAME;  break;
+                case 2:  PlayerApplication.library_details_albums_sort_order = MediaManager.Provider.ALBUM_ARTIST;  break;
+                case 3:  PlayerApplication.library_details_albums_sort_order = -MediaManager.Provider.ALBUM_ARTIST; break;
             }
 
             doRefresh();

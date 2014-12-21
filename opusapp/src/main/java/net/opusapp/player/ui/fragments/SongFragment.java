@@ -30,7 +30,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
 import net.opusapp.player.ui.utils.PlayerApplication;
@@ -58,12 +58,12 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaManager.Provider.SONG_ID,
-            AbstractMediaManager.Provider.SONG_TITLE,
-            AbstractMediaManager.Provider.SONG_ARTIST,
-            AbstractMediaManager.Provider.SONG_TRACK,
-            AbstractMediaManager.Provider.SONG_ART_URI,
-            AbstractMediaManager.Provider.SONG_VISIBLE,
+            MediaManager.Provider.SONG_ID,
+            MediaManager.Provider.SONG_TITLE,
+            MediaManager.Provider.SONG_ARTIST,
+            MediaManager.Provider.SONG_TRACK,
+            MediaManager.Provider.SONG_ART_URI,
+            MediaManager.Provider.SONG_VISIBLE,
     };
 
     public static final int COLUMN_SONG_ID = 0;
@@ -90,9 +90,9 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA));
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA));
     }
         
 	@Override
@@ -174,7 +174,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                 requestedFields,
                 sortFields,
                 PlayerApplication.lastSearchFilter,
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
+                MediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null);
 	}
 
 	@Override

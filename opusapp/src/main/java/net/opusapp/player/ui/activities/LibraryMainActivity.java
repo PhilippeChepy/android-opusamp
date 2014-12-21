@@ -32,9 +32,9 @@ import com.astuetz.PagerSlidingTabStrip;
 import com.squareup.otto.Subscribe;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.PlayerEventBus;
 import net.opusapp.player.core.service.PlayerService;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.ProviderEventBus;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.index.database.Entities;
@@ -159,6 +159,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         mReloadMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_RELOAD, 6, R.string.menuitem_label_reload);
         MenuItemCompat.setShowAsAction(mReloadMenuItem, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         mReloadMenuItem.setOnMenuItemClickListener(mReloadMenuItemListener);
+        drawReloadMenuItem();
 
         final MenuItem settingsMenuItem = menu.add(Menu.NONE, OPTION_MENUITEM_APPLICATION_SETTINGS_ID, 7, R.string.drawer_item_label_settings);
         settingsMenuItem.setIcon(R.drawable.ic_settings_grey600_48dp);
@@ -241,7 +242,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(PlayerApplication.context);
             localBroadcastManager.sendBroadcast(PlayerService.CLIENT_STOP_INTENT);
 
-            AbstractMediaManager manager = PlayerApplication.mediaManager(1);
+            MediaManager manager = PlayerApplication.mediaManager(1);
             PlayerApplication.setLibraryManager(1);
             PlayerApplication.setPlayerManager(1);
             PlayerApplication.saveLibraryIndexes();
@@ -254,21 +255,21 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             }
 
             manager.getProvider().setProperty(
-                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     path,
-                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
+                    MediaManager.Provider.ContentProperty.CONTENT_STORAGE_CURRENT_LOCATION,
                     null,
                     null);
 
             int position = (Integer) manager.getProvider().getProperty(
-                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     dataUri.getPath(),
-                    AbstractMediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
+                    MediaManager.Provider.ContentProperty.CONTENT_STORAGE_RESOURCE_POSITION);
 
             mLibraryAdapter.refresh();
 
             PlayerApplication.doContextActionPlay(
-                    AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
+                    MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE,
                     String.valueOf(position),
                     PlayerApplication.library_storage_sort_order,
                     position);
@@ -276,12 +277,12 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             getSlidingPanel().expandPanel();
         }
 
-        PlayerEventBus.getInstance().register(this);
+        ProviderEventBus.getInstance().register(this);
     }
 
     @Override
     protected void onDestroy() {
-        PlayerEventBus.getInstance().unregister(this);
+        ProviderEventBus.getInstance().unregister(this);
 
         getSupportLoaderManager().destroyLoader(0);
         super.onDestroy();
@@ -382,35 +383,35 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     protected void initLibraryView() {
         mLibraryAdapter = new PagerAdapter(getApplicationContext(), getSupportFragmentManager());
 
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         // Only show tabs that were set in preferences
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST)) {
             mLibraryAdapter.addFragment(new PlaylistFragment(), null, R.string.tab_label_playlists);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST)) {
             mLibraryAdapter.addFragment(new ArtistFragment(), null, R.string.tab_label_artists);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST)) {
             mLibraryAdapter.addFragment(new AlbumArtistFragment(), null, R.string.tab_label_album_artists);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM)) {
             mLibraryAdapter.addFragment(new AlbumFragment(), null, R.string.tab_label_albums);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA)) {
             mLibraryAdapter.addFragment(new SongFragment(), null, R.string.tab_label_songs);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE)) {
             mLibraryAdapter.addFragment(new GenreFragment(), null, R.string.tab_label_genres);
         }
 
-        if (provider.hasContentType(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
+        if (provider.hasContentType(MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE)) {
             mLibraryAdapter.addFragment(new StorageFragment(), null, R.string.tab_label_storage);
         }
 
@@ -441,7 +442,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
     protected void initCurrentProvider() {
         initLibraryView();
-        final AbstractMediaManager.Provider provider = PlayerApplication.libraryMediaManager().getProvider();
+        final MediaManager.Provider provider = PlayerApplication.libraryMediaManager().getProvider();
 
         //    Launching scan.
         if (!provider.scanIsRunning()) {
@@ -450,7 +451,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
 
         if (mNavigationCursor != null) {
             try {
-                final AbstractMediaManager manager = PlayerApplication.libraryMediaManager();
+                final MediaManager manager = PlayerApplication.libraryMediaManager();
 
                 getSupportActionBar().setTitle(manager.getName());
                 getSupportActionBar().setSubtitle(manager.getDescription());
@@ -497,6 +498,17 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         }
         else if (slideOffset < 0.1 && hasPlaylist() && getSlidingPanel().isPanelHidden()) {
             getSlidingPanel().showPanel();
+        }
+    }
+
+    protected void drawReloadMenuItem() {
+        if (PlayerApplication.thereIsScanningMediaManager()) {
+            mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
+            mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
+        }
+        else {
+            mReloadMenuItem.setTitle(R.string.menuitem_label_reload);
+            mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
         }
     }
 
@@ -588,8 +600,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             if (currentItemClass.equals(PlaylistFragment.class)) {
                 int sortIndex = 0;
                 switch (PlayerApplication.library_playlists_sort_order) {
-                    case +AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.PLAYLIST_NAME: sortIndex = 1;  break;
+                    case +MediaManager.Provider.PLAYLIST_NAME: sortIndex = 0;  break;
+                    case -MediaManager.Provider.PLAYLIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_playlists, sortIndex, playlistFragmentAlertDialogClickListener);
@@ -597,8 +609,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(ArtistFragment.class)) {
                 int sortIndex = 0;
                 switch (PlayerApplication.library_artists_sort_order) {
-                    case +AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.ARTIST_NAME: sortIndex = 1;  break;
+                    case +MediaManager.Provider.ARTIST_NAME: sortIndex = 0;  break;
+                    case -MediaManager.Provider.ARTIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_artists, sortIndex, artistFragmentAlertDialogClickListener);
@@ -606,8 +618,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(AlbumArtistFragment.class)) {
                 int sortIndex = 0;
                 switch (PlayerApplication.library_album_artists_sort_order) {
-                    case +AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 1;  break;
+                    case +MediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 0;  break;
+                    case -MediaManager.Provider.ALBUM_ARTIST_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_album_artists, sortIndex, albumArtistFragmentAlertDialogClickListener);
@@ -615,10 +627,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(AlbumFragment.class)) {
                 int sortIndex = 0;
                 switch (PlayerApplication.library_albums_sort_order) {
-                    case +AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
-                    case +AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
-                    case -AbstractMediaManager.Provider.ALBUM_ARTIST: sortIndex = 3;  break;
+                    case +MediaManager.Provider.ALBUM_NAME:   sortIndex = 0;  break;
+                    case -MediaManager.Provider.ALBUM_NAME:   sortIndex = 1;  break;
+                    case +MediaManager.Provider.ALBUM_ARTIST: sortIndex = 2;  break;
+                    case -MediaManager.Provider.ALBUM_ARTIST: sortIndex = 3;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_albums, sortIndex, albumFragmentAlertDialogClickListener);
@@ -626,16 +638,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(SongFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
                 switch (PlayerApplication.library_songs_sort_order) {
-                    case +AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.SONG_TITLE:   sortIndex = 1;  break;
-                    case +AbstractMediaManager.Provider.SONG_TRACK:   sortIndex = 2;  break;
-                    case -AbstractMediaManager.Provider.SONG_TRACK:   sortIndex = 3;  break;
-                    case +AbstractMediaManager.Provider.SONG_URI:     sortIndex = 4;  break;
-                    case -AbstractMediaManager.Provider.SONG_URI:     sortIndex = 5;  break;
-                    case +AbstractMediaManager.Provider.SONG_ARTIST:  sortIndex = 6;  break;
-                    case -AbstractMediaManager.Provider.SONG_ARTIST:  sortIndex = 7;  break;
-                    case +AbstractMediaManager.Provider.SONG_ALBUM:   sortIndex = 8;  break;
-                    case -AbstractMediaManager.Provider.SONG_ALBUM:   sortIndex = 9; break;
+                    case +MediaManager.Provider.SONG_TITLE:   sortIndex = 0;  break;
+                    case -MediaManager.Provider.SONG_TITLE:   sortIndex = 1;  break;
+                    case +MediaManager.Provider.SONG_TRACK:   sortIndex = 2;  break;
+                    case -MediaManager.Provider.SONG_TRACK:   sortIndex = 3;  break;
+                    case +MediaManager.Provider.SONG_URI:     sortIndex = 4;  break;
+                    case -MediaManager.Provider.SONG_URI:     sortIndex = 5;  break;
+                    case +MediaManager.Provider.SONG_ARTIST:  sortIndex = 6;  break;
+                    case -MediaManager.Provider.SONG_ARTIST:  sortIndex = 7;  break;
+                    case +MediaManager.Provider.SONG_ALBUM:   sortIndex = 8;  break;
+                    case -MediaManager.Provider.SONG_ALBUM:   sortIndex = 9; break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_songs, sortIndex, songFragmentAlertDialogClickListener);
@@ -643,8 +655,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(GenreFragment.class)) {
                 int sortIndex = 0;
                 switch (PlayerApplication.library_genres_sort_order) {
-                    case +AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.GENRE_NAME: sortIndex = 1;  break;
+                    case +MediaManager.Provider.GENRE_NAME: sortIndex = 0;  break;
+                    case -MediaManager.Provider.GENRE_NAME: sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_genre, sortIndex, genreFragmentAlertDialogClickListener);
@@ -652,8 +664,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
             else if (currentItemClass.equals(StorageFragment.class)) {
                 int sortIndex = 0; // case MusicConnector.SORT_A_Z
                 switch (PlayerApplication.library_storage_sort_order) {
-                    case AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:               sortIndex = 0;  break;
-                    case -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME:              sortIndex = 1;  break;
+                    case MediaManager.Provider.STORAGE_DISPLAY_NAME:               sortIndex = 0;  break;
+                    case -MediaManager.Provider.STORAGE_DISPLAY_NAME:              sortIndex = 1;  break;
                 }
 
                 alertDialogBuilder.setSingleChoiceItems(R.array.sort_files, sortIndex, storageFragmentAlertDialogClickListener);
@@ -669,8 +681,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_playlists_sort_order = AbstractMediaManager.Provider.PLAYLIST_NAME; break;
-                case 1:  PlayerApplication.library_playlists_sort_order = -AbstractMediaManager.Provider.PLAYLIST_NAME; break;
+                case 0:  PlayerApplication.library_playlists_sort_order = MediaManager.Provider.PLAYLIST_NAME; break;
+                case 1:  PlayerApplication.library_playlists_sort_order = -MediaManager.Provider.PLAYLIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -683,8 +695,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_artists_sort_order = AbstractMediaManager.Provider.ARTIST_NAME; break;
-                case 1:  PlayerApplication.library_artists_sort_order = -AbstractMediaManager.Provider.ARTIST_NAME; break;
+                case 0:  PlayerApplication.library_artists_sort_order = MediaManager.Provider.ARTIST_NAME; break;
+                case 1:  PlayerApplication.library_artists_sort_order = -MediaManager.Provider.ARTIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -697,8 +709,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_album_artists_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
-                case 1:  PlayerApplication.library_album_artists_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST_NAME; break;
+                case 0:  PlayerApplication.library_album_artists_sort_order = MediaManager.Provider.ALBUM_ARTIST_NAME; break;
+                case 1:  PlayerApplication.library_album_artists_sort_order = -MediaManager.Provider.ALBUM_ARTIST_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -711,10 +723,10 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME; break;
-                case 1:  PlayerApplication.library_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_NAME;  break;
-                case 2:  PlayerApplication.library_albums_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST;  break;
-                case 3:  PlayerApplication.library_albums_sort_order = -AbstractMediaManager.Provider.ALBUM_ARTIST; break;
+                case 0:  PlayerApplication.library_albums_sort_order = MediaManager.Provider.ALBUM_NAME; break;
+                case 1:  PlayerApplication.library_albums_sort_order = -MediaManager.Provider.ALBUM_NAME;  break;
+                case 2:  PlayerApplication.library_albums_sort_order = MediaManager.Provider.ALBUM_ARTIST;  break;
+                case 3:  PlayerApplication.library_albums_sort_order = -MediaManager.Provider.ALBUM_ARTIST; break;
             }
 
             mLibraryAdapter.refresh();
@@ -727,16 +739,16 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 1:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_TITLE; break;
-                case 2:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 3:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_TRACK; break;
-                case 4:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_URI; break;
-                case 5:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_URI; break;
-                case 6:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 7:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_ARTIST; break;
-                case 8:  PlayerApplication.library_songs_sort_order = AbstractMediaManager.Provider.SONG_ALBUM; break;
-                case 9:  PlayerApplication.library_songs_sort_order = -AbstractMediaManager.Provider.SONG_ALBUM; break;
+                case 0:  PlayerApplication.library_songs_sort_order = MediaManager.Provider.SONG_TITLE; break;
+                case 1:  PlayerApplication.library_songs_sort_order = -MediaManager.Provider.SONG_TITLE; break;
+                case 2:  PlayerApplication.library_songs_sort_order = MediaManager.Provider.SONG_TRACK; break;
+                case 3:  PlayerApplication.library_songs_sort_order = -MediaManager.Provider.SONG_TRACK; break;
+                case 4:  PlayerApplication.library_songs_sort_order = MediaManager.Provider.SONG_URI; break;
+                case 5:  PlayerApplication.library_songs_sort_order = -MediaManager.Provider.SONG_URI; break;
+                case 6:  PlayerApplication.library_songs_sort_order = MediaManager.Provider.SONG_ARTIST; break;
+                case 7:  PlayerApplication.library_songs_sort_order = -MediaManager.Provider.SONG_ARTIST; break;
+                case 8:  PlayerApplication.library_songs_sort_order = MediaManager.Provider.SONG_ALBUM; break;
+                case 9:  PlayerApplication.library_songs_sort_order = -MediaManager.Provider.SONG_ALBUM; break;
             }
 
             mLibraryAdapter.refresh();
@@ -749,8 +761,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_genres_sort_order = AbstractMediaManager.Provider.GENRE_NAME; break;
-                case 1:  PlayerApplication.library_genres_sort_order = -AbstractMediaManager.Provider.GENRE_NAME; break;
+                case 0:  PlayerApplication.library_genres_sort_order = MediaManager.Provider.GENRE_NAME; break;
+                case 1:  PlayerApplication.library_genres_sort_order = -MediaManager.Provider.GENRE_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -763,8 +775,8 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
-                case 0:  PlayerApplication.library_storage_sort_order = AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
-                case 1:  PlayerApplication.library_storage_sort_order = -AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME; break;
+                case 0:  PlayerApplication.library_storage_sort_order = MediaManager.Provider.STORAGE_DISPLAY_NAME; break;
+                case 1:  PlayerApplication.library_storage_sort_order = -MediaManager.Provider.STORAGE_DISPLAY_NAME; break;
             }
 
             mLibraryAdapter.refresh();
@@ -788,13 +800,7 @@ public class LibraryMainActivity extends AbstractPlayerActivity implements Refre
     @SuppressWarnings("unused")
     @Subscribe public void libraryScanStatusChanged(LibraryScanStatusChangedEvent libraryScanStatusChangedEvent) {
         if (mReloadMenuItem != null) {
-            if (PlayerApplication.libraryMediaManager().getProvider().scanIsRunning()) {
-                mReloadMenuItem.setTitle(R.string.menuitem_label_cancel_reload);
-                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_close_black_48dp : R.drawable.ic_close_white_48dp);
-            } else {
-                mReloadMenuItem.setTitle(R.string.menuitem_label_reload);
-                mReloadMenuItem.setIcon(PlayerApplication.iconsAreDark() ?  R.drawable.ic_refresh_black_48dp : R.drawable.ic_refresh_white_48dp);
-            }
+            drawReloadMenuItem();
         }
     }
 

@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.LocalMediaManager;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
@@ -82,7 +82,7 @@ public class MediaScanner {
         }
     }
 
-    public AbstractMediaManager getManager() {
+    public MediaManager getManager() {
         return mManager;
     }
 

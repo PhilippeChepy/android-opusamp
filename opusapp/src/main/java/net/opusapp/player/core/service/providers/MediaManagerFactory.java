@@ -22,11 +22,11 @@ public class MediaManagerFactory {
     public static MediaManagerDescription[] getMediaManagerList() {
         MediaManagerDescription list[] = new MediaManagerDescription[7];
 
-        list[0] = new MediaManagerDescription(AbstractMediaManager.LOCAL_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_local_media_manager), true);
+        list[0] = new MediaManagerDescription(MediaManager.LOCAL_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_local_media_manager), true);
         /*
         list[1] = new MediaManagerDescription(AbstractMediaManager.DLNA_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_dlna_media_manager), false);
         */
-        list[2] = new MediaManagerDescription(AbstractMediaManager.DEEZER_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_deezer_media_manager), BuildConfig.DEBUG);
+        list[2] = new MediaManagerDescription(MediaManager.DEEZER_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_deezer_media_manager), BuildConfig.DEBUG);
         /*
         list[3] = new MediaManagerDescription(AbstractMediaManager.GOOGLE_MUSIC_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_google_music_media_manager), false);
         list[4] = new MediaManagerDescription(AbstractMediaManager.GROOVESHARK_MEDIA_MANAGER, PlayerApplication.context.getString(R.string.label_grooveshark_media_manager), false);
@@ -38,13 +38,13 @@ public class MediaManagerFactory {
 
     public static String getDescriptionFromType(int mediaManagerType) {
         switch (mediaManagerType) {
-            case AbstractMediaManager.LOCAL_MEDIA_MANAGER:
+            case MediaManager.LOCAL_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_local_media_manager);
         /*
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_dlna_media_manager);
         */
-            case AbstractMediaManager.DEEZER_MEDIA_MANAGER:
+            case MediaManager.DEEZER_MEDIA_MANAGER:
                 return PlayerApplication.context.getString(R.string.label_deezer_media_manager);
         /*
             case AbstractMediaManager.GROOVESHARK_MEDIA_MANAGER:
@@ -61,9 +61,9 @@ public class MediaManagerFactory {
         }
     }
 
-    public static AbstractMediaManager buildMediaManager(int mediaManagerType, int providerId, String name) {
+    public static MediaManager buildMediaManager(int mediaManagerType, int providerId, String name) {
         switch (mediaManagerType) {
-            case AbstractMediaManager.LOCAL_MEDIA_MANAGER:
+            case MediaManager.LOCAL_MEDIA_MANAGER:
                 return new LocalMediaManager(providerId, name);
             /*
             case AbstractMediaManager.DLNA_MEDIA_MANAGER:

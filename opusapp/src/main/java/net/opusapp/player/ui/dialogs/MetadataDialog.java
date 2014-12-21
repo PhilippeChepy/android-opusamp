@@ -13,7 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TableLayout;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.MediaMetadata;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.views.CustomTextView;
@@ -37,9 +37,9 @@ public class MetadataDialog extends Dialog {
     private ViewHolder[] mEditMapping;
 
 
-    private AbstractMediaManager.Provider mProvider;
+    private MediaManager.Provider mProvider;
 
-    private AbstractMediaManager.Provider.ContentType mContentType;
+    private MediaManager.Provider.ContentType mContentType;
 
     private String mContentId;
 
@@ -49,7 +49,7 @@ public class MetadataDialog extends Dialog {
 
 
 
-    public MetadataDialog(Context context, int title, AbstractMediaManager.Provider provider, AbstractMediaManager.Provider.ContentType contentType, String contentId) {
+    public MetadataDialog(Context context, int title, MediaManager.Provider provider, MediaManager.Provider.ContentType contentType, String contentId) {
         super(context);
 
         final List<MediaMetadata> metadataList = provider.getMetadataList(contentType, contentId);

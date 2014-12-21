@@ -19,17 +19,13 @@ import net.opusapp.player.ui.views.RefreshableView;
 
 import java.util.List;
 
-public interface AbstractMediaManager {
-
-    public static final int INVALID_MEDIA_MANAGER = -1;
+public interface MediaManager {
 
     public static final int LOCAL_MEDIA_MANAGER = 1;
 
     public static final int DEEZER_MEDIA_MANAGER = 3;
 
 
-
-    public int getMediaManagerType();
 
     public int getId();
 
@@ -74,10 +70,6 @@ public interface AbstractMediaManager {
         public static final String KEY_PROVIDER_ID = "providerId";
 
         public static final String KEY_SOURCE_ID = "sourceId";
-
-        public static final String KEY_SELECTED_ART_URI = "selectedUri";
-
-        public static final String KEY_SELECTED_ART_ID = "selectedId";
 
         public static int ACTIVITY_NEED_UI_REFRESH = 200;
 
@@ -272,15 +264,6 @@ public interface AbstractMediaManager {
         public long equalizerBandSetGain(int band, long gain);
         public long equalizerBandGetGain(int band);
         public boolean equalizerApplyProperties();
-
-        void addPlaybackStatusListener(PlaybackStatusListener listener);
-        void removePlaybackStatusListener(PlaybackStatusListener listener);
-        void clearPlaybackStatusListeners();
-
-        public interface PlaybackStatusListener {
-            public void onPlaybackCompleted();
-            public void onPlaybackTimestampUpdate(long newPosition);
-        }
     }
 
     public interface ProviderAction {

@@ -1,9 +1,9 @@
 package net.opusapp.player.core.service.providers.local;
 
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
 
-public class LocalMediaManager implements AbstractMediaManager {
+public class LocalMediaManager implements MediaManager {
 
     private Player player;
 
@@ -18,11 +18,6 @@ public class LocalMediaManager implements AbstractMediaManager {
         mName = name;
         player = new LocalPlayer(this);
         provider = new LocalProvider(this);
-    }
-
-    @Override
-    public int getMediaManagerType() {
-        return LOCAL_MEDIA_MANAGER;
     }
 
     @Override

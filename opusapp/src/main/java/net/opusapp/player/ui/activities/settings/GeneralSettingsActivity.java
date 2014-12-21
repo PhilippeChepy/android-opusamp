@@ -30,7 +30,7 @@ import android.widget.TextView;
 import com.mobeta.android.dslv.DragSortListView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.providers.index.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
@@ -229,7 +229,7 @@ public class GeneralSettingsActivity extends ActionBarActivity implements
                                 });
 
                         // Delete provider specific content
-                        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
+                        final MediaManager mediaManager = PlayerApplication.mediaManager(providerId);
                         mediaManager.getProvider().erase();
                         refresh();
                     }

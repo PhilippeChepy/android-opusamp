@@ -48,8 +48,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.otto.Subscribe;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.PlayerEventBus;
 import net.opusapp.player.core.service.PlayerService;
+import net.opusapp.player.core.service.ProviderEventBus;
 import net.opusapp.player.core.service.event.MediaChangedEvent;
 import net.opusapp.player.core.service.event.MediaCoverChangedEvent;
 import net.opusapp.player.core.service.event.PlayStateChangedEvent;
@@ -57,7 +57,7 @@ import net.opusapp.player.core.service.event.PlaylistChangedEvent;
 import net.opusapp.player.core.service.event.RepeatModeChangedEvent;
 import net.opusapp.player.core.service.event.ShuffleModeChangedEvent;
 import net.opusapp.player.core.service.event.TimestampChangedEvent;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.activities.settings.EqualizerSettingsActivity;
 import net.opusapp.player.ui.activities.settings.FirstRunActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
@@ -91,17 +91,17 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     private Cursor playlistCursor;
 
     private int[] requestedFields = new int[] {
-            AbstractMediaManager.Provider.SONG_ID,
-            AbstractMediaManager.Provider.SONG_TITLE,
-            AbstractMediaManager.Provider.SONG_ARTIST,
-            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION,
-            AbstractMediaManager.Provider.SONG_ART_URI,
-            AbstractMediaManager.Provider.SONG_TRACK,
-            AbstractMediaManager.Provider.SONG_VISIBLE
+            MediaManager.Provider.SONG_ID,
+            MediaManager.Provider.SONG_TITLE,
+            MediaManager.Provider.SONG_ARTIST,
+            MediaManager.Provider.PLAYLIST_ENTRY_POSITION,
+            MediaManager.Provider.SONG_ART_URI,
+            MediaManager.Provider.SONG_TRACK,
+            MediaManager.Provider.SONG_VISIBLE
     };
 
     private int[] sortFields = new int[] {
-            AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION
+            MediaManager.Provider.PLAYLIST_ENTRY_POSITION
     };
 
     private static final int COLUMN_SONG_ID = 0;
@@ -305,6 +305,15 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         if (slidingUpPanelLayout != null) {
             slidingUpPanelLayout.setDragView(findViewById(R.id.audio_player_upper_panel));
         }
+
+        LogUtils.LOGI(TAG, "registering to bus " + ProviderEventBus.getInstance());
+        ProviderEventBus.getInstance().register(mEventListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        ProviderEventBus.getInstance().unregister(mEventListener);
+        super.onDestroy();
     }
 
     @Override
@@ -319,17 +328,11 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         if (mTotalTimeTextView != null) {
             mTotalTimeTextView.setTextColor(PlayerApplication.getAccentColor());
         }
-
-        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
-        PlayerEventBus.getInstance().register(mEventListener);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
-        PlayerEventBus.getInstance().unregister(mEventListener);
-
         PlayerApplication.disconnectService(this);
     }
 
@@ -384,7 +387,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 requestedFields,
                 sortFields,
                 null,
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
+                MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
                 null);
     }
 
@@ -405,6 +408,8 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             int count = playlistCursor.getCount();
             mPlaylistPositionTextView.setText(getResources().getQuantityString(R.plurals.label_track_position, count, count));
         }
+
+        doSetPlaylistPosition();
     }
 
     @Override
@@ -546,7 +551,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
             mCurrentTitle = mediaChangedEvent.getTitle();
             mCurrentArtist = mediaChangedEvent.getArtist();
 
-            doSetPlaylistPosition(mCurrentQueuePosition);
+            doSetPlaylistPosition();
             mMediaTitleTextView.setText(mCurrentTitle);
             mMediaArtistTextView.setText(mCurrentArtist);
             mTotalTimeTextView.setText(PlayerApplication.formatSecs(mediaChangedEvent.getDuration()));
@@ -557,7 +562,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         @Subscribe public void repeatModeChanged(RepeatModeChangedEvent repeatModeChangedEvent) {
             mCurrentRepeatMode = repeatModeChangedEvent.getNewMode();
 
-            switch (mCurrentShuffleMode) {
+            switch (mCurrentRepeatMode) {
                 case PlayerService.REPEAT_ALL:
                     mRepeatButton.setImageResource(R.drawable.ic_repeat_black_48dp);
                     mRepeatButton.setColorFilter(PlayerApplication.getBackgroundColor());
@@ -592,8 +597,6 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
         @SuppressWarnings("unused")
         @Subscribe public synchronized void playlistChangedEvent(PlaylistChangedEvent playlistChangedEvent) {
             if (playlistChangedEvent.getProviderId() == PlayerApplication.playerMediaManager().getId() && playlistChangedEvent.getPlaylistId() == 0) {
-                LogUtils.LOGW(TAG, "playlist length = " + playlistChangedEvent.getPlaylistLength());
-
                 if (slidingUpPanelLayout != null) {
                     if (playlistChangedEvent.getPlaylistLength() <= 0) {
                         slidingUpPanelLayout.collapsePanel();
@@ -629,7 +632,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
                 }
             }
 
-            doSetPlaylistPosition(mCurrentQueuePosition);
+            doSetPlaylistPosition();
         }
     };
 
@@ -742,7 +745,7 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     }
 
     protected boolean doAddToPlaylistAction() {
-        return PlayerApplication.doContextActionAddToPlaylist(this, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), PlayerApplication.library_songs_sort_order);
+        return PlayerApplication.doContextActionAddToPlaylist(this, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, playlistCursor.getString(COLUMN_SONG_ID), PlayerApplication.library_songs_sort_order);
     }
 
     protected boolean doClearAction() {
@@ -772,33 +775,34 @@ public abstract class AbstractPlayerActivity extends OpusActivity implements
     protected boolean doDetailsAction() {
         final MetadataDialog metadataDialog = new MetadataDialog(this, R.string.alert_dialog_title_media_properties,
                 PlayerApplication.playerMediaManager().getProvider(),
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
+                MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA,
                 playlistCursor.getString(COLUMN_SONG_ID));
         metadataDialog.show();
         return true;
     }
 
-    protected void doSetPlaylistPosition(int position) {
-        if (playlistCursor == null || position < 0 || position >= playlistCursor.getCount()) {
+    protected void doSetPlaylistPosition() {
+        if (playlistCursor == null || mCurrentQueuePosition < 0 || mCurrentQueuePosition >= playlistCursor.getCount()) {
             return;
         }
 
-        adapter.setPosition(position);
+        adapter.setPosition(mCurrentQueuePosition);
         adapter.notifyDataSetChanged();
 
         if (mPlaylistListView != null) {
-            int first = mPlaylistListView.getFirstVisiblePosition();
+            int first = mPlaylistListView.getFirstVisiblePosition() - 1;
             int last = mPlaylistListView.getLastVisiblePosition();
 
-            if (position < first) {
-                mPlaylistListView.setSelection(position);
-            } else if (position >= last) {
-                mPlaylistListView.setSelection(1 + position - (last - first));
+            if (mCurrentQueuePosition - 1 < first) {
+                mPlaylistListView.setSelection(mCurrentQueuePosition);
+            }
+            else if (mCurrentQueuePosition + 1 > last) {
+                mPlaylistListView.setSelection(1 + mCurrentQueuePosition - (last - first));
             }
         }
 
         if (!playlistCursor.isClosed()) {
-            playlistCursor.moveToPosition(position);
+            playlistCursor.moveToPosition(mCurrentQueuePosition);
         }
     }
 

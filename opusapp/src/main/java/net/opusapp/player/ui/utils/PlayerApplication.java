@@ -48,7 +48,7 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.service.PlayerService;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.MediaManagerFactory;
 import net.opusapp.player.core.service.providers.index.database.Entities;
 import net.opusapp.player.core.service.providers.index.database.OpenHelper;
@@ -85,7 +85,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     //
-    private static AbstractMediaManager mediaManagers[] = null;
+    private static MediaManager mediaManagers[] = null;
 
     private static int playerMediaManagerIndex = 0;
 
@@ -109,27 +109,27 @@ public class PlayerApplication extends Application implements ServiceConnection 
     // Library explorer options
     public static boolean library_show_hidden = false;
 
-    public static int library_album_artists_sort_order = AbstractMediaManager.Provider.ALBUM_ARTIST_NAME;
+    public static int library_album_artists_sort_order = MediaManager.Provider.ALBUM_ARTIST_NAME;
 
-    public static int library_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME;
+    public static int library_albums_sort_order = MediaManager.Provider.ALBUM_NAME;
 
-    public static int library_artists_sort_order = AbstractMediaManager.Provider.ARTIST_NAME;
+    public static int library_artists_sort_order = MediaManager.Provider.ARTIST_NAME;
 
-    public static int library_genres_sort_order = AbstractMediaManager.Provider.GENRE_NAME;
+    public static int library_genres_sort_order = MediaManager.Provider.GENRE_NAME;
 
-    public static int library_playlists_sort_order = AbstractMediaManager.Provider.PLAYLIST_NAME;
+    public static int library_playlists_sort_order = MediaManager.Provider.PLAYLIST_NAME;
 
-    public static int library_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK;
+    public static int library_songs_sort_order = MediaManager.Provider.SONG_TRACK;
 
-    public static int library_storage_sort_order = AbstractMediaManager.Provider.STORAGE_DISPLAY_NAME;
+    public static int library_storage_sort_order = MediaManager.Provider.STORAGE_DISPLAY_NAME;
 
 
 
-    public static int library_details_songs_sort_order = AbstractMediaManager.Provider.SONG_TRACK;
+    public static int library_details_songs_sort_order = MediaManager.Provider.SONG_TRACK;
 
-    public static int library_details_playlist_sort_order = AbstractMediaManager.Provider.PLAYLIST_ENTRY_POSITION;
+    public static int library_details_playlist_sort_order = MediaManager.Provider.PLAYLIST_ENTRY_POSITION;
 
-    public static int library_details_albums_sort_order = AbstractMediaManager.Provider.ALBUM_NAME;
+    public static int library_details_albums_sort_order = MediaManager.Provider.ALBUM_NAME;
 
 
 
@@ -197,7 +197,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static void allocateMediaManagers() {
 
         final SQLiteDatabase database = OpenHelper.getInstance().getWritableDatabase();
-        final AbstractMediaManager playerProvider = playerMediaManager();
+        final MediaManager playerProvider = playerMediaManager();
 
         final String[] columns = new String[] {
                 Entities.Provider._ID,
@@ -216,7 +216,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         final Cursor cursor = database.query(Entities.Provider.TABLE_NAME, columns, null, null, null, null, orderBy);
 
         if (CursorUtils.ifNotEmpty(cursor)) {
-            mediaManagers = new AbstractMediaManager[cursor.getCount()];
+            mediaManagers = new MediaManager[cursor.getCount()];
 
             if (playerProvider != null && playerProvider.getPlayer().playerIsPlaying()) {
                 while (cursor.moveToNext()) {
@@ -228,8 +228,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
                         mediaManagers[cursor.getPosition()] = playerProvider;
                     }
                     else {
-                        final AbstractMediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
-                        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                        final MediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
+                        final MediaManager.Player player = mediaManager.getPlayer();
 
                         mediaManagers[cursor.getPosition()] = mediaManager;
 
@@ -245,8 +245,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
                     int newProviderType = cursor.getInt(COLUMN_TYPE);
                     final String newProviderName = cursor.getString(COLUMN_NAME);
 
-                    final AbstractMediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
-                    final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                    final MediaManager mediaManager = MediaManagerFactory.buildMediaManager(newProviderType, newProviderId, newProviderName);
+                    final MediaManager.Player player = mediaManager.getPlayer();
 
                     mediaManagers[cursor.getPosition()] = mediaManager;
 
@@ -258,21 +258,9 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
             CursorUtils.free(cursor);
         }
-
-        if (playerService != null) {
-            playerService.notifyProviderChanged();
-        }
     }
 
-    public static void registerPlaybackStatusListener(final AbstractMediaManager.Player.PlaybackStatusListener listener) {
-        for (AbstractMediaManager manager : mediaManagers) {
-            final AbstractMediaManager.Player player = manager.getPlayer();
-            player.clearPlaybackStatusListeners();
-            player.addPlaybackStatusListener(listener);
-        }
-    }
-
-    public static AbstractMediaManager playerMediaManager() {
+    public static MediaManager playerMediaManager() {
         if (mediaManagers == null || playerMediaManagerIndex >= mediaManagers.length) {
             return null;
         }
@@ -280,7 +268,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return mediaManagers[playerMediaManagerIndex];
     }
 
-    public static AbstractMediaManager libraryMediaManager() {
+    public static MediaManager libraryMediaManager() {
         if (mediaManagers == null || libraryMediaManagerIndex >= mediaManagers.length) {
             return null;
         }
@@ -295,8 +283,6 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return;
             }
         }
-
-        // TODO: throw exception ?
     }
 
     public static void setLibraryManager(int id) {
@@ -306,12 +292,10 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return;
             }
         }
-
-        // TODO: throw exception ?
     }
 
     public static boolean thereIsScanningMediaManager() {
-        for (AbstractMediaManager mediaManager : mediaManagers) {
+        for (MediaManager mediaManager : mediaManagers) {
             if (mediaManager.getProvider().scanIsRunning()) {
                 return true;
             }
@@ -320,8 +304,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return false;
     }
 
-    public static AbstractMediaManager mediaManager(int id) {
-        for (final AbstractMediaManager mediaManager : mediaManagers) {
+    public static MediaManager mediaManager(int id) {
+        for (final MediaManager mediaManager : mediaManagers) {
             if (mediaManager.getId() == id) {
                 return mediaManager;
             }
@@ -379,65 +363,65 @@ public class PlayerApplication extends Application implements ServiceConnection 
         optimizationTask.execute();
     }
 
-    public static Loader<Cursor> buildAlbumArtistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildAlbumArtistLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildAlbumLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
+    public static Loader<Cursor> buildAlbumLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final MediaManager.Provider.ContentType contentType, final String sourceId) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, requestedFields, sortFields, filter, contentType, sourceId);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, requestedFields, sortFields, filter, contentType, sourceId);
             }
         };
     }
 
-    public static Loader<Cursor> buildArtistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildArtistLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildGenreLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildGenreLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildPlaylistLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildPlaylistLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, requestedFields, sortFields, filter, null, null);
             }
         };
     }
 
-    public static Loader<Cursor> buildMediaLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final AbstractMediaManager.Provider.ContentType contentType, final String sourceId) {
+    public static Loader<Cursor> buildMediaLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter, final MediaManager.Provider.ContentType contentType, final String sourceId) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, requestedFields, sortFields, filter, contentType, sourceId);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, requestedFields, sortFields, filter, contentType, sourceId);
             }
         };
     }
 
-    public static Loader<Cursor> buildStorageLoader(final AbstractMediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
+    public static Loader<Cursor> buildStorageLoader(final MediaManager.Provider provider, final int[] requestedFields, final int[] sortFields, final String filter) {
         return new AbstractSimpleCursorLoader(PlayerApplication.context) {
             @Override
             public Cursor loadInBackground() {
-                return provider.buildCursor(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter, null, null);
+                return provider.buildCursor(MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, requestedFields, sortFields, filter, null, null);
             }
         };
     }
@@ -514,17 +498,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean songContextItemSelected(Activity hostActivity, int itemId, String songId, int position, String playlistId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null, library_songs_sort_order, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_DEFAULT, null, library_songs_sort_order, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, library_songs_sort_order);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
             case CONTEXT_MENUITEM_DETAIL:
-                doContextActionDetail(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
                 return false;
             case CONTEXT_MENUITEM_DELETE:
                 doContextActionMediaRemoveFromQueue(playlistId, position);
@@ -550,17 +534,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean playlistDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String playlistId, int sortOrder, int position, String songId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
             case CONTEXT_MENUITEM_DETAIL:
-                doContextActionDetail(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
                 return false;
             case CONTEXT_MENUITEM_DELETE:
                 doContextActionMediaRemoveFromQueue(playlistId, position);
@@ -576,13 +560,13 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean playlistContextItemSelected(Activity hostActivity, int itemId, String playlistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST, playlistId);
             case CONTEXT_MENUITEM_DELETE:
                 return doContextActionPlaylistDelete(hostActivity, playlistId);
             default:
@@ -605,15 +589,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean genreDetailContextItemSelected(FragmentActivity hostActivity, int itemId, int sortOrder, int position, String albumId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
             default:
                 return false;
         }
@@ -622,15 +606,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean genreContextItemSelected(Activity hostActivity, int itemId, String genreId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_GENRE, genreId);
             default:
                 return false;
         }
@@ -650,15 +634,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean artistDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String artistId, int sortOrder, int position, String songId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
             default:
                 return false;
         }
@@ -667,15 +651,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean artistContextItemSelected(Activity hostActivity, int itemId, String artistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ARTIST, artistId);
             default:
                 return false;
         }
@@ -696,17 +680,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean albumDetailContextItemSelected(FragmentActivity hostActivity, int itemId, String albumId, int sortOrder, int position, String songId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
             case CONTEXT_MENUITEM_DETAIL:
-                doContextActionDetail(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+                doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
                 return false;
             default:
                 return false;
@@ -716,17 +700,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean albumContextItemSelected(Activity hostActivity, int itemId, String albumId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
             case CONTEXT_MENUITEM_DETAIL:
-                doContextActionDetail(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+                doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
                 return false;
             default:
                 return false;
@@ -747,15 +731,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean albumArtistDetailContextItemSelected(FragmentActivity hostActivity, int itemId, int sortOrder, String albumId) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, 0);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder, 0);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
             default:
                 return false;
         }
@@ -764,15 +748,15 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean albumArtistContextItemSelected(Activity hostActivity, int itemId, String albumArtistId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_PLAYLIST:
-                return doContextActionAddToPlaylist(hostActivity, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
+                return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
-                return doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId);
+                return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST, albumArtistId);
             default:
                 return false;
         }
@@ -790,11 +774,11 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static boolean storageContextItemSelected(int itemId, String storageId, int sortOrder, int position) {
         switch (itemId) {
             case CONTEXT_MENUITEM_PLAY:
-                return doContextActionPlay(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder, position);
+                return doContextActionPlay(MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder, position);
             case CONTEXT_MENUITEM_PLAY_NEXT:
-                return doContextActionPlayNext(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder);
+                return doContextActionPlayNext(MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder);
             case CONTEXT_MENUITEM_ADD_TO_QUEUE:
-                return doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder);
+                return doContextActionAddToQueue(MediaManager.Provider.ContentType.CONTENT_TYPE_STORAGE, storageId, sortOrder);
             default:
                 return false;
         }
@@ -802,32 +786,32 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     // Context actions
-    public static boolean doContextActionPlay(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder, int position) {
+    public static boolean doContextActionPlay(MediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder, int position) {
         doPrepareProviderSwitch();
 
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.play(sourceType, sourceId, sortOrder, position, PlayerApplication.lastSearchFilter);
     }
 
-    private static boolean doContextActionPlayNext(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+    private static boolean doContextActionPlayNext(MediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.playNext(sourceType, sourceId, sortOrder, PlayerApplication.lastSearchFilter);
     }
 
-    private static boolean doContextActionAddToQueue(AbstractMediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+    private static boolean doContextActionAddToQueue(MediaManager.Provider.ContentType sourceType, String sourceId, int sortOrder) {
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         return provider.playlistAdd(null, sourceType, sourceId, sortOrder, PlayerApplication.lastSearchFilter);
     }
 
-    public static boolean doContextActionAddToPlaylist(final Activity parent, final AbstractMediaManager.Provider.ContentType sourceType, final String sourceId, final int sortOrder) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+    public static boolean doContextActionAddToPlaylist(final Activity parent, final MediaManager.Provider.ContentType sourceType, final String sourceId, final int sortOrder) {
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         showPlaylistManagementDialog(parent, new PlaylistManagementRunnable() {
             public void run(String playlistId) {
@@ -838,34 +822,34 @@ public class PlayerApplication extends Application implements ServiceConnection 
         return true;
     }
 
-    private static boolean doContextActionToggleVisibility(AbstractMediaManager.Provider.ContentType sourceType, String sourceId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+    private static boolean doContextActionToggleVisibility(MediaManager.Provider.ContentType sourceType, String sourceId) {
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
-        provider.setProperty(sourceType, sourceId, AbstractMediaManager.Provider.ContentProperty.CONTENT_VISIBILITY_TOGGLE, null, null);
+        provider.setProperty(sourceType, sourceId, MediaManager.Provider.ContentProperty.CONTENT_VISIBILITY_TOGGLE, null, null);
 
         return true;
     }
 
     private static boolean doContextActionMediaRemoveFromQueue(String playlistId, int position) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         provider.playlistRemove(playlistId, position);
         return true;
     }
 
     private static boolean doContextActionPlaylistClear(String playlistId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         provider.playlistClear(playlistId);
         return true;
     }
 
-    private static boolean doContextActionDetail(Activity hostActivity, AbstractMediaManager.Provider.ContentType contentType, String contentId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+    private static boolean doContextActionDetail(Activity hostActivity, MediaManager.Provider.ContentType contentType, String contentId) {
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         int titleResId = R.string.alert_dialog_title_media_properties;
         switch (contentType) {
@@ -881,8 +865,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
     }
 
     private static boolean doContextActionPlaylistDelete(final Activity hostActivity, final String playlistId) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         final DialogInterface.OnClickListener newPlaylistPositiveOnClickListener = new DialogInterface.OnClickListener() {
 
@@ -943,17 +927,17 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
     protected static void showPlaylistManagementDialog(final Activity hostActivity, final PlaylistManagementRunnable runnable) {
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         final Cursor playlistCursor = provider.buildCursor(
-                AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
+                MediaManager.Provider.ContentType.CONTENT_TYPE_PLAYLIST,
                 new int[] {
-                        AbstractMediaManager.Provider.PLAYLIST_ID,
-                        AbstractMediaManager.Provider.PLAYLIST_NAME
+                        MediaManager.Provider.PLAYLIST_ID,
+                        MediaManager.Provider.PLAYLIST_NAME
                 },
                 new int[] {
-                        AbstractMediaManager.Provider.PLAYLIST_ID
+                        MediaManager.Provider.PLAYLIST_ID
                 },
                 null,
                 null,
@@ -976,8 +960,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
             }
 
             final DialogInterface.OnClickListener dialogOnClickListener = new DialogInterface.OnClickListener() {
-                final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-                final AbstractMediaManager.Provider mediaProvider = mediaManager.getProvider();
+                final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+                final MediaManager.Provider mediaProvider = mediaManager.getProvider();
 
                 final EditText nameEditText = new EditText(hostActivity);
 
@@ -1177,10 +1161,10 @@ public class PlayerApplication extends Application implements ServiceConnection 
             CursorUtils.free(cursor);
         }
 
-        final AbstractMediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId, null);
-        final AbstractMediaManager.Provider provider = localLibraryProvider.getProvider();
+        final MediaManager localLibraryProvider = MediaManagerFactory.buildMediaManager(mediaProviderType, mediaProviderId, null);
+        final MediaManager.Provider provider = localLibraryProvider.getProvider();
 
-        final AbstractMediaManager.ProviderAction providerAction = provider.getAction(AbstractMediaManager.Provider.ACTION_INDEX_SETTINGS);
+        final MediaManager.ProviderAction providerAction = provider.getAction(MediaManager.Provider.ACTION_INDEX_SETTINGS);
 
         if (providerAction != null) {
             /* launch activity */ providerAction.launch(sourceActivity);
@@ -1221,7 +1205,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
     public static int getManagerIndex(int providerId) {
 
         for (int managerIndex = 0 ; managerIndex < PlayerApplication.mediaManagers.length ; managerIndex++) {
-            final AbstractMediaManager mediaManager = PlayerApplication.mediaManagers[managerIndex];
+            final MediaManager mediaManager = PlayerApplication.mediaManagers[managerIndex];
 
             if (mediaManager.getId() == providerId) {
                 return managerIndex;
@@ -1293,7 +1277,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
 
 
 
-    public static void saveEqualizerSettings(AbstractMediaManager.Player player) {
+    public static void saveEqualizerSettings(MediaManager.Player player) {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(CONFIG_EQUALIZER_ENABLED, player.equalizerIsEnabled());
@@ -1311,7 +1295,7 @@ public class PlayerApplication extends Application implements ServiceConnection 
         editor.apply();
     }
 
-    public static void restoreEqualizerSettings(AbstractMediaManager.Player player) {
+    public static void restoreEqualizerSettings(MediaManager.Player player) {
         final SharedPreferences sharedPreferences = context.getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
 
         player.equalizerSetEnabled(sharedPreferences.getBoolean(CONFIG_EQUALIZER_ENABLED, false));

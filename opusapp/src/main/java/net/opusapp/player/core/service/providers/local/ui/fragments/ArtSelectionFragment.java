@@ -24,8 +24,8 @@ import android.widget.GridView;
 import com.bumptech.glide.Glide;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.PlayerEventBus;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.ProviderEventBus;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.core.service.providers.local.database.Entities;
@@ -110,9 +110,9 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            mProviderId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
+            mProviderId = arguments.getInt(MediaManager.Provider.KEY_PROVIDER_ID);
             contentType = arguments.getInt(CONTENT_TYPE_KEY);
-            sourceId = arguments.getLong(AbstractMediaManager.Provider.KEY_SOURCE_ID);
+            sourceId = arguments.getLong(MediaManager.Provider.KEY_SOURCE_ID);
         }
 
         getLoaderManager().initLoader(0, null, this);
@@ -230,10 +230,10 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
                 database.delete(Entities.Art.TABLE_NAME, Entities.Art._ID + " = ? ", selectionArgs);
                 database.delete(Entities.AlbumHasArts.TABLE_NAME, Entities.AlbumHasArts.COLUMN_FIELD_ART_ID + " = ? ", selectionArgs);
 
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                final MediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+                final MediaManager.Provider provider = mediaManager.getProvider();
                 if (provider instanceof LocalProvider) {
-                    PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+                    ProviderEventBus.getInstance().post(new LibraryContentChangedEvent());
 
                     Cursor artCursor = database.rawQuery(
                             "SELECT " + Entities.Art.TABLE_NAME + "." + Entities.Art._ID + ", " + Entities.Art.TABLE_NAME + "." + Entities.Art.COLUMN_FIELD_URI + " " +
@@ -271,8 +271,8 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
         cursor.moveToPosition(position);
         final String selectedUri = cursor.getString(COLUMN_URI);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         final Activity activity = getActivity();
         final Intent resultIntent = activity.getIntent();
@@ -281,7 +281,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, true);
+                provider.setProperty(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), MediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, true);
                 activity.setResult(Activity.RESULT_OK, resultIntent);
                 activity.finish();
             }
@@ -291,7 +291,7 @@ public class ArtSelectionFragment extends Fragment implements RefreshableView, L
 
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                provider.setProperty(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), AbstractMediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, false);
+                provider.setProperty(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, String.valueOf(sourceId), MediaManager.Provider.ContentProperty.CONTENT_ART_URI, selectedUri, false);
                 activity.setResult(Activity.RESULT_OK, resultIntent);
                 activity.finish();
             }

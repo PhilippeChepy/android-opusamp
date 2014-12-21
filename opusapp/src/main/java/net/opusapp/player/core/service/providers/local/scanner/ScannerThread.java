@@ -10,7 +10,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.PlayerEventBus;
+import net.opusapp.player.core.service.ProviderEventBus;
 import net.opusapp.player.core.service.providers.event.LibraryContentChangedEvent;
 import net.opusapp.player.core.service.providers.event.LibraryScanStatusChangedEvent;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
@@ -71,7 +71,7 @@ public class ScannerThread extends Thread {
     @Override
     public void run() {
         LogUtils.LOGI(TAG, "scan started");
-        PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(LibraryScanStatusChangedEvent.STATUS_STARTED));
+        ProviderEventBus.getInstance().post(new LibraryScanStatusChangedEvent(LibraryScanStatusChangedEvent.STATUS_STARTED));
         setPriority(MIN_PRIORITY); // Don't burn our poor phone's CPU... to quickly
 
         // construction of extension set.
@@ -134,13 +134,13 @@ public class ScannerThread extends Thread {
         }
         catch (final CancellingException exception) {
             LogUtils.LOGI(TAG, "scan terminated (by user)");
-            PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(true));
+            ProviderEventBus.getInstance().post(new LibraryScanStatusChangedEvent(true));
             mMediaScanner.scannerHasTerminated();
             return;
         }
 
         LogUtils.LOGI(TAG, "scan terminated");
-        PlayerEventBus.getInstance().post(new LibraryScanStatusChangedEvent(false));
+        ProviderEventBus.getInstance().post(new LibraryScanStatusChangedEvent(false));
         mMediaScanner.scannerHasTerminated();
     }
 
@@ -697,7 +697,7 @@ public class ScannerThread extends Thread {
 
         updateCovers();
 
-        PlayerEventBus.getInstance().post(new LibraryContentChangedEvent());
+        ProviderEventBus.getInstance().post(new LibraryContentChangedEvent());
     }
 
     protected void updateAlbums() {

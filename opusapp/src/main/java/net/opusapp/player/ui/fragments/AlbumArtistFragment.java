@@ -31,7 +31,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.activities.LibraryDetailActivity;
 import net.opusapp.player.ui.adapter.LibraryAdapter;
 import net.opusapp.player.ui.adapter.LibraryAdapterFactory;
@@ -62,9 +62,9 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
     private Cursor cursor;
 
     private final static int[] requestedFields = new int[] {
-            AbstractMediaManager.Provider.ALBUM_ARTIST_ID,
-            AbstractMediaManager.Provider.ALBUM_ARTIST_NAME,
-            AbstractMediaManager.Provider.ALBUM_ARTIST_VISIBLE
+            MediaManager.Provider.ALBUM_ARTIST_ID,
+            MediaManager.Provider.ALBUM_ARTIST_NAME,
+            MediaManager.Provider.ALBUM_ARTIST_VISIBLE
     };
 
     public static final int COLUMN_ALBUM_ARTIST_ID = 0;
@@ -84,9 +84,9 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final AbstractMediaManager mediaManager = PlayerApplication.libraryMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-        setEmptyContentAction(provider.getEmptyContentAction(AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST));
+        final MediaManager mediaManager = PlayerApplication.libraryMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
+        setEmptyContentAction(provider.getEmptyContentAction(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST));
     }
 
 	@Override
@@ -199,7 +199,7 @@ public class AlbumArtistFragment extends AbstractRefreshableFragment implements 
 		Intent intent = new Intent(PlayerApplication.context, LibraryDetailActivity.class);
         cursor.moveToPosition(position);
 
-		intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST);
+		intent.putExtra(PlayerApplication.CONTENT_TYPE_KEY, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM_ARTIST);
         intent.putExtra(PlayerApplication.CONTENT_SOURCE_ID_KEY, cursor.getString(COLUMN_ALBUM_ARTIST_ID));
 		startActivity(intent);
 	}

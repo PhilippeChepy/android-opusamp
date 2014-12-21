@@ -38,6 +38,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.squareup.otto.Produce;
+import com.squareup.otto.Subscribe;
 
 import net.opusapp.player.R;
 import net.opusapp.player.core.RemoteControlClientHelper;
@@ -48,7 +49,9 @@ import net.opusapp.player.core.service.event.PlaylistChangedEvent;
 import net.opusapp.player.core.service.event.RepeatModeChangedEvent;
 import net.opusapp.player.core.service.event.ShuffleModeChangedEvent;
 import net.opusapp.player.core.service.event.TimestampChangedEvent;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
+import net.opusapp.player.core.service.providers.event.PlaybackTerminatedEvent;
+import net.opusapp.player.core.service.providers.event.PlaybackTimestampChangedEvent;
 import net.opusapp.player.ui.activities.LibraryMainActivity;
 import net.opusapp.player.ui.utils.PlayerApplication;
 import net.opusapp.player.ui.widgets.AbstractAppWidget;
@@ -64,7 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class PlayerService extends Service implements AbstractMediaManager.Player.PlaybackStatusListener {
+public class PlayerService extends Service {
 
 	private final static String TAG = PlayerService.class.getSimpleName();
 
@@ -72,7 +75,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
     // Empty playlist
-    public static final AbstractMediaManager.Media[] EMPTY_PLAYLIST = new AbstractMediaManager.Media[0];
+    public static final MediaManager.Media[] EMPTY_PLAYLIST = new MediaManager.Media[0];
 
 
     // Command
@@ -180,7 +183,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
 
 
-    private AbstractMediaManager.Media[] mPlaylist = EMPTY_PLAYLIST;
+    private MediaManager.Media[] mPlaylist = EMPTY_PLAYLIST;
 
     private List<Integer> mShuffledPlaylistIndexList;
 
@@ -208,8 +211,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     private Bitmap mMediaCover = null;
 
 
-    @Override
-    public void onPlaybackCompleted() {
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void playbackTerminated(PlaybackTerminatedEvent playbackTerminatedEvent) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -229,7 +233,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                         }
                         else { /* cannot play anymore */
                             stop();
-                            notifyTimestampUpdate(0);
+                            mTimeStamp = 0;
+                            mTimestampChangedEvent.setTimestamp(0);
+                            ProviderEventBus.getInstance().post(produceTimestampChangedEvent());
                         }
 
                         break;
@@ -238,11 +244,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }).start();
     }
 
-    @Override
-    public void onPlaybackTimestampUpdate(long newPosition) {
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void playbackTimestampChanged(PlaybackTimestampChangedEvent playbackTimestampChangedEvent) {
         /* Playing, request for timestamp update */
-        notifyTimestampUpdate(newPosition);
-        mTimeStamp = newPosition;
+        mTimeStamp = playbackTimestampChangedEvent.getTimeStamp();
+
+        mTimestampChangedEvent.setTimestamp(mTimeStamp);
+        ProviderEventBus.getInstance().post(produceTimestampChangedEvent());
 
         if (getAutostopTimestamp() == 0) {
             LogUtils.LOGD(TAG, "autostop timestamp reached : " + getAutostopTimestamp());
@@ -305,8 +314,6 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             queueSetPosition(position);
         }
 
-        notifyProviderChanged();
-
         mCommandbroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -344,7 +351,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         final IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(mHeadsetBroadcastReceiver, filter);
 
-        LogUtils.LOGI(TAG, "registering to bus " + PlayerEventBus.getInstance());
+        LogUtils.LOGI(TAG, "registering to bus " + ProviderEventBus.getInstance());
+        ProviderEventBus.getInstance().register(this);
         PlayerEventBus.getInstance().register(this);
     }
 
@@ -360,6 +368,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     @Override
     public void onDestroy() {
         PlayerEventBus.getInstance().unregister(this);
+        ProviderEventBus.getInstance().unregister(this);
 
         unregisterReceiver(mCommandbroadcastReceiver);
         unregisterReceiver(mHeadsetBroadcastReceiver);
@@ -712,8 +721,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     protected void loadPlaylist(boolean notify) {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         mPlaylist = provider.getCurrentPlaylist(mediaManager.getPlayer());
 
@@ -823,9 +832,9 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     class MediaLoaderRunnable implements Runnable {
 
-        public AbstractMediaManager.Media track;
+        public MediaManager.Media track;
 
-        public MediaLoaderRunnable(AbstractMediaManager.Media track) {
+        public MediaLoaderRunnable(MediaManager.Media track) {
             this.track = track;
         }
 
@@ -887,8 +896,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
         @Override
         public void run() {
-            final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
+            final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+            final MediaManager.Player player = mediaManager.getPlayer();
 
             player.playerSeek(mPlaylist[index], 0);
         }
@@ -899,8 +908,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     // Public API
     public void play() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         // should never happen..
         if (!mPlaylist[mPlaylistIndex].isLoaded()) {
@@ -917,8 +926,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void pause(boolean keepNotification) {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         if (player.playerIsPlaying()) {
             player.playerPause(true);
@@ -929,8 +938,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void stop() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         player.playerStop();
 
@@ -951,8 +960,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             notifySetQueuePosition();
 
             if (mPlaylistIndex < mPlaylist.length) {
-                final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+                final MediaManager.Player player = mediaManager.getPlayer();
                 player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
         }
@@ -968,8 +977,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             notifySetQueuePosition();
 
             if (mPlaylistIndex < mPlaylist.length) {
-                final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-                final AbstractMediaManager.Player player = mediaManager.getPlayer();
+                final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+                final MediaManager.Player player = mediaManager.getPlayer();
                 player.playerSetContent(mPlaylist[mPlaylistIndex]);
             }
         }
@@ -978,22 +987,22 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public boolean isPlaying() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         return player.playerIsPlaying();
     }
 
     public long getDuration() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         return player.playerGetDuration();
     }
 
     public long getPosition() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         return player.playerGetPosition();
     }
@@ -1003,12 +1012,14 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             return;
         }
 
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         mTimeStamp = position;
         player.playerSeek(mPlaylist[mPlaylistIndex], position);
-        notifyTimestampUpdate(position);
+
+        mTimestampChangedEvent.setTimestamp(mTimeStamp);
+        ProviderEventBus.getInstance().post(produceTimestampChangedEvent());
     }
 
     public int getShuffleMode() {
@@ -1032,19 +1043,17 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
 
     public void setRepeatMode(int mode) {
         mRepeatMode = mode;
-        if (mRepeatMode == REPEAT_CURRENT) {
-            if (getShuffleMode() != SHUFFLE_NONE) {
-                setShuffleMode(SHUFFLE_NONE);
-            }
+        if (mRepeatMode == REPEAT_CURRENT && getShuffleMode() != SHUFFLE_NONE) {
+            setShuffleMode(SHUFFLE_NONE);
         }
 
         notifyRepeatChange();
     }
 
     public void queueAdd(String media) {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
-        provider.playlistAdd(null, AbstractMediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
+        provider.playlistAdd(null, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, media, 0, null);
 
         loadPlaylist(true);
 
@@ -1074,8 +1083,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mPlaylistIndex = indexTo;
         }
 
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistMove(null, indexFrom, indexTo);
 
         loadPlaylist(true);
@@ -1090,8 +1099,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             mPlaylistIndex--;
         }
 
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
         provider.playlistRemove(null, entry);
 
         boolean wasPlaying = isPlaying();
@@ -1124,8 +1133,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             stop();
         }
 
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         provider.playlistClear(null);
         mPlaylistIndex = 0;
@@ -1136,8 +1145,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     public void queueReload() {
-        final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-        final AbstractMediaManager.Player player = mediaManager.getPlayer();
+        final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+        final MediaManager.Player player = mediaManager.getPlayer();
 
         boolean wasPlaying = player.playerIsPlaying();
 
@@ -1191,8 +1200,8 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
                     break;
             }
 
-            final AbstractMediaManager mediaManager = PlayerApplication.playerMediaManager();
-            final AbstractMediaManager.Player player = mediaManager.getPlayer();
+            final MediaManager mediaManager = PlayerApplication.playerMediaManager();
+            final MediaManager.Player player = mediaManager.getPlayer();
 
             player.playerSetContent(mPlaylist[mPlaylistIndex]);
 
@@ -1248,20 +1257,11 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         return remaining;
     }
 
-    public void notifyProviderChanged() {
-        PlayerApplication.registerPlaybackStatusListener(this);
-    }
-
-    public void notifyTimestampUpdate(long timestamp) {
-        mTimestampChangedEvent.setTimestamp(timestamp);
-        PlayerEventBus.getInstance().post(produceTimestampChangedEvent());
-    }
-
     public void notifyPlay() {
         mUiUpdateExecutor.submit(runnablePlay);
 
         mPlayState = PLAYSTATE_PLAYING;
-        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
+        ProviderEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     public void notifyPause(boolean keepNotification) {
@@ -1269,18 +1269,18 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         mUiUpdateExecutor.submit(runnablePause);
 
         mPlayState = PLAYSTATE_PAUSED;
-        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
+        ProviderEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     public void notifyStop() {
         mUiUpdateExecutor.submit(runnableStop);
 
         mPlayState = PLAYSTATE_STOPPED;
-        PlayerEventBus.getInstance().post(producePlaystateChangedEvent());
+        ProviderEventBus.getInstance().post(producePlaystateChangedEvent());
     }
 
     private void notifyQueueChanged() {
-        PlayerEventBus.getInstance().post(producePlaylistChangedEvent());
+        ProviderEventBus.getInstance().post(producePlaylistChangedEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1289,7 +1289,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyShuffleChange() {
-        PlayerEventBus.getInstance().post(produceShuffleModeEvent());
+        ProviderEventBus.getInstance().post(produceShuffleModeEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1298,7 +1298,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyRepeatChange() {
-        PlayerEventBus.getInstance().post(produceRepeatModeEvent());
+        ProviderEventBus.getInstance().post(produceRepeatModeEvent());
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -1320,7 +1320,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
             }
 
             if (mPlaylistIndex < mPlaylist.length) {
-                final AbstractMediaManager.Media media = mPlaylist[mPlaylistIndex];
+                final MediaManager.Media media = mPlaylist[mPlaylistIndex];
 
                 mMediaCoverUri = mPlaylist[mPlaylistIndex].artUri;
                 mediaTitle = media.name;
@@ -1331,7 +1331,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
         }
 
         mMedia = new MediaChangedEvent(mediaTitle, mediaArtist, mediaAlbum, mediaDuration, mPlaylistIndex);
-        PlayerEventBus.getInstance().post(produceMediaChangedEvent());
+        ProviderEventBus.getInstance().post(produceMediaChangedEvent());
 
         mUiUpdateExecutor.submit(runnableRefreshSongData);
 
@@ -1342,7 +1342,7 @@ public class PlayerService extends Service implements AbstractMediaManager.Playe
     }
 
     private void notifyCoverLoaded() {
-        PlayerEventBus.getInstance().post(produceMediaCoverChangedEvent());
+        ProviderEventBus.getInstance().post(produceMediaCoverChangedEvent());
     }
 
 

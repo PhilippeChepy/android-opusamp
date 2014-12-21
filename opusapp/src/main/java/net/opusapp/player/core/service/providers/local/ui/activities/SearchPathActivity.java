@@ -27,7 +27,7 @@ import android.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.fragments.SearchPathFragment;
@@ -57,7 +57,7 @@ public class SearchPathActivity extends ActionBarActivity {
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 
-        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mProviderId = getIntent().getIntExtra(MediaManager.Provider.KEY_PROVIDER_ID, -1);
 
 		setContentView(R.layout.activity_tabbed_grids);
 
@@ -66,11 +66,11 @@ public class SearchPathActivity extends ActionBarActivity {
 		
 		Bundle searchBundle = new Bundle();
 		searchBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_SEARCH_PATH);
-        searchBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
+        searchBundle.putInt(MediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 		
 		Bundle excludedBundle = new Bundle();
 		excludedBundle.putInt(SearchPathFragment.CONTENT_TYPE_KEY, SearchPathFragment.CONTENT_EXCLUDE_PATH);
-        excludedBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
+        excludedBundle.putInt(MediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 		
 		mPagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
 		mPagerAdapter.addFragment(new SearchPathFragment(), searchBundle, R.string.tab_label_accept_path);
@@ -167,8 +167,8 @@ public class SearchPathActivity extends ActionBarActivity {
     protected void notifyLibraryChanges() {
         mPagerAdapter.refresh();
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final MediaManager.Provider provider = mediaManager.getProvider();
         if (provider != null) {
             provider.scanStart();
         }

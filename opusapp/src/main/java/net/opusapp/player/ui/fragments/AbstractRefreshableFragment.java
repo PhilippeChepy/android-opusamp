@@ -17,7 +17,7 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.view.View;
 
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.views.CustomLinkTextView;
 import net.opusapp.player.ui.views.CustomTextView;
 import net.opusapp.player.ui.views.RefreshableView;
@@ -29,14 +29,14 @@ public abstract class AbstractRefreshableFragment extends Fragment implements Re
 
 
     // Empty actions
-    private AbstractMediaManager.AbstractEmptyContentAction emptyContentAction;
+    private MediaManager.AbstractEmptyContentAction emptyContentAction;
 
 
 
     @Override
     public abstract void refresh();
 
-    protected void setEmptyContentAction(final AbstractMediaManager.AbstractEmptyContentAction emptyContentAction) {
+    protected void setEmptyContentAction(final MediaManager.AbstractEmptyContentAction emptyContentAction) {
         this.emptyContentAction = emptyContentAction;
     }
 

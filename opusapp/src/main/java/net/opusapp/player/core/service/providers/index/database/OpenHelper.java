@@ -17,7 +17,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
 public class OpenHelper extends SQLiteOpenHelper {
@@ -67,7 +67,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_NAME, PlayerApplication.context.getString(R.string.label_default_library));
         contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_POSITION, 0);
-        contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, AbstractMediaManager.LOCAL_MEDIA_MANAGER);
+        contentValues.put(Entities.Provider.COLUMN_FIELD_PROVIDER_TYPE, MediaManager.LOCAL_MEDIA_MANAGER);
         database.insert(Entities.Provider.TABLE_NAME, null, contentValues);
 
         // Default equalizer presets

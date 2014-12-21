@@ -33,7 +33,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
@@ -104,7 +104,7 @@ public class SearchPathFragment extends Fragment implements RefreshableView, Loa
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            mProviderId = arguments.getInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID);
+            mProviderId = arguments.getInt(MediaManager.Provider.KEY_PROVIDER_ID);
         }
 
         getLoaderManager().initLoader(0, null, this);

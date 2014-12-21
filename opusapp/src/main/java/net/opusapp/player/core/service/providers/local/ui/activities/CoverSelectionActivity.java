@@ -13,7 +13,7 @@ import android.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.providers.local.ui.fragments.ArtSelectionFragment;
@@ -47,26 +47,26 @@ public class CoverSelectionActivity extends ActionBarActivity {
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
-        mSourceId = getIntent().getLongExtra(AbstractMediaManager.Provider.KEY_SOURCE_ID, -1);
+        mProviderId = getIntent().getIntExtra(MediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mSourceId = getIntent().getLongExtra(MediaManager.Provider.KEY_SOURCE_ID, -1);
 
         setContentView(R.layout.activity_tabbed_grids);
         PlayerApplication.applyActionBar(this);
 
         Bundle fromEmbeddedTagsBundle = new Bundle();
         fromEmbeddedTagsBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_EMBEDDED_TAGS);
-        fromEmbeddedTagsBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
-        fromEmbeddedTagsBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
+        fromEmbeddedTagsBundle.putLong(MediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromEmbeddedTagsBundle.putInt(MediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
         Bundle fromLocalFileSystemBundle = new Bundle();
         fromLocalFileSystemBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_LOCAL_FILESYSTEM);
-        fromLocalFileSystemBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
-        fromLocalFileSystemBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
+        fromLocalFileSystemBundle.putLong(MediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromLocalFileSystemBundle.putInt(MediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
         Bundle fromInternetBundle = new Bundle();
         fromInternetBundle.putInt(ArtSelectionFragment.CONTENT_TYPE_KEY, ArtSelectionFragment.CONTENT_INTERNET);
-        fromInternetBundle.putLong(AbstractMediaManager.Provider.KEY_SOURCE_ID, mSourceId);
-        fromInternetBundle.putInt(AbstractMediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
+        fromInternetBundle.putLong(MediaManager.Provider.KEY_SOURCE_ID, mSourceId);
+        fromInternetBundle.putInt(MediaManager.Provider.KEY_PROVIDER_ID, mProviderId);
 
         mPagerAdapter = new PagerAdapter(this, getSupportFragmentManager());
         mPagerAdapter.addFragment(new ArtSelectionFragment(), fromEmbeddedTagsBundle, R.string.tab_label_from_embedded_tag);

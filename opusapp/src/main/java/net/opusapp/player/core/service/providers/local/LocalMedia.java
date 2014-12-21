@@ -12,10 +12,10 @@
  */
 package net.opusapp.player.core.service.providers.local;
 
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.utils.LogUtils;
 
-public class LocalMedia extends AbstractMediaManager.Media {
+public class LocalMedia extends MediaManager.Media {
 	
 	public static final String TAG = LocalMedia.class.getSimpleName();
 
@@ -27,13 +27,13 @@ public class LocalMedia extends AbstractMediaManager.Media {
 
 
 
-    private AbstractMediaManager.Player player;
+    private MediaManager.Player player;
 
     private boolean loaded = false;
 
 
 
-    public LocalMedia(AbstractMediaManager.Player player, String sourceUri) {
+    public LocalMedia(MediaManager.Player player, String sourceUri) {
         this.player = player;
         this.sourceUri = sourceUri;
     }

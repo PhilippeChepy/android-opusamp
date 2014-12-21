@@ -23,7 +23,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.LocalProvider;
 import net.opusapp.player.ui.utils.PlayerApplication;
 
@@ -40,7 +40,7 @@ public class SettingsActivity extends PreferenceActivity {
         providerId = 0;
 
         if (intent != null) {
-            providerId = intent.getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, 0);
+            providerId = intent.getIntExtra(MediaManager.Provider.KEY_PROVIDER_ID, 0);
         }
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -80,8 +80,8 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
-                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                final MediaManager mediaManager = PlayerApplication.mediaManager(providerId);
+                final MediaManager.Provider provider = mediaManager.getProvider();
 
                 if (provider instanceof LocalProvider) {
                     provider.getAction(LocalProvider.ACTION_INDEX_LOCATION).launch(SettingsActivity.this);
@@ -98,8 +98,8 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(providerId);
-                final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+                final MediaManager mediaManager = PlayerApplication.mediaManager(providerId);
+                final MediaManager.Provider provider = mediaManager.getProvider();
 
                 if (provider instanceof LocalProvider) {
                     provider.getAction(LocalProvider.ACTION_INDEX_EXTENSIONS).launch(SettingsActivity.this);

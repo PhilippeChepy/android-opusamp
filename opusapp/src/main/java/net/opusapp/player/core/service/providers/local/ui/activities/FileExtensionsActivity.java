@@ -21,7 +21,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import net.opusapp.player.R;
-import net.opusapp.player.core.service.providers.AbstractMediaManager;
+import net.opusapp.player.core.service.providers.MediaManager;
 import net.opusapp.player.core.service.providers.local.database.Entities;
 import net.opusapp.player.core.service.providers.local.database.OpenHelper;
 import net.opusapp.player.core.service.utils.AbstractSimpleCursorLoader;
@@ -96,7 +96,7 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mProviderId = getIntent().getIntExtra(MediaManager.Provider.KEY_PROVIDER_ID, -1);
 
         setContentView(R.layout.activity_grid);
 
@@ -115,7 +115,7 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
         mGridView.setAdapter(mAdapter);
         mGridView.setNumColumns(PlayerApplication.getListColumns() * 2);
 
-        mProviderId = getIntent().getIntExtra(AbstractMediaManager.Provider.KEY_PROVIDER_ID, -1);
+        mProviderId = getIntent().getIntExtra(MediaManager.Provider.KEY_PROVIDER_ID, -1);
 
         getSupportLoaderManager().initLoader(0, null, this);
     }
@@ -178,8 +178,8 @@ public class FileExtensionsActivity extends ActionBarActivity implements Refresh
     protected void notifyLibraryChanges() {
         refresh();
 
-        final AbstractMediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
-        final AbstractMediaManager.Provider provider = mediaManager.getProvider();
+        final MediaManager mediaManager = PlayerApplication.mediaManager(mProviderId);
+        final MediaManager.Provider provider = mediaManager.getProvider();
 
         if (provider != null) {
             provider.scanStart();
