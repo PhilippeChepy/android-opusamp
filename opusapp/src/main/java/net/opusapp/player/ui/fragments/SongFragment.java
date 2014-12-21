@@ -62,6 +62,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
             AbstractMediaManager.Provider.SONG_TITLE,
             AbstractMediaManager.Provider.SONG_ARTIST,
             AbstractMediaManager.Provider.SONG_TRACK,
+            AbstractMediaManager.Provider.SONG_ART_URI,
             AbstractMediaManager.Provider.SONG_VISIBLE,
     };
 
@@ -73,7 +74,9 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
 
     public static final int COLUMN_SONG_TRACK_NUMBER = 3;
 
-    public static final int COLUMN_SONG_VISIBLE = 4;
+    public static final int COLUMN_SONG_ART_URI = 4;
+
+    public static final int COLUMN_SONG_VISIBLE = 5;
 
 
 
@@ -136,6 +139,16 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
             }
         };
 
+        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG, LibraryAdapter.LIBRARY_MANAGER,
+                new int[]{
+                        COLUMN_SONG_ID,
+                        COLUMN_SONG_TITLE,
+                        COLUMN_SONG_ARTIST,
+                        COLUMN_SONG_TRACK_NUMBER,
+                        COLUMN_SONG_ART_URI,
+                        COLUMN_SONG_VISIBLE
+                });
+/*
         adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
                 new int[] {
                         COLUMN_SONG_ID,
@@ -143,7 +156,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                         COLUMN_SONG_ARTIST,
                         COLUMN_SONG_TRACK_NUMBER,
                         COLUMN_SONG_VISIBLE
-                });
+                });*/
         gridView.setOnCreateContextMenuListener(this);
         gridView.setOnItemClickListener(this);
         gridView.setAdapter(adapter);

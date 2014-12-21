@@ -15,6 +15,7 @@
 Update 20:
 Added: Click on previous button now reset playback position to 0s if > 4s and switch to previous track otherwise.
 Added: Long click on previous or next button now do a fast seeking backward/forward.
+Added: Added media covers in "track" tab.
 Updated: Improved global performances.
 Fixed: Scan cancellation causing freeze to the whole app.
 Fixed: Missing auto pause feature since Update 18.
