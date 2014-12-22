@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="MissingTranslation">
+<resources>
+    <string name="service_label" translatable="false">Audio management service</string>
 
-    <string name="key_cover_exts">cover_exts</string>
+    <string name="notification_fallback_info_format" translatable="false">%1$s - %2$s</string>
 
-    <string name="ext_jpeg">jpeg</string>
-    <string name="ext_jpg">jpg</string>
-    <string name="ext_png">png</string>
-    <string name="ext_bmp">bmp</string>
+    <string name="key_cover_exts" translatable="false">cover_exts</string>
+
+    <string name="ext_jpeg" translatable="false">jpeg</string>
+    <string name="ext_jpg" translatable="false">jpg</string>
+    <string name="ext_png" translatable="false">png</string>
+    <string name="ext_bmp" translatable="false">bmp</string>
 </resources>

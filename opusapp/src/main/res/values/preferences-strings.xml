@@ -1,33 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="MissingTranslation">
+<resources>
 
     <!-- Global Preferences keys -->
-    <string name="preference_screen_key_global">screen_key_global</string>
+    <string name="preference_screen_key_global" translatable="false">screen_key_global</string>
 
-    <string name="preference_key_color_presets">color_preset</string>
-    <string name="preference_key_primary_color">primary_color</string>
-    <string name="preference_key_accent_color">accent_color</string>
-    <string name="preference_key_foreground_color">foreground_color</string>
-    <string name="preference_key_toolbar_dark_icons">dark_icons</string>
+    <string name="preference_key_color_presets" translatable="false">color_preset</string>
+    <string name="preference_key_primary_color" translatable="false">primary_color</string>
+    <string name="preference_key_accent_color" translatable="false">accent_color</string>
+    <string name="preference_key_foreground_color" translatable="false">foreground_color</string>
+    <string name="preference_key_toolbar_dark_icons" translatable="false">dark_icons</string>
 
-    <string name="preference_key_embedded_art_cache_size">embedded_art_cache_size</string>
-    <string name="preference_key_optimize_database">optimize_database</string>
-    <string name="preference_key_plug_auto_play">plug_auto_play</string>
-    <string name="preference_key_pause_call">pause_call</string>
-    <string name="preference_key_premium">premium</string>
-    <string name="preference_key_privacy_policy">online_help</string>
-    <string name="preference_key_opensource">opensource</string>
+    <string name="preference_key_embedded_art_cache_size" translatable="false">embedded_art_cache_size</string>
+    <string name="preference_key_optimize_database" translatable="false">optimize_database</string>
+    <string name="preference_key_plug_auto_play" translatable="false">plug_auto_play</string>
+    <string name="preference_key_pause_call" translatable="false">pause_call</string>
+    <string name="preference_key_premium" translatable="false">premium</string>
+    <string name="preference_key_privacy_policy" translatable="false">online_help</string>
+    <string name="preference_key_opensource" translatable="false">opensource</string>
 
     <!-- Local preference keys -->
-    <string name="preference_key_settings_location">settings_location</string>
-    <string name="preference_key_settings_extensions">settings_extensions</string>
-    <string name="preference_key_tab_visibility">tab_visibility</string>
-    <string name="preference_key_storage_display_details">storage_display</string>
-    <string name="preference_key_display_local_art">show_local_art</string>
-    <string name="preference_key_display_source_if_no_tags">show_src_if_no_media</string>
-    <string name="preference_key_genre_display">genre_display</string>
+    <string name="preference_key_settings_location" translatable="false">settings_location</string>
+    <string name="preference_key_settings_extensions" translatable="false">settings_extensions</string>
+    <string name="preference_key_tab_visibility" translatable="false">tab_visibility</string>
+    <string name="preference_key_storage_display_details" translatable="false">storage_display</string>
+    <string name="preference_key_display_local_art" translatable="false">show_local_art</string>
+    <string name="preference_key_display_source_if_no_tags" translatable="false">show_src_if_no_media</string>
+    <string name="preference_key_genre_display" translatable="false">genre_display</string>
 
 
     <!-- Preference values -->

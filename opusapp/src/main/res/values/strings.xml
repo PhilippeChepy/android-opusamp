@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Service -->
-    <string name="service_label">Audio Media Player</string>
-    <string name="notification_fallback_info_format">%1$s - %2$s</string>
-
     <!-- Widget -->
     <string name="widget_label_4x1">Audio Player (4x1)</string>
     <string name="widget_label_4x2">Audio Player (4x2)</string>
@@ -17,8 +13,6 @@
     <string name="activity_title_library_file_extensions">File extensions settings</string>
     <string name="activity_label_files_to_scan">Files to scan</string>
     <string name="activity_label_art_selection">Art selection</string>
-    <string name="activity_label_deezer_signin">Connection to Deezer service</string>
-    <string name="activity_label_deezer_signout">Disconnect</string>
 
     <!-- Dialogs -->
     <string name="alert_dialog_button_edit">"Edit"</string>
@@ -240,16 +234,6 @@
 
     <!-- Other UI -->
     <string name="label_local_media_manager">Medias on this device</string>
-    <string name="label_dlna_media_manager">Medias on the network (DLNA)</string>
-    <string name="label_deezer_media_manager">Deezer</string>
-    <string name="label_grooveshark_media_manager">Grooveshark</string>
-    <string name="label_google_music_media_manager">Google Music</string>
-    <string name="label_qobuz_media_manager">Qobuz</string>
-    <string name="label_spotify_media_manager">Spotify</string>
-
-    <!-- Deezer specific strings -->
-    <string name="label_deezer_storage_thematic_radio">Thematic Radios</string>
-    <string name="label_deezer_storage_artist_radio">Artist Radios</string>
 
     <!-- No items messages for library -->
     <string name="ni_artists">No artists</string>
@@ -297,4 +281,5 @@
 
     <!-- ColorPicker -->
     <string name="dialog_color_picker">Color Picker</string>
+
 </resources>
