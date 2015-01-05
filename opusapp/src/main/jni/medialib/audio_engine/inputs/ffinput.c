@@ -13,7 +13,7 @@
 
 #include <unistd.h>
 #include <assert.h>
-#include <pthread.h>
+#include <stdarg.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
