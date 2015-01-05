@@ -112,8 +112,14 @@ public abstract class JniMediaLib {
 
 	static {
         System.loadLibrary("soxr");
-        System.loadLibrary("ffmpeg");
+
+        System.loadLibrary("avutil");
+        System.loadLibrary("avformat");
+        System.loadLibrary("avcodec");
+        System.loadLibrary("avfilter");
+        System.loadLibrary("swresample");
         System.loadLibrary("taglib");
+
         System.loadLibrary("medialib");
 	}
 	

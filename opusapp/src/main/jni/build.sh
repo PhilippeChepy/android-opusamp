@@ -1,3 +1,3 @@
 #!/bin/sh
-PATH=/mnt/net/devel/tools/android-ndk:$PATH
-ndk-build
+PATH=/Users/phil/Library/Android/android-ndk-r10c:$PATH
+ndk-build $1

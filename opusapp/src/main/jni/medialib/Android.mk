@@ -57,7 +57,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/audio_engine/effects/utils/nsfft/dft/
 
 
 
-LOCAL_STATIC_LIBRARIES = libffmpeg libtaglib
+LOCAL_STATIC_LIBRARIES = avformat avcodec avfilter avutil swresample libtaglib
 
 LOCAL_ALLOW_UNDEFINED_SYMBOLS := false
 
