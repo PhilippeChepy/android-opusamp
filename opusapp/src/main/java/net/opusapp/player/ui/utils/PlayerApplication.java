@@ -598,6 +598,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
                 return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+            case CONTEXT_MENUITEM_DETAIL:
+                return doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
             default:
                 return false;
         }
@@ -643,6 +645,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId, 0);
             case CONTEXT_MENUITEM_HIDE:
                 return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
+            case CONTEXT_MENUITEM_DETAIL:
+                return doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_MEDIA, songId);
             default:
                 return false;
         }
@@ -740,6 +744,8 @@ public class PlayerApplication extends Application implements ServiceConnection 
                 return doContextActionAddToPlaylist(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId, sortOrder);
             case CONTEXT_MENUITEM_HIDE:
                 return doContextActionToggleVisibility(MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
+            case CONTEXT_MENUITEM_DETAIL:
+                return doContextActionDetail(hostActivity, MediaManager.Provider.ContentType.CONTENT_TYPE_ALBUM, albumId);
             default:
                 return false;
         }

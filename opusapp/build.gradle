@@ -84,9 +84,6 @@ android {
             minifyEnabled true
             shrinkResources true
         }
-        debug {
-            jniDebuggable true
-        }
     }
 }
 
