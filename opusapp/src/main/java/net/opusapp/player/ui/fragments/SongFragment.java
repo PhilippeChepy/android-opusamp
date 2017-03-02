@@ -148,15 +148,7 @@ public class SongFragment extends AbstractRefreshableFragment implements LoaderC
                         COLUMN_SONG_ART_URI,
                         COLUMN_SONG_VISIBLE
                 });
-/*
-        adapter = LibraryAdapterFactory.build(container, LibraryAdapterFactory.ADAPTER_SONG_SIMPLE, LibraryAdapter.LIBRARY_MANAGER,
-                new int[] {
-                        COLUMN_SONG_ID,
-                        COLUMN_SONG_TITLE,
-                        COLUMN_SONG_ARTIST,
-                        COLUMN_SONG_TRACK_NUMBER,
-                        COLUMN_SONG_VISIBLE
-                });*/
+
         gridView.setOnCreateContextMenuListener(this);
         gridView.setOnItemClickListener(this);
         gridView.setAdapter(adapter);

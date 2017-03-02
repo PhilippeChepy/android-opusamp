@@ -1,0 +1,4 @@
+set solib-search-path /home/phil/Projets/android/opusapp/src/main/obj/local/armeabi-v7a
+directory /opt/android-ndk-r9d/platforms/android-8/arch-arm/usr/include /home/phil/Projets/android/opusapp/src/main/jni/prebuilt-deezer /home/phil/Projets/android/opusapp/src/main/jni//prebuilt-soxr/include /home/phil/Projets/android/opusapp/src/main/jni/prebuilt-ffmpeg /home/phil/Projets/android/opusapp/src/main/jni/medialib /home/phil/Projets/android/opusapp/src/main/jni/medialib/audio_engine/effects/utils/nsfft/simd/ /home/phil/Projets/android/opusapp/src/main/jni/medialib/audio_engine/effects/utils/nsfft/dft/ /home/phil/Projets/android/opusapp/src/main/jni/prebuilt-ffmpeg/armeabi-v7a/include /home/phil/Projets/android/opusapp/src/main/jni/prebuilt-taglib/include /opt/android-ndk-r9d/sources/cxx-stl/stlport/stlport /opt/android-ndk-r9d/sources/cxx-stl//gabi++/include
+file ./obj/local/armeabi-v7a/app_process
+target remote :5039
